@@ -5,60 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Generar Reportes</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
-
-  <p><a href="index.html">Regresar a incio</a></p>
+  
   <main>
     <!-- Formulario para seleccionar filtros de reporte -->
+    <a class="retorno"  href="index.html">Regresar a inicio</a>
+
     <section class="report-filters">
       <h2>Filtrar Reporte</h2>
       <form id="report-form">
         <div class="form-row">
           <label for="cliente">Cliente:</label>
-          <select id="cliente">
+          <select id="cliente" name="cliente" required>
             <option value="">Seleccionar Cliente</option>
-            <option value="cliente1">Calimax</option>
-            <option value="cliente2">Florido</option>
-            
-            <option value="cliente2">Casa ley</option>
-            
-            <option value="cliente2">Todos</option>
+            <option value="calimax">Calimax</option>
+            <option value="florido">Florido</option>
+            <option value="casa-ley">Casa Ley</option>
+            <option value="todos">Todos</option>
           </select>
         </div>
 
-        <!-- <div class="form-row">
-          <label for="sucursal">Sucursal:</label>
-          <select id="sucursal">
-            <option value="">Seleccionar Sucursal</option>
-            <option value="sucursal1">Sucursal 1</option>
-            <option value="sucursal2">Sucursal 2</option>
-          </select>
-        </div> -->
-
         <div class="form-row">
           <label for="fecha-inicio">Fecha de Inicio:</label>
-          <input type="date" id="fecha-inicio" required>
+          <input type="date" id="fecha-inicio" name="fecha-inicio" required>
         </div>
 
         <div class="form-row">
           <label for="fecha-fin">Fecha de Fin:</label>
-          <input type="date" id="fecha-fin" required>
+          <input type="date" id="fecha-fin" name="fecha-fin" required>
         </div>
 
         <button type="submit">Generar Reporte</button>
       </form>
     </section>
 
-    <!-- Resultado de Reportes -->
+    <!-- Resultados del Reporte -->
     <section id="report-results">
       <h2>Resultados del Reporte</h2>
       <div id="report-data">
-        <!-- Aquí se mostrarán los reportes generados dinámicamente -->
+        <!-- Los reportes generados dinámicamente aparecerán aquí -->
       </div>
     </section>
   </main>
 
-  <script src="script.js"></script>
 </body>
 </html>
