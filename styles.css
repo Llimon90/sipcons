@@ -69,27 +69,7 @@ a:hover {
   text-decoration: underline;
 }
 
-
-
-
-
-
-
-
-
 /* Estilos Globales */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f7fb;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
 header {
   background-color: #0056b3;
   width: 100%;
@@ -233,16 +213,7 @@ button.edit-status:hover {
   background-color: #0056b3;
 }
 
-
-
-/*ESTILOS CLIENTES*/
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f9f9f9;
-}
-
+/* Estilos Clientes */
 .container {
   max-width: 800px;
   margin: 20px auto;
@@ -311,22 +282,7 @@ li {
   margin-left: 5px;
 }
 
-
-/*DASHBOARD ADMIN */
-
-/* General Styles */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f9;
-  color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
+/* Dashboard Admin */
 #admin-content {
   text-align: center;
   width: 90%;
@@ -367,28 +323,66 @@ h2 {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   background-color: #007bff;
   color: #fff;
-  text-decoration: none; 
-}
-
-/* Adjusting sizes for larger screens */
-@media (min-width: 768px) {
-  .option-box {
-    font-size: 1.8rem;
-    padding: 3rem;
-    
-  }
+  text-decoration: none;
 }
 
 .option-box i {
-  display: block; /* Coloca el ícono en una línea separada */
-  font-size: 2.5rem; /* Tamaño del ícono */
-  margin-bottom: 0.5rem; /* Espacio entre el ícono y el texto */
-  color: #007bff; /* Color del ícono */
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #007bff;
   transition: color 0.3s ease;
 }
 
 .option-box:hover i {
-  color: #fff; /* Cambia el color al hacer hover */
+  color: #fff;
 }
 
-/*BLOQUE CLIENTES*/
+/* Diseño Responsive */
+@media (min-width: 768px) {
+  .option-box {
+    font-size: 1.8rem;
+    padding: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .options-container {
+    flex-direction: column;
+  }
+
+  .option-box {
+    flex: none;
+    margin: 10px auto;
+    width: 80%;
+  }
+
+  .modal-content {
+    width: 90%;
+  }
+}
+
+@media (max-width: 480px) {
+  h1, h2 {
+    font-size: 18px;
+  }
+
+  .option-box {
+    padding: 15px;
+    margin: 10px;
+    width: 100%;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  table th, table td {
+    font-size: 14px;
+    padding: 8px;
+  }
+}
