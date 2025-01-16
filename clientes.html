@@ -15,23 +15,32 @@
     <form id="client-form">
       <h2>Registrar Cliente</h2>
       <div class="form-group">
-        <label for="name">Nombre del Cliente:</label>
+        <label for="name">Nombre del Cliente o razón social:</label>
         <input type="text" id="name" required>
       </div>
       <div class="form-group">
-        <label for="tax-info">Datos Fiscales:</label>
+        <label for="tax-info">RFC:</label>
         <input type="text" id="tax-info" required>
       </div>
       <div class="form-group">
-        <label for="branches">Sucursales:</label>
-        <input type="text" id="branches" placeholder="Ejemplo: Sucursal A, Sucursal B" required>
+        <label for="branches">Dirección:</label>
+        <input type="text" id="branches" placeholder="Ejemplo: Corporativo" required>
+      </div>
+      <div class="form-group">
+        <label for="branches">Teléfono:</label>
+        <input type="text" id="branches" placeholder="Con clave lada" required>
       </div>
       <div class="form-group">
         <label for="contacts">Contactos:</label>
-        <input type="text" id="contacts" placeholder="Ejemplo: Juan Pérez - 123456789" required>
+        <input type="text" id="contacts" placeholder="Ejemplo: Juan Pérez" required>
+      </div>
+      <div class="form-group">
+        <label for="branches">E-mail:</label>
+        <input type="text" id="branches" placeholder="Ejemplo: cliente@dominio.com" required>
       </div>
       <button type="submit">Guardar Cliente</button>
     </form>
+    
 
     <h2>Lista de Clientes</h2>
     <table id="client-table">
@@ -40,7 +49,7 @@
           <th>Nombre o razón social</th>
           <th>RFC</th>
           <th>Dirección</th>
-          <th>Telefono</th>
+          <th>Teléfono</th>
           <th>Contactos</th>
         </tr>
       </thead>
