@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Incidencias</title>
+ 
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <p><a href="admin-dashboard1.html">Regresar a incio</a></p>
+  <main>
+    <!-- Formulario para registrar una nueva incidencia -->
+    <section class="new-incidencia">
+      <h2>Registrar nueva incidencia</h2>
+      <form id="new-incidencia-form">
+        <div class="form-row">
+          <div>
+            <label for="cliente">Cliente</label>
+            <input type="text" id="cliente" required placeholder="Nombre del cliente">
+          </div>
+          <div>
+            <label for="contacto">Contacto</label>
+            <input type="text" id="contacto" required placeholder="Teléfono o correo">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="direccion">Dirección</label>
+            <input type="text" id="direccion" required placeholder="Dirección del cliente">
+          </div>
+          <div>
+            <label for="falla">Falla Reportada</label>
+            <textarea id="falla" required placeholder="Descripción de la falla"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="fecha-reporte">Fecha de Reporte</label>
+            <input type="date" id="fecha-reporte" required>
+          </div>
+          <div>
+            <label for="tecnico">Técnico Asignado</label>
+            
+            <form id="report-form">
+              <div class="form-row">
+               
+                <select id="tecnico">
+                  <option value="tecnico">Victor Cordoba</option>
+                  <option value="tecnico">Tomás Vázquez</option>
+                  <option value="tecnico">Francisco Aguiar</option>
+                  <option value="tecnico">Mauricio Martínez</option>
+                  <option value="tecnico">Humberto Martínez</option>
+                  <option value="tecnico">Jose </option>
+                  <option value="tecnico">Hoscar Martínez</option>
+                  <option value="tecnico">Jacob Ventura</option>
+                  <option value="tecnico">Luis Limón</option>
+                  <form id="report-form">
+                </select>
+              </div>
+              
+                
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="estatus">Estatus</label>
+            <select id="estatus" required>
+              <option value="abierta">Abierta</option>
+              <option value="cerrada">Cerrada</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en seguimiento">En seguimiento</option>
+              <option value="facturada">Facturada</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit">Registrar Incidencia</button>
+      </form>
+    </section>
+
+    <!-- Lista de incidencias registradas -->
+    <section class="incidencias-lista">
+      <h2>Incidencias Registradas</h2>
+      <table id="incidencias-table">
+        <thead>
+          <tr>
+            <th># Incidencia</th>
+            <th>Cliente</th>
+            <th>Fecha de Reporte</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Las incidencias se agregarán aquí dinámicamente -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Modal para ver detalles de la incidencia -->
+    <div id="incidencia-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="close-modal">&times;</span>
+        <h3>Detalles de Incidencia</h3>
+        <p><strong>Cliente:</strong> <span id="modal-cliente"></span></p>
+        <p><strong>Dirección:</strong> <span id="modal-direccion"></span></p>
+        <p><strong>Falla Reportada:</strong> <span id="modal-falla"></span></p>
+        <p><strong>Técnico Asignado:</strong> <span id="modal-tecnico"></span></p>
+        <p><strong>Estatus:</strong> <span id="modal-estatus"></span></p>
+        <h4>Imágenes</h4>
+        <input type="file" id="image-upload" multiple>
+        <div id="image-gallery"></div>
+        <button id="update-status">Actualizar Estatus</button>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

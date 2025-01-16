@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generar Reportes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <p><a href="/index.html">Regresar a incio</a></p>
+  <main>
+    <!-- Formulario para seleccionar filtros de reporte -->
+    <section class="report-filters">
+      <h2>Filtrar Reporte</h2>
+      <form id="report-form">
+        <div class="form-row">
+          <label for="cliente">Cliente:</label>
+          <select id="cliente">
+            <option value="">Seleccionar Cliente</option>
+            <option value="cliente1">Calimax</option>
+            <option value="cliente2">Florido</option>
+            
+            <option value="cliente2">Casa ley</option>
+            
+            <option value="cliente2">Todos</option>
+          </select>
+        </div>
+
+        <!-- <div class="form-row">
+          <label for="sucursal">Sucursal:</label>
+          <select id="sucursal">
+            <option value="">Seleccionar Sucursal</option>
+            <option value="sucursal1">Sucursal 1</option>
+            <option value="sucursal2">Sucursal 2</option>
+          </select>
+        </div> -->
+
+        <div class="form-row">
+          <label for="fecha-inicio">Fecha de Inicio:</label>
+          <input type="date" id="fecha-inicio" required>
+        </div>
+
+        <div class="form-row">
+          <label for="fecha-fin">Fecha de Fin:</label>
+          <input type="date" id="fecha-fin" required>
+        </div>
+
+        <button type="submit">Generar Reporte</button>
+      </form>
+    </section>
+
+    <!-- Resultado de Reportes -->
+    <section id="report-results">
+      <h2>Resultados del Reporte</h2>
+      <div id="report-data">
+        <!-- Aquí se mostrarán los reportes generados dinámicamente -->
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
