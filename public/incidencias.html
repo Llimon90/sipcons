@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Incidencias</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  
+  
+  <main>
+    <!-- Formulario para registrar una nueva incidencia -->
+    <a class="retorno"  href="/index.html">Regresar a inicio</a>
+    <section class="new-incidencia">
+      <h2>Registrar nueva incidencia</h2>
+      <form id="new-incidencia-form">
+        <div class="form-row">
+          <div>
+            <label for="numero"># Ticket cliente</label>
+            <input type="text" id="numero" name="numero" required placeholder="Ejemplo: st-66477">
+          </div>
+          
+          <div>
+            <label for="cliente">Cliente</label>
+            <input type="text" id="cliente" name="cliente" required placeholder="Nombre del cliente">
+          </div>
+        </div>
+      
+        <div class="form-row">
+          <div>
+            <label for="contacto">Reporta</label>
+            <input type="text" id="contacto" name="contacto" required placeholder="Persona que reporta incidencia">
+          </div>
+          <div>
+            <label for="sucursal">Sucursal</label>
+            <input type="text" id="sucursal" name="sucursal" required placeholder="Sucursal o dirección">
+          </div>
+        </div>
+
+
+        <div>
+          <label for="falla">Falla reportada</label>
+          <input type="text" id="falla" name="falla" required placeholder="Descrición de la falla">
+        </div>
+      
+      
+        <div class="form-row">
+          <div>
+            <label for="fecha">Fecha de Reporte</label>
+            <input type="date" id="fecha" name="fecha" required>
+          </div>
+          <div>
+            <label for="tecnico">Técnico Asignado</label>
+            <select id="tecnico" name="tecnico" required>
+              <!-- Opciones aquí -->
+              <option value="Victor Cordoba">Victor Cordoba</option>
+              <option value="Tomás Vázquez">Tomás Vázquez</option>
+              <option value="Francisco Aguiar">Francisco Aguiar</option>
+              <option value="Mauricio Martínez">Mauricio Martínez</option>
+              <option value="Humberto Martínez">Humberto Martínez</option>
+              <option value="Jose Adalberto">Jose Armando</option>
+              <option value="Hoscar Martínez">Hoscar Martínez</option>
+              <option value="Jacob Ventura">Jacob Ventura</option>
+              <option value="Luis Limón">Luis Limón</option>
+            </select>
+          </div>
+        </div>
+      
+        <div class="form-row">
+          <div>
+            <label for="status">Estatus</label>
+            <select id="status" name="status" required>
+              <!-- Opciones aquí -->
+            
+              <option value="abierta">Abierta</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en seguimiento">Completa</option>
+              <option value="facturada">Facturada</option>
+            </select>
+          </div>
+        </div>
+      
+        <button type="submit">Registrar Incidencia</button>
+      </form>
+      
+    </section>
+
+    <!-- Lista de incidencias registradas -->
+    <section class="incidencias-lista">
+      <h2>Incidencias Registradas</h2>
+      <table id="incidencias-table">
+        <thead>
+          <tr>
+            <th># Incidencia</th>
+            <th>Cliente</th>
+            <th>Reporta</th>
+            <th>Estatus</th>
+         
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Las incidencias se agregarán aquí dinámicamente -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
+
+
