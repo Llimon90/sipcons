@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Establecer la conexión a la base de datos
 const conexion = mysql.createConnection({
-  host: 'localhost',
+  host: '193.203.166.103',
   database: 'u179371012_sipcons',
   user: 'root',
   password: 'Weruzco17@',
