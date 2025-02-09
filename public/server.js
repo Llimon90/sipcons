@@ -17,7 +17,7 @@ const conexion = mysql.createConnection({
   host: '193.203.166.103',
   database: 'u179371012_sipcons',
   user: 'root',
-  password: 'Weruzco17@',
+  password: 'Llimon90',
 });
 
 // Conectar a la base de datos
