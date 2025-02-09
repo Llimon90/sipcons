@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Establecer la conexión a la base de datos
 const conexion = mysql.createConnection({
-  host: 'srv1267.hstgr.io',
+  host: 'localhost',
   database: 'u179371012_sipcons',
   user: 'u179371012_root',
   password: 'Llimon2025',
