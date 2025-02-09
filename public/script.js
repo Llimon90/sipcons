@@ -12,7 +12,7 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
     status: document.getElementById('status').value
   };
 
-  fetch('https://tudominio.com/api.php', {
+  fetch('https://darkgoldenrod-duck-950402.hostingersite.com/api.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
