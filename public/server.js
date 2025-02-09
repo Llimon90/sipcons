@@ -16,8 +16,8 @@ app.use(express.json());
 const conexion = mysql.createConnection({
   host: '193.203.166.103',
   database: 'u179371012_sipcons',
-  user: 'root',
-  password: 'Llimon90',
+  user: 'u179371012_root',
+  password: 'Weruzco17@',
 });
 
 // Conectar a la base de datos
