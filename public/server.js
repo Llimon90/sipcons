@@ -1,47 +1,44 @@
 // Importar dependencias
 const express = require('express');
-const mysql = require('mysql');
 const cors = require('cors');
+const mysql = require('mysql');
 
 // Crear una instancia de Express
 const app = express();
 
-// Usar CORS para permitir solicitudes desde tu frontend
-app.use(cors());
+// Usar middlewares
+app.use(cors()); // Permitir solicitudes desde el frontend
+app.use(express.json()); // Parsear JSON en el cuerpo de las solicitudes
 
-// Usar JSON en el cuerpo de las solicitudes
-app.use(express.json());
-
-// Establecer la conexión a la base de datos
+// Conectar a la base de datos MySQL
 const conexion = mysql.createConnection({
-  host: '193.203.166.103',
-  database: 'u179371012_sipcons', 
-  user: 'u179371012_root',
-  password: 'Llimon2025',
+  host: 'localhost',
+  user: 'root',
+  password: 'Llimon',
+  database: 'sipcons',
   port: 3306
 });
 
-// Conectar a la base de datos
-conexion.connect(function (err) {
+conexion.connect((err) => {
   if (err) {
-    console.error('Error de conexión a la base de datos:', err);
+    console.error('Error al conectar a la base de datos:', err);
     return;
   }
-  console.log('Conexión exitosa a la base de datos');
+  console.log('Conectado a la base de datos');
 });
 
-// Ruta para crear una nueva incidencia con número incremental
+// Ruta para registrar una nueva incidencia
 app.post('/nueva-incidencia', (req, res) => {
   const { cliente, contacto, sucursal, fecha, tecnico, status, falla } = req.body;
 
-  // Validar campos obligatorios
+  // Validar que todos los campos sean enviados
   if (!cliente || !contacto || !sucursal || !fecha || !tecnico || !status || !falla) {
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
   }
 
-  // Obtener el último número generado
+  // Consultar el último número_incidente generado
   const consultaUltimoNumero = `
-    SELECT numero FROM incidencias ORDER BY id DESC LIMIT 1
+    SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1
   `;
 
   conexion.query(consultaUltimoNumero, (error, results) => {
@@ -50,23 +47,23 @@ app.post('/nueva-incidencia', (req, res) => {
       return res.status(500).json({ error: 'Error al obtener el último número' });
     }
 
-    let nuevoNumero = 'SIP-0001'; // Número inicial si no hay registros previos
+    let nuevoNumeroIncidente = 'SIP-0001'; // Número inicial si no hay registros previos
 
     if (results.length > 0) {
-      const ultimoNumero = results[0].numero; // Ejemplo: "SIP-0001"
+      const ultimoNumero = results[0].numero_incidente; // Ejemplo: "SIP-0001"
       const numeroIncremental = parseInt(ultimoNumero.split('-')[1]) + 1;
 
       // Generar el nuevo número con formato "SIP-XXXX"
-      nuevoNumero = `SIP-${numeroIncremental.toString().padStart(4, '0')}`;
+      nuevoNumeroIncidente = `SIP-${numeroIncremental.toString().padStart(4, '0')}`;
     }
 
-    // Query para insertar la nueva incidencia
+    // Insertar la nueva incidencia
     const nuevaIncidencia = `
-      INSERT INTO incidencias (numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO incidencias (numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const valores = [nuevoNumero, cliente, contacto, sucursal, fecha, tecnico, status, falla];
+    const valores = ['CLIENTE-MANUAL', cliente, contacto, sucursal, fecha, tecnico, status, falla, nuevoNumeroIncidente];
 
     conexion.query(nuevaIncidencia, valores, (error, result) => {
       if (error) {
@@ -76,18 +73,15 @@ app.post('/nueva-incidencia', (req, res) => {
 
       res.status(201).json({ 
         message: 'Incidencia registrada correctamente', 
-        numero: nuevoNumero, 
+        numero_incidente: nuevoNumeroIncidente, 
         id: result.insertId 
       });
     });
   });
 });
 
-// Iniciar el servidor
+// Iniciar el servidor en el puerto 3000
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
-
-
-//BLOQUE QUE OBTIENE Y SIEMBRA CONSECUTIVO DE INCIDENCIA EN FORMULARIO
