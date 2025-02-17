@@ -17,3 +17,6 @@ jOcgtl3tVLmx4CWBn236WZ0JNye3UqMRypHK2mC6RT5xmes80iyHlJEFScIS2WYNdYSzcpzfRXgpsjse
 yQY1VMMRvN3+e7jE1pkfqRsQoqZe07lGJPOslljQY5Z89VWft/qiBSvQ0= weruz@DESKTOP-7HS1GA0
 
 
+sql password
+user root 
+pass Llimon
