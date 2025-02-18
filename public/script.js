@@ -25,9 +25,7 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
             console.log("Incidencia registrada:", data);
             
             // Vaciar inputs después de 300ms (para evitar que se borren antes de ver la respuesta)
-            setTimeout(() => {
-                document.getElementById("new-incidencia-form").reset();
-            }, 300);
+
         }
     })
 

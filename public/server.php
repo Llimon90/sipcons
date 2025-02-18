@@ -45,19 +45,17 @@ if ($method === "POST") {
     }
 
     // Insertar la nueva incidencia
+    $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $nuevoNumeroIncidente);
+
     if ($stmt->execute()) {
-        echo json_encode([
-            "message" => "Incidencia registrada correctamente",
-            "numero_incidente" => $nuevoNumeroIncidente,
-            "id" => $stmt->insert_id
-        ]);
+        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
+        
     } else {
-        echo json_encode([
-            "error" => "Error al insertar incidencia",
-            "details" => $stmt->error // Agrega detalles del error
-        ]);
+        echo json_encode(["error" => "Error al insertar incidencia"]);
     }
-    
+
     $stmt->close();
 }
 
