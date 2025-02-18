@@ -8,7 +8,7 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
         sucursal: document.getElementById("sucursal").value.trim(),
         fecha: document.getElementById("fecha").value,
         tecnico: document.getElementById("tecnico").value.trim(),
-        status: document.getElementById("status").value,
+        estatus: document.getElementById("estatus").value, // Cambiado de 'status' a 'estatus'
         falla: document.getElementById("falla").value.trim()
     };
 
@@ -23,13 +23,13 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
             console.error("Error:", data.error);
         } else {
             console.log("Incidencia registrada:", data);
-            
             // Vaciar inputs después de 300ms (para evitar que se borren antes de ver la respuesta)
-
+            setTimeout(() => {
+                document.getElementById("new-incidencia-form").reset();
+            }, 300);
         }
     })
-
+    .catch(error => {
+        console.error("Error en la solicitud:", error);
+    });
 });
-
-
-// OBTENER INCIDENCIAS ABIERTAS AL CARGAR LA PAGIN A

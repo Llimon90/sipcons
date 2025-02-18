@@ -26,7 +26,7 @@ if ($method === "POST") {
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Validar los datos
-    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"])) {
+    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["estatus"], $data["falla"])) {
         echo json_encode(["error" => "Todos los campos son obligatorios"]);
         exit();
     }
@@ -47,13 +47,12 @@ if ($method === "POST") {
     // Insertar la nueva incidencia
     $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $nuevoNumeroIncidente);
+    $stmt->bind_param("sssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["estatus"], $data["falla"], $nuevoNumeroIncidente);
 
     if ($stmt->execute()) {
         echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
-        
     } else {
-        echo json_encode(["error" => "Error al insertar incidencia"]);
+        echo json_encode(["error" => "Error al insertar incidencia: " . $stmt->error]);
     }
 
     $stmt->close();
@@ -61,5 +60,3 @@ if ($method === "POST") {
 
 $conn->close();
 ?>
-
-<!-- RECUPERAR INCIDENCIAS ABIERTAS EN LA BD EN EL DOM   -->
