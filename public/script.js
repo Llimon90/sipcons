@@ -8,9 +8,10 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
         sucursal: document.getElementById("sucursal").value.trim(),
         fecha: document.getElementById("fecha").value,
         tecnico: document.getElementById("tecnico").value.trim(),
-        status: document.getElementById("estatus").value,
+        status: document.getElementById("estatus").value, // Este es el campo
         falla: document.getElementById("falla").value.trim()
     };
+    
 
     console.log(datosFormulario); // Verifica el contenido de los datos enviados
 
