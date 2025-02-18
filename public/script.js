@@ -30,7 +30,7 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
             }, 300);
         }
     })
-    .catch(error => console.error("Error al enviar los datos:", error));
+
 });
 
 
