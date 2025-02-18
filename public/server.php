@@ -21,6 +21,22 @@ header("Access-Control-Allow-Headers: Content-Type");
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
 
+if ($method === "GET" && isset($_GET["incidencias_abiertas"])) {
+    // Consulta para obtener todas las incidencias abiertas
+    $sql = "SELECT * FROM incidencias WHERE estatus = 'abierto'";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $incidencias = [];
+        while($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+        echo json_encode($incidencias);
+    } else {
+        echo json_encode(["message" => "No hay incidencias abiertas"]);
+    }
+}
+
 if ($method === "POST") {
     // Leer los datos enviados desde `fetch()`
     $data = json_decode(file_get_contents("php://input"), true);
@@ -86,7 +102,6 @@ if ($method === "POST" && isset($_GET["usuarios"])) {
 
     $stmt->close();
 }
-
 
 $conn->close();
 ?>

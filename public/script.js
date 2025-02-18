@@ -28,5 +28,13 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
     });
 });
 
+// para obtener incidencias abiertas 
+
+fetch('server.php?incidencias_abiertas')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+
+
 //BLOQUE PARA ENVIAR USUARIOS Y TECNICOS A BD
 
