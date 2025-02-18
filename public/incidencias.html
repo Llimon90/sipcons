@@ -8,9 +8,11 @@
   <script src="script.js" defer></script>
 </head>
 <body>
+  
+  
   <main>
     <!-- Formulario para registrar una nueva incidencia -->
-    <a class="retorno" href="/index.html">Regresar a inicio</a>
+    <a class="retorno"  href="/index.html">Regresar a inicio</a>
     <section class="new-incidencia">
       <h2>Registrar nueva incidencia</h2>
       <form id="new-incidencia-form">
@@ -37,10 +39,12 @@
           </div>
         </div>
 
+
         <div>
           <label for="falla">Falla reportada</label>
-          <input type="text" id="falla" name="falla" required placeholder="Descripción de la falla">
+          <input type="text" id="falla" name="falla" required placeholder="Descrición de la falla">
         </div>
+      
       
         <div class="form-row">
           <div>
@@ -50,6 +54,7 @@
           <div>
             <label for="tecnico">Técnico Asignado</label>
             <select id="tecnico" name="tecnico" required>
+              <!-- Opciones aquí -->
               <option value="Victor Cordoba">Victor Cordoba</option>
               <option value="Tomás Vázquez">Tomás Vázquez</option>
               <option value="Francisco Aguiar">Francisco Aguiar</option>
@@ -67,6 +72,8 @@
           <div>
             <label for="status">Estatus</label>
             <select id="estatus" name="estatus" required>
+              <!-- Opciones aquí -->
+            
               <option value="abierta">Abierta</option>
               <option value="pendiente">Pendiente</option>
               <option value="en seguimiento">Completa</option>
@@ -77,9 +84,27 @@
       
         <button type="submit">Registrar Incidencia</button>
       </form>
+      
     </section>
 
-   
+    <!-- Lista de incidencias registradas -->
+    <section class="incidencias-lista">
+      <h2>Incidencias Registradas</h2>
+      <table id="incidencias-table">
+        <thead>
+          <tr>
+            <th># Incidencia</th>
+            <th>Cliente</th>
+            <th>Reporta</th>
+            <th>Estatus</th>
+         
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Las incidencias se agregarán aquí dinámicamente -->
+        </tbody>
+      </table>
+    </section>
   </main>
 </body>
 </html>
