@@ -1,7 +1,7 @@
 <?php
 // Configurar conexión con la base de datos
 $host = "localhost";
-$user = "u179371012_root	";
+$user = "u179371012_root";
 $password = "Llimon.2025";
 $database = "u179371012_sipcons";
 
@@ -58,5 +58,31 @@ if ($method === "POST") {
     $stmt->close();
 }
 
+
+
+
+// Recibir datos del formulario
+$nombre = $_POST['nombre'];
+$correo = $_POST['correo'];
+$telefono = $_POST['telefono'];
+$usuario = $_POST['usuario'];
+$password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hashear la contraseña
+$rol = $_POST['rol'];
+$estatus = $_POST['estatus'];
+
+// Preparar la consulta SQL
+$sql = "INSERT INTO usuarios (nombre, correo, telefono, usuario, password, rol, estatus) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("sssssss", $nombre, $correo, $telefono, $usuario, $password, $rol, $estatus);
+
+if ($stmt->execute()) {
+    echo "Usuario registrado exitosamente";
+} else {
+    echo "Error al registrar usuario: " . $stmt->error;
+}
+
+$stmt->close();
 $conn->close();
 ?>
+
