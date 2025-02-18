@@ -30,7 +30,7 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
 
 // para obtener incidencias abiertas 
 
-fetch('server.php?incidencias_abiertas')
+fetch('https://darkgoldenrod-duck-950402.hostingersite.com/public/server.php?incidencias_abiertas')
   .then(response => response.json())
   .then(data => console.log(data))
   .catch(error => console.error('Error:', error));
