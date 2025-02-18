@@ -8,9 +8,11 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
         sucursal: document.getElementById("sucursal").value.trim(),
         fecha: document.getElementById("fecha").value,
         tecnico: document.getElementById("tecnico").value.trim(),
-        estatus: document.getElementById("estatus").value, // Cambiado de 'status' a 'estatus'
+        estatus: document.getElementById("estatus").value,
         falla: document.getElementById("falla").value.trim()
     };
+
+    console.log(datosFormulario); // Verifica el contenido de los datos enviados
 
     fetch("public/server.php", {
         method: "POST",
@@ -23,7 +25,6 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
             console.error("Error:", data.error);
         } else {
             console.log("Incidencia registrada:", data);
-            // Vaciar inputs después de 300ms (para evitar que se borren antes de ver la respuesta)
             setTimeout(() => {
                 document.getElementById("new-incidencia-form").reset();
             }, 300);
