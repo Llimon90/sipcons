@@ -12,7 +12,7 @@ document.getElementById("formIncidencia").addEventListener("submit", function (e
         falla: document.getElementById("falla").value
     };
 
-    fetch("ruta/del/servidor.php", {
+    fetch("public/servidor.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosFormulario)
