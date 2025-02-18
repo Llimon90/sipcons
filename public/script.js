@@ -34,5 +34,5 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
 });
 
 
-// OBTENER INCIDENCIAS ABIERTAS AL CARGAR LA PAGINA
+// OBTENER INCIDENCIAS ABIERTAS AL CARGAR LA PAGIN A
 

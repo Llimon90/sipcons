@@ -61,4 +61,4 @@ if ($method === "POST") {
 $conn->close();
 ?>
 
-<!-- RECUPERAR INCIDENCIAS ABIERTAS EN LA BD EN EL DOM -->
+<!-- RECUPERAR INCIDENCIAS ABIERTAS EN LA BD EN EL DOM   -->
