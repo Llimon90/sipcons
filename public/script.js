@@ -41,7 +41,7 @@ document.getElementById('alta-usuarios-form').addEventListener('submit', functio
         usuario: document.getElementById('usuario').value,
         password: document.getElementById('password').value,
         rol: document.getElementById('rol').value,
-        estatus: document.getElementById('estatus').value,
+        
     };
 
     // Validar que las contraseñas coincidan

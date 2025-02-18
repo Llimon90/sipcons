@@ -58,31 +58,35 @@ if ($method === "POST") {
     $stmt->close();
 }
 
+//BLOQUE PARA ENVIAR Y DAR DE ALTA USUARIOS Y TECNICOS
 
+if ($method === "POST" && isset($_GET["usuarios"])) {
+    // Leer datos del formulario
+    $data = json_decode(file_get_contents("php://input"), true);
 
+    // Validar campos obligatorios
+    if (!isset($data["nombre"], $data["correo"], $data["telefono"], $data["usuario"], $data["password"], $data["rol"])) {
+        echo json_encode(["error" => "Todos los campos son obligatorios"]);
+        exit();
+    }
 
-// Recibir datos del formulario
-$nombre = $_POST['nombre'];
-$correo = $_POST['correo'];
-$telefono = $_POST['telefono'];
-$usuario = $_POST['usuario'];
-$password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hashear la contraseña
-$rol = $_POST['rol'];
-$estatus = $_POST['estatus'];
+    // Hashear la contraseña antes de guardarla
+    $passwordHash = password_hash($data["password"], PASSWORD_DEFAULT);
 
-// Preparar la consulta SQL
-$sql = "INSERT INTO usuarios (nombre, correo, telefono, usuario, password, rol, estatus) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("sssssss", $nombre, $correo, $telefono, $usuario, $password, $rol, $estatus);
+    // Insertar usuario en la base de datos
+    $sql = "INSERT INTO usuarios (nombre, correo, telefono, usuario, password, rol, estatus) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssss", $data["nombre"], $data["correo"], $data["telefono"], $data["usuario"], $passwordHash, $data["rol"]);
 
-if ($stmt->execute()) {
-    echo "Usuario registrado exitosamente";
-} else {
-    echo "Error al registrar usuario: " . $stmt->error;
+    if ($stmt->execute()) {
+        echo json_encode(["message" => "Usuario registrado correctamente"]);
+    } else {
+        echo json_encode(["error" => "Error al registrar usuario"]);
+    }
+
+    $stmt->close();
 }
 
-$stmt->close();
+
 $conn->close();
 ?>
-
