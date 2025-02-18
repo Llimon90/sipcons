@@ -74,7 +74,7 @@ if ($method === "POST" && isset($_GET["usuarios"])) {
     $passwordHash = password_hash($data["password"], PASSWORD_DEFAULT);
 
     // Insertar usuario en la base de datos
-    $sql = "INSERT INTO usuarios (nombre, correo, telefono, usuario, password, rol, estatus) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO usuarios (nombre, correo, telefono, usuario, password, rol) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssssss", $data["nombre"], $data["correo"], $data["telefono"], $data["usuario"], $passwordHash, $data["rol"]);
 
