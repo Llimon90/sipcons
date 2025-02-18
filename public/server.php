@@ -60,3 +60,51 @@ if ($method === "POST") {
 
 $conn->close();
 ?>
+
+<!-- RECUPERAR INCIDENCIAS ABIERTAS EN LA BD EN EL DOM -->
+<?php
+// Configurar conexión con la base de datos
+$host = "localhost";
+$user = "u179371012_root";
+$password = "Llimon.2025";
+$database = "u179371012_sipcons";
+
+$conn = new mysqli($host, $user, $password, $database);
+
+// Verificar la conexión
+if ($conn->connect_error) {
+    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+}
+
+// Permitir solicitudes desde el frontend
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+// Leer el método HTTP
+$method = $_SERVER["REQUEST_METHOD"];
+
+if ($method === "GET") {
+    // Obtener las incidencias abiertas
+    $sql = "SELECT numero, numero_incidente, fecha, cliente FROM incidencias WHERE estatus = 'abierta'";
+
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $incidencias = [];
+
+        // Recuperar todas las incidencias y guardarlas en un array
+        while ($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+
+        // Retornar las incidencias como JSON
+        echo json_encode($incidencias);
+    } else {
+        echo json_encode(["message" => "No hay incidencias abiertas"]);
+    }
+}
+
+$conn->close();
+?>
