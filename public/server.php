@@ -3,7 +3,7 @@
 $host = "localhost";
 $user = "u179371012_root";
 $password = "Llimon.2025";
-$database = "u179371012_sipcons
+$database = "u179371012_sipcons"
 ";
 
 $conn = new mysqli($host, $user, $password, $database);
