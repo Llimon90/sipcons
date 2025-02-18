@@ -25,6 +25,10 @@ if ($method === "POST") {
     // Leer los datos enviados desde `fetch()`
     $data = json_decode(file_get_contents("php://input"), true);
 
+    //REGISTRA DATOS RECIBIDOS CON ERRORES
+    error_log(print_r($data, true));  // Esto registrará el contenido de $data
+
+
     // Validar los datos
     if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["estatus"], $data["falla"])) {
         echo json_encode(["error" => "Todos los campos son obligatorios"]);
