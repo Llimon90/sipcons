@@ -32,33 +32,4 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
 
 
 
-        // Función para cargar los datos de la base de datos
-        function cargarDatos() {
-            fetch('https://darkgoldenrod-duck-950402.hostingersite.com/public/server.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                    } else {
-                        const tabla = document.getElementById('tabla-datos').getElementsByTagName('tbody')[0];
-                        // Limpiar la tabla antes de agregar los nuevos datos
-                        tabla.innerHTML = '';
-
-                        // Recorrer los datos y agregarlos a la tabla
-                        data.forEach(fila => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td>${fila.numero}</td>
-                                <td>${fila.cliente}</td>
-                                <td>${fila.sucursal}</td>
-                                <td>${fila.fecha}</td>
-                            `;
-                            tabla.appendChild(tr);
-                        });
-                    }
-                })
-                .catch(error => console.error('Error al cargar los datos:', error));
-        }
-
-        // Cargar los datos cuando la página esté lista
-        window.onload = cargarDatos;
+        

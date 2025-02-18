@@ -75,42 +75,6 @@ if ($method === "POST") {
 }
 
 
-// Conexión a la base de datos
-// Conexión a la base de datos
-$host = "localhost";
-$user = "u179371012_root";
-$password = "Llimon.2025";
-$database = "u179371012_sipcons";
-
-$conn = new mysqli($host, $user, $password, $database);
-
-// Verificar la conexión
-if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
-}
-
-// Consulta para obtener los datos de la tabla (solo los campos que necesitas)
-$sql = "SELECT numero, cliente, sucursal, fecha FROM incidencias";
-$result = $conn->query($sql);
-
-// Verificar si se obtuvieron resultados
-if ($result->num_rows > 0) {
-    // Crear un array para almacenar los datos
-    $data = [];
-    
-    // Recorrer los resultados y agregarlos al array
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-
-    // Convertir el array a JSON y enviarlo como respuesta
-    echo json_encode($data);
-} else {
-    echo json_encode(["error" => "No se encontraron registros"]);
-}
-$conn->close();
-?>
-
 
 $conn->close();
 ?>
