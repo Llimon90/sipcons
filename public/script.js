@@ -70,9 +70,9 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-    // FORMULARIO DE INCIDENCIAS (Si existe)
+    // FORMULARIO DE INCIDENCIAS
     const incidenciaForm = document.getElementById('new-incidencia-form');
-    if (incidenciaForm) {
+    if (incidenciaForm !== null) {
         incidenciaForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
@@ -104,9 +104,9 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // FORMULARIO DE USUARIOS (Si existe)
+    // FORMULARIO DE USUARIOS
     const userForm = document.getElementById('alta-usuarios-form');
-    if (userForm) {
+    if (userForm !== null) {
         userForm.addEventListener('submit', function(event) {
             event.preventDefault();
 
