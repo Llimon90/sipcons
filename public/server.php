@@ -30,7 +30,7 @@ if ($method === "POST") {
 
 
     // Validar los datos
-    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["estatus"], $data["falla"])) {
+    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"])) {
         echo json_encode(["error" => "Todos los campos son obligatorios"]);
         exit();
     }

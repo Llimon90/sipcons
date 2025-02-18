@@ -8,7 +8,7 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
         sucursal: document.getElementById("sucursal").value.trim(),
         fecha: document.getElementById("fecha").value,
         tecnico: document.getElementById("tecnico").value.trim(),
-        estatus: document.getElementById("estatus").value,
+        status: document.getElementById("estatus").value,
         falla: document.getElementById("falla").value.trim()
     };
 
