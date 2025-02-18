@@ -36,32 +36,3 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
 
 // OBTENER INCIDENCIAS ABIERTAS AL CARGAR LA PAGINA
 
-window.addEventListener("load", function() {
-    fetch("public/server.php", {
-        method: "GET"
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-            const tableBody = document.querySelector("#incidencias-table tbody");
-            tableBody.innerHTML = ''; // Limpiar tabla antes de agregar nuevas filas
-
-            // Agregar las incidencias al cuerpo de la tabla
-            data.forEach(incidencia => {
-                const row = document.createElement("tr");
-
-                // Crear celdas con los datos de cada incidencia
-                row.innerHTML = `
-                    <td>${incidencia.numero}</td>
-                    <td>${incidencia.numero_incidente}</td>
-                    <td>${incidencia.fecha}</td>
-                    <td>${incidencia.cliente}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        } else {
-            console.log("No hay incidencias abiertas");
-        }
-    })
-    .catch(error => console.error("Error al obtener las incidencias:", error));
-});
