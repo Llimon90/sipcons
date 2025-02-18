@@ -52,7 +52,7 @@ document.getElementById('alta-usuarios-form').addEventListener('submit', functio
     }
 
     // Enviar datos al backend
-    fetch('server.php', {
+    fetch('public/server.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevoUsuario),
