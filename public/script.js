@@ -34,7 +34,8 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
 document.addEventListener("DOMContentLoaded", function () {
     // Función para cargar las incidencias desde la base de datos
     function cargarIncidencias() {
-        fetch("server.php?incidencias_abiertas")
+        fetch("server.php")
+
             .then(response => response.json())
             .then(data => {
                 const listaIncidencias = document.getElementById("lista-incidencias");
@@ -62,6 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p><strong>Fecha:</strong> ${incidencia.fecha}</p>
                         <p><strong>Técnico:</strong> ${incidencia.tecnico}</p>
                         <p><strong>Estatus:</strong> ${incidencia.estatus}</p>
+                        <p><strong>Estatus:</strong> ${incidencia.numero_incidente}</p>
                         <hr>
                     `;
                     listaIncidencias.appendChild(incidenciaItem);
