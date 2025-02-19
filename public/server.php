@@ -11,8 +11,6 @@ $conn = new mysqli($host, $user, $password, $database);
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
     
-}else{
-    echo json_encode(["message" => "Se conecto correctamente a base de datos"]);
 }
 
 // Permitir solicitudes desde el frontend
