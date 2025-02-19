@@ -24,7 +24,7 @@ $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET" && isset($_GET["incidencias_abiertas"])) {
     // Consulta para obtener todas las incidencias abiertas
-    $sql = "SELECT * FROM incidencias WHERE estatus = 'abierta'";
+    $sql = "SELECT * FROM incidencias";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
