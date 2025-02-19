@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
+                        <td>${incidencia.numero_incidente}</td>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.contacto}</td>
                         <td>${incidencia.sucursal}</td>
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${incidencia.fecha}</td>
                         <td>${incidencia.tecnico}</td>
                         <td>${incidencia.estatus}</td>
-                        <td>${incidencia.numero_incidente}</td>
+                        
                     `;
                     tbody.appendChild(fila);
                 });
