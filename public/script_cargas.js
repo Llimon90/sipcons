@@ -1,6 +1,10 @@
+//CARGAR INCIDENCIAS ACTIVAS
+
 document.addEventListener("DOMContentLoaded", function () {
+    // Función para cargar las incidencias desde la base de datos
     function cargarIncidencias() {
-        fetch("server.php") // Sin parámetro para obtener todas las incidencias
+        fetch("server.php")
+
             .then(response => response.json())
             .then(data => {
                 const listaIncidencias = document.getElementById("lista-incidencias");
@@ -28,6 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p><strong>Fecha:</strong> ${incidencia.fecha}</p>
                         <p><strong>Técnico:</strong> ${incidencia.tecnico}</p>
                         <p><strong>Estatus:</strong> ${incidencia.estatus}</p>
+                        
                         <hr>
                     `;
                     listaIncidencias.appendChild(incidenciaItem);
@@ -36,5 +41,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error al cargar incidencias:", error));
     }
 
-    cargarIncidencias(); // Llamar a la función al cargar la página
+    // Llamar a la función cuando la página cargue
+    cargarIncidencias();
 });
