@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p><strong>Fecha:</strong> ${incidencia.fecha}</p>
                         <p><strong>Técnico:</strong> ${incidencia.tecnico}</p>
                         <p><strong>Estatus:</strong> ${incidencia.estatus}</p>
-                        <p><strong>Estatus:</strong> ${incidencia.numero_incidente}</p>
+                        
                         <hr>
                     `;
                     listaIncidencias.appendChild(incidenciaItem);
