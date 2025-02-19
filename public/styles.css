@@ -236,6 +236,11 @@ padding: 20px;
 
 
 /* ESTILOS PARA CARGA DE TABLAS SQL */
+tbody {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -244,20 +249,22 @@ table {
 
 th, td {
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 8px;
   text-align: left;
 }
 
 th {
-  background-color: #333;
-  color: white;
-}
-
-tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
 tr:hover {
-  background-color: #ddd;
-  cursor: pointer;
+  background-color: #f1f1f1;
+}
+
+#tabla-incidencias {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }

@@ -1,9 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
     function cargarIncidencias() {
-        fetch("server.php") // Sin parámetro para obtener todas las incidencias
+        fetch("server.php")
             .then(response => response.json())
             .then(data => {
-                const tablaIncidencias = document.getElementById("tabla-incidencias");
                 const tbody = document.getElementById("tabla-body");
                 tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
