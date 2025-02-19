@@ -22,8 +22,8 @@ header("Access-Control-Allow-Headers: Content-Type");
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
 
-if ($method === "GET" && isset($_GET["incidencias_abiertas"])) {
-    // Consulta para obtener todas las incidencias abiertas
+if ($method === "GET") {
+    // Consulta para obtener todas las incidencias sin filtrar
     $sql = "SELECT * FROM incidencias";
     $result = $conn->query($sql);
 
