@@ -22,20 +22,20 @@ header("Access-Control-Allow-Headers: Content-Type");
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
-    // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias";
+    // Consulta para obtener las incidencias con los campos específicos
+    $sql = "SELECT numero, numero_incidente, cliente, contacto, sucursal, falla, fecha, tecnico, estatus FROM incidencias";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
         $incidencias = [];
-        while($row = $result->fetch_assoc()) {
+        while ($row = $result->fetch_assoc()) {
             $incidencias[] = $row;
         }
         echo json_encode($incidencias);
     } else {
         echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
-} elseif ($method === "POST") {
+}elseif ($method === "POST") {
     // Leer los datos enviados desde `fetch()`
     $data = json_decode(file_get_contents("php://input"), true);
 

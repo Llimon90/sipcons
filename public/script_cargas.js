@@ -30,12 +30,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         fila.innerHTML = `
                             <td>${incidencia.numero}</td>
                             <td>${incidencia.numero_incidente}</td>
-                            <td>${incidencia.cliente}</td>
-                            <td>${incidencia.contacto}</td>
+                            <td>${incidencia.cliente}</td>     
                             <td>${incidencia.sucursal}</td>
-                            <td>${incidencia.falla}</td>
                             <td>${incidencia.fecha}</td>
-                            <td>${incidencia.tecnico}</td>
                             <td>${incidencia.estatus}</td>
                         `;
                         tbody.appendChild(fila);
