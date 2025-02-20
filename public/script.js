@@ -1,3 +1,19 @@
+//FUNCION PARA BARRA LATERAL
+
+  
+document.querySelector(".menu-icon").addEventListener("click", function () {
+    console.log("Icono de menú presionado"); // Para verificar si funciona
+    document.querySelector(".sidebar").classList.toggle("active");
+});
+
+function toggleSidebar() {
+    console.log("Toggle Sidebar ejecutado"); // Para verificar si la función se ejecuta
+    document.querySelector(".sidebar").classList.toggle("active");
+}
+
+//ENVIA INCIDENCIAS A BD
+
+
 document.getElementById('new-incidencia-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevenir envío por defecto
     
@@ -36,15 +52,3 @@ const fechaActual = new Date().toISOString().split('T')[0];
 document.getElementById('fecha').value = fechaActual;
 
 
-//FUNCION PARA BARRA LATERAL
-
-  
-  document.querySelector(".menu-icon").addEventListener("click", function () {
-    console.log("Icono de menú presionado"); // Para verificar si funciona
-    document.querySelector(".sidebar").classList.toggle("active");
-});
-
-function toggleSidebar() {
-    console.log("Toggle Sidebar ejecutado"); // Para verificar si la función se ejecuta
-    document.querySelector(".sidebar").classList.toggle("active");
-}
