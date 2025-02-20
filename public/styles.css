@@ -187,15 +187,98 @@ button:hover {
   margin: 5px 0 0; /* Margen superior */
 }
 
+
+/*ESTILOS RESPONSIVE*/
+
+/* Responsive para dispositivos móviles */
 /* Responsive para dispositivos móviles */
 @media (max-width: 768px) {
+  .sidebar {
+    width: 100%; /* Panel lateral ocupa el 100% */
+    height: auto; /* Altura automática para contenido */
+    position: relative; /* Cambia la posición para que no se superponga */
+    text-align: center; /* Centrar texto en la barra lateral */
+  }
+
+  main {
+    margin-left: 0; /* Sin margen para el contenido principal */
+    padding: 10px; /* Espaciado reducido */
+    text-align: center; /* Centrar contenido principal */
+  }
+
   .options-container {
-    grid-template-columns: repeat(2, 1fr); /* Dos columnas en pantallas más pequeñas */
+    grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+    justify-items: center; /* Centra cada opción en la grilla */
+  }
+
+  .option-box {
+    display: flex; /* Flexbox para centrar el contenido */
+    flex-direction: column; /* Disposición vertical */
+    align-items: center; /* Centra horizontalmente el contenido */
+    justify-content: center; /* Centra verticalmente el contenido */
+    height: auto; /* Altura automática para que se ajuste al contenido */
+    width: 100%; /* Ancho completo para las cajas de opción */
+    max-width: 300px; /* Ancho máximo para que no sea demasiado ancho */
+    margin: 10px 0; /* Margen entre las opciones */
+    text-align: center; /* Centrar texto en las cajas */
+  }
+
+  /* Estilo de texto */
+  .option-box h3, .option-box p {
+    margin: 0; /* Elimina margen para evitar desbordamiento */
   }
 }
 
-@media (max-width: 480px) {
-  .options-container {
-    grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+/* Asegúrate de que el icono de menú no se muestre en pantallas grandes */
+@media (min-width: 769px) {
+  .menu-icon {
+    display: none; /* Ocultar el icono en pantallas grandes */
+  }
+}
+
+
+
+/* Ocultar la barra lateral en pantallas pequeñas */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none; /* Ocultar la barra lateral */
+    transition: all 0.3s ease; /* Animación para la transición */
+  }
+
+  .sidebar.active {
+    display: block; /* Mostrar la barra lateral */
+    position: absolute; /* Posicionarla respecto al icono */
+    top: 50px; /* Ajusta según la altura del icono */
+    left: 50%; /* Centrar horizontalmente */
+    transform: translateX(-50%); /* Ajuste para centrar */
+    z-index: 1000; /* Asegúrate de que esté por encima del contenido */
+    background-color: #2c3e50; /* Fondo del menú */
+    width: 250px; /* Ancho del menú */
+    padding: 15px; /* Espaciado interno */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Sombra para el menú */
+    max-height: 80vh; /* Altura máxima para el menú */
+    overflow-y: auto; /* Habilita el desplazamiento si el contenido es demasiado */
+    text-align: center;
+   
+  }
+
+  /* Estilo para el icono de menú */
+  .menu-icon {
+    display: block; /* Mostrar el icono en pantallas pequeñas */
+    cursor: pointer; /* Cambiar el cursor al pasar el mouse */
+    margin: 10px; /* Margen alrededor del icono */
+    font-size: 24px; /* Tamaño del icono */
+    color: #157188; /* Color del icono */
+    text-align: center;
+
+  }
+  
+}
+
+/* Asegúrate de que el icono de menú no se muestre en pantallas grandes */
+@media (min-width: 769px) {
+  .menu-icon {
+    display: none; /* Ocultar el icono en pantallas grandes */
   }
 }

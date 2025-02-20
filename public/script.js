@@ -27,3 +27,9 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
         alert('Hubo un error al enviar los datos');
     });
 });
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('active');
+  }
+  
