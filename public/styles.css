@@ -21,6 +21,7 @@ body {
   position: fixed;
   left: 0;
   top: 0;
+  overflow-y: auto; /* Permite el desplazamiento en caso de contenido largo */
 }
 
 .sidebar h2 {
@@ -51,12 +52,13 @@ main {
   margin-left: 250px; /* Ajuste para el panel lateral */
   padding: 20px;
   width: calc(100% - 250px);
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* Espacio entre secciones */
 }
 
 .retorno {
   text-align: center;
-  padding: 20px;
-  display: block;
   color: #007BFF;
   font-weight: bold;
 }
@@ -67,23 +69,23 @@ main {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
 }
 
 form {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap; /* Permite que los elementos se distribuyan */
+  gap: 20px; /* Espacio entre inputs */
 }
 
 .form-row {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  width: 100%;
 }
 
 .form-row div {
-  flex: 1;
-  min-width: 250px;
+  flex: 1 1 250px; /* Flex grow, shrink y base */
 }
 
 label {
