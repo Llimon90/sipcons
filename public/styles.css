@@ -1,4 +1,4 @@
-Estilos base
+/* Estilos base */
 * {
   margin: 0;
   padding: 0;
@@ -8,28 +8,61 @@ Estilos base
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f9;
+  display: flex;
+}
+
+/* Panel lateral */
+.sidebar {
+  width: 250px;
+  background-color: #2c3e50;
+  color: white;
   padding: 20px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
 }
 
-main {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-h2 {
+.sidebar h2 {
   font-size: 1.5rem;
   margin-bottom: 20px;
 }
 
-a {
-  text-decoration: none;
-  color: #007BFF;
-  font-weight: bold;
-  margin-bottom: 20px;
-  display: block;
+.sidebar ul {
+  list-style: none;
 }
 
-section {
+.sidebar ul li {
+  margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.sidebar ul li a:hover {
+  color: #007BFF;
+}
+
+/* Contenido principal */
+main {
+  margin-left: 250px; /* Ajuste para el panel lateral */
+  padding: 20px;
+  width: calc(100% - 250px);
+}
+
+.retorno {
+  text-align: center;
+  padding: 20px;
+  display: block;
+  color: #007BFF;
+  font-weight: bold;
+}
+
+/* Estilos del formulario */
+.new-incidencia {
   background-color: white;
   padding: 20px;
   border-radius: 8px;
@@ -37,7 +70,6 @@ section {
   margin-bottom: 30px;
 }
 
-/* Estilos del formulario */
 form {
   display: flex;
   flex-direction: column;
@@ -83,7 +115,14 @@ button:hover {
   background-color: #0056b3;
 }
 
-/* Estilos de la tabla */
+/* Estilos de la lista de incidencias */
+.lista-incidencias {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -101,8 +140,18 @@ th {
 }
 
 /* Media Queries - Adaptación a dispositivos pequeños */
-
 @media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  main {
+    margin-left: 0;
+    width: 100%;
+  }
+
   .form-row {
     flex-direction: column;
   }
@@ -110,161 +159,4 @@ th {
   .form-row div {
     min-width: 100%;
   }
-
-  table {
-    font-size: 0.9rem;
-  }
-
-  th, td {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  body {
-    padding: 10px;
-  }
-
-  h2 {
-    font-size: 1.2rem;
-  }
-
-  button {
-    font-size: 0.9rem;
-  }
-
-  table {
-    font-size: 0.8rem;
-  }
-
-  th, td {
-    padding: 8px;
-  }
-
-  .form-row div {
-    min-width: 100%;
-  }
-}
-
-/*ESTILOS DASHBOARD ADMIN*/
-
-/* General styles */
-body {
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f9;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-#admin-content {
-  text-align: center;
-  padding: 20px;
-}
-
-h2 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 30px;
-}
-
-/* Options container styles */
-.options-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-}
-
-.option-box {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  width: 200px;
-  height: 150px;
-  background: linear-gradient(135deg, #007bff, #00c6ff);
-  color: #fff;
-  text-decoration: none;
-  font-size: 1.1rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-}
-
-.option-box i {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-/* Hover effects */
-.option-box:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(135deg, #0056b3, #0094c6);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .option-box {
-    width: 150px;
-    height: 120px;
-    font-size: 1rem;
-  }
-
-  .option-box i {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .option-box {
-    width: 100%;
-    height: 100px;
-  }
-}
-
-.retorno {
-text-align: center;
-padding: 20px;
-
-}
-
-
-/* ESTILOS PARA CARGA DE TABLAS SQL */
-tbody {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-}
-
-tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-tr:hover {
-  background-color: #f1f1f1;
-}
-
-#tabla-incidencias {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }

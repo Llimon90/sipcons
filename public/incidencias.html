@@ -8,11 +8,22 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  
-  
+  <!-- Panel lateral -->
+  <aside class="sidebar">
+    <h2>Opciones</h2>
+    <ul>
+      <li><a href="#">Inicio</a></li>
+      <li><a href="#">Incidencias</a></li>
+      <li><a href="#">Reportes</a></li>
+      <li><a href="#">Configuración</a></li>
+    </ul>
+  </aside>
+
+  <!-- Contenido principal -->
   <main>
+    <a class="retorno" href="/index.html">Regresar a inicio</a>
+
     <!-- Formulario para registrar una nueva incidencia -->
-    <a class="retorno"  href="/index.html">Regresar a inicio</a>
     <section class="new-incidencia">
       <h2>Registrar nueva incidencia</h2>
       <form id="new-incidencia-form">
@@ -21,13 +32,12 @@
             <label for="numero"># Incidencia cliente</label>
             <input type="text" id="numero" name="numero" required placeholder="Ejemplo: st-66477">
           </div>
-          
           <div>
             <label for="cliente">Cliente</label>
             <input type="text" id="cliente" name="cliente" required placeholder="Nombre del cliente">
           </div>
         </div>
-      
+
         <div class="form-row">
           <div>
             <label for="contacto">Reporta</label>
@@ -39,13 +49,11 @@
           </div>
         </div>
 
-
         <div>
           <label for="falla">Falla reportada</label>
-          <input type="text" id="falla" name="falla" required placeholder="Descrición de la falla">
+          <input type="text" id="falla" name="falla" required placeholder="Descripción de la falla">
         </div>
-      
-      
+
         <div class="form-row">
           <div>
             <label for="fecha">Fecha de Reporte</label>
@@ -54,7 +62,6 @@
           <div>
             <label for="tecnico">Técnico Asignado</label>
             <select id="tecnico" name="tecnico" required>
-              <!-- Opciones aquí -->
               <option value="Victor Cordoba">Victor Cordoba</option>
               <option value="Tomás Vázquez">Tomás Vázquez</option>
               <option value="Francisco Aguiar">Francisco Aguiar</option>
@@ -67,13 +74,11 @@
             </select>
           </div>
         </div>
-      
+
         <div class="form-row">
           <div>
             <label for="status">Estatus</label>
             <select id="estatus" name="estatus" required>
-              <!-- Opciones aquí -->
-            
               <option value="abierta">Abierta</option>
               <option value="pendiente">Pendiente</option>
               <option value="en seguimiento">Completa</option>
@@ -81,19 +86,18 @@
             </select>
           </div>
         </div>
-      
+
         <button type="submit">Registrar Incidencia</button>
       </form>
-      
-      <h1>Lista de Incidencias</h1>
-      <section class="lista-incidencias">
-        <h2>Incidencias Registradas</h2>
-        <div id="lista-incidencias"></div>
-      </section>
-      
-  
+    </section>
+
+    <!-- Lista de incidencias -->
+    <section class="lista-incidencias">
+      <h2>Incidencias Registradas</h2>
+      <div id="lista-incidencias"></div>
+    </section>
   </main>
+
   <script src="script_cargas.js"></script>
 </body>
-
 </html>
