@@ -148,6 +148,8 @@ body {
   grid-template-columns: repeat(4, 1fr); /* Cuatro columnas */
   gap: 20px; /* Espacio entre las tarjetas */
   max-width: 1800px; /* Ancho máximo del contenedor */
+  width: 100%; /* Asegura que el contenedor ocupe el ancho completo */
+  margin: 0 auto; /* Centra el contenedor horizontalmente */
 }
 
 /* Estilo de cada opción */
