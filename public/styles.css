@@ -11,66 +11,6 @@ body {
   display: flex;
 }
 
-
-/* Estilos generales */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-/* Contenedor principal */
-#admin-content {
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 90%;
-  max-width: 600px;
-}
-
-/* Contenedor de opciones */
-.options-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-}
-
-/* Cajas de opciones */
-.option-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 260px;
-  height: 60px;
-  background-color: #3b5169;
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
-  font-weight: bold;
-  border-radius: 8px;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.option-box:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-}
-
-/* Iconos */
-.option-box i {
-  font-size: 22px;
-}
-
-
 /* Panel lateral */
 .sidebar {
   width: 250px;
@@ -115,37 +55,56 @@ main {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  text-align: center;
 }
 
-.retorno {
-  text-align: center;
-  color: #007BFF;
+
+
+/* Contenedor de opciones */
+.options-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* Cajas de opciones */
+.option-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 260px;
+  height: 60px;
+  background-color: #2e445c;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
   font-weight: bold;
+  border-radius: 8px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.option-box:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Iconos */
+.option-box i {
+  font-size: 22px;
 }
 
 /* Estilos del formulario */
-/* .new-incidencia {
-  background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-} */
-
 form {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
 }
 
-.form-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+.form-group {
   width: 100%;
-}
-
-.form-row div {
-  flex: 1 1 250px;
+  max-width: 400px;
 }
 
 label {
@@ -154,26 +113,96 @@ label {
   display: block;
 }
 
-input, textarea, select {
-  width: 100%;
-  padding: 8px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
 
+
+/* Botones */
 button {
-  padding: 8px 16px;
+  padding: 10px 16px;
   background-color: #007BFF;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
+  transition: background 0.3s ease;
 }
 
 button:hover {
   background-color: #0056b3;
 }
 
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  main {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+/* Estilos generales para el formulario */
+form {
+  display: flex;
+  flex-direction: column;
+  max-width: 600px; /* Ancho máximo del formulario */
+  margin: auto; /* Centra el formulario */
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9; /* Color de fondo del formulario */
+}
+
+/* Estilos para cada fila del formulario */
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px; /* Espacio entre filas */
+}
+
+/* Estilos para los labels */
+label {
+  font-weight: bold;
+  margin-bottom: 5px; /* Espacio entre label y input */
+}
+
+/* Estilos para los inputs y selects */
+input[type="text"],
+input[type="date"],
+select {
+  width: 100%; /* Ancho completo */
+  padding: 10px; /* Espacio interno */
+  border: 1px solid #ccc; /* Borde */
+  border-radius: 5px; /* Bordes redondeados */
+  font-size: 16px; /* Tamaño de fuente */
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Estilos para el botón */
+button {
+  padding: 10px 15px; /* Espacio interno */
+  border: none; /* Sin borde */
+  border-radius: 5px; /* Bordes redondeados */
+  background-color: #007BFF; /* Color de fondo */
+  color: white; /* Color de texto */
+  font-size: 16px; /* Tamaño de fuente */
+  cursor: pointer; /* Cursor pointer */
+}
+
+button:hover {
+  background-color: #0056b3; /* Color de fondo al pasar el mouse */
+}
+
+/* Estilos para los mensajes de error (opcional) */
+.error {
+  color: red; /* Color rojo para mensajes de error */
+  font-size: 14px; /* Tamaño de fuente */
+}
