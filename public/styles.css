@@ -246,7 +246,7 @@ button:hover {
 
 /* Asegúrate de que el icono de menú no se muestre en pantallas grandes */
 @media (min-width: 769px) {
-  .menu-icon {
+  .retorna  {
     display: none; /* Ocultar el icono en pantallas grandes */
   }
 }
@@ -260,7 +260,7 @@ button:hover {
     transition: all 0.3s ease; /* Animación para la transición */
   }
 
-  .sidebar.active {
+  .retorna.active {
     display: block; /* Mostrar la barra lateral */
     position: absolute; /* Posicionarla respecto al icono */
     top: 50px; /* Ajusta según la altura del icono */
@@ -279,7 +279,7 @@ button:hover {
   }
 
   /* Estilo para el icono de menú */
-  .menu-icon {
+  .retorna {
     display: block; /* Mostrar el icono en pantallas pequeñas */
     cursor: pointer; /* Cambiar el cursor al pasar el mouse */
     margin: 10px; /* Margen alrededor del icono */
