@@ -28,6 +28,15 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
     });
 });
 
+
+
+//FUNCION PARA TENER FECHA ACTUAL EN INPUT FECHA INCIDENCIA
+const fechaActual = new Date().toISOString().split('T')[0];
+
+document.getElementById('fecha').value = fechaActual;
+
+
+//FUNCION PARA BARRA LATERAL
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('active');

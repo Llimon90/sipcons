@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Incidencias</title>
   
-  <link rel="stylesheet" href="styles.css?v=1.1">
+  <link rel="stylesheet" href="styles.css?v=1.2">
   <script src="script.js" defer></script>
 </head>
 <body>
+  
   <div class="menu-icon" onclick="toggleSidebar()">
     &#9776; <!-- Icono de barras -->
   </div>
 
-  
   <!-- Panel lateral -->
   <aside class="sidebar">
     <h2>Navegación</h2>
@@ -27,22 +27,28 @@
     </ul>
   </aside>
 
-
-
   <!-- Contenido principal -->
   <main>
     <!-- Formulario para registrar una nueva incidencia -->
     <section class="encabezado">
       <h2>Registrar nueva incidencia</h2>
+      
       <form id="new-incidencia-form">
+        
         <div class="form-row">
           <div>
-            <label for="numero"># Incidencia cliente</label>
-            <input type="text" id="numero" name="numero" required placeholder="Ejemplo: st-66477">
-          </div>
-          <div>
             <label for="cliente">Cliente</label>
-            <input type="text" id="cliente" name="cliente" required placeholder="Nombre del cliente">
+            <select id="cliente" name="cliente" required>
+              <option value="calimax">Calimax</option>
+              <option value="florido">Florido</option>
+              <option value="ranchodeltio">Rancho del Tío</option>
+              <option value="granodeoro">Grano de Oro</option>
+            </select>
+          </div>    
+
+          <div>
+            <label for="numero"># Incidencia Cliente</label>
+            <input type="text" id="numero" name="numero" required placeholder="Ejemplo: ST-66477">
           </div>
         </div>
 
@@ -51,22 +57,26 @@
             <label for="contacto">Reporta</label>
             <input type="text" id="contacto" name="contacto" required placeholder="Persona que reporta incidencia">
           </div>
+
           <div>
             <label for="sucursal">Sucursal</label>
             <input type="text" id="sucursal" name="sucursal" required placeholder="Sucursal o dirección">
           </div>
         </div>
 
-        <div>
-          <label for="falla">Falla reportada</label>
-          <input type="text" id="falla" name="falla" maxlength="500">
-        </div>
-
         <div class="form-row">
+          <div>
+            <label for="falla">Falla Reportada</label>
+            <input type="text" id="falla" name="falla" maxlength="500">
+          </div>
+
           <div>
             <label for="fecha">Fecha de Reporte</label>
             <input type="date" id="fecha" name="fecha" required>
           </div>
+        </div>
+
+        <div class="form-row">
           <div>
             <label for="tecnico">Técnico Asignado</label>
             <select id="tecnico" name="tecnico" required>
@@ -75,21 +85,19 @@
               <option value="Francisco Aguiar">Francisco Aguiar</option>
               <option value="Mauricio Martínez">Mauricio Martínez</option>
               <option value="Humberto Martínez">Humberto Martínez</option>
-              <option value="Jose Adalberto">Jose Armando</option>
+              <option value="Jose Armando">José Armando</option>
               <option value="Hoscar Martínez">Hoscar Martínez</option>
               <option value="Jacob Ventura">Jacob Ventura</option>
               <option value="Luis Limón">Luis Limón</option>
             </select>
           </div>
-        </div>
 
-        <div class="form-row">
           <div>
             <label for="estatus">Estatus</label>
             <select id="estatus" name="estatus" required>
               <option value="abierta">Abierta</option>
               <option value="pendiente">Pendiente</option>
-              <option value="en seguimiento">Completa</option>
+              <option value="en seguimiento">En Seguimiento</option>
               <option value="facturada">Facturada</option>
             </select>
           </div>
@@ -105,6 +113,13 @@
       <div id="lista-incidencias"></div>
     </section>
   </main>
+
+  <script>
+    // Establecer fecha actual en el input de fecha
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+    });
+  </script>
 
   <script src="script_cargas.js"></script>
 </body>

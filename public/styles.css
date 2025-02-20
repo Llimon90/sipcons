@@ -58,28 +58,34 @@ h2 {
   color: #34495e;
 }
 
-/* Estilos del formulario */
+//* Estilos del formulario */
+#new-incidencia-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
+  margin: auto;
+}
+
 .form-row {
   display: flex;
-  justify-content: space-between;
+  gap: 15px;
   margin-bottom: 15px;
 }
 
+/* Asegurar dos columnas con igual ancho */
 .form-row div {
   flex: 1;
-  margin-right: 10px;
 }
 
-.form-row div:last-child {
-  margin-right: 0;
-}
-
+/* Etiquetas */
 label {
   display: block;
   margin-bottom: 5px;
+  font-weight: bold;
   color: #34495e;
 }
 
+/* Inputs y select */
 input[type="text"],
 input[type="date"],
 select {
@@ -107,11 +113,20 @@ button {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 16px;
 }
 
 button:hover {
   background-color: #2980b9;
 }
+
+/* Responsividad */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
+
 
 /* Estilo para la lista de incidencias */
 .lista-incidencias {
