@@ -166,29 +166,6 @@ th {
 
 /* RESPONSVE */
 
-/* General styles */
-body {
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f9;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-#admin-content {
-  text-align: center;
-  padding: 20px;
-}
-
-h2 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 30px;
-}
-
 /* Options container styles */
 .options-container {
   display: flex;
