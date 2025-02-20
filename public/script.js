@@ -37,11 +37,14 @@ document.getElementById('fecha').value = fechaActual;
 
 
 //FUNCION PARA BARRA LATERAL
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('active');
-  }
+
   
-  document.getElementById("menu-toggle").addEventListener("click", function () {
-    document.getElementById("sidebar").classList.toggle("active");
-  });
+  document.querySelector(".menu-icon").addEventListener("click", function () {
+    console.log("Icono de menú presionado"); // Para verificar si funciona
+    document.querySelector(".sidebar").classList.toggle("active");
+});
+
+function toggleSidebar() {
+    console.log("Toggle Sidebar ejecutado"); // Para verificar si la función se ejecuta
+    document.querySelector(".sidebar").classList.toggle("active");
+}
