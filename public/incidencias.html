@@ -85,12 +85,25 @@
         <button type="submit">Registrar Incidencia</button>
       </form>
       
-    </section>
-
-    <section class="lista-incidencias">
-      <h2>Incidencias Registradas</h2>
-      <div id="lista-incidencias"></div>
-    </section>
+      <h1>Lista de Incidencias</h1>
+      <table>
+          <thead>
+              <tr>
+                  <th>Número</th>
+                  <th>Número de Incidencia</th>
+                  <th>Cliente</th>
+                  <th>Contacto</th>
+                  <th>Sucursal</th>
+                  <th>Falla</th>
+                  <th>Fecha</th>
+                  <th>Técnico</th>
+                  <th>Estatus</th>
+              </tr>
+          </thead>
+          <tbody id="tabla-body">
+              <!-- Las filas se insertarán aquí dinámicamente -->
+          </tbody>
+      </table>
   
   </main>
   <script src="script_cargas.js"></script>
