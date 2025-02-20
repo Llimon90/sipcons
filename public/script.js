@@ -27,9 +27,3 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
         alert('Hubo un error al enviar los datos');
     });
 });
-
-
-
-
-
-        

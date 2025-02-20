@@ -10,7 +10,6 @@ $conn = new mysqli($host, $user, $password, $database);
 // Verificar la conexión
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
-    
 }
 
 // Permitir solicitudes desde el frontend
@@ -36,11 +35,7 @@ if ($method === "GET") {
     } else {
         echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
-}
-
-//ENVIO DE DATOS A TABLA
-
-if ($method === "POST") {
+} elseif ($method === "POST") {
     // Leer los datos enviados desde `fetch()`
     $data = json_decode(file_get_contents("php://input"), true);
 
@@ -76,8 +71,6 @@ if ($method === "POST") {
 
     $stmt->close();
 }
-
-
 
 $conn->close();
 ?>
