@@ -5,7 +5,7 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
+  background-color: #f4f4f4; /* Fondo general */
 }
 
 /* Panel lateral */
@@ -122,22 +122,13 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-
 /* ESTILOS INDEX OPCIONES */
-
-/* Estilos generales */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #dfe0e0; /* Fondo suave */
-}
 
 /* Contenedor principal del contenido del administrador */
 #admin-content {
   display: flex;
   justify-content: center;
-  align-items: end; /* Alinea al final */
+  align-items: flex-start; /* Alinea al inicio */
   min-height: 85vh; /* Ocupa toda la altura de la ventana */
   padding: 40px 20px; /* Espaciado en la parte superior e inferior */
 }
@@ -156,7 +147,7 @@ body {
 .option-box {
   display: flex; /* Flexbox para alinear icono y texto */
   flex-direction: column; /* Disposición vertical */
-  align-items: start; /* Centra horizontalmente el contenido */
+  align-items: center; /* Centra horizontalmente el contenido */
   justify-content: center; /* Centra verticalmente el contenido */
   color: #333333; /* Texto oscuro */
   border-radius: 8px; /* Bordes redondeados */
@@ -179,7 +170,7 @@ body {
 .option-box i {
   font-size: 40px; /* Tamaño del icono */
   margin-bottom: 10px; /* Espacio entre el icono y el texto */
-  color: #2679a0; /* Color diferente para los íconos (puedes cambiarlo) */
+  color: #2679a0; /* Color diferente para los íconos */
 }
 
 /* Estilo de texto */
@@ -199,12 +190,12 @@ body {
 /* Responsive para dispositivos móviles */
 @media (max-width: 768px) {
   .options-container {
-      grid-template-columns: repeat(2, 1fr); /* Dos columnas en pantallas más pequeñas */
+    grid-template-columns: repeat(2, 1fr); /* Dos columnas en pantallas más pequeñas */
   }
 }
 
 @media (max-width: 480px) {
   .options-container {
-      grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+    grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
   }
 }
