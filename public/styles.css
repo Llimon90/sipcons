@@ -162,3 +162,92 @@ th {
     min-width: 100%;
   }
 }
+
+
+/* RESPONSVE */
+
+/* General styles */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+#admin-content {
+  text-align: center;
+  padding: 20px;
+}
+
+h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+/* Options container styles */
+.options-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.option-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 200px;
+  height: 150px;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.1rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+}
+
+.option-box i {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+/* Hover effects */
+.option-box:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #0056b3, #0094c6);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .option-box {
+    width: 150px;
+    height: 120px;
+    font-size: 1rem;
+  }
+
+  .option-box i {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .option-box {
+    width: 100%;
+    height: 100px;
+  }
+}
+
+.retorno {
+text-align: center;
+padding: 20px;
+
+}
