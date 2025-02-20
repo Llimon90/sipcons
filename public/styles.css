@@ -147,7 +147,7 @@ button:hover {
 .option-box {
   display: flex; /* Flexbox para alinear icono y texto */
   flex-direction: column; /* Disposición vertical */
-  align-items: center; /* Centra horizontalmente el contenido */
+  align-items: start; /* Centra horizontalmente el contenido */
   justify-content: center; /* Centra verticalmente el contenido */
   color: #333333; /* Texto oscuro */
   border-radius: 8px; /* Bordes redondeados */
