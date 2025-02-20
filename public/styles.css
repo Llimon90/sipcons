@@ -278,17 +278,7 @@ button:hover {
    
   }
 
-  /* Estilo para el icono de menú */
-  .retorna {
-    display: block; /* Mostrar el icono en pantallas pequeñas */
-    cursor: pointer; /* Cambiar el cursor al pasar el mouse */
-    margin: 10px; /* Margen alrededor del icono */
-    font-size: 24px; /* Tamaño del icono */
-    color: #157188; /* Color del icono */
-    text-align: center;
 
-  }
-  
 }
 
 /* Asegúrate de que el icono de menú no se muestre en pantallas grandes */
