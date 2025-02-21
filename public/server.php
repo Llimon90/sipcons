@@ -36,7 +36,7 @@ if ($method === "GET") {
         echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
 } elseif ($method === "POST") {
-    // Leer los datos enviados desde `fetch()`
+    // Leer los datos enviados desde fetch()
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Validar los datos
