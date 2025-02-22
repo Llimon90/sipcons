@@ -21,21 +21,21 @@ if ($conn->connect_error) {
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
 
-if ($method === "GET") {
-    // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias";
-    $result = $conn->query($sql);
+// if ($method === "GET") {
+//     // Consulta para obtener todas las incidencias sin filtrar
+//     $sql = "SELECT * FROM incidencias";
+//     $result = $conn->query($sql);
 
-    if ($result->num_rows > 0) {
-        $incidencias = [];
-        while($row = $result->fetch_assoc()) {
-            $incidencias[] = $row;
-        }
-        echo json_encode($incidencias);
-    } else {
-        echo json_encode(["message" => "No hay incidencias abiertas"]);
-    }
-}
+//     if ($result->num_rows > 0) {
+//         $incidencias = [];
+//         while($row = $result->fetch_assoc()) {
+//             $incidencias[] = $row;
+//         }
+//         echo json_encode($incidencias);
+//     } else {
+//         echo json_encode(["message" => "No hay incidencias abiertas"]);
+//     }
+// }
 
-$conn->close();
-?>
+// $conn->close();
+// ?>
