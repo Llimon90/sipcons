@@ -5,46 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VISTA GENERAL INCIDENCIAS</title>
     <link rel="stylesheet" href="styles.css?v=1.6">
-  
 </head>
 <body>
-  <div class="retorna" >
+  <div class="retorna">
     <a href="/index.html">  <<- Inicio</a>
-    </div>
+  </div>
 
-    <aside class="sidebar">
-        
-        <ul>
-          <li><a href="/index.html">Inicio</a></li>
-          <li><a href="incidencias.html">Incidencias</a></li>
-          <li><a href="reportes.html">Reportes</a></li>
-          <li><a href="clientes.html">Clientes</a></li>
-          <li><a href="usuarios.html">Usuarios</a></li>
-          <li><a href="#">Configuración</a></li>
-         
-        </ul>
-      </aside>
-      <table id="tabla-incidencias">
-        <thead>
-            <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>Contacto</th>
-                <th>Sucursal</th>
-                <th>Fecha</th>
-                <th>Técnico</th>
-                <th>Estatus</th>
-                <th>Falla</th>
-                <th>Número Incidente</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+  <aside class="sidebar">
+    <ul>
+      <li><a href="/index.html">Inicio</a></li>
+      <li><a href="incidencias.html">Incidencias</a></li>
+      <li><a href="reportes.html">Reportes</a></li>
+      <li><a href="clientes.html">Clientes</a></li>
+      <li><a href="usuarios.html">Usuarios</a></li>
+      <li><a href="#">Configuración</a></li>
+    </ul>
+  </aside>
+
+  <table id="tabla-incidencias">
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Cliente</th>
+        <th>Contacto</th>
+        <th>Sucursal</th>
+        <th>Fecha</th>
+        <th>Técnico</th>
+        <th>Estatus</th>
+        <th>Falla</th>
+        <th>Número Incidente</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-body"> <!-- Asegúrate de agregar el ID aquí -->
+    </tbody>
+  </table>
     
-    <script src="script_cargas.js" defer></script>
-
-     
+  <script src="script_cargas.js" defer></script>
 </body>
-
 </html>
