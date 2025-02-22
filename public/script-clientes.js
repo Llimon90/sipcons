@@ -4,7 +4,7 @@
 document.getElementById('new-cliente-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevenir envío por defecto
     
-    const nuevaIncidencia = {
+    const nuevoCliente = {
         nombre: document.getElementById('nombre').value,
         rfc: document.getElementById('rfc').value,
         direccion: document.getElementById('direccion').value,
