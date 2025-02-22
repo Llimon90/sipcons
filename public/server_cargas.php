@@ -35,7 +35,39 @@ if ($method === "GET") {
     } else {
         echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
+} elseif ($method === "POST") {
+    // Leer los datos enviados desde fetch()
+    $data = json_decode(file_get_contents("php://input"), true);
 
+    // Validar los datos
+    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"])) {
+        echo json_encode(["error" => "Todos los campos son obligatorios"]);
+        exit();
+    }
+
+    // Obtener el último número de incidencia
+    $sqlUltimoNumero = "SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1";
+    $result = $conn->query($sqlUltimoNumero);
+
+    $nuevoNumeroIncidente = "SIP-0001"; // Valor inicial si no hay registros
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $ultimoNumero = $row["numero_incidente"]; // "SIP-0001"
+        $numeroIncremental = intval(explode("-", $ultimoNumero)[1]) + 1;
+        $nuevoNumeroIncidente = "SIP-" . str_pad($numeroIncremental, 4, "0", STR_PAD_LEFT);
+    }
+
+    // Insertar la nueva incidencia
+    $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $nuevoNumeroIncidente);
+
+    if ($stmt->execute()) {
+        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
+    } else {
+        echo json_encode(["error" => "Error al insertar incidencia"]);
+    }
 
     $stmt->close();
 }
