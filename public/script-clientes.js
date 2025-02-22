@@ -1,29 +1,35 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("client-form");
+//ENVIA INCIDENCIAS A BD
 
-    form.addEventListener("submit", function (event) {
-        event.preventDefault(); // Evita que el formulario se envíe de manera tradicional
 
-        // Crear un objeto FormData con los datos del formulario
-        const formData = new FormData(form);
+document.getElementById('new-cliente-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevenir envío por defecto
+    
+    const nuevaIncidencia = {
+        numero: document.getElementById('nombre').value,
+        cliente: document.getElementById('rfc').value,
+        contacto: document.getElementById('direccion').value,
+        sucursal: document.getElementById('telefono').value,
+        falla: document.getElementById('contactos').value,
+        fecha: document.getElementById('email').value,
+        
+    };
 
-        // Enviar los datos al servidor
-        fetch("server-clientes.php", {
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error); // Muestra un mensaje de error
-            } else {
-                alert(data.message); // Muestra un mensaje de éxito
-                form.reset(); // Limpia el formulario después de enviar
-            }
-        })
-        .catch(error => {
-            console.error("Error al enviar los datos:", error);
-            alert("Ocurrió un error al enviar los datos. Inténtalo de nuevo.");
-        });
+    fetch('server-clientes.php', { 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevoCliente),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Respuesta del servidor:', data);
+        alert(data.message || data.error);
+    })
+    .catch(error => {
+        console.error('Error al enviar los datos:', error);
+        alert('Hubo un error al enviar los datos');
     });
 });
+
+
+
+
+
