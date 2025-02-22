@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VISTA GENERAL INCIDENCIAS</title>
-    <link rel="stylesheet" href="styles.css?v=1.5">
+    <link rel="stylesheet" href="styles.css?v=1.6">
   
 </head>
 <body>
@@ -24,27 +24,26 @@
          
         </ul>
       </aside>
-      <h2>Lista de Incidencias</h2>
-      <table border="1">
+      <table id="tabla-incidencias">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Cliente</th>
+                <th>Contacto</th>
+                <th>Sucursal</th>
+                <th>Fecha</th>
+                <th>Técnico</th>
+                <th>Estatus</th>
+                <th>Falla</th>
+                <th>Número Incidente</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    
+    <script src="script_cargas.js" defer></script>
 
-        
-          <thead>
-              <tr>
-                  <th>Número</th>
-                  <th>Cliente</th>
-                  <th>Contacto</th>
-                  <th>Sucursal</th>
-                  <th>Fecha</th>
-                  <th>Técnico</th>
-                  <th>Estatus</th>
-                  <th>Falla</th>
-                  <th>Número Incidente</th>
-              </tr>
-          </thead>
-          <tbody id="tabla-body"></tbody>
-      </table>
-  
-      <script src="script_cargas.js"></script>
      
 </body>
 

@@ -44,10 +44,22 @@
 document.addEventListener("DOMContentLoaded", function () {
     const tbody = document.getElementById("tabla-body");
 
+    if (!tbody) {
+        console.error("Error: No se encontró el tbody con id 'tabla-body'");
+        return;
+    }
+
     fetch("server.php")
         .then(response => response.json())
         .then(data => {
-            console.log(data); // Para verificar que llegan los datos
+            console.log("Datos recibidos:", data);
+
+            if (!Array.isArray(data)) {
+                console.error("Error: la respuesta del servidor no es un array válido.");
+                return;
+            }
+
+            tbody.innerHTML = ""; // Limpiar la tabla antes de agregar filas
 
             data.forEach(incidencia => {
                 const fila = document.createElement("tr");
