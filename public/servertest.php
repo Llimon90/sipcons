@@ -13,10 +13,10 @@ if ($conn->connect_error) {
 }
 
 // Permitir solicitudes desde el frontend
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: GET");
-header("Access-Control-Allow-Headers: Content-Type");
+// header("Access-Control-Allow-Origin: *");
+// header("Content-Type: application/json");
+// header("Access-Control-Allow-Methods: GET");
+// header("Access-Control-Allow-Headers: Content-Type");
 
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
