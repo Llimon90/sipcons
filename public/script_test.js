@@ -16,9 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                data.forEach(incidencia=> {
+                data.forEach(kk=> {
                     
-                    console.log(incidencias);
+                    console.log(kk);
 
 
                     const fila = document.createElement("tr");
