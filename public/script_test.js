@@ -7,23 +7,33 @@ document.addEventListener("DOMContentLoaded", function () {
                 tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
                 if (data.error) {
-                    tbody.innerHTML = `<tr><td colspan="8">${data.error}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10">${data.error}</td></tr>`;
                     return;
                 }
 
                 if (data.message) {
-                    tbody.innerHTML = `<tr><td colspan="9">${data.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10">${data.message}</td></tr>`;
                     return;
                 }
 
-                data.forEach(kk => {
-                    console.log(kk); // Verifica los datos recibidos
+                data.forEach(incidencia => {
+                    console.log(incidencia);
 
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
-                        <td>${kk.copia_numero_incidente ?? 'N/A'}</td>
+                        <td>${incidencia.id ?? ''}</td>
+                        <td>${incidencia.numero}</td>
+                        <td>${incidencia.cliente}</td>
+                        <td>${incidencia.contacto}</td>
+                        <td>${incidencia.sucursal}</td>
+                        <td>${incidencia.falla}</td>
+                        <td>${incidencia.fecha}</td>
+                        <td>${incidencia.tecnico}</td>
+                        <td>${incidencia.estatus}</td>
+                        <td>${incidencia.numero_incidente ?? ''}</td>
+                        <td>${incidencia.copia_numero_incidente}</td>
                     `;
-                    
+
                     tbody.appendChild(fila);
                 });
             })
