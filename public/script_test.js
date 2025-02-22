@@ -23,17 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
-                        <td>${incidencias.id ?? ''}</td>
-                        <td>${incidencias.numero}</td>
-                        <td>${incidencias.cliente}</td>
-                        <td>${incidencias.contacto}</td>
-                        <td>${incidencias.sucursal}</td>
-                        <td>${incidencias.falla}</td>
-                        <td>${incidencias.fecha}</td>
-                        <td>${incidencias.tecnico}</td>
-                        <td>${incidencias.estatus}</td>
-                        <td>${incidencias.numero_incidente ?? ''}</td>
-                        <td>${incidencias.copia_numero_incidente }</td>
+              
 
 
                         
