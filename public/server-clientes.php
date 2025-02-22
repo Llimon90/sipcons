@@ -49,7 +49,7 @@ if ($method === "GET") {
     // Insertar nueuvo cliente
     $sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssss", $data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"]);
+    $stmt->bind_param("ssssss", $data["nombre"],$data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"]);
 
     if ($stmt->execute()) {
         echo json_encode(["message" => "Cliente registrado correctamente" ]);
