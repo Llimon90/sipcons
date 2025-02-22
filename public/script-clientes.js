@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 rfc: document.getElementById('rfc').value,
                 direccion: document.getElementById('direccion').value,
                 telefono: document.getElementById('telefono').value,
-                contactos: document.getElementById('contacto').value,
+                contactos: document.getElementById('contactos').value,
                 email: document.getElementById('email').value,
             };
 
