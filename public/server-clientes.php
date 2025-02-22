@@ -39,9 +39,9 @@ if ($method === "GET") {
     // Leer los datos enviados desde fetch()
     $data = json_decode(file_get_contents("php://input"), true);
 
-    // Validar los datos
+// Validar los datos
 if (!isset($data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"])) {
-    echo json_encode(["error" => "Faltan datos en el formulario"]);
+    echo json_encode(["error" => "Faltan datos requeridos."]); // Añadir mensaje de error
     exit();
 }
 
