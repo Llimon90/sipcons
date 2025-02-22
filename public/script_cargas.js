@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            tbody.innerHTML = ""; // Limpiar la tabla antes de agregar filas
+            // tbody.innerHTML = ""; // Limpiar la tabla antes de agregar filas
 
             data.forEach(incidencia => {
                 const fila = document.createElement("tr");
