@@ -7,32 +7,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 // tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
                 if (data.error) {
-                    tbody.innerHTML = `<tr><td colspan="8">${data.error}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="1">${data.error}</td></tr>`;
                     return;
                 }
 
                 if (data.message) {
-                    tbody.innerHTML = `<tr><td colspan="9">${data.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="1">${data.message}</td></tr>`;
                     return;
                 }
 
                 data.forEach(incidencia => {
-                    
-                    console.log(incidencia);
-
-
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
-                       
-                  
-                        <td>${incidencia.copia_numero_incidente }</td>
-
-
-                        
+                        <td>${incidencia.copia_numero_incidente ?? 'N/A'}</td>
                     `;
-
-                    console.log(incidencia);
-
                     tbody.appendChild(fila);
                 });
             })
