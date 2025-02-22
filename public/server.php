@@ -69,7 +69,7 @@ if ($method === "GET") {
         $data["sucursal"],
         $data["fecha"],
         $data["tecnico"],
-        $data["estatus"],  // Aquí corregí "status" por "estatus"
+        $data["status"],  // Aquí corregí "status" por "estatus"
         $data["falla"],
         $nuevoNumeroIncidente
     );
