@@ -71,7 +71,7 @@ if ($method === "GET") {
         $data["tecnico"],
         $data["status"],  // Aquí corregí "status" por "estatus"
         $data["falla"],
-        $nuevoNumeroIncidente
+    
     );
 
     if ($stmt->execute()) {
