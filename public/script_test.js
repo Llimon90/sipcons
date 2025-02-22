@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 tbody.innerHTML = ""; // Limpia la tabla antes de agregar nuevas filas
 
                 if (data.error) {
-                    tbody.innerHTML = `<tr><td colspan="15">${data.error}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8">${data.error}</td></tr>`;
                     return;
                 }
 
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
                         <td>${incidencia.cliente}</td>
-                        <td>${incidencia.contacto}</td>
+                      
                  
                         <td>${incidencia.falla}</td>
                         <td>${incidencia.fecha}</td>
