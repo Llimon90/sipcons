@@ -40,10 +40,11 @@ if ($method === "GET") {
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Validar los datos
-    if (!isset($data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"])) {
-        echo json_encode(["error" => "Todos los campos son obligatorios"]);
-        exit();
-    }
+if (!isset($data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"])) {
+    echo json_encode(["error" => "Faltan datos en el formulario"]);
+    exit();
+}
+
 
     
     // Insertar nueuvo cliente
