@@ -1,7 +1,7 @@
 //ENVIA INCIDENCIAS A BD
 
 
-document.getElementById('new-cliente-form').addEventListener('submit', function(event) {
+document.getElementById('new-cliente-form').addEventListener('submit2', function(event) {
     event.preventDefault(); // Prevenir envío por defecto
     
     const nuevoCliente = {
