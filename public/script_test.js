@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById("tabla-body");
-                tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
+                // tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
                 if (data.error) {
                     tbody.innerHTML = `<tr><td colspan="8">${data.error}</td></tr>`;
