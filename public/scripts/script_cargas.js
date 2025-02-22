@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    fetch("backend/server.php")
+    fetch("/backend/server.php")
         .then(response => response.json())
         .then(data => {
             console.log("Datos recibidos:", data);
