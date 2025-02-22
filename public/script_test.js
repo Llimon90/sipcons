@@ -25,9 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 data.forEach(incidencia => {
+                    console.log("Incidencia recibida:", incidencia); // 🔍 Verifica qué datos llegan
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
-                        <td>${incidencia.id}</td>
+                        <td>${incidencia.id ?? 'N/A'}</td>
                         <td>${incidencia.numero}</td>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.contacto}</td>
@@ -40,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     `;
                     tbody.appendChild(fila);
                 });
+                
             })
             .catch(error => console.error("Error al cargar incidencias:", error));
     }
