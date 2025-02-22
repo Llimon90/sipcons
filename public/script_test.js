@@ -33,7 +33,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${incidencia.tecnico}</td>
                         <td>${incidencia.estatus}</td>
                         <td>${incidencia.numero_incidente ?? 'N/A'}</td>
+
+                        
                     `;
+
+                    console.log(incidencia);
+
                     tbody.appendChild(fila);
                 });
             })
