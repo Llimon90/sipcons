@@ -18,16 +18,24 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Allow-Headers: Content-Type");
 
-$sql = "SELECT copia_numero_incidente FROM incidencias"; // Selecciona solo el campo copia_numero_incidente
-$result = $conn->query($sql);
+// Leer el método HTTP
+$method = $_SERVER["REQUEST_METHOD"];
 
-if ($result->num_rows > 0) {
-    $incidencias = [];
-    while ($row = $result->fetch_assoc()) {
-        $incidencias[] = $row;
+if ($method === "GET") {
+    // Consulta para obtener todas las incidencias sin filtrar
+    $sql = "SELECT * FROM incidencias";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $incidencias = [];
+        while($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+        echo json_encode($incidencias);
+    } else {
+        echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
-    echo json_encode($incidencias);
-} else {
-    echo json_encode(["message" => "No hay incidencias abiertas"]);
 }
+
+$conn->close();
 ?>
