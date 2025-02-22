@@ -1,24 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VISTA GENERAL INCIDENCIAS</title>
-    <link rel="stylesheet" href="styles.css?v=1.6">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incidencias TEST</title>
+  
+  <link rel="stylesheet" href="styles.css?v=1.5">
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="retorna">
-    <a href="/index.html">  <<- Inicio</a>
+  
+  <div class="retorna" >
+  <a href="/index.html">  <<- Inicio</a>
   </div>
 
-
-
- <!-- Lista de incidencias -->
- <section class="lista-incidencias">
-  <h2>Incidencias Registradas</h2>
-  <div id="lista-incidencias"></div>
-</section>
+  <!-- Panel lateral -->
+  <aside class="sidebar">
     
-  <script src="public/script_cargastest.js" defer></script>
+    <ul>
+      <li><a href="/index.html">Inicio</a></li>
+      <li><a href="incidencias.html">Incidencias</a></li>
+      <li><a href="reportes.html">Reportes</a></li>
+      <li><a href="clientes.html">Clientes</a></li>
+      <li><a href="usuarios.html">Usuarios</a></li>
+      <li><a href="#">Configuración</a></li>
+    </ul>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main>
+    <!-- Formulario para registrar una nueva incidencia -->
+    <section class="encabezado">
+      <h2>Registrar nueva incidencia</h2>
+      
+      <form id="new-incidencia-form">
+        
+        <div class="form-row">
+          <div>
+            <label for="cliente">Cliente</label>
+            <select id="cliente" name="cliente" required>
+              <option value="" selected disabled>Seleccione una opción</option>
+              <option value="Calimax">Calimax</option>
+              <option value="Florido">Florido</option>
+              <option value="Rancho del tio">Rancho del Tío</option>
+              <option value="Grano de oro">Grano de Oro</option>
+            </select>
+          </div>    
+
+          <div>
+            <label for="numero"># Incidencia Cliente</label>
+            <input type="text" id="numero" name="numero" required placeholder="Ejemplo: ST-66477">
+          </div>
+        </div>
+
+        <div class="form-row">
+
+          <div>
+            <label for="sucursal">Sucursal</label>
+            <input type="text" id="sucursal" name="sucursal" required placeholder="Sucursal o dirección">
+          </div>
+      
+
+          <div>
+            <label for="contacto">Reporta</label>
+            <input type="text" id="contacto" name="contacto" required placeholder="Persona que reporta incidencia">
+          </div>
+
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="falla">Falla Reportada</label>
+            <input type="text" id="falla" name="falla" maxlength="500">
+          </div>
+
+          <div>
+            <label for="fecha">Fecha de Reporte</label>
+            <input type="date" id="fecha" name="fecha" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="tecnico">Técnico Asignado</label>
+            <select id="tecnico" name="tecnico" required>
+              <option value="" selected disabled>Seleccione una opción</option>
+              <option value="Victor Cordoba">Victor Cordoba</option>
+              <option value="Tomás Vázquez">Tomás Valdéz</option>
+              <option value="Francisco Aguiar">Francisco Aguiar</option>
+              <option value="Mauricio Díaz">Mauricio Diaz</option>
+              <option value="Humberto Vázquez">Humberto Vázquez</option>
+              <option value="Jose López">José López</option>
+              <option value="Hoscar Martínez">Hoscar Martínez</option>
+              <option value="Jacob Ventura">Jacob Ventura</option>
+              <option value="Luis Limón">Luis Limón</option>
+              <option value="Ernesto Chávez">Ernesto Chávez</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="estatus">Estatus</label>
+            <select id="estatus" name="estatus" required>
+              <option value="abierta">Abierta</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en seguimiento">En Seguimiento</option>
+              <option value="facturada">Facturada</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit">Registrar Incidencia</button>
+      </form>
+    </section>
+
+    <!-- Lista de incidencias -->
+    <section class="lista-incidencias">
+      <h2>Incidencias Registradas</h2>
+      <div id="lista-incidencias"></div>
+    </section>
+  </main>
+
+
+
+  <script src="script_cargas.js"></script>
+
+  
+  <script>
+/*Establecer fecha actual en el input de fecha*/
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+    });
+  </script>
 </body>
 </html>
