@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 if (data.message) {
-                    tbody.innerHTML = `<tr><td colspan="8">${data.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9">${data.message}</td></tr>`;
                     return;
                 }
 
@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
-                
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.contacto}</td>
                         <td>${incidencia.sucursal}</td>
