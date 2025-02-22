@@ -17,6 +17,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 data.forEach(incidencia => {
+                    
+                    console.log(incidencia);
+
+
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
                         <td>${incidencia.id ?? 'N/A'}</td>
