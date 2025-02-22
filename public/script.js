@@ -17,7 +17,7 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
         status: document.getElementById('estatus').value,
     };
 
-    fetch('/backend/server.php', { // Ahora llama a server.php
+    fetch('server.php', { // Ahora llama a server.php
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevaIncidencia),
