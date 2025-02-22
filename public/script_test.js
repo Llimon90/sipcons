@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 data.forEach(incidencia => {
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
+                        <td>${incidencia.id}</td>
                         <td>${incidencia.numero}</td>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.contacto}</td>
