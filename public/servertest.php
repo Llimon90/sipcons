@@ -23,7 +23,7 @@ $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
     // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias";
+    $sql = "SELECT id, numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente, copia_numero_incidente FROM incidencias";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
