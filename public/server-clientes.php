@@ -41,7 +41,7 @@ if ($method === "GET") {
 
     // Validar los datos
     if (!isset($data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"])) {
-    
+        echo json_encode(["error" => "Todos los campos son obligatorios"]);
         exit();
     }
 
