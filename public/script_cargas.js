@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${incidencia.fecha}</td>
                         <td>${incidencia.tecnico}</td>
                         <td>${incidencia.estatus}</td>
-                         <td>${incidencia.numero_incidente}</td>
+                    
                     
                         
                     `;
