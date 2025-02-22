@@ -1,31 +1,22 @@
-
 document.addEventListener("DOMContentLoaded", function () {
     function cargarIncidencias() {
         fetch("servertest.php")
             .then(response => response.json())
             .then(data => {
-                console.log("Datos recibidos:", data); // Depuración
-
                 const tbody = document.getElementById("tabla-body");
-                if (!tbody) {
-                    console.error("No se encontró el elemento con id 'tabla-body'");
-                    return;
-                }
-
-                tbody.innerHTML = ""; // Limpia la tabla antes de agregar nuevas filas
+                // tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
                 if (data.error) {
-                    tbody.innerHTML = `<tr><td colspan="11">${data.error}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8">${data.error}</td></tr>`;
                     return;
                 }
 
                 if (data.message) {
-                    tbody.innerHTML = `<tr><td colspan="11">${data.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9">${data.message}</td></tr>`;
                     return;
                 }
 
                 data.forEach(incidencia => {
-                    console.log("Incidencia recibida:", incidencia); // 🔍 Verifica qué datos llegan
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
                         <td>${incidencia.id ?? 'N/A'}</td>
@@ -41,10 +32,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     `;
                     tbody.appendChild(fila);
                 });
-                
             })
             .catch(error => console.error("Error al cargar incidencias:", error));
     }
 
-    cargarIncidencias();
+    cargarIncidencias(); // Llamar a la función al cargar la página
 });
