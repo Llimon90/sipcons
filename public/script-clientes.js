@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', function() {
+window.onload = function() {
     const form = document.getElementById('new-cliente-form');
-    if (form) { // Verifica si el formulario existe
+    if (form) {
         form.addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevenir envío por defecto
-
+            event.preventDefault();
+            
             const nuevoCliente = {
                 nombre: document.getElementById('nombre').value,
                 rfc: document.getElementById('rfc').value,
@@ -14,16 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             fetch('server-clientes.php', { 
-                method: 'POST', // Asegúrate de especificar el método POST
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoCliente), // Envía los datos como JSON
+                body: JSON.stringify(nuevoCliente),
             })
             .then(response => response.json())
             .then(data => {
                 console.log('Respuesta del servidor:', data);
                 alert(data.message || data.error);
                 if (data.message) {
-                    form.reset(); // Limpiar el formulario
+                    form.reset();
                 }
             })
             .catch(error => {
@@ -34,4 +34,4 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error("El formulario no se encontró");
     }
-});
+};
