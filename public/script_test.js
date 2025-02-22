@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                data.forEach(incidencias => {
+                data.forEach(incidencia=> {
                     
                     console.log(incidencias);
 
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         
                     `;
 
-                    console.log(incidencia);
+                    console.log(incidencias);
 
                     tbody.appendChild(fila);
                 });
