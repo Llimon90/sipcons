@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById("tabla-body");
-                // tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
+                tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
                 if (data.error) {
                     tbody.innerHTML = `<tr><td colspan="8">${data.error}</td></tr>`;
@@ -16,21 +16,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                data.forEach(kk=> {
-                    
-                    console.log(kk);
-
+                data.forEach(kk => {
+                    console.log(kk); // Verifica los datos recibidos
 
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
-              
-
-
-                        
+                        <td>${kk.copia_numero_incidente ?? 'N/A'}</td>
                     `;
-
-                    console.log(incidencias);
-
+                    
                     tbody.appendChild(fila);
                 });
             })
