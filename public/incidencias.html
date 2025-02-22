@@ -114,15 +114,18 @@
     </section>
 
     <!-- Lista de incidencias -->
-
- 
-      <tbody id="tabla-body"> <!-- Aquí se agrega el ID -->
-      </tbody>
-
-  
+    <section class="lista-incidencias">
+      <h2>Incidencias Registradas</h2>
+      <div id="lista-incidencias"></div>
+    </section>
   </main>
 
-
+  <script>
+    // Establecer fecha actual en el input de fecha
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+    });
+  </script>
 
   <script src="script_cargas.js"></script>
 </body>
