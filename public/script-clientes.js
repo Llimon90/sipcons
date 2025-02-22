@@ -5,12 +5,12 @@ document.getElementById('new-cliente-form').addEventListener('submit', function(
     event.preventDefault(); // Prevenir envío por defecto
     
     const nuevaIncidencia = {
-        numero: document.getElementById('nombre').value,
-        cliente: document.getElementById('rfc').value,
-        contacto: document.getElementById('direccion').value,
-        sucursal: document.getElementById('telefono').value,
-        falla: document.getElementById('contactos').value,
-        fecha: document.getElementById('email').value,
+        nombre: document.getElementById('nombre').value,
+        rfc: document.getElementById('rfc').value,
+        direccion: document.getElementById('direccion').value,
+        telefono: document.getElementById('telefono').value,
+        contactos: document.getElementById('contactos').value,
+        email: document.getElementById('email').value,
         
     };
 
