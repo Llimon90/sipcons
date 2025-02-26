@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 if (data.message) {
-                    tbody.innerHTML = `<tr><td colspan="8">${data.message}</td></tr>`;
-                    return;
+                    // tbody.innerHTML = `<tr><td colspan="8">${data.message}</td></tr>`;
+                    // return;
                 }
 
                 data.forEach(incidencia => {
