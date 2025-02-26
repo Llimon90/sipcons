@@ -22,10 +22,13 @@ header("Access-Control-Allow-Headers: Content-Type");
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
+
+
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
     // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias";
+    $sql = "SELECT id, numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente FROM incidencias";
+
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
@@ -39,6 +42,7 @@ if ($method === "GET") {
     }
     
     // **FIN - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
+
     
 } elseif ($method === "POST") {
     // **INICIO - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
