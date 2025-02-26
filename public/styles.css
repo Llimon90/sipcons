@@ -290,7 +290,7 @@ button:hover {
 
 
 /*ESTILOS TABLA*/
-
+.lista-incidencias{
 table {
   width: 100%;
   border-collapse: collapse;
@@ -329,4 +329,5 @@ tbody tr:last-child {
 
 td {
   color: #333;
+}
 }
