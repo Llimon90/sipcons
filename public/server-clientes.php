@@ -44,8 +44,6 @@ if (!isset($data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"],
     echo json_encode(["error" => "Faltan datos requeridos."]); // Añadir mensaje de error
     exit();
 }
-
-
     
     // Insertar nueuvo cliente
     $sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)";
