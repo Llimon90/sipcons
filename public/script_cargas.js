@@ -18,18 +18,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 data.forEach(incidencia => {
                     const fila = document.createElement("tr");
-                    // fila.innerHTML = `
-                    //     <td>${incidencia.numero}</td>
+                    fila.innerHTML = `
+                        <td>${incidencia.numero}</td>
                 
-                    //     <td>${incidencia.cliente}</td>
-                    //     <td>${incidencia.contacto}</td>
-                    //     <td>${incidencia.sucursal}</td>
-                    //     <td>${incidencia.falla}</td>
-                    //     <td>${incidencia.fecha}</td>
-                    //     <td>${incidencia.tecnico}</td>
-                    //     <td>${incidencia.estatus}</td>
+                        <td>${incidencia.cliente}</td>
+                        <td>${incidencia.contacto}</td>
+                        <td>${incidencia.sucursal}</td>
+                        <td>${incidencia.falla}</td>
+                        <td>${incidencia.fecha}</td>
+                        <td>${incidencia.tecnico}</td>
+                        <td>${incidencia.estatus}</td>
                         
-                    // `;
+                    `;
                     tbody.appendChild(fila);
                 });
             })

@@ -7,6 +7,7 @@
   
   <link rel="stylesheet" href="styles.css?v=1.5">
   <script src="script.js" defer></script>
+  <script src="script_cargas.js"></script>
 </head>
 <body>
   
@@ -122,11 +123,12 @@
 
 
 
-  <script src="script_cargas.js"></script>
 
-  
+
+
+  <!-- /*Establecer fecha actual en el input de fecha*/ -->
   <script>
-/*Establecer fecha actual en el input de fecha*/
+
     document.addEventListener("DOMContentLoaded", function() {
       document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
     });
