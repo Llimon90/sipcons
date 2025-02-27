@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Convertir la BD en un arreglo de objetos
                 let incidenciasArray = data.map(incidencia => ({
-                    incidente: incidencia.numero,
+                    numero: incidencia.numero,
                     numero_incidente: incidencia.numero_incidente,
                     cliente: incidencia.cliente,
                     contacto: incidencia.contacto,
