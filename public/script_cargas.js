@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
-                        <a href="crude-incidencias.php"><td>${incidencia.numero_incidente}</td></a>
+                        <td>${incidencia.numero_incidente}</td>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
