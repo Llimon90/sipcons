@@ -31,8 +31,9 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
         contacto: document.getElementById("contacto").value,
         sucursal: document.getElementById("sucursal").value,
         fecha: document.getElementById("fecha").value,
-        tecnico: document.getElementById("tecnico").value,
         falla: document.getElementById("falla").value,
+        tecnico: document.getElementById("tecnico").value,
+        
         estatus: document.getElementById("estatus").value,
     };
 
@@ -47,7 +48,7 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert("Incidencia actualizada correctamente");
+            // alert("Incidencia actualizada correctamente");
             cargarIncidencias(); // Recargar las incidencias para mostrar los cambios
             this.style.display = "none"; // Ocultar el formulario
         } else {
