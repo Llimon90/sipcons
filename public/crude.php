@@ -1,4 +1,5 @@
 <?php
+
 // Configurar conexión con la base de datos
 $host = "localhost";
 $user = "u179371012_root";
@@ -9,50 +10,26 @@ $conn = new mysqli($host, $user, $password, $database);
 
 // Verificar la conexión
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = $_POST['id'];
+    $numero = $_POST['numero'];
+    $cliente = $_POST['cliente'];
+    $contacto = $_POST['contacto'];
+    $sucursal = $_POST['sucursal'];
+    $falla = $_POST['falla'];
+    $fecha = $_POST['fecha'];
+    $tecnico = $_POST['tecnico'];
+    $estatus = $_POST['estatus'];
 
-// Obtener los datos del formulario
-$data = json_decode(file_get_contents("php://input"), true);
-
-// Verificar que se hayan enviado los datos necesarios
-if (isset($data['id']) && isset($data['numero']) && isset($data['cliente'])) {
-    $id = $data['id'];
-    $numero = $data['numero'];
-    $cliente = $data['cliente'];
-    $contacto = $data['contacto'];
-    $sucursal = $data['sucursal'];
-    $falla = $data['falla'];
-    $fecha = $data['fecha'];
-    $tecnico = $data['tecnico'];
-    $estatus = $data['estatus'];
-
-    // Preparar la consulta SQL para actualizar la incidencia
-    $sql = "UPDATE incidencias SET 
-                numero = ?, 
-                cliente = ?, 
-                contacto = ?, 
-                sucursal = ?, 
-                falla = ?, 
-                fecha = ?, 
-                tecnico = ?, 
-                estatus = ? 
-            WHERE id = ?";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssi", $numero, $cliente, $contacto, $sucursal, $falla, $fecha, $tecnico, $estatus, $id);
-
-    // Ejecutar la consulta
-    if ($stmt->execute()) {
+    // Aquí deberías tener la lógica para actualizar la incidencia en la base de datos
+    $resultado = actualizarIncidencia($id, $numero, $cliente, $contacto, $sucursal, $falla, $fecha, $tecnico, $estatus);
+    
+    if ($resultado) {
         echo json_encode(["success" => true]);
     } else {
-        echo json_encode(["success" => false, "error" => "Error al actualizar incidencia: " . $stmt->error]);
+        echo json_encode(["success" => false, "error" => "Error al actualizar"]);
     }
-
-    $stmt->close();
-} else {
-    echo json_encode(["success" => false, "error" => "Datos incompletos"]);
 }
-
-$conn->close();
 ?>
