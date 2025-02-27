@@ -21,11 +21,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     numero: incidencia.numero,
                     numero_incidente: incidencia.numero_incidente,
                     cliente: incidencia.cliente,
-                    contacto: incidencia.contacto,
                     sucursal: incidencia.sucursal,
                     falla: incidencia.falla,
                     fecha: incidencia.fecha,
-                    tecnico: incidencia.tecnico,
                     estatus: incidencia.estatus
                 }));
 
@@ -38,11 +36,9 @@ document.addEventListener("DOMContentLoaded", function () {
                       <td>${incidencia.numero}</td>
                         <td>${incidencia.numero_incidente}</td>
                         <td>${incidencia.cliente}</td>
-                        <td>${incidencia.contacto}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
                         <td>${incidencia.fecha}</td>
-                        <td>${incidencia.tecnico}</td>
                         <td>${incidencia.estatus}</td>
                     `;
                     tbody.appendChild(fila);
