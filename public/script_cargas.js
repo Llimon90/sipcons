@@ -52,4 +52,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     cargarIncidencias(); // Cargar los datos cuando la página se carga
+
+     // Recargar datos al hacer clic en el icono o botón
+     document.getElementById("reload-data").addEventListener("click", function () {
+        cargarIncidencias();
+    });
 });
