@@ -32,6 +32,7 @@ document.getElementById("new-incidencia-form").addEventListener("submit", functi
         sucursal: document.getElementById("sucursal").value,
         fecha: document.getElementById("fecha").value,
         tecnico: document.getElementById("tecnico").value,
+        falla: document.getElementById("falla").value,
         estatus: document.getElementById("estatus").value,
     };
 
