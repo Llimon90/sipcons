@@ -27,7 +27,8 @@ if ($method === "GET") {
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
     // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT id, numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, numero_incidente FROM incidencias";
+    $sql = "SELECT * FROM incidencias WHERE estatus = 'Abierta'";
+
 
     $result = $conn->query($sql);
 
