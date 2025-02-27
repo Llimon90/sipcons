@@ -44,7 +44,7 @@ $incidencia = getIncidenciaById($id);
             if (data.success) {
                 alert("Incidencia actualizada correctamente");
                 // Redirigir a la página anterior o donde quieras
-                window.location.href = "tu-pagina-de-incidencias.php"; // Cambia esto a la página de incidencias
+                window.location.href = "incidencias.html"; // Cambia esto a la página de incidencias
             } else {
                 alert("Error al actualizar incidencia: " + data.error);
             }
