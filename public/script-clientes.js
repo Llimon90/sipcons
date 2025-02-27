@@ -1,37 +1,27 @@
-window.onload = function() {
-    const form = document.getElementById('new-cliente-form');
-    if (form) {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const nuevoCliente = {
-                nombre: document.getElementById('nombre').value,
-                rfc: document.getElementById('rfc').value,
-                direccion: document.getElementById('direccion').value,
-                telefono: document.getElementById('telefono').value,
-                contactos: document.getElementById('contactos').value,
-                email: document.getElementById('email').value,
-            };
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("new-cliente-form");
 
-            fetch('server-clientes.php', { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(nuevoCliente),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Respuesta del servidor:', data);
-                alert(data.message || data.error);
-                if (data.message) {
-                    form.reset();
-                }
-            })
-            .catch(error => {
-                console.error('Error al enviar los datos:', error);
-                alert('Hubo un error al enviar los datos');
-            });
-        });
-    } else {
-        console.error("El formulario no se encontró");
-    }
-};
+    form.addEventListener("submit", function (event) {
+        event.preventDefault(); // Evita que el formulario se envíe normalmente
+
+        // Obtener los valores del formulario
+        const formData = new FormData(form);
+
+        // Enviar los datos al servidor mediante fetch
+        fetch("server-clientes.php", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Cliente registrado con éxito");
+                form.reset(); // Limpiar el formulario
+                // Aquí podrías agregar código para actualizar la lista de clientes sin recargar la página
+            } else {
+                alert("Error al registrar cliente: " + data.message);
+            }
+        })
+        .catch(error => console.error("Error en la solicitud:", error));
+    });
+});

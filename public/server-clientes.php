@@ -1,63 +1,54 @@
 <?php
+
+
+header("Content-Type: application/json");
+$response = ["success" => false, "message" => ""];
+
 // Configurar conexión con la base de datos
 $host = "localhost";
 $user = "u179371012_root";
 $password = "Llimon.2025";
 $database = "u179371012_sipcons";
 
-$conn = new mysqli($host, $user, $password, $database);
+$conn = new mysqli($host, $user, $password, $dbname);
 
-// Verificar la conexión
+// Verificar conexión
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    $response["message"] = "Error en la conexión: " . $conn->connect_error;
+    echo json_encode($response);
+    exit;
 }
 
-// Permitir solicitudes desde el frontend
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+// Recibir los datos del formulario
+$nombre = $_POST["nombre"] ?? "";
+$rfc = $_POST["rfc"] ?? "";
+$direccion = $_POST["direccion"] ?? "";
+$telefono = $_POST["telefono"] ?? "";
+$contactos = $_POST["contactos"] ?? "";
+$email = $_POST["email"] ?? "";
 
-// Leer el método HTTP
-$method = $_SERVER["REQUEST_METHOD"];
-
-if ($method === "GET") {
-    // Consulta para obtener todas las clientes
-    $sql = "SELECT * FROM clientes";
-    $result = $conn->query($sql);
-
-    if ($result->num_rows > 0) {
-        $clientes = [];
-        while($row = $result->fetch_assoc()) {
-            $clientes[] = $row;
-        }
-        echo json_encode($clientes);
-    } else {
-        echo json_encode(["message" => "No hay clientes registrados"]);
-    }
-} elseif ($method === "POST") {
-    // Leer los datos enviados desde fetch()
-    $data = json_decode(file_get_contents("php://input"), true);
-
-// Validar los datos
-if (!isset($data["nombre"], $data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"])) {
-    echo json_encode(["error" => "Faltan datos requeridos."]); // Añadir mensaje de error
-    exit();
-}
-    
-    // Insertar nueuvo cliente
-    $sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssss", $data["nombre"],$data["rfc"], $data["direccion"], $data["telefono"], $data["contactos"], $data["email"]);
-
-    if ($stmt->execute()) {
-        echo json_encode(["message" => "Cliente registrado correctamente" ]);
-    } else {
-        echo json_encode(["error" => "Error al registrar nuevo cliente"]);
-    }
-
-    $stmt->close();
+// Validar que no estén vacíos
+if (empty($nombre) || empty($rfc) || empty($direccion) || empty($telefono) || empty($contactos) || empty($email)) {
+    $response["message"] = "Todos los campos son obligatorios.";
+    echo json_encode($response);
+    exit;
 }
 
+// Insertar en la base de datos
+$sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("ssssss", $nombre, $rfc, $direccion, $telefono, $contactos, $email);
+
+if ($stmt->execute()) {
+    $response["success"] = true;
+    $response["message"] = "Cliente registrado con éxito";
+} else {
+    $response["message"] = "Error al registrar cliente: " . $conn->error;
+}
+
+// Cerrar conexión
+$stmt->close();
 $conn->close();
+
+echo json_encode($response);
 ?>
