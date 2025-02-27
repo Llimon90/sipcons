@@ -15,21 +15,16 @@ if ($conn->connect_error) {
 // Permitir solicitudes desde el frontend
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
-
-
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
-    
     // Consulta para obtener todas las incidencias sin filtrar
     $sql = "SELECT * FROM incidencias WHERE estatus = 'Abierta'";
-
-
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
@@ -41,13 +36,10 @@ if ($method === "GET") {
     } else {
         echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
-    
     // **FIN - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
-
     
 } elseif ($method === "POST") {
     // **INICIO - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
-    
     // Leer los datos enviados desde fetch()
     $data = json_decode(file_get_contents("php://input"), true);
 
@@ -82,10 +74,32 @@ if ($method === "GET") {
     }
 
     $stmt->close();
-    
     // **FIN - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
+
+} elseif ($method === "PUT") {
+    // **INICIO - FUNCIÓN PARA ACTUALIZAR INCIDENCIAS**
+    parse_str(file_get_contents("php://input"), $_PUT);
+
+    // Validar los datos
+    if (!isset($_PUT["numero"], $_PUT["cliente"], $_PUT["contacto"], $_PUT["sucursal"], $_PUT["fecha"], $_PUT["tecnico"], $_PUT["status"], $_PUT["falla"])) {
+        echo json_encode(["error" => "Todos los campos son obligatorios"]);
+        exit();
+    }
+
+    // Actualizar la incidencia
+    $sql = "UPDATE incidencias SET cliente=?, contacto=?, sucursal=?, fecha=?, tecnico=?, estatus=?, falla=? WHERE numero=?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssssss", $_PUT["cliente"], $_PUT["contacto"], $_PUT["sucursal"], $_PUT["fecha"], $_PUT["tecnico"], $_PUT["status"], $_PUT["falla"], $_PUT["numero"]);
+
+    if ($stmt->execute()) {
+        echo json_encode(["message" => "Incidencia actualizada correctamente"]);
+    } else {
+        echo json_encode(["error" => "Error al actualizar incidencia: " . $stmt->error]);
+    }
+
+    $stmt->close();
+    // **FIN - FUNCIÓN PARA ACTUALIZAR INCIDENCIAS**
 }
 
 $conn->close();
-
 ?>

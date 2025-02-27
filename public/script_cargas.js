@@ -4,64 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById("tabla-body");
-                tbody.innerHTML = ""; 
-
-                if (data.error) {
-                    tbody.innerHTML = `<tr><td colspan="10">${data.error}</td></tr>`;
-                    return;
-                }
-
-                if (data.message) {
-                    tbody.innerHTML = `<tr><td colspan="10">${data.message}</td></tr>`;
-                    return;
-                }
-
-                // Convertir la BD en un arreglo de objetos
-                let incidenciasArray = data.map(incidencia => ({
-                    numero: incidencia.numero,
-                    numero_incidente: incidencia.numero_incidente,
-                    cliente: incidencia.cliente,
-                    sucursal: incidencia.sucursal,
-                    falla: incidencia.falla,
-                    fecha: incidencia.fecha,
-                    estatus: incidencia.estatus
-                }));
-
-                console.log("Arreglo de incidencias:", incidenciasArray);
-
-                // Mostrar el arreglo en la tabla
-                incidenciasArray.forEach(incidencia => {
-                    const fila = document.createElement("tr");
-                    fila.innerHTML = `
-                      <td>${incidencia.numero}</td>
-                        <td>${incidencia.numero_incidente}</td>
-                        <td>${incidencia.cliente}</td>
-                        <td>${incidencia.sucursal}</td>
-                        <td>${incidencia.falla}</td>
-                        <td>${incidencia.fecha}</td>
-                        <td>${incidencia.estatus}</td>
-                    `;
-                    tbody.appendChild(fila);
-                });
-            })
-            .catch(error => console.error("Error al cargar incidencias:", error));
-    }
-
-    cargarIncidencias(); // Cargar los datos cuando la página se carga
-
-     // Recargar datos al hacer clic en el icono o botón
-     document.getElementById("reload-data").addEventListener("click", function () {
-        cargarIncidencias();
-    });
-});
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    function cargarIncidencias() {
-        fetch("server.php")
-            .then(response => response.json())
-            .then(data => {
-                const tbody = document.getElementById("tabla-body");
                 tbody.innerHTML = ""; // Limpiar tabla antes de agregar nuevas filas
 
                 if (data.error) {
@@ -93,13 +35,9 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error al cargar incidencias:", error));
     }
 
-
-
-    //BLOQUE PARA EDITAR CAMPOS DE LAS INCIDENCIAS 
-
+    // BLOQUE PARA EDITAR CAMPOS DE LAS INCIDENCIAS 
     function mostrarDetalles(incidencia) {
         // Cargar los datos en el formulario
-       
         document.getElementById("numero").value = incidencia.numero;
         document.getElementById("cliente").value = incidencia.cliente;
         document.getElementById("contacto").value = incidencia.contacto;
@@ -137,5 +75,11 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("Error al actualizar incidencia:", error));
     });
 
-    cargarIncidencias(); // Llamar a la función al cargar la página
+    // Cargar las incidencias al cargar la página
+    cargarIncidencias(); 
+
+    // Recargar datos al hacer clic en el icono o botón
+    document.getElementById("reload-data").addEventListener("click", function () {
+        cargarIncidencias();
+    });
 });
