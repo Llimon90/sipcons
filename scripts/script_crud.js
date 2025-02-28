@@ -7,7 +7,7 @@ function cargarIncidencias() {
     fetch('../backend/crud.php')
         .then(response => response.json())
         .then(data => {
-            const tabla = document.getElementById('tabla-incidencias');
+            const tabla = document.getElementById('tabla-body');
             tabla.innerHTML = ''; // Limpiar la tabla antes de cargar nuevas filas
             
             data.forEach(incidencia => {
