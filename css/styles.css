@@ -1,4 +1,4 @@
-/* styles.css */
+
 
 /* Estilos generales */
 body {
@@ -58,8 +58,8 @@ h2 {
   color: #34495e;
 }
 
-//* Estilos del formulario */
-#new-incidencia-form {
+/*Estilos del formulario*/
+.new-incidencia-form {
   display: flex;
   flex-direction: column;
   max-width: 800px;
@@ -137,7 +137,7 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* ESTILOS INDEX OPCIONES */
+/* ESTILOS INDEX menu */
 
 /* Contenedor principal del contenido del administrador */
 #admin-content {
