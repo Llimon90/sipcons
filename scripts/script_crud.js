@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".estatus-select").forEach(select => {
+    document.querySelectorAll(".tabla-body").forEach(select => {
         select.addEventListener("change", function () {
             const id = this.dataset.id;
             const estatus = this.value;
