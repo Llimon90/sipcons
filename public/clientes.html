@@ -36,33 +36,53 @@
         <form id="new-incidencia-form">
 
           <h2>Registrar Cliente</h2>
-          <div class="form-row">
-            <label for="nombre">Nombre del Cliente o razón social:</label>
-            <input type="text" id="nombre" name="nombre" >
 
+          <div class="form-row">
+
+            <div>  
+            
+              <label for="nombre">Nombre del Cliente o razón social:</label>
+              <input type="text" id="nombre" name="nombre" >
+
+            </div>
+          
+            <div>
+
+              <label for="rfc">RFC:</label>
+              <input type="text" id="rfc" name="rfc" >
+            
+            </div>
+          
+          </div>  
+
+          <div class="form-row">
+          
+            <div>  
+              <label for="direccion">Dirección:</label>
+              <input type="text" id="direccion" name="direccion" placeholder="Ejemplo: Corporativo" >
+            </div>
+          
+            <div>
+              <label for="telefono">Teléfono:</label>
+              <input type="text" id="telefono" name="telefono" placeholder="Con clave lada" >
+            </div>
+          
+          </div>
+
+          <div class="form-row">
+          
+            <div>
+              <label for="contactos">Contactos:</label>
+              <input type="text" id="contactos" name="contactos" placeholder="Ejemplo: Juan Pérez" >
+            </div>
+          
+            <div>
+              <label for="email">E-mail:</label>
+              <input type="text" id="email" name="email" placeholder="Ejemplo: cliente@dominio.com" >
+            </div>
+          
           </div>
           
-          <div>
-      
-            <label for="rfc">RFC:</label>
-            <input type="text" id="rfc" name="rfc" >
-          </div>
-
-
-          <div class="form-row">
-            <label for="direccion">Dirección:</label>
-            <input type="text" id="direccion" name="direccion" placeholder="Ejemplo: Corporativo" >
-          
-            <label for="telefono">Teléfono:</label>
-            <input type="text" id="telefono" name="telefono" placeholder="Con clave lada" >
-          </div>
-          <div class="form-row">
-            <label for="contactos">Contactos:</label>
-            <input type="text" id="contactos" name="contactos" placeholder="Ejemplo: Juan Pérez" >
-      
-            <label for="email">E-mail:</label>
-            <input type="text" id="email" name="email" placeholder="Ejemplo: cliente@dominio.com" >
-          </div>
           <button type="submit">Guardar Cliente</button>
         </form>
 
