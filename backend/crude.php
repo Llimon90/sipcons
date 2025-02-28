@@ -1,5 +1,4 @@
 <?php
-
 // Configurar conexión con la base de datos
 $host = "localhost";
 $user = "u179371012_root";
@@ -12,24 +11,41 @@ $conn = new mysqli($host, $user, $password, $database);
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'];
-    $numero = $_POST['numero'];
-    $cliente = $_POST['cliente'];
-    $contacto = $_POST['contacto'];
-    $sucursal = $_POST['sucursal'];
-    $falla = $_POST['falla'];
-    $fecha = $_POST['fecha'];
-    $tecnico = $_POST['tecnico'];
-    $estatus = $_POST['estatus'];
 
-    // Aquí deberías tener la lógica para actualizar la incidencia en la base de datos
-    $resultado = actualizarIncidencia($id, $numero, $cliente, $contacto, $sucursal, $falla, $fecha, $tecnico, $estatus);
+// Permitir solicitudes desde el frontend
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+// Leer el método HTTP
+$method = $_SERVER["REQUEST_METHOD"];
+
+if ($method === "GET") {
+
+
+   
+    // **INICIO - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
     
-    if ($resultado) {
-        echo json_encode(["success" => true]);
+    // Leer los datos enviados desde fetch()
+    $data = json_decode(file_get_contents("php://input"), true);
+
+
+    // Insertar la nueva incidencia
+    $sql = "UPDATE incidencias SET estatus = 'facturada' WHERE id=183";    
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt->execute()) {
+        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
     } else {
-        echo json_encode(["success" => false, "error" => "Error al actualizar"]);
+        echo json_encode(["error" => "Error al insertar incidencia"]);
     }
+
+    $stmt->close();
+    
+    // **FIN - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
 }
+
+$conn->close();
+
 ?>
