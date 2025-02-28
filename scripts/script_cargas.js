@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     function cargarIncidencias() {
-        fetch("/backend/server.php")
+        fetch("../backend/server.php")
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById("tabla-body");
