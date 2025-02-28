@@ -15,37 +15,44 @@ if ($conn->connect_error) {
 // Permitir solicitudes desde el frontend
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
 
-if ($method === "GET") {
-
-
-   
-    // **INICIO - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
-    
+if ($method === "POST") {
     // Leer los datos enviados desde fetch()
     $data = json_decode(file_get_contents("php://input"), true);
 
+    if (!isset($data["id"]) || !isset($data["estatus"])) {
+        echo json_encode(["error" => "Faltan datos"]);
+        exit;
+    }
 
-    // Insertar la nueva incidencia
-    $sql = "UPDATE incidencias SET estatus = 'facturada' WHERE id=183";    
+    $id = intval($data["id"]);
+    $estatus = $data["estatus"];
+
+    // Validar estatus permitido (opcional, pero recomendable)
+    $estatusPermitidos = ["pendiente", "en proceso", "facturada", "cerrada"];
+    if (!in_array($estatus, $estatusPermitidos)) {
+        echo json_encode(["error" => "Estatus inválido"]);
+        exit;
+    }
+
+    // Actualizar la incidencia
+    $sql = "UPDATE incidencias SET estatus = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $estatus, $id);
 
     if ($stmt->execute()) {
-        echo json_encode(["message" => "Incidencia actualizada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
+        echo json_encode(["message" => "Incidencia actualizada correctamente", "id" => $id, "estatus" => $estatus]);
     } else {
         echo json_encode(["error" => "Error al actualizar incidencia"]);
     }
 
     $stmt->close();
-    
-    
 }
 
 $conn->close();
-
 ?>
