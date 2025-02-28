@@ -15,40 +15,63 @@ if ($conn->connect_error) {
 // Permitir solicitudes desde el frontend
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 // Leer el método HTTP
 $method = $_SERVER["REQUEST_METHOD"];
 
-if ($method === "POST") {
-    // Leer los datos enviados desde fetch()
+if ($method === "GET" && isset($_GET["id"])) {
+    // Obtener una incidencia por ID
+    $id = intval($_GET["id"]);
+    $sql = "SELECT * FROM incidencias WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($row = $result->fetch_assoc()) {
+        echo json_encode($row);
+    } else {
+        echo json_encode(["error" => "Incidencia no encontrada"]);
+    }
+    $stmt->close();
+
+} elseif ($method === "GET") {
+    // Listar todas las incidencias
+    $sql = "SELECT * FROM incidencias WHERE estatus = 'Abierta'";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $incidencias = [];
+        while ($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+        echo json_encode($incidencias);
+    } else {
+        echo json_encode(["message" => "No hay incidencias abiertas"]);
+    }
+
+} elseif ($method === "POST") {
+    // Actualizar estatus de una incidencia
     $data = json_decode(file_get_contents("php://input"), true);
 
-    if (!isset($data["id"]) || !isset($data["estatus"])) {
-        echo json_encode(["error" => "Faltan datos"]);
-        exit;
+    if (!isset($data["id"], $data["estatus"])) {
+        echo json_encode(["error" => "ID y estatus son requeridos"]);
+        exit();
     }
 
     $id = intval($data["id"]);
     $estatus = $data["estatus"];
 
-    // Validar estatus permitido (opcional, pero recomendable)
-    $estatusPermitidos = ["pendiente", "en proceso", "facturada", "cerrada"];
-    if (!in_array($estatus, $estatusPermitidos)) {
-        echo json_encode(["error" => "Estatus inválido"]);
-        exit;
-    }
-
-    // Actualizar la incidencia
     $sql = "UPDATE incidencias SET estatus = ? WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("si", $estatus, $id);
 
     if ($stmt->execute()) {
-        echo json_encode(["message" => "Incidencia actualizada correctamente", "id" => $id, "estatus" => $estatus]);
+        echo json_encode(["message" => "Estatus actualizado correctamente"]);
     } else {
-        echo json_encode(["error" => "Error al actualizar incidencia"]);
+        echo json_encode(["error" => "Error al actualizar estatus"]);
     }
 
     $stmt->close();
