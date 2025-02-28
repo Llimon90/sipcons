@@ -36,14 +36,14 @@ if ($method === "GET") {
     $stmt = $conn->prepare($sql);
 
     if ($stmt->execute()) {
-        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
+        echo json_encode(["message" => "Incidencia actualizada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
     } else {
-        echo json_encode(["error" => "Error al insertar incidencia"]);
+        echo json_encode(["error" => "Error al actualizar incidencia"]);
     }
 
     $stmt->close();
     
-    // **FIN - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
+    
 }
 
 $conn->close();
