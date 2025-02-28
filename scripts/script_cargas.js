@@ -42,13 +42,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${incidencia.estatus}</td>
                     `;
 
-                    // Añadir evento de doble clic a la celda numero_incidente
-    fila.querySelector(".numero-incidente").addEventListener("dblclick", () => {
-        // Redirigir a la página de edición con el ID de la incidencia
-        window.location.href = `crude-incidencia.php?id=${incidencia.id}`; // Asegúrate de que 'id' esté presente en el objeto 'incidencia'
-    });
-
-
                     tbody.appendChild(fila);
                 });
             })
