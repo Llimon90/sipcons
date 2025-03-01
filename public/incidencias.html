@@ -110,7 +110,11 @@
           </div>
         </div>
 
-        <button type="submit">Registrar Incidencia</button>
+        <button type="submit" id="btn-registrar">Registrar Incidencia</button>
+        <button type="button" id="btn-actualizar" style="display: none;">Actualizar</button>
+        <button type="button" id="btn-eliminar" style="display: none;" class="btn-rojo">Eliminar</button>
+        <input type="hidden" id="incidencia-id"> <!-- ID de la incidencia -->
+        
  
       </form>
     </section>
@@ -144,7 +148,7 @@
     </section>
 
 
-    
+
 
     <!-- Modal para editar incidencia -->
 <div id="modal-editar" class="modal">

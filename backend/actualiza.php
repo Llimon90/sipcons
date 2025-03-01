@@ -1,5 +1,5 @@
 <?php
-include 'server.php'; // Archivo que contiene la conexión a la BD
+include 'conexion.php'; // Archivo con la conexión a la BD
 
 $data = json_decode(file_get_contents("php://input"), true);
 
