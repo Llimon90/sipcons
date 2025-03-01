@@ -1,28 +1,49 @@
 <?php
-include 'conexion.php'; // Archivo con la conexión a la BD
+// Configurar conexión con la base de datos
+$host = "localhost";
+$user = "u179371012_root";
+$password = "Llimon.2025";
+$database = "u179371012_sipcons";
 
-// Decodificar los datos recibidos en formato JSON
-$data = json_decode(file_get_contents("php://input"), true);
+$conn = new mysqli($host, $user, $password, $database);
 
-// Verificar que los datos necesarios existan
-if (!isset($data['id'], $data['cliente'], $data['sucursal'], $data['contacto'], $data['falla'], $data['fecha'], $data['tecnico'], $data['estatus'])) {
-    echo json_encode(["error" => "Faltan datos para actualizar"]);
-    exit();
+// Verificar conexión
+if ($conn->connect_error) {
+    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-$sql = "UPDATE incidencias SET cliente=?, sucursal=?, contacto=?, falla=?, fecha=?, tecnico=?, estatus=? WHERE id=?";
-$stmt = $conn->prepare($sql);
+// Permitir solicitudes desde el frontend
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-// Enlace de los parámetros a los valores
-$stmt->bind_param("sssssssi", $data["cliente"], $data["sucursal"], $data["contacto"], $data["falla"], $data["fecha"], $data["tecnico"], $data["estatus"], $data["id"]);
+// Leer el método HTTP
+$method = $_SERVER["REQUEST_METHOD"];
 
-// Ejecutar la consulta y devolver el resultado
-if ($stmt->execute()) {
-    echo json_encode(["message" => "Incidencia actualizada"]);
-} else {
-    echo json_encode(["error" => "Error al actualizar"]);
+if ($method === "POST") {
+    // Leer los datos enviados desde fetch()
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    // Validar los datos
+    if (!isset($data["id"], $data["estatus"])) {
+        echo json_encode(["error" => "Faltan datos requeridos"]);
+        exit();
+    }
+
+    // Preparar la actualización en la BD
+    $sql = "UPDATE incidencias SET estatus = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $data["estatus"], $data["id"]);
+
+    if ($stmt->execute()) {
+        echo json_encode(["message" => "Estatus actualizado correctamente"]);
+    } else {
+        echo json_encode(["error" => "Error al actualizar estatus"]);
+    }
+
+    $stmt->close();
 }
 
-$stmt->close();
 $conn->close();
 ?>

@@ -1,99 +1,62 @@
 document.addEventListener("DOMContentLoaded", function () {
-    document.addEventListener("DOMContentLoaded", function () {
-        const tablaBody = document.getElementById("tabla-body");
-    
-        // Cargar datos en el formulario al hacer doble clic en una fila
-        tablaBody.addEventListener("dblclick", function (event) {
-            const row = event.target.closest("tr");
-            if (!row) return;
-    
-            // Obtener el ID de la fila seleccionada
-            const id = row.dataset.id;
-    
-            // Redirigir a la página de edición pasando el ID en la URL
-            window.location.href = `editar-incidencia.html?id=${id}`;
-        });
-    });
-    
-    // Cargar datos en el formulario al hacer doble clic en una fila
-    tablaBody.addEventListener("dblclick", function (event) {
-        const row = event.target.closest("tr");
-        if (!row) return;
+    // Seleccionar la tabla donde se listan las incidencias
+    const tablaBody = document.getElementById("tabla-body");
 
-        // Obtener datos de la fila
-        inputId.value = row.dataset.id;
-        document.getElementById("cliente").value = row.querySelector(".cliente").textContent;
-        document.getElementById("sucursal").value = row.querySelector(".sucursal").textContent;
-        document.getElementById("contacto").value = row.querySelector(".contacto").textContent;
-        document.getElementById("falla").value = row.querySelector(".falla").textContent;
-        document.getElementById("fecha").value = row.querySelector(".fecha").textContent;
-        document.getElementById("tecnico").value = row.querySelector(".tecnico").textContent;
-        document.getElementById("estatus").value = row.querySelector(".estatus").textContent;
-
-        // Ocultar botón de registrar y mostrar botones de actualizar/eliminar
-        btnRegistrar.style.display = "none";
-        btnActualizar.style.display = "inline-block";
-        btnEliminar.style.display = "inline-block";
-    });
-
-    // Actualizar incidencia
-    btnActualizar.addEventListener("click", function () {
-        if (!inputId.value) {
-            alert("No se encontró el ID de la incidencia");
-            return;
-        }
-
-        const incidenciaActualizada = {
-            id: inputId.value,
-            cliente: document.getElementById("cliente").value,
-            sucursal: document.getElementById("sucursal").value,
-            contacto: document.getElementById("contacto").value,
-            falla: document.getElementById("falla").value,
-            fecha: document.getElementById("fecha").value,
-            tecnico: document.getElementById("tecnico").value,
-            estatus: document.getElementById("estatus").value,
-        };
-
-        fetch("../backend/actualiza.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(incidenciaActualizada),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                alert(data.message);
-                location.reload(); // Recargar la página
-            }
-        })
-        .catch(error => alert("Error al actualizar la incidencia"));
-    });
-
-    // Eliminar incidencia
-    btnEliminar.addEventListener("click", function () {
-        if (!inputId.value) {
-            alert("No se encontró el ID de la incidencia");
-            return;
-        }
-
-        if (confirm("¿Estás seguro de eliminar esta incidencia?")) {
-            fetch("../backend/elimina.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: inputId.value }),
-            })
+    // Cargar incidencias existentes y permitir edición de estatus
+    function cargarIncidencias() {
+        fetch("../backend/server.php")
             .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert(data.message);
-                    location.reload(); // Recargar la página
-                }
+            .then(incidencias => {
+                tablaBody.innerHTML = ""; // Limpiar tabla antes de llenar
+
+                incidencias.forEach(incidencia => {
+                    const fila = document.createElement("tr");
+
+                    fila.innerHTML = `
+                        <td>${incidencia.numero}</td>
+                        <td>${incidencia.numero_incidente}</td>
+                        <td>${incidencia.cliente}</td>
+                        <td>${incidencia.sucursal}</td>
+                        <td>${incidencia.falla}</td>
+                        <td>${incidencia.fecha}</td>
+                        <td>
+                            <select class="estatus-select" data-id="${incidencia.id}">
+                                <option value="Abierta" ${incidencia.estatus === "Abierta" ? "selected" : ""}>Abierta</option>
+                                <option value="Pendiente" ${incidencia.estatus === "Pendiente" ? "selected" : ""}>Pendiente</option>
+                                <option value="En seguimiento" ${incidencia.estatus === "En seguimiento" ? "selected" : ""}>En Seguimiento</option>
+                                <option value="Facturada" ${incidencia.estatus === "Facturada" ? "selected" : ""}>Facturada</option>
+                            </select>
+                        </td>
+                    `;
+
+                    tablaBody.appendChild(fila);
+                });
+
+                // Agregar evento para actualizar estatus en la BD
+                document.querySelectorAll(".estatus-select").forEach(select => {
+                    select.addEventListener("change", function () {
+                        const id = this.dataset.id;
+                        const nuevoEstatus = this.value;
+
+                        fetch("../backend/actualiza.php", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ id, estatus: nuevoEstatus }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message || data.error);
+                        })
+                        .catch(error => {
+                            console.error("Error al actualizar estatus:", error);
+                            alert("Hubo un error al actualizar el estatus");
+                        });
+                    });
+                });
             })
-            .catch(error => alert("Error al eliminar la incidencia"));
-        }
-    });
+            .catch(error => console.error("Error al cargar incidencias:", error));
+    }
+
+    // Cargar incidencias al cargar la página
+    cargarIncidencias();
 });
