@@ -144,6 +144,59 @@
     </section>
 
 
+    
+
+    <!-- Modal para editar incidencia -->
+<div id="modal-editar" class="modal">
+  <div class="modal-contenido">
+    <span class="cerrar">&times;</span>
+    <h2>Editar Incidencia</h2>
+    <form id="form-editar">
+      <input type="hidden" id="edit-id"> <!-- ID de la incidencia -->
+
+      <label for="edit-cliente">Cliente</label>
+      <select id="edit-cliente" required>
+        <option value="Calimax">Calimax</option>
+        <option value="Florido">Florido</option>
+        <option value="Rancho del tio">Rancho del Tío</option>
+        <option value="Grano de oro">Grano de Oro</option>
+      </select>
+
+      <label for="edit-sucursal">Sucursal</label>
+      <input type="text" id="edit-sucursal" required>
+
+      <label for="edit-contacto">Reporta</label>
+      <input type="text" id="edit-contacto" required>
+
+      <label for="edit-falla">Falla Reportada</label>
+      <input type="text" id="edit-falla" required>
+
+      <label for="edit-fecha">Fecha de Reporte</label>
+      <input type="date" id="edit-fecha" required>
+
+      <label for="edit-tecnico">Técnico Asignado</label>
+      <select id="edit-tecnico" required>
+        <option value="Victor Cordoba">Victor Cordoba</option>
+        <option value="Tomás Vázquez">Tomás Vázquez</option>
+        <option value="Francisco Aguiar">Francisco Aguiar</option>
+        <option value="Mauricio Díaz">Mauricio Díaz</option>
+      </select>
+
+      <label for="edit-estatus">Estatus</label>
+      <select id="edit-estatus" required>
+        <option value="Abierta">Abierta</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="En seguimiento">En Seguimiento</option>
+        <option value="Facturada">Facturada</option>
+      </select>
+
+      <button type="submit">Actualizar</button>
+      <button type="button" id="btn-eliminar" class="btn-rojo">Eliminar</button>
+    </form>
+  </div>
+</div>
+
+
   <!-- /*Establecer fecha actual en el input de fecha*/ -->
   <script>
 
