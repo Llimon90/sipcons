@@ -30,6 +30,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Actualizar incidencia
     btnActualizar.addEventListener("click", function () {
+        if (!inputId.value) {
+            alert("No se encontró el ID de la incidencia");
+            return;
+        }
+
         const incidenciaActualizada = {
             id: inputId.value,
             cliente: document.getElementById("cliente").value,
@@ -48,14 +53,23 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(response => response.json())
         .then(data => {
-            alert(data.message || data.error);
-            location.reload();
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert(data.message);
+                location.reload(); // Recargar la página
+            }
         })
         .catch(error => alert("Error al actualizar la incidencia"));
     });
 
     // Eliminar incidencia
     btnEliminar.addEventListener("click", function () {
+        if (!inputId.value) {
+            alert("No se encontró el ID de la incidencia");
+            return;
+        }
+
         if (confirm("¿Estás seguro de eliminar esta incidencia?")) {
             fetch("../backend/elimina.php", {
                 method: "POST",
@@ -64,8 +78,12 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message || data.error);
-                location.reload();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.message);
+                    location.reload(); // Recargar la página
+                }
             })
             .catch(error => alert("Error al eliminar la incidencia"));
         }
