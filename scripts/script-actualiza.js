@@ -1,12 +1,20 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const tablaBody = document.getElementById("tabla-body");
-    const form = document.getElementById("new-incidencia-form");
-
-    const btnRegistrar = document.getElementById("btn-registrar");
-    const btnActualizar = document.getElementById("btn-actualizar");
-    const btnEliminar = document.getElementById("btn-eliminar");
-    const inputId = document.getElementById("incidencia-id");
-
+    document.addEventListener("DOMContentLoaded", function () {
+        const tablaBody = document.getElementById("tabla-body");
+    
+        // Cargar datos en el formulario al hacer doble clic en una fila
+        tablaBody.addEventListener("dblclick", function (event) {
+            const row = event.target.closest("tr");
+            if (!row) return;
+    
+            // Obtener el ID de la fila seleccionada
+            const id = row.dataset.id;
+    
+            // Redirigir a la página de edición pasando el ID en la URL
+            window.location.href = `editar-incidencia.html?id=${id}`;
+        });
+    });
+    
     // Cargar datos en el formulario al hacer doble clic en una fila
     tablaBody.addEventListener("dblclick", function (event) {
         const row = event.target.closest("tr");
