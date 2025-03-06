@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function() {
       <div style="overflow-x: auto;">
         <table border="1" style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="background-color: #f2f2f2;">
+            <tr>
               <th># REPORTE INTERNO</th>
               <th># INCIDENCIA CLIENTE</th>
               <th>CLIENTE</th>

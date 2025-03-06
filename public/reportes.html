@@ -27,7 +27,6 @@
 
   <!-- Contenido principal -->
   <main class="container">
-    <!-- Formulario para seleccionar filtros de reporte -->
     <section class="encabezado">
       <h2>Filtrar incidencias</h2>
       <form id="report-form">
@@ -60,10 +59,24 @@
     <section id="report-results">
       <h2>Historial de incidencias</h2>
       <div id="report-data" style="overflow-x: auto;">
-        <!-- Los reportes generados dinámicamente aparecerán aquí -->
+        <table>
+          <thead>
+            <tr>
+              <th>Incidencia Cliente</th>
+              <th># Reporte Interno</th>
+              <th>Cliente</th>
+              <th>Sucursal</th>
+              <th>Falla</th>
+              <th>Fecha</th>
+              <th>Estatus</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body">
+            <!-- Los reportes generados dinámicamente aparecerán aquí -->
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
-
 </body>
 </html>
