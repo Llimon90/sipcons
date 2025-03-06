@@ -142,13 +142,14 @@ button:hover {
 }
 
 
-/* Estilo para la lista de incidencias */
+/* Estilo para TABLAS de incidencias */
 .lista-incidencias {
   margin-top: 20px;
   background-color: #ffffff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 /* ESTILOS INDEX menu */
