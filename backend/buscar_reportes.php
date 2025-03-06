@@ -13,10 +13,27 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// ** INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM **
+// Recibir los parámetros de búsqueda
+$cliente = isset($_GET['cliente']) ? $_GET['cliente'] : '';
+$fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : '';
+$fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : '';
 
-// Consulta para obtener todas las incidencias sin filtrar
-$sql = "SELECT * FROM incidencias";
+// Construir la consulta SQL
+$sql = "SELECT * FROM incidencias WHERE 1";
+
+// Aplicar los filtros
+if ($cliente && $cliente !== 'todos') {
+    $sql .= " AND cliente = '$cliente'";
+}
+
+if ($fecha_inicio) {
+    $sql .= " AND fecha >= '$fecha_inicio'";
+}
+
+if ($fecha_fin) {
+    $sql .= " AND fecha <= '$fecha_fin'";
+}
+
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
@@ -28,8 +45,6 @@ if ($result->num_rows > 0) {
 } else {
     echo json_encode(["message" => "No hay incidencias abiertas"]);
 }
-
-// ** FIN - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM **
 
 // Cerrar la conexión
 $conn->close();
