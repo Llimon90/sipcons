@@ -7,43 +7,30 @@ $database = "u179371012_sipcons";
 
 $conn = new mysqli($host, $user, $password, $database);
 
-// Verificar conexión
+// Verificar la conexión
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// Permitir solicitudes desde el frontend
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+// Leer los datos enviados desde el frontend
+$data = json_decode(file_get_contents("php://input"), true);
 
-// Leer el método HTTP
-$method = $_SERVER["REQUEST_METHOD"];
-
-if ($method === "POST") {
-    // Leer los datos enviados desde fetch()
-    $data = json_decode(file_get_contents("php://input"), true);
-
-    // Validar los datos
-    if (!isset($data["id"], $data["estatus"])) {
-        echo json_encode(["error" => "Faltan datos requeridos"]);
-        exit();
-    }
-
-    // Preparar la actualización en la BD
-    $sql = "UPDATE incidencias SET estatus = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $data["estatus"], $data["id"]);
-
-    if ($stmt->execute()) {
-        echo json_encode(["message" => "Estatus actualizado correctamente"]);
-    } else {
-        echo json_encode(["error" => "Error al actualizar estatus"]);
-    }
-
-    $stmt->close();
+if (!isset($data['id'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'])) {
+    echo json_encode(["error" => "Faltan datos"]);
+    exit();
 }
 
+// Actualizar la incidencia en la base de datos
+$sql = "UPDATE incidencias SET cliente = ?, contacto = ?, sucursal = ?, fecha = ?, tecnico = ?, estatus = ?, falla = ?, accion = ? WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("ssssssssi", $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'], $data['id']);
+
+if ($stmt->execute()) {
+    echo json_encode(["success" => true]);
+} else {
+    echo json_encode(["error" => "Error al actualizar la incidencia"]);
+}
+
+$stmt->close();
 $conn->close();
 ?>

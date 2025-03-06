@@ -35,20 +35,95 @@
                         return;
                     }
 
+                    // Crear el formulario para la edición
                     document.getElementById("detalle-incidencia").innerHTML = `
+                        <form id="form-editar">
+                            <p><strong># de incidencia cliente:</strong> ${data.numero}</p>
+                            <p><strong># de reporte interno:</strong> ${data.numero_incidente}</p>
+                            
+                            <p><strong>Cliente:</strong> 
+                                <input type="text" id="cliente" value="${data.cliente}" required>
+                            </p>
 
-                        <p><strong># de incidencia cliente:</strong> ${data.numero}</p>
-                        <p><strong># de reporte intenro:</strong> ${data.numero_incidente}</p>
-                        <p><strong>Cliente:</strong> ${data.cliente}</p>
-                        <p><strong>Contacto:</strong> ${data.contacto}</p>
-                        <p><strong>Sucursal:</strong> ${data.sucursal}</p>
-                        <p><strong>Fecha:</strong> ${data.fecha}</p>
-                        <p><strong>Técnico:</strong> ${data.tecnico}</p>
-                        <p><strong>Estatus:</strong> ${data.estatus}</p>
-                        <p><strong>Falla:</strong> ${data.falla}</p>
-                        <p><strong>Trabajo realizado:</strong> ${data.accion}</p>
+                            <p><strong>Contacto:</strong> 
+                                <input type="text" id="contacto" value="${data.contacto}" required>
+                            </p>
 
+                            <p><strong>Sucursal:</strong> 
+                                <input type="text" id="sucursal" value="${data.sucursal}" required>
+                            </p>
+
+                            <p><strong>Fecha:</strong> 
+                                <input type="date" id="fecha" value="${data.fecha}" required>
+                            </p>
+
+                            <p><strong>Técnico:</strong> 
+                                <input type="text" id="tecnico" value="${data.tecnico}" required>
+                            </p>
+
+                            <p><strong>Estatus:</strong> 
+                                <select id="estatus">
+                                    <option value="Abierta" ${data.estatus === "Abierta" ? 'selected' : ''}>Abierta</option>
+                                    <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
+                                    <option value="En seguimiento" ${data.estatus === "En seguimiento" ? 'selected' : ''}>En seguimiento</option>
+                                    <option value="Facturada" ${data.estatus === "Facturada" ? 'selected' : ''}>Facturada</option>
+                                </select>
+                            </p>
+
+                            <p><strong>Falla:</strong>
+                                <textarea id="falla" required>${data.falla}</textarea>
+                            </p>
+
+                            <p><strong>Trabajo realizado:</strong>
+                                <textarea id="accion">${data.accion}</textarea>
+                            </p>
+
+                            <button type="submit">Guardar cambios</button>
+                        </form>
                     `;
+
+                    // Guardar cambios al enviar el formulario
+                    document.getElementById("form-editar").addEventListener("submit", function (e) {
+                        e.preventDefault(); // Prevenir el envío por defecto
+
+                        const cliente = document.getElementById("cliente").value;
+                        const contacto = document.getElementById("contacto").value;
+                        const sucursal = document.getElementById("sucursal").value;
+                        const fecha = document.getElementById("fecha").value;
+                        const tecnico = document.getElementById("tecnico").value;
+                        const estatus = document.getElementById("estatus").value;
+                        const falla = document.getElementById("falla").value;
+                        const accion = document.getElementById("accion").value;
+
+                        // Hacer la petición para actualizar la incidencia
+                        fetch("../backend/actualiza.php", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: id,
+                                cliente: cliente,
+                                contacto: contacto,
+                                sucursal: sucursal,
+                                fecha: fecha,
+                                tecnico: tecnico,
+                                estatus: estatus,
+                                falla: falla,
+                                accion: accion
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Incidencia actualizada correctamente");
+                                window.location.href = "incidencias.html"; // Redirigir a la página de incidencias
+                            } else {
+                                alert("Error al actualizar la incidencia");
+                            }
+                        })
+                        .catch(error => console.error("Error al actualizar incidencia:", error));
+                    });
                 })
                 .catch(error => console.error("Error al cargar detalles:", error));
         });
