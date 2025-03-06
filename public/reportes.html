@@ -3,20 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buscar</title>
+  <title>Buscar Incidencias</title>
   <link rel="stylesheet" href="../css/styles.css?v=1.9">
-
-  
+  <script src="../scripts/script-busquedas.js" defer></script>
 </head>
 <body>
 
-  <div class="retorna" >
-    <a href="/index.html">  <<- Inicio</a>
-    </div>
-    
+  <div class="retorna">
+    <a href="/index.html">← Volver a Inicio</a>
+  </div>
+
   <!-- Panel lateral -->
-  <aside class="sidebar">
- 
+  <aside class="sidebar" role="navigation" aria-label="Menú de navegación">
     <ul>
       <li><a href="/index.html">Inicio</a></li>
       <li><a href="incidencias.html">Incidencias</a></li>
@@ -28,7 +26,7 @@
   </aside>
 
   <!-- Contenido principal -->
-  <main>
+  <main class="container">
     <!-- Formulario para seleccionar filtros de reporte -->
     <section class="encabezado">
       <h2>Filtrar incidencias</h2>
@@ -54,19 +52,18 @@
           <input type="date" id="fecha-fin" name="fecha-fin" required>
         </div>
 
-        <button type="submit">Buscar</button>
+        <button type="submit" aria-label="Buscar incidencias">Buscar</button>
       </form>
     </section>
 
     <!-- Resultados del Reporte -->
     <section id="report-results">
       <h2>Historial de incidencias</h2>
-      <div id="report-data">
+      <div id="report-data" style="overflow-x: auto;">
         <!-- Los reportes generados dinámicamente aparecerán aquí -->
       </div>
     </section>
   </main>
 
-  <script src="../scripts/script-busquedas.js" defer></script>
 </body>
 </html>
