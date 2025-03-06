@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
   // Función para cargar las incidencias desde el servidor
   function cargarIncidencias() {
-    fetch('../backend/obtener_incidencias.php') // Cambia el archivo según tu nombre PHP
+    fetch('../backend/buscar_reportes.php') // Cambia el archivo según tu nombre PHP
       .then(response => response.json())
       .then(data => {
         if (data.error) {
