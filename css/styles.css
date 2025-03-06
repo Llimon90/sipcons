@@ -75,7 +75,56 @@ h2 {
 
 
 
-/* Asegurar dos columnas con igual ancho */
+/* ESTILOS PARA FORMULARIOS EDITAR */
+#form-editar {
+  flex: 1;
+  
+}
+
+input[type="text"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus {
+  border: 1px solid #3498db;
+  outline: none;
+}
+
+/* Botón */
+button {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+/* Responsividad */
+@media (max-width: 600px) {
+  .form-editar {
+    flex-direction: column;
+  }
+}
+
+
+
+/*ESTILOS PARA FORMULARIOS DE ALTA*/
 .form-row div {
   flex: 1;
 }
