@@ -1,67 +1,78 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('report-form');
-    const reportResults = document.getElementById('report-data');
-    
-    form.addEventListener('submit', function (event) {
-      event.preventDefault(); // Evita que el formulario se envíe de manera tradicional
-      
-      const cliente = document.getElementById('cliente').value;
-      const fechaInicio = document.getElementById('fecha-inicio').value;
-      const fechaFin = document.getElementById('fecha-fin').value;
-  
-      // Validación básica
-      if (!cliente || !fechaInicio || !fechaFin) {
-        alert('Por favor, complete todos los campos.');
-        return;
-      }
-  
-      // Realizar la solicitud al servidor para obtener los reportes
-      fetch(`buscar_reportes.php?cliente=${cliente}&fecha-inicio=${fechaInicio}&fecha-fin=${fechaFin}`)
-        .then(response => response.json())
-        .then(data => {
-          // Mostrar los resultados
-          mostrarResultados(data);
-        })
-        .catch(error => {
-          console.error("Error al obtener los reportes:", error);
-          alert("Hubo un problema al obtener los reportes.");
-        });
+document.addEventListener("DOMContentLoaded", function() {
+  // Función para cargar las incidencias desde el servidor
+  function cargarIncidencias() {
+    fetch('../backend/obtener_incidencias.php') // Cambia el archivo según tu nombre PHP
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('report-data').innerHTML = `<p>${data.error}</p>`;
+        } else {
+          mostrarIncidencias(data);
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar las incidencias:', error);
+        document.getElementById('report-data').innerHTML = "<p>Error al cargar los datos.</p>";
+      });
+  }
+
+  // Función para mostrar las incidencias en una tabla
+  function mostrarIncidencias(incidencias) {
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th># Incidencia</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Estatus</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    incidencias.forEach(incidencia => {
+      html += `
+        <tr>
+          <td>${incidencia.numero}</td>
+          <td>${incidencia.cliente}</td>
+          <td>${incidencia.fecha}</td>
+          <td>${incidencia.estatus}</td>
+          <td><a href="detalle-incidencia.html?id=${incidencia.id}">Ver detalle</a></td>
+        </tr>
+      `;
     });
-  
-    function mostrarResultados(reportData) {
-      // Limpiar los resultados anteriores
-      reportResults.innerHTML = '';
-  
-      // Verificar si se encontraron reportes
-      if (reportData.error) {
-        reportResults.innerHTML = `<p>${reportData.error}</p>`;
-      } else if (reportData.mensaje) {
-        reportResults.innerHTML = `<p>${reportData.mensaje}</p>`;
-      } else {
-        // Crear la tabla
-        const table = document.createElement('table');
-        table.classList.add('report-table');
-        
-        // Crear la fila de cabecera
-        const headerRow = document.createElement('tr');
-        headerRow.innerHTML = '<th>ID</th><th>Cliente</th><th>Fecha</th><th>Descripción</th>';
-        table.appendChild(headerRow);
-  
-        // Agregar las filas de los reportes
-        reportData.forEach((reporte) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${reporte.id}</td>
-            <td>${reporte.cliente}</td>
-            <td>${reporte.fecha}</td>
-            <td>${reporte.descripcion}</td>
-          `;
-          table.appendChild(row);
-        });
-  
-        // Insertar la tabla en el contenedor de resultados
-        reportResults.appendChild(table);
-      }
-    }
+
+    html += `</tbody></table>`;
+    document.getElementById('report-data').innerHTML = html;
+  }
+
+  // Cargar las incidencias al cargar la página
+  cargarIncidencias();
+
+  // Filtrar incidencias
+  const form = document.getElementById('report-form');
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const cliente = document.getElementById('cliente').value;
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    // Enviar los datos de filtro al backend
+    fetch(`../backend/filtrar_incidencias.php?cliente=${cliente}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('report-data').innerHTML = `<p>${data.error}</p>`;
+        } else {
+          mostrarIncidencias(data);
+        }
+      })
+      .catch(error => {
+        console.error('Error al filtrar incidencias:', error);
+        document.getElementById('report-data').innerHTML = "<p>Error al filtrar los datos.</p>";
+      });
   });
-  
+});
