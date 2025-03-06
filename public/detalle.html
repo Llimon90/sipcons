@@ -121,7 +121,7 @@
                     // Guardar cambios al enviar el formulario
                         document.getElementById("form-editar").addEventListener("submit", function (e) {
                             e.preventDefault(); // Prevenir el envío por defecto
-
+                            const numero = document.getElementById("numero").value;
                             const cliente = document.getElementById("cliente").value;
                             const contacto = document.getElementById("contacto").value;
                             const sucursal = document.getElementById("sucursal").value;
@@ -139,6 +139,7 @@
                              },
                                 body: JSON.stringify({
                                     id: id,
+                                    cliente: cliente,
                                     cliente: cliente,
                                     contacto: contacto,
                                     sucursal: sucursal,
