@@ -22,11 +22,16 @@ document.addEventListener("DOMContentLoaded", function() {
       <table>
         <thead>
           <tr>
-            <th># Incidencia</th>
-            <th>Cliente</th>
-            <th>Fecha</th>
-            <th>Estatus</th>
-            <th>Acción</th>
+            <th># REPORTE INTERNO</th>
+            <th># INCIDENCIA CLIENTE</th>
+            <th>CLIENTE</th>
+            <th>CONTACTO</th>
+            <th>SUCURSAL</th>
+            <th>FECHA</th>
+            <th>TÉCNICO</th>
+            <th>FALLA</th>
+            <th>ESTATUS</th>  
+            <th>TRABAJO REALIZADO</th>
           </tr>
         </thead>
         <tbody>
@@ -35,10 +40,18 @@ document.addEventListener("DOMContentLoaded", function() {
     incidencias.forEach(incidencia => {
       html += `
         <tr>
+          <td>${incidencia.numero_incidente}</td>
           <td>${incidencia.numero}</td>
           <td>${incidencia.cliente}</td>
+          <td>${incidencia.contacto}</td>
+          <td>${incidencia.sucursal}</td>
           <td>${incidencia.fecha}</td>
+          <td>${incidencia.tecnico}</td>
+          <td>${incidencia.falla}</td>
           <td>${incidencia.estatus}</td>
+          <td>${incidencia.accion}</td>
+          
+          
           <td><a href="detalle-incidencia.html?id=${incidencia.id}">Ver detalle</a></td>
         </tr>
       `;
