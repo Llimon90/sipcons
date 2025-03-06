@@ -53,7 +53,7 @@ if ($result->num_rows > 0) {
     }
     echo json_encode($incidencias);
 } else {
-    echo json_encode(["message" => "No hay incidencias abiertas"]);
+    echo json_encode(["message" => "No se encontraron datos"]);
 }
 
 // Cerrar la conexión
