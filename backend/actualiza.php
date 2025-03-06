@@ -23,7 +23,7 @@ if (!isset($data['id'], $data['numero'], $data['cliente'], $data['contacto'], $d
 // Actualizar la incidencia en la base de datos
 $sql = "UPDATE incidencias SET numero = ?, cliente = ?, contacto = ?, sucursal = ?, fecha = ?, tecnico = ?, estatus = ?, falla = ?, accion = ? WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ssssssssi", $data['numero'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'], $data['id']);
+$stmt->bind_param("sssssssssi", $data['numero'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'], $data['id']);
 
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);
