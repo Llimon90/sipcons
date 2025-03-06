@@ -15,7 +15,7 @@ if ($conn->connect_error) {
 // Leer los datos enviados desde el frontend
 $data = json_decode(file_get_contents("php://input"), true);
 
-if (!isset($data['id'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'])) {
+if (!isset($data['id'], $data['numero'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'])) {
     echo json_encode(["error" => "Faltan datos"]);
     exit();
 }
@@ -23,7 +23,7 @@ if (!isset($data['id'], $data['cliente'], $data['contacto'], $data['sucursal'], 
 // Actualizar la incidencia en la base de datos
 $sql = "UPDATE incidencias SET numero = ?, cliente = ?, contacto = ?, sucursal = ?, fecha = ?, tecnico = ?, estatus = ?, falla = ?, accion = ? WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("sssssssssi", $data['numero'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'], $data['id']);
+$stmt->bind_param("ssssssssi", $data['numero'], $data['cliente'], $data['contacto'], $data['sucursal'], $data['fecha'], $data['tecnico'], $data['estatus'], $data['falla'], $data['accion'], $data['id']);
 
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);
