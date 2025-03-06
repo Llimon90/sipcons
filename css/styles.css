@@ -73,50 +73,6 @@ h2 {
 }
 
 /*ESTILOS PARA FORMS */
-/* Estilo para los formularios */
-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px; /* Espacio entre los campos */
-}
-
-/* Contenedor de cada campo */
-form > div {
-    width: 48%; /* El 50% del ancho, menos el espacio entre elementos */
-    box-sizing: border-box;
-}
-
-/* Estilo para los inputs y selects */
-input, select, textarea {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-/* Estilo para los botones */
-button {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-/* Responsividad: Para pantallas pequeñas */
-@media (max-width: 768px) {
-    form > div {
-        width: 100%; /* Para pantallas pequeñas, hacer que los campos ocupen todo el ancho */
-    }
-}
 
 /*ESTILOS PARA FORMULARIOS DE ALTA*/
 .form-row div {
