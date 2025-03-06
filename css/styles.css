@@ -165,6 +165,19 @@ button:hover {
   text-align: center;
 }
 
+.lista-incidencias th, 
+.lista-incidencias td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  vertical-align: middle;
+  white-space: normal; /* Permite saltos de línea */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limita a 3 líneas */
+  -webkit-box-orient: vertical;
+}
 
 /* ESTILOS INDEX menu */
 
