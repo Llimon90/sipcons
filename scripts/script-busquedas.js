@@ -155,6 +155,18 @@ document.addEventListener("DOMContentLoaded", function() {
     cargarIncidencias(); // Cargar incidencias con los filtros seleccionados
   });
 
+
+
+   // Agregar funcionalidad al botón de limpiar filtros
+   document.getElementById('limpiar-filtros').addEventListener('click', function() {
+    // Limpiar todos los filtros
+    document.getElementById('report-form').reset();
+
+    // Recargar la página para limpiar los datos cargados
+    window.location.reload();
+  });
+
+  
   // Cargar las incidencias al cargar la página (sin filtros)
   cargarIncidencias();
 });
