@@ -76,7 +76,7 @@ h2 {
 
 
 /* Asegurar dos columnas con igual ancho */
-.form-row div P {
+.form-row div {
   flex: 1;
 }
 
