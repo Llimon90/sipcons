@@ -143,6 +143,34 @@ button:hover {
 
 
 /* Estilo para TABLAS de incidencias */
+
+.lista-incidencias table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  text-align: center;
+  table-layout: fixed; /* Fija el tamaño de las columnas */
+}
+
+.lista-incidencias th, 
+.lista-incidencias td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap; /* Evita que el texto haga saltos de línea */
+  overflow: hidden; /* Oculta el texto que sobrepasa el tamaño */
+  text-overflow: ellipsis; /* Muestra '...' si el texto es demasiado largo */
+}
+
+.lista-incidencias tbody tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+.lista-incidencias tbody tr:hover {
+  background-color: #e0e0ff;
+}
+
 .lista-incidencias  {
   margin-top: 20px;
   background-color: #ffffff;
@@ -164,26 +192,7 @@ button:hover {
   text-align: center;
 }
 
-.lista-incidencias thead {
-  background-color: #1637cc;
-  color: white;
-}
 
-.lista-incidencias th, 
-.lista-incidencias td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: center; /* Centrar contenido horizontalmente */
-  vertical-align: middle; /* Centrar contenido verticalmente */
-}
-
-.lista-incidencias tbody tr:nth-child(even) {
-  background-color: #f3f3f3;
-}
-
-.lista-incidencias tbody tr:hover {
-  background-color: #e0e0ff;
-}
 /* ESTILOS INDEX menu */
 
 /* Contenedor principal del contenido del administrador */
