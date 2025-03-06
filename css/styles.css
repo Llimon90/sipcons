@@ -192,6 +192,36 @@ button:hover {
   text-align: center;
 }
 
+.lista-incidencias table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  text-align: center;
+  table-layout: fixed; /* Evita que las columnas se expandan */
+}
+
+.lista-incidencias th, 
+.lista-incidencias td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  vertical-align: middle;
+  white-space: normal; /* Permite que haya saltos de línea */
+  overflow: hidden; /* Oculta el texto que sobrepasa el tamaño */
+  text-overflow: ellipsis; /* Agrega "..." si el texto es muy largo */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limita a 2 líneas */
+  -webkit-box-orient: vertical;
+}
+
+.lista-incidencias tbody tr:nth-child(even) {
+  background-color: #f3f3f3;
+}
+
+.lista-incidencias tbody tr:hover {
+  background-color: #e0e0ff;
+}
+
 
 /* ESTILOS INDEX menu */
 
