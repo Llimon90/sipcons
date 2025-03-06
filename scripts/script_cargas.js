@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
-                        <td><a href="detalle.html?id=${incidencia.id}" style="color: blue; text-decoration: underline;">${incidencia.numero_incidente}</a></td>
+                        <a href="detalle.html?id=${incidencia.id}" style="color: blue; text-decoration: underline;"><td>${incidencia.numero_incidente}</td></a>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
