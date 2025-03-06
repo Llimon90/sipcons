@@ -55,9 +55,11 @@
 
                     // Crear el formulario para la edición
                     document.getElementById("detalle-incidencia").innerHTML = `
+                    
+                    <div class="form-row>"
                         <form id="form-editar">
 
-                            <div class="form-row>"
+                        
                             
                                 <p><strong># de reporte interno:</strong> ${data.numero_incidente}</p>
 
@@ -74,7 +76,7 @@
                                     <label>Cliente:</label> 
                                     <input type="text" id="cliente" value="${data.cliente}" required>
                                 </div>  
-                           </div> 
+                    </div> 
 
                             <p><strong>Contacto:</strong> 
                                 <input type="text" id="contacto" value="${data.contacto}" required>
