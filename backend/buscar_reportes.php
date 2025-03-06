@@ -17,6 +17,8 @@ if ($conn->connect_error) {
 $cliente = isset($_GET['cliente']) ? $_GET['cliente'] : '';
 $fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : '';
 $fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : '';
+$estatus = isset($_GET['estatus']) ? $_GET['estatus'] : '';
+$sucursal = isset($_GET['sucursal']) ? $_GET['sucursal'] : '';
 
 // Construir la consulta SQL
 $sql = "SELECT * FROM incidencias WHERE 1";
@@ -32,6 +34,14 @@ if ($fecha_inicio) {
 
 if ($fecha_fin) {
     $sql .= " AND fecha <= '$fecha_fin'";
+}
+
+if ($estatus) {
+    $sql .= " AND estatus = '$estatus'";
+}
+
+if ($sucursal) {
+    $sql .= " AND sucursal = '$sucursal'";
 }
 
 $result = $conn->query($sql);

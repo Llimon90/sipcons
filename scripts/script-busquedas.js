@@ -72,15 +72,17 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-  // Función para cargar las incidencias desde el servidor con filtros
+  // Función para cargar las incidencias desde el servidor con los filtros
   function cargarIncidencias() {
     // Obtener los valores de los filtros
     const cliente = document.getElementById('cliente').value;
     const fechaInicio = document.getElementById('fecha-inicio').value;
     const fechaFin = document.getElementById('fecha-fin').value;
+    const estatus = document.getElementById('estatus').value;
+    const sucursal = document.getElementById('sucursal').value;
 
     // Construir la URL con los parámetros de búsqueda
-    let url = `../backend/buscar_reportes.php?cliente=${cliente}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+    let url = `../backend/buscar_reportes.php?cliente=${cliente}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&estatus=${estatus}&sucursal=${sucursal}`;
 
     fetch(url)
       .then(response => response.json())
