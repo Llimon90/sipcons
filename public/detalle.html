@@ -56,8 +56,8 @@
                     // Crear el formulario para la edición
                     document.getElementById("detalle-incidencia").innerHTML = `
                     
-                    <form id="new-incidencia-form">
-                    <div class="form-row>"
+                   
+                  
                         <form id="form-editar">
 
                         
@@ -77,7 +77,7 @@
                                     <label>Cliente:</label> 
                                     <input type="text" id="cliente" value="${data.cliente}" required>
                                 </div>  
-                    </div> 
+                    
 
                             <p><strong>Contacto:</strong> 
                                 <input type="text" id="contacto" value="${data.contacto}" required>
@@ -113,8 +113,9 @@
                             </p>
 
                             <button type="submit">Guardar cambios</button>
-                             </form>
+                            
                         </form>
+                  
                     `;
 
                     // Guardar cambios al enviar el formulario
