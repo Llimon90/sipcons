@@ -72,8 +72,11 @@ h2 {
   margin-bottom: 15px;
 }
 
+
+
+
 /* Asegurar dos columnas con igual ancho */
-.form-row div {
+.form-row div P {
   flex: 1;
 }
 
