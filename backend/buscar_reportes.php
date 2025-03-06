@@ -13,40 +13,26 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// Obtener parámetros del formulario (desde el frontend)
-$cliente = isset($_GET['cliente']) ? $_GET['cliente'] : '';
-$fechaInicio = isset($_GET['fecha-inicio']) ? $_GET['fecha-inicio'] : '';
-$fechaFin = isset($_GET['fecha-fin']) ? $_GET['fecha-fin'] : '';
+ // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
+    
+    // Consulta para obtener todas las incidencias sin filtrar
+    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierta', 'En seguimiento', 'Pendiente')";
 
-// Preparar la consulta SQL
-$sql = "SELECT id, cliente, fecha, descripcion FROM reportes WHERE 1=1";
 
-// Aplicar filtros si existen
-if ($cliente !== 'todos' && $cliente !== '') {
-    $sql .= " AND cliente = '$cliente'";
-}
 
-if ($fechaInicio !== '') {
-    $sql .= " AND fecha >= '$fechaInicio'";
-}
+    $result = $conn->query($sql);
 
-if ($fechaFin !== '') {
-    $sql .= " AND fecha <= '$fechaFin'";
-}
-
-// Ejecutar la consulta
-$result = $conn->query($sql);
-
-// Verificar si hay resultados
-if ($result->num_rows > 0) {
-    $reportes = [];
-    while ($row = $result->fetch_assoc()) {
-        $reportes[] = $row;
+    if ($result->num_rows > 0) {
+        $incidencias = [];
+        while($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+        echo json_encode($incidencias);
+    } else {
+        echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
-    echo json_encode($reportes);
-} else {
-    echo json_encode(["mensaje" => "No se encontraron reportes con los filtros seleccionados."]);
-}
+    
+    // **FIN - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
 
 // Cerrar la conexión
 $conn->close();
