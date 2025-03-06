@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <td>${incidencia.accion}</td>
           
           
-          <td><a href="detalle-incidencia.html?id=${incidencia.id}">Ver detalle</a></td>
+          <td><a href="detalle.html?id=${incidencia.id}">Ver detalle</a></td>
         </tr>
       `;
     });
