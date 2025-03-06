@@ -12,8 +12,26 @@
         <a href="incidencias.html"><<- Volver a Incidencias</a>
     </div>
 
-    <h2>Detalles de la Incidencia</h2>
-    <div id="detalle-incidencia">
+     <!-- Panel lateral -->
+  <aside class="sidebar">
+    
+    <ul>
+      <li><a href="/index.html">Inicio</a></li>
+      <li><a href="incidencias.html">Incidencias</a></li>
+      <li><a href="reportes.html">Reportes</a></li>
+      <li><a href="clientes.html">Clientes</a></li>
+      <li><a href="usuarios.html">Usuarios</a></li>
+      <li><a href="#">Configuración</a></li>
+    </ul>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main>
+    <!-- Formulario para ACTUALIZAR una incidencia -->
+    <section class="encabezado">
+        <h2>Detalles de la Incidencia</h2>
+        <div id="detalle-incidencia">
+
         <p>Cargando detalles...</p>
     </div>
 
@@ -86,51 +104,52 @@
                     `;
 
                     // Guardar cambios al enviar el formulario
-                    document.getElementById("form-editar").addEventListener("submit", function (e) {
-                        e.preventDefault(); // Prevenir el envío por defecto
+                        document.getElementById("form-editar").addEventListener("submit", function (e) {
+                            e.preventDefault(); // Prevenir el envío por defecto
 
-                        const cliente = document.getElementById("cliente").value;
-                        const contacto = document.getElementById("contacto").value;
-                        const sucursal = document.getElementById("sucursal").value;
-                        const fecha = document.getElementById("fecha").value;
-                        const tecnico = document.getElementById("tecnico").value;
-                        const estatus = document.getElementById("estatus").value;
-                        const falla = document.getElementById("falla").value;
-                        const accion = document.getElementById("accion").value;
+                            const cliente = document.getElementById("cliente").value;
+                            const contacto = document.getElementById("contacto").value;
+                            const sucursal = document.getElementById("sucursal").value;
+                            const fecha = document.getElementById("fecha").value;
+                            const tecnico = document.getElementById("tecnico").value;
+                            const estatus = document.getElementById("estatus").value;
+                            const falla = document.getElementById("falla").value;
+                            const accion = document.getElementById("accion").value;
 
                         // Hacer la petición para actualizar la incidencia
-                        fetch("../backend/actualiza.php", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                id: id,
-                                cliente: cliente,
-                                contacto: contacto,
-                                sucursal: sucursal,
-                                fecha: fecha,
-                                tecnico: tecnico,
-                                estatus: estatus,
-                                falla: falla,
-                                accion: accion
+                            fetch("../backend/actualiza.php", {
+                                method: "POST",
+                                headers: {
+                                   "Content-Type": "application/json"
+                             },
+                                body: JSON.stringify({
+                                    id: id,
+                                    cliente: cliente,
+                                    contacto: contacto,
+                                    sucursal: sucursal,
+                                    fecha: fecha,
+                                    tecnico: tecnico,
+                                    estatus: estatus,
+                                    falla: falla,
+                                    accion: accion
+                                })
                             })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert("Incidencia actualizada correctamente");
-                                window.location.href = "incidencias.html"; // Redirigir a la página de incidencias
-                            } else {
-                                alert("Error al actualizar la incidencia");
-                            }
-                        })
-                        .catch(error => console.error("Error al actualizar incidencia:", error));
-                    });
-                })
-                .catch(error => console.error("Error al cargar detalles:", error));
-        });
-    </script>
-
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert("Incidencia actualizada correctamente");
+                                    window.location.href = "incidencias.html"; // Redirigir a la página de incidencias
+                                } else {
+                                    alert("Error al actualizar la incidencia");
+                             }
+                            })
+                            .catch(error => console.error("Error al actualizar incidencia:", error));
+                        });
+                    })
+                    .catch(error => console.error("Error al cargar detalles:", error));
+            });
+        </script>
+    </section>
+  </main>
 </body>
 </html>
