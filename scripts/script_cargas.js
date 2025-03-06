@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById("tabla-body");
-                tbody.innerHTML = ""; 
+                tbody.innerHTML = ""; // Limpiar la tabla antes de cargar datos nuevos
 
                 if (data.error) {
                     tbody.innerHTML = `<tr><td colspan="10">${data.error}</td></tr>`;
@@ -89,15 +89,30 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Mostrar el arreglo en la tabla
                 incidenciasArray.forEach(incidencia => {
                     const fila = document.createElement("tr");
+
+                    // Crear la celda con el hipervínculo
+                    const celdaNumeroIncidente = document.createElement("td");
+                    const enlace = document.createElement("a");
+                    enlace.href = `detalle.html?id=${incidencia.id}`;
+                    enlace.textContent = incidencia.numero_incidente;
+                    enlace.style.color = "blue";
+                    enlace.style.textDecoration = "underline";
+
+                    celdaNumeroIncidente.appendChild(enlace);
+
+                    // Resto de las celdas
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
-                        <a href="detalle.html?id=${incidencia.id}" style="color: blue; text-decoration: underline;"><td>${incidencia.numero_incidente}</td></a>
+                        <td></td> <!-- Esta celda se llenará con el hipervínculo -->
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
                         <td>${incidencia.fecha}</td>
                         <td>${incidencia.estatus}</td>
                     `;
+
+                    // Insertar la celda con el hipervínculo en la posición correcta
+                    fila.children[1].replaceWith(celdaNumeroIncidente);
 
                     tbody.appendChild(fila);
                 });
