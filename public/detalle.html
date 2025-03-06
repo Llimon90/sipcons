@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Incidencia</title>
+    <link rel="stylesheet" href="../css/styles.css?v=1.9">
+</head>
+<body>
+
+    <div class="retorna">
+        <a href="incidencias.html"><<- Volver a Incidencias</a>
+    </div>
+
+    <h2>Detalles de la Incidencia</h2>
+    <div id="detalle-incidencia">
+        <p>Cargando detalles...</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get("id");
+
+            if (!id) {
+                document.getElementById("detalle-incidencia").innerHTML = "<p>Error: ID no encontrado.</p>";
+                return;
+            }
+
+            fetch(`../backend/detalle.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById("detalle-incidencia").innerHTML = `<p>${data.error}</p>`;
+                        return;
+                    }
+
+                    document.getElementById("detalle-incidencia").innerHTML = `
+                        <p><strong>Número de Incidente:</strong> ${data.numero_incidente}</p>
+                        <p><strong>Cliente:</strong> ${data.cliente}</p>
+                        <p><strong>Contacto:</strong> ${data.contacto}</p>
+                        <p><strong>Sucursal:</strong> ${data.sucursal}</p>
+                        <p><strong>Fecha:</strong> ${data.fecha}</p>
+                        <p><strong>Técnico:</strong> ${data.tecnico}</p>
+                        <p><strong>Estatus:</strong> ${data.estatus}</p>
+                        <p><strong>Falla:</strong> ${data.falla}</p>
+                    `;
+                })
+                .catch(error => console.error("Error al cargar detalles:", error));
+        });
+    </script>
+
+</body>
+</html>
