@@ -157,6 +157,13 @@ button:hover {
 
 }
 
+.lista-incidencias table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  text-align: center;
+}
+
 /* ESTILOS INDEX menu */
 
 /* Contenedor principal del contenido del administrador */
