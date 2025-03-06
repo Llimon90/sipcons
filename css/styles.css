@@ -47,6 +47,18 @@ main {
   padding: 20px;
 }
 
+
+main textarea {
+  width: 100%; /* O un valor específico en píxeles, como 300px */
+  height: 150px; /* Altura fija */
+  resize: none; /* Evita que el usuario cambie el tamaño del textarea */
+  padding: 8px; /* Espaciado interno */
+  border: 1px solid #ccc; /* Borde */
+  border-radius: 4px; /* Bordes redondeados */
+  box-sizing: border-box; /* Incluye el padding en el tamaño total del textarea */
+}
+
+
 .encabezado {
   background-color: #ffffff;
   padding: 20px;
