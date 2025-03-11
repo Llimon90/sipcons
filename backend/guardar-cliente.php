@@ -11,6 +11,23 @@ if ($conn->connect_error) {
     die(json_encode(['success' => false, 'message' => 'Error de conexión: ' . $conn->connect_error]));
 }
 
+
+// Permitir solicitudes desde el frontend
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+// Asegurar que el contenido devuelto sea JSON
+header('Content-Type: application/json');
+
+// Evitar que se muestren errores o advertencias PHP
+error_reporting(0);
+ini_set('display_errors', 0);
+
+
+
+
 // Recibe datos del formulario
 $nombre = $_POST['nombre'] ?? '';
 $rfc = $_POST['rfc'] ?? '';
