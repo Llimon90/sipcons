@@ -4,7 +4,7 @@ document.getElementById('new-incidencia-form').addEventListener('submit', async 
     const formData = new FormData(event.target);
   
     try {
-      const response = await fetch('guardar-cliente.php', {
+      const response = await fetch('../backend/guardar-cliente.php', {
         method: 'POST',
         body: formData
       });
