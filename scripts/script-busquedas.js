@@ -162,3 +162,10 @@ document.addEventListener("DOMContentLoaded", function() {
   // Cargar las incidencias al cargar la página (sin filtros)
   cargarIncidencias();
 });
+
+
+
+flatpickr("#fecha", {
+  clickOpens: true,  // Esto asegura que el calendario se abra al hacer clic
+  dateFormat: "Y-m-d"  // Formato de la fecha
+});
