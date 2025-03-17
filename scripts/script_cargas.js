@@ -66,7 +66,7 @@ async function cargarClientesEnSelect() {
   
       clientes.forEach(cliente => {
         const option = document.createElement('option');
-        option.value = cliente.nombre; // Usa el ID del cliente como valor
+        option.value = cliente.id; // Usa el ID del cliente como valor
         option.textContent = cliente.nombre; // Muestra el nombre en el select
         selectClientes.appendChild(option);
       });
@@ -131,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     fila.innerHTML = `
                         <td>${incidencia.numero}</td>
                         <td></td> <!-- Esta celda se llenará con el hipervínculo -->
-                        <td>${incidencia.cliente}</td>
+                        <td>${incidencia.sucursal}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
                         <td>${incidencia.fecha}</td>
