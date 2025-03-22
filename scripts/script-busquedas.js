@@ -72,31 +72,52 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-  // Función para cargar las incidencias desde el servidor con los filtros
-  function cargarIncidencias() {
-    // Obtener los valores de los filtros
-    const cliente = document.getElementById('cliente').value;
-    const fechaInicio = document.getElementById('fecha-inicio').value;
-    const fechaFin = document.getElementById('fecha-fin').value;
-    const estatus = document.getElementById('estatus').value;
-    const sucursal = document.getElementById('sucursal').value;
+  // Cargar incidencias al cargar la página sin filtros
+  cargarIncidencias(true);
 
-    // Construir la URL con los parámetros de búsqueda
-    let url = `../backend/buscar_reportes.php?cliente=${cliente}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&estatus=${estatus}&sucursal=${sucursal}`;
+  // Agregar evento al formulario para aplicar filtros
+  document.getElementById('report-form').addEventListener('submit', function(e) {
+    e.preventDefault(); // Evitar que el formulario se recargue
+    cargarIncidencias(false); // Llamar con filtros
+  });
+
+  // Función para cargar incidencias con o sin filtros
+  function cargarIncidencias(sinFiltros = false) {
+    let url = "../backend/buscar_reportes.php";
+
+    if (!sinFiltros) {
+      // Obtener valores de los filtros y asegurarse de que no sean undefined
+      const cliente = document.getElementById('cliente')?.value || "";
+      const fechaInicio = document.getElementById('fecha-inicio')?.value || "";
+      const fechaFin = document.getElementById('fecha-fin')?.value || "";
+      const estatus = document.getElementById('estatus')?.value || "";
+      const sucursal = document.getElementById('sucursal')?.value || "";
+
+      // Construir la URL solo si hay filtros aplicados
+      url += `?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}`;
+    }
+
+    console.log("📡 Enviando petición a:", url); // Verificar URL en consola
 
     fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          document.getElementById('report-data').innerHTML = `<p>${data.error}</p>`;
-        } else if (data.message) {
-          document.getElementById('report-data').innerHTML = `<p>${data.message}</p>`;
-        } else {
-          mostrarIncidencias(data);
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Error en la respuesta del servidor: ${response.status}`);
         }
+        return response.json();
+      })
+      .then(data => {
+        console.log("✅ Datos recibidos:", data);
+
+        if (!data || data.length === 0) {
+          document.getElementById('report-data').innerHTML = "<p>No se encontraron resultados.</p>";
+          return;
+        }
+
+        mostrarIncidencias(data);
       })
       .catch(error => {
-        console.error('Error al cargar las incidencias:', error);
+        console.error("❌ Error en la petición:", error);
         document.getElementById('report-data').innerHTML = "<p>Error al cargar los datos.</p>";
       });
   }
@@ -149,23 +170,9 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('report-data').innerHTML = html;
   }
 
-  // Escuchar el evento de envío del formulario y cargar incidencias
-  document.getElementById('report-form').addEventListener('submit', function(e) {
-    e.preventDefault(); // Evitar el comportamiento por defecto
-    cargarIncidencias(); // Cargar incidencias con los filtros seleccionados
+  // Inicializar el selector de fecha
+  flatpickr("#fecha", {
+    clickOpens: true,
+    dateFormat: "Y-m-d"
   });
-
-
-
- 
-  
-  // Cargar las incidencias al cargar la página (sin filtros)
-  cargarIncidencias();
-});
-
-
-
-flatpickr("#fecha", {
-  clickOpens: true,  // Esto asegura que el calendario se abra al hacer clic
-  dateFormat: "Y-m-d"  // Formato de la fecha
 });
