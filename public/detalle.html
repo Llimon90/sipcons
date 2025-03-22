@@ -112,6 +112,10 @@
                                 <textarea id="accion" rows="4" cols="50">${data.accion}</textarea>
                             </p>
 
+                            <p><strong>ARCHIVOS ADJUNTOS:</strong><br>
+                                <input type="file" id="archivos" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                            </p>
+
                             <button type="submit">Guardar cambios</button>
                             
                         </form>
@@ -130,25 +134,28 @@
                             const estatus = document.getElementById("estatus").value;
                             const falla = document.getElementById("falla").value;
                             const accion = document.getElementById("accion").value;
+                            const archivos = document.getElementById("archivos").files;
+
+                            const formData = new FormData();
+                            formData.append("id", id);
+                            formData.append("numero", numero);
+                            formData.append("cliente", cliente);
+                            formData.append("contacto", contacto);
+                            formData.append("sucursal", sucursal);
+                            formData.append("fecha", fecha);
+                            formData.append("tecnico", tecnico);
+                            formData.append("estatus", estatus);
+                            formData.append("falla", falla);
+                            formData.append("accion", accion);
+
+                            for (let i = 0; i < archivos.length; i++) {
+                                formData.append("archivos[]", archivos[i]);
+                            }
 
                         // Hacer la petición para actualizar la incidencia
                             fetch("../backend/actualiza.php", {
                                 method: "POST",
-                                headers: {
-                                   "Content-Type": "application/json"
-                             },
-                                body: JSON.stringify({
-                                    id: id,
-                                    numero: numero,
-                                    cliente: cliente,
-                                    contacto: contacto,
-                                    sucursal: sucursal,
-                                    fecha: fecha,
-                                    tecnico: tecnico,
-                                    estatus: estatus,
-                                    falla: falla,
-                                    accion: accion
-                                })
+                                body: formData
                             })
                             .then(response => response.json())
                             .then(data => {
