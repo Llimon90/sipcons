@@ -13,49 +13,64 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// Recibir los parámetros de búsqueda
-$cliente = isset($_GET['cliente']) ? $_GET['cliente'] : '';
-$fecha_inicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : '';
-$fecha_fin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : '';
-$estatus = isset($_GET['estatus']) ? $_GET['estatus'] : '';
-$sucursal = isset($_GET['sucursal']) ? $_GET['sucursal'] : '';
+// Recibir los parámetros de búsqueda y sanitizarlos
+$cliente = isset($_GET['cliente']) ? trim($_GET['cliente']) : '';
+$fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
+$fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
+$estatus = isset($_GET['estatus']) ? trim($_GET['estatus']) : '';
+$sucursal = isset($_GET['sucursal']) ? trim($_GET['sucursal']) : '';
 
-// Construir la consulta SQL
+// Construir la consulta SQL con `prepared statements`
 $sql = "SELECT * FROM incidencias WHERE 1";
+$params = [];
+$types = "";
 
-// Aplicar los filtros
-if ($cliente && $cliente !== 'todos') {
-    $sql .= " AND cliente = '$cliente'";
+if (!empty($cliente) && $cliente !== 'todos') {
+    $sql .= " AND cliente = ?";
+    $params[] = $cliente;
+    $types .= "s";
 }
 
-if ($fecha_inicio) {
-    $sql .= " AND fecha >= '$fecha_inicio'";
+if (!empty($fecha_inicio)) {
+    $sql .= " AND fecha >= ?";
+    $params[] = $fecha_inicio;
+    $types .= "s";
 }
 
-if ($fecha_fin) {
-    $sql .= " AND fecha <= '$fecha_fin'";
+if (!empty($fecha_fin)) {
+    $sql .= " AND fecha <= ?";
+    $params[] = $fecha_fin;
+    $types .= "s";
 }
 
-if ($estatus) {
-    $sql .= " AND estatus = '$estatus'";
+if (!empty($estatus)) {
+    $sql .= " AND estatus = ?";
+    $params[] = $estatus;
+    $types .= "s";
 }
 
-if ($sucursal) {
-    $sql .= " AND sucursal = '$sucursal'";
+if (!empty($sucursal)) {
+    $sql .= " AND sucursal LIKE ?";
+    $params[] = "%$sucursal%"; // Permite buscar por parte del nombre
+    $types .= "s";
 }
 
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    $incidencias = [];
-    while($row = $result->fetch_assoc()) {
-        $incidencias[] = $row;
-    }
-    echo json_encode($incidencias);
-} else {
-    echo json_encode(["message" => "No se encontraron datos"]);
+// Preparar y ejecutar la consulta
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
 }
+$stmt->execute();
+$result = $stmt->get_result();
+
+$incidencias = [];
+while ($row = $result->fetch_assoc()) {
+    $incidencias[] = $row;
+}
+
+echo json_encode($incidencias ?: ["message" => "No se encontraron datos"]);
 
 // Cerrar la conexión
+$stmt->close();
 $conn->close();
 ?>
