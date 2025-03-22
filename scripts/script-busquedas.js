@@ -5,6 +5,16 @@ document.addEventListener("DOMContentLoaded", function() {
   // Evento del formulario
   document.getElementById("report-form").addEventListener("submit", function(e) {
     e.preventDefault();
+
+    const fechaInicio = document.getElementById("fecha-inicio").value;
+    const fechaFin = document.getElementById("fecha-fin").value;
+
+    // Validar que la fecha de fin no sea menor que la fecha de inicio
+    if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+      alert("❌ La fecha de fin no puede ser menor que la fecha de inicio.");
+      return; // Detener ejecución si la validación falla
+    }
+
     cargarIncidencias();
   });
 
@@ -55,32 +65,4 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("tabla-body").innerHTML = `<tr><td colspan="7">Error al cargar los datos.</td></tr>`;
       });
   }
-});
-
-
-//EVITAR QUE SE COLOQUE UNA FECHA PREVIA EN FECHA FIN
-
-document.addEventListener("DOMContentLoaded", function() {
-  // Cargar incidencias al cargar la página sin filtros
-  cargarIncidencias(true);
-
-  // Agregar evento al formulario para aplicar filtros
-  document.getElementById('report-form').addEventListener('submit', function(e) {
-    e.preventDefault(); // Evitar que el formulario se recargue
-    
-    const fechaInicio = document.getElementById('fecha-inicio').value;
-    const fechaFin = document.getElementById('fecha-fin').value;
-
-    // Validar que la fecha de fin no sea menor que la fecha de inicio
-    if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
-      alert("❌ La fecha de fin no puede ser previa que la fecha de inicio.");
-      return; // Detener la ejecución si la validación falla
-    }
-
-    cargarIncidencias(false); // Llamar con filtros
-  });
-
-  // Inicializar Flatpickr en los campos de fecha
-  flatpickr("#fecha-inicio", { dateFormat: "Y-m-d" });
-  flatpickr("#fecha-fin", { dateFormat: "Y-m-d" });
 });
