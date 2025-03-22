@@ -12,51 +12,52 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// Leer los datos enviados desde el frontend
-$id = $_POST['id'];
-$numero = $_POST['numero'];
-$cliente = $_POST['cliente'];
-$contacto = $_POST['contacto'];
-$sucursal = $_POST['sucursal'];
-$fecha = $_POST['fecha'];
-$tecnico = $_POST['tecnico'];
-$estatus = $_POST['estatus'];
-$falla = $_POST['falla'];
-$accion = $_POST['accion'];
+$id = $_GET['id'];
 
-// Actualizar la incidencia en la base de datos
-$sql = "UPDATE incidencias SET numero = ?, cliente = ?, contacto = ?, sucursal = ?, fecha = ?, tecnico = ?, estatus = ?, falla = ?, accion = ? WHERE id = ?";
+// Obtener los detalles de la incidencia
+$sql = "SELECT * FROM incidencias WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("sssssssssi", $numero, $cliente, $contacto, $sucursal, $fecha, $tecnico, $estatus, $falla, $accion, $id);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$incidencia = $result->fetch_assoc();
 
-if ($stmt->execute()) {
-    // Manejar la subida de archivos
-    if (!empty($_FILES['archivos'])) {
-        $uploadDir = '../uploads/'; // Directorio donde se guardarán los archivos
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
-        foreach ($_FILES['archivos']['tmp_name'] as $key => $tmp_name) {
-            $fileName = basename($_FILES['archivos']['name'][$key]);
-            $uploadFilePath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($tmp_name, $uploadFilePath)) {
-                // Guardar la ruta del archivo en la base de datos
-                $sql = "INSERT INTO archivos_incidencias (incidencia_id, ruta_archivo) VALUES (?, ?)";
-                $stmt2 = $conn->prepare($sql);
-                $stmt2->bind_param("is", $id, $uploadFilePath);
-                $stmt2->execute();
-                $stmt2->close();
-            }
-        }
-    }
-
-    echo json_encode(["success" => true]);
-} else {
-    echo json_encode(["error" => "Error al actualizar la incidencia"]);
+if (!$incidencia) {
+    echo json_encode(["error" => "Incidencia no encontrada"]);
+    exit();
 }
 
+// Obtener los archivos asociados a la incidencia
+$sqlArchivos = "SELECT ruta_archivo FROM archivos_incidencias WHERE incidencia_id = ?";
+$stmtArchivos = $conn->prepare($sqlArchivos);
+$stmtArchivos->bind_param("i", $id);
+$stmtArchivos->execute();
+$resultArchivos = $stmtArchivos->get_result();
+
+$archivos = [];
+while ($row = $resultArchivos->fetch_assoc()) {
+    $archivos[] = $row['ruta_archivo'];
+}
+
+// Combinar los detalles de la incidencia con los archivos
+$response = [
+    "id" => $incidencia['id'],
+    "numero_incidente" => $incidencia['numero_incidente'],
+    "numero" => $incidencia['numero'],
+    "cliente" => $incidencia['cliente'],
+    "contacto" => $incidencia['contacto'],
+    "sucursal" => $incidencia['sucursal'],
+    "fecha" => $incidencia['fecha'],
+    "tecnico" => $incidencia['tecnico'],
+    "estatus" => $incidencia['estatus'],
+    "falla" => $incidencia['falla'],
+    "accion" => $incidencia['accion'],
+    "archivos" => $archivos // Agregar los archivos a la respuesta
+];
+
+echo json_encode($response);
+
 $stmt->close();
+$stmtArchivos->close();
 $conn->close();
 ?>

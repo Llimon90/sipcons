@@ -12,28 +12,28 @@
         <a href="incidencias.html"><<- Volver a Incidencias</a>
     </div>
 
-     <!-- Panel lateral -->
-  <aside class="sidebar">
-    
-    <ul>
-      <li><a href="/index.html">Inicio</a></li>
-      <li><a href="incidencias.html">Incidencias</a></li>
-      <li><a href="reportes.html">Reportes</a></li>
-      <li><a href="clientes.html">Clientes</a></li>
-      <li><a href="usuarios.html">Usuarios</a></li>
-      <li><a href="#">Configuración</a></li>
-    </ul>
-  </aside>
+    <!-- Panel lateral -->
+    <aside class="sidebar">
+        <ul>
+            <li><a href="/index.html">Inicio</a></li>
+            <li><a href="incidencias.html">Incidencias</a></li>
+            <li><a href="reportes.html">Reportes</a></li>
+            <li><a href="clientes.html">Clientes</a></li>
+            <li><a href="usuarios.html">Usuarios</a></li>
+            <li><a href="#">Configuración</a></li>
+        </ul>
+    </aside>
 
-  <!-- Contenido principal -->
-  <main>
-    <!-- Formulario para ACTUALIZAR una incidencia -->
-    <section class="encabezado">
-        <h2>Detalles de la Incidencia</h2>
-        <div id="detalle-incidencia">
-
-        <p>Cargando detalles...</p>
-    </div>
+    <!-- Contenido principal -->
+    <main>
+        <!-- Formulario para ACTUALIZAR una incidencia -->
+        <section class="encabezado">
+            <h2>Detalles de la Incidencia</h2>
+            <div id="detalle-incidencia">
+                <p>Cargando detalles...</p>
+            </div>
+        </section>
+    </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -55,29 +55,18 @@
 
                     // Crear el formulario para la edición
                     document.getElementById("detalle-incidencia").innerHTML = `
-                    
-                   
-                  
                         <form id="form-editar">
+                            <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
 
-                        
-                            
-                                <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
+                            <div>
+                                <label># INCIDENCIA CLIENTE:</label> 
+                                <input type="text" id="numero" value="${data.numero}">
+                            </div>    
 
-                            
-
-                                <div>
-
-                                    <label># INCIDENCIA CLIENTE:</label> 
-                                    <input type="text" id="numero" value="${data.numero}" >
-
-                                </div>    
-                                 
-                                <div>
-                                    <label>CLIENTE:</label> 
-                                    <input type="text" id="cliente" value="${data.cliente}" required>
-                                </div>  
-                    
+                            <div>
+                                <label>CLIENTE:</label> 
+                                <input type="text" id="cliente" value="${data.cliente}" required>
+                            </div>  
 
                             <p><strong>CONTACTO:</strong> 
                                 <input type="text" id="contacto" value="${data.contacto}" required>
@@ -105,7 +94,7 @@
                             </p>
 
                             <p><strong>FALLA:</strong><br>
-                                <textarea id="falla" required  rows="4" cols="50" >${data.falla}</textarea>
+                                <textarea id="falla" required rows="4" cols="50">${data.falla}</textarea>
                             </p>
 
                             <p><strong>TRABAJO REALIZADO:</strong><br>
@@ -113,66 +102,64 @@
                             </p>
 
                             <p><strong>ARCHIVOS ADJUNTOS:</strong><br>
-                                <input type="file" id="archivos" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                                <ul id="lista-archivos">
+                                    ${data.archivos.map(archivo => `
+                                        <li>
+                                            <a href="${archivo}" target="_blank">${archivo.split('/').pop()}</a>
+                                        </li>
+                                    `).join('')}
+                                </ul>
                             </p>
 
                             <button type="submit">Guardar cambios</button>
-                            
                         </form>
-                  
                     `;
 
                     // Guardar cambios al enviar el formulario
-                        document.getElementById("form-editar").addEventListener("submit", function (e) {
-                            e.preventDefault(); // Prevenir el envío por defecto
-                            const numero = document.getElementById("numero").value;
-                            const cliente = document.getElementById("cliente").value;
-                            const contacto = document.getElementById("contacto").value;
-                            const sucursal = document.getElementById("sucursal").value;
-                            const fecha = document.getElementById("fecha").value;
-                            const tecnico = document.getElementById("tecnico").value;
-                            const estatus = document.getElementById("estatus").value;
-                            const falla = document.getElementById("falla").value;
-                            const accion = document.getElementById("accion").value;
-                            const archivos = document.getElementById("archivos").files;
+                    document.getElementById("form-editar").addEventListener("submit", function (e) {
+                        e.preventDefault(); // Prevenir el envío por defecto
+                        const numero = document.getElementById("numero").value;
+                        const cliente = document.getElementById("cliente").value;
+                        const contacto = document.getElementById("contacto").value;
+                        const sucursal = document.getElementById("sucursal").value;
+                        const fecha = document.getElementById("fecha").value;
+                        const tecnico = document.getElementById("tecnico").value;
+                        const estatus = document.getElementById("estatus").value;
+                        const falla = document.getElementById("falla").value;
+                        const accion = document.getElementById("accion").value;
 
-                            const formData = new FormData();
-                            formData.append("id", id);
-                            formData.append("numero", numero);
-                            formData.append("cliente", cliente);
-                            formData.append("contacto", contacto);
-                            formData.append("sucursal", sucursal);
-                            formData.append("fecha", fecha);
-                            formData.append("tecnico", tecnico);
-                            formData.append("estatus", estatus);
-                            formData.append("falla", falla);
-                            formData.append("accion", accion);
-
-                            for (let i = 0; i < archivos.length; i++) {
-                                formData.append("archivos[]", archivos[i]);
+                        fetch("../backend/actualiza.php", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: id,
+                                numero: numero,
+                                cliente: cliente,
+                                contacto: contacto,
+                                sucursal: sucursal,
+                                fecha: fecha,
+                                tecnico: tecnico,
+                                estatus: estatus,
+                                falla: falla,
+                                accion: accion
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Incidencia actualizada correctamente");
+                                window.location.href = "incidencias.html"; // Redirigir a la página de incidencias
+                            } else {
+                                alert("Error al actualizar la incidencia");
                             }
-
-                        // Hacer la petición para actualizar la incidencia
-                            fetch("../backend/actualiza.php", {
-                                method: "POST",
-                                body: formData
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    alert("Incidencia actualizada correctamente");
-                                    window.location.href = "incidencias.html"; // Redirigir a la página de incidencias
-                                } else {
-                                    alert("Error al actualizar la incidencia");
-                             }
-                            })
-                            .catch(error => console.error("Error al actualizar incidencia:", error));
-                        });
-                    })
-                    .catch(error => console.error("Error al cargar detalles:", error));
-            });
-        </script>
-    </section>
-  </main>
+                        })
+                        .catch(error => console.error("Error al actualizar incidencia:", error));
+                    });
+                })
+                .catch(error => console.error("Error al cargar detalles:", error));
+        });
+    </script>
 </body>
 </html>
