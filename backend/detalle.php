@@ -18,18 +18,33 @@ if ($id === 0) {
     exit();
 }
 
+// Obtener los detalles de la incidencia
 $sql = "SELECT * FROM incidencias WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-if ($row = $result->fetch_assoc()) {
-    echo json_encode($row);
-} else {
-    echo json_encode(["error" => "No se encontró la incidencia."]);
+$incidencia = $result->fetch_assoc();
+
+// Obtener los archivos asociados a la incidencia
+$sqlArchivos = "SELECT ruta_archivo FROM archivos_incidencias WHERE incidencia_id = ?";
+$stmtArchivos = $conn->prepare($sqlArchivos);
+$stmtArchivos->bind_param("i", $id);
+$stmtArchivos->execute();
+$resultArchivos = $stmtArchivos->get_result();
+
+$archivos = [];
+while ($row = $resultArchivos->fetch_assoc()) {
+    $archivos[] = $row['ruta_archivo'];
 }
 
+// Agregar los archivos al array de la incidencia
+$incidencia["archivos"] = $archivos;
+
 $stmt->close();
+$stmtArchivos->close();
 $conn->close();
+
+echo json_encode($incidencia);
 ?>
