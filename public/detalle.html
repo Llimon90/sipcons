@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle de Incidencia</title>
     <link rel="stylesheet" href="../css/styles.css?v=3.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
 
@@ -13,6 +12,7 @@
         <a href="incidencias.html"><<- Volver a Incidencias</a>
     </div>
 
+    <!-- Panel lateral -->
     <aside class="sidebar">
         <ul>
             <li><a href="/index.html">Inicio</a></li>
@@ -24,7 +24,9 @@
         </ul>
     </aside>
 
+    <!-- Contenido principal -->
     <main>
+        <!-- Formulario para ACTUALIZAR una incidencia -->
         <section class="encabezado">
             <h2>Detalles de la Incidencia</h2>
             <div id="detalle-incidencia">
@@ -82,6 +84,15 @@
                                     <option value="Facturada" ${data.estatus === "Facturada" ? 'selected' : ''}>Facturada</option>
                                 </select>
                             </p>
+                            <p><strong>FALLA:</strong><br>
+                                <textarea id="falla" required rows="4" cols="50">${data.falla}</textarea>
+                            </p>
+                            <p><strong>TRABAJO REALIZADO:</strong><br>
+                                <textarea id="accion" rows="4" cols="50">${data.accion}</textarea>
+                            </p>
+                            <p><strong>ARCHIVOS ADJUNTOS:</strong><br>
+                                <input type="file" id="archivos" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                            </p>
                             <section class="archivos-incidencia">
                                 <h2>Archivos de la Incidencia</h2>
                                 <div id="contenedor-archivos" style="display: flex; flex-wrap: wrap;"></div>
@@ -90,6 +101,7 @@
                         </form>
                     `;
 
+                    // Mostrar archivos si existen
                     const contenedorArchivos = document.getElementById("contenedor-archivos");
                     if (data.archivos && data.archivos.length > 0) {
                         data.archivos.forEach(archivo => {
@@ -98,10 +110,16 @@
 
                             if (["jpg", "jpeg", "png"].includes(ext)) {
                                 archivoHTML = `<div style="margin: 5px;">
-                                    <img src="${archivo}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
+                                    <a href="${archivo}" target="_blank">
+                                        <img src="${archivo}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
+                                    </a>
                                 </div>`;
                             } else if (ext === "pdf") {
-                                archivoHTML = `<canvas class="pdf-thumbnail" data-pdf="${archivo}" style="width: 100px; height: 100px;"></canvas>`;
+                                archivoHTML = `<div style="margin: 5px;">
+                                    <a href="${archivo}" target="_blank">
+                                        <img src="../img/pdf-icon.png" alt="PDF" style="width: 100px;">
+                                    </a>
+                                </div>`;
                             } else {
                                 archivoHTML = `<div style="margin: 5px;">
                                     <a href="${archivo}" target="_blank">${archivo}</a>
@@ -110,32 +128,49 @@
 
                             contenedorArchivos.innerHTML += archivoHTML;
                         });
-
-                        generarMiniaturasPDF();
+                    } else {
+                        contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
                     }
+
+                    // Evento para actualizar la incidencia
+                    document.getElementById("form-editar").addEventListener("submit", function (e) {
+                        e.preventDefault();
+                        const formData = new FormData();
+                        formData.append("id", id);
+                        formData.append("numero", document.getElementById("numero").value);
+                        formData.append("cliente", document.getElementById("cliente").value);
+                        formData.append("contacto", document.getElementById("contacto").value);
+                        formData.append("sucursal", document.getElementById("sucursal").value);
+                        formData.append("fecha", document.getElementById("fecha").value);
+                        formData.append("tecnico", document.getElementById("tecnico").value);
+                        formData.append("estatus", document.getElementById("estatus").value);
+                        formData.append("falla", document.getElementById("falla").value);
+                        formData.append("accion", document.getElementById("accion").value);
+
+                        const archivos = document.getElementById("archivos").files;
+                        for (let i = 0; i < archivos.length; i++) {
+                            formData.append("archivos[]", archivos[i]);
+                        }
+
+                        fetch("../backend/actualiza.php", {
+                            method: "POST",
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Incidencia actualizada correctamente");
+                                location.reload();
+                            } else {
+                                alert("Error al actualizar la incidencia");
+                            }
+                        })
+                        .catch(error => console.error("Error al actualizar incidencia:", error));
+                    });
                 })
                 .catch(error => console.error("Error al cargar detalles:", error));
         });
-
-        function generarMiniaturasPDF() {
-            document.querySelectorAll('.pdf-thumbnail').forEach(canvas => {
-                const url = canvas.getAttribute('data-pdf');
-                const loadingTask = pdfjsLib.getDocument(url);
-                loadingTask.promise.then(pdf => {
-                    pdf.getPage(1).then(page => {
-                        const viewport = page.getViewport({ scale: 0.5 });
-                        const context = canvas.getContext('2d');
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-                        const renderContext = {
-                            canvasContext: context,
-                            viewport: viewport
-                        };
-                        page.render(renderContext);
-                    });
-                }).catch(error => console.error("Error cargando PDF:", error));
-            });
-        }
     </script>
+
 </body>
 </html>
