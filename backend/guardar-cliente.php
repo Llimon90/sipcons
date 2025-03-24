@@ -36,8 +36,8 @@ $telefono = $_POST['telefono'] ?? '';
 $contactos = $_POST['contactos'] ?? '';
 $email = $_POST['email'] ?? '';
 
-if (empty($nombre) || empty($rfc) || empty($direccion) || empty($telefono) || empty($contactos) || empty($email)) {
-    echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios']);
+if (empty($nombre) || empty($contactos) ) {
+    echo json_encode(['success' => false, 'message' => 'Nombre y contacto son obligatorios']);
     exit;
 }
 
