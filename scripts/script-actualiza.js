@@ -60,3 +60,54 @@ document.addEventListener("DOMContentLoaded", function () {
     // Cargar incidencias al cargar la página
     cargarIncidencias();
 });
+
+async function cargarArchivos(numeroIncidente) {
+    const response = await fetch(`../backend/obtener_archivos.php?numero_incidente=${numeroIncidente}`);
+    const archivos = await response.json();
+
+    const contenedor = document.getElementById('contenedor-archivos');
+    contenedor.innerHTML = ''; // Limpiar antes de cargar nuevos archivos
+
+    if (archivos.length === 0) {
+        contenedor.innerHTML = '<p>No hay archivos para esta incidencia.</p>';
+        return;
+    }
+
+    archivos.forEach(ruta => {
+        const ext = ruta.split('.').pop().toLowerCase(); // Obtener la extensión del archivo
+        const fileContainer = document.createElement('div');
+        fileContainer.style.margin = '10px';
+
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+            // Si es imagen, mostrarla
+            const imgElement = document.createElement('img');
+            imgElement.src = ruta.replace('../', ''); // Ajustamos la ruta si es necesario
+            imgElement.alt = 'Archivo de incidencia';
+            imgElement.style.width = '150px';
+            fileContainer.appendChild(imgElement);
+        } else {
+            // Si es otro tipo de archivo, mostrar un enlace de descarga
+            const linkElement = document.createElement('a');
+            linkElement.href = ruta.replace('../', '');
+            linkElement.target = '_blank';
+            linkElement.textContent = `Descargar: ${ruta.split('/').pop()}`;
+            linkElement.style.display = 'block';
+            fileContainer.appendChild(linkElement);
+        }
+
+        contenedor.appendChild(fileContainer);
+    });
+}
+
+// Llamar a la función cuando se seleccione un incidente
+document.addEventListener("DOMContentLoaded", function () {
+    const tablaBody = document.getElementById("tabla-body");
+
+    tablaBody.addEventListener("click", function (event) {
+        const fila = event.target.closest("tr");
+        if (!fila) return;
+
+        const numeroIncidente = fila.cells[1].textContent.trim(); // Obtener el número de incidente
+        cargarArchivos(numeroIncidente);
+    });
+});
