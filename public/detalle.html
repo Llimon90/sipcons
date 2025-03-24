@@ -35,16 +35,18 @@
         </section>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const params = new URLSearchParams(window.location.search);
             const id = params.get("id");
-
+    
             if (!id) {
                 document.getElementById("detalle-incidencia").innerHTML = "<p>Error: ID no encontrado.</p>";
                 return;
             }
-
+    
             fetch(`../backend/detalle.php?id=${id}`)
                 .then(response => response.json())
                 .then(data => {
@@ -52,123 +54,67 @@
                         document.getElementById("detalle-incidencia").innerHTML = `<p>${data.error}</p>`;
                         return;
                     }
-
-                    document.getElementById("detalle-incidencia").innerHTML = `
-                        <form id="form-editar">
-                            <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
-                            <div>
-                                <label># INCIDENCIA CLIENTE:</label> 
-                                <input type="text" id="numero" value="${data.numero}">
-                            </div>    
-                            <div>
-                                <label>CLIENTE:</label> 
-                                <input type="text" id="cliente" value="${data.cliente}" required>
-                            </div>  
-                            <p><strong>CONTACTO:</strong> 
-                                <input type="text" id="contacto" value="${data.contacto}" required>
-                            </p>
-                            <p><strong>SUCURSAL:</strong> 
-                                <input type="text" id="sucursal" value="${data.sucursal}" required>
-                            </p>
-                            <p><strong>FECHA:</strong> 
-                                <input type="date" id="fecha" value="${data.fecha}" required>
-                            </p>
-                            <p><strong>TÉCNICO:</strong> 
-                                <input type="text" id="tecnico" value="${data.tecnico}" required>
-                            </p>
-                            <p><strong>ESTATUS:</strong> 
-                                <select id="estatus">
-                                    <option value="Abierta" ${data.estatus === "Abierta" ? 'selected' : ''}>Abierta</option>
-                                    <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
-                                    <option value="En seguimiento" ${data.estatus === "En seguimiento" ? 'selected' : ''}>En seguimiento</option>
-                                    <option value="Facturada" ${data.estatus === "Facturada" ? 'selected' : ''}>Facturada</option>
-                                </select>
-                            </p>
-                            <p><strong>FALLA:</strong><br>
-                                <textarea id="falla" required rows="4" cols="50">${data.falla}</textarea>
-                            </p>
-                            <p><strong>TRABAJO REALIZADO:</strong><br>
-                                <textarea id="accion" rows="4" cols="50">${data.accion}</textarea>
-                            </p>
-                            <p><strong>ARCHIVOS ADJUNTOS:</strong><br>
-                                <input type="file" id="archivos" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
-                            </p>
-                            <section class="archivos-incidencia">
-                                <h2>Archivos de la Incidencia</h2>
-                                <div id="contenedor-archivos" style="display: flex; flex-wrap: wrap;"></div>
-                            </section>
-                            <button type="submit">Guardar cambios</button>
-                        </form>
-                    `;
-
-                    // Mostrar archivos si existen
+    
                     const contenedorArchivos = document.getElementById("contenedor-archivos");
+                    contenedorArchivos.innerHTML = ""; 
+    
                     if (data.archivos && data.archivos.length > 0) {
                         data.archivos.forEach(archivo => {
                             const ext = archivo.split('.').pop().toLowerCase();
                             let archivoHTML = '';
-
+    
                             if (["jpg", "jpeg", "png"].includes(ext)) {
                                 archivoHTML = `<div style="margin: 5px;">
                                     <img src="${archivo}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
                                 </div>`;
                             } else if (ext === "pdf") {
+                                const canvasId = `pdf-preview-${Math.random().toString(36).substr(2, 9)}`;
                                 archivoHTML = `<div style="margin: 5px;">
-                                    <a href="${archivo}" target="_blank">
-                                        <img src="../img/pdf-icon.png" alt="PDF" style="width: 100px;">
-                                    </a>
+                                    <canvas id="${canvasId}" style="width: 100px; height: auto;"></canvas>
+                                    <br>
+                                    <a href="${archivo}" target="_blank">Ver PDF</a>
                                 </div>`;
+                                setTimeout(() => renderPDFThumbnail(archivo, canvasId), 500);
                             } else {
                                 archivoHTML = `<div style="margin: 5px;">
                                     <a href="${archivo}" target="_blank">${archivo}</a>
                                 </div>`;
                             }
-
+    
                             contenedorArchivos.innerHTML += archivoHTML;
                         });
                     } else {
                         contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
                     }
-
-                    // Evento para actualizar la incidencia
-                    document.getElementById("form-editar").addEventListener("submit", function (e) {
-                        e.preventDefault();
-                        const formData = new FormData();
-                        formData.append("id", id);
-                        formData.append("numero", document.getElementById("numero").value);
-                        formData.append("cliente", document.getElementById("cliente").value);
-                        formData.append("contacto", document.getElementById("contacto").value);
-                        formData.append("sucursal", document.getElementById("sucursal").value);
-                        formData.append("fecha", document.getElementById("fecha").value);
-                        formData.append("tecnico", document.getElementById("tecnico").value);
-                        formData.append("estatus", document.getElementById("estatus").value);
-                        formData.append("falla", document.getElementById("falla").value);
-                        formData.append("accion", document.getElementById("accion").value);
-
-                        const archivos = document.getElementById("archivos").files;
-                        for (let i = 0; i < archivos.length; i++) {
-                            formData.append("archivos[]", archivos[i]);
-                        }
-
-                        fetch("../backend/actualiza.php", {
-                            method: "POST",
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert("Incidencia actualizada correctamente");
-                                location.reload();
-                            } else {
-                                alert("Error al actualizar la incidencia");
-                            }
-                        })
-                        .catch(error => console.error("Error al actualizar incidencia:", error));
-                    });
                 })
                 .catch(error => console.error("Error al cargar detalles:", error));
+    
+            function renderPDFThumbnail(url, canvasId) {
+                const loadingTask = pdfjsLib.getDocument(url);
+                loadingTask.promise.then(pdf => {
+                    pdf.getPage(1).then(page => {
+                        const scale = 0.5;
+                        const viewport = page.getViewport({ scale });
+    
+                        const canvas = document.getElementById(canvasId);
+                        const context = canvas.getContext('2d');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+    
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+    
+                        page.render(renderContext);
+                    });
+                }).catch(error => {
+                    console.error('Error al renderizar miniatura PDF:', error);
+                });
+            }
         });
     </script>
+    
 
 </body>
 </html>
