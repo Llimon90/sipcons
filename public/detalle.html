@@ -34,8 +34,12 @@
                 <p>Cargando detalles...</p>
             </div>
         </section>
+        
+        <section class="archivos-incidencia">
+            <h2>Archivos de la Incidencia</h2>
+            <div id="contenedor-archivos" style="display: flex; flex-wrap: wrap;"></div>
+        </section>
     </main>
-    
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -47,6 +51,79 @@
                 return;
             }
 
+            // Función para renderizar miniaturas de PDF
+            function renderPDFThumbnail(url, canvasId) {
+                const loadingTask = pdfjsLib.getDocument(url);
+                loadingTask.promise.then(pdf => {
+                    return pdf.getPage(1);
+                }).then(page => {
+                    const scale = 0.5;
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.getElementById(canvasId);
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+
+                    return page.render(renderContext);
+                }).catch(error => {
+                    console.error('Error al renderizar miniatura PDF:', error);
+                    // Mostrar icono genérico si falla la renderización
+                    const canvas = document.getElementById(canvasId);
+                    if (canvas) {
+                        canvas.parentElement.innerHTML = `
+                            <div style="margin: 5px;">
+                                <a href="${url}" target="_blank">
+                                    <img src="../img/pdf-icon.png" alt="PDF" style="width: 100px;">
+                                </a>
+                            </div>`;
+                    }
+                });
+            }
+
+            // Función para cargar y mostrar archivos adjuntos
+            function cargarArchivosAdjuntos(archivos) {
+                const contenedorArchivos = document.getElementById("contenedor-archivos");
+                contenedorArchivos.innerHTML = "";
+
+                if (archivos && archivos.length > 0) {
+                    archivos.forEach(archivo => {
+                        const ext = archivo.split('.').pop().toLowerCase();
+                        let archivoHTML = '';
+
+                        if (["jpg", "jpeg", "png"].includes(ext)) {
+                            archivoHTML = `<div style="margin: 5px;">
+                                <a href="${archivo}" target="_blank">
+                                    <img src="${archivo}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
+                                </a>
+                            </div>`;
+                        } else if (ext === "pdf") {
+                            const canvasId = `pdf-preview-${Math.random().toString(36).substr(2, 9)}`;
+                            archivoHTML = `<div style="margin: 5px;">
+                                <canvas id="${canvasId}" style="width: 100px; height: auto;"></canvas>
+                                <br>
+                                <a href="${archivo}" target="_blank">Ver PDF completo</a>
+                            </div>`;
+                            setTimeout(() => renderPDFThumbnail(archivo, canvasId), 500);
+                        } else {
+                            archivoHTML = `<div style="margin: 5px;">
+                                <a href="${archivo}" target="_blank">${archivo.split('/').pop()}</a>
+                            </div>`;
+                        }
+
+                        contenedorArchivos.innerHTML += archivoHTML;
+                    });
+                } else {
+                    contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
+                }
+            }
+
+            // Cargar datos de la incidencia
             fetch(`../backend/detalle.php?id=${id}`)
                 .then(response => response.json())
                 .then(data => {
@@ -55,6 +132,7 @@
                         return;
                     }
 
+                    // Mostrar formulario de edición
                     document.getElementById("detalle-incidencia").innerHTML = `
                         <form id="form-editar">
                             <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
@@ -92,46 +170,16 @@
                             <p><strong>TRABAJO REALIZADO:</strong><br>
                                 <textarea id="accion" rows="4" cols="50">${data.accion}</textarea>
                             </p>
-                            <p><strong>ARCHIVOS ADJUNTOS:</strong><br>
+                            <p><strong>AGREGAR NUEVOS ARCHIVOS:</strong><br>
                                 <input type="file" id="archivos" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
                             </p>
-                            <section class="archivos-incidencia">
-                                <h2>Archivos de la Incidencia</h2>
-                                <div id="contenedor-archivos" style="display: flex; flex-wrap: wrap;"></div>
-                            </section>
                             <button type="submit">Guardar cambios</button>
                         </form>
                     `;
 
-                    // Mostrar archivos si existen
-                    const contenedorArchivos = document.getElementById("contenedor-archivos");
-                    if (data.archivos && data.archivos.length > 0) {
-                        data.archivos.forEach(archivo => {
-                            const ext = archivo.split('.').pop().toLowerCase();
-                            let archivoHTML = '';
-
-                            if (["jpg", "jpeg", "png"].includes(ext)) {
-                                archivoHTML = `<div style="margin: 5px;">
-                                    <a href="${archivo}" target="_blank">
-                                        <img src="${archivo}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
-                                    </a>
-                                </div>`;
-                            } else if (ext === "pdf") {
-                                archivoHTML = `<div style="margin: 5px;">
-                                    <a href="${archivo}" target="_blank">
-                                        <img src="../img/pdf-icon.png" alt="PDF" style="width: 100px;">
-                                    </a>
-                                </div>`;
-                            } else {
-                                archivoHTML = `<div style="margin: 5px;">
-                                    <a href="${archivo}" target="_blank">${archivo}</a>
-                                </div>`;
-                            }
-
-                            contenedorArchivos.innerHTML += archivoHTML;
-                        });
-                    } else {
-                        contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
+                    // Cargar archivos adjuntos
+                    if (data.archivos) {
+                        cargarArchivosAdjuntos(data.archivos);
                     }
 
                     // Evento para actualizar la incidencia
@@ -162,17 +210,25 @@
                         .then(data => {
                             if (data.success) {
                                 alert("Incidencia actualizada correctamente");
-                                location.reload();
+                                if (data.archivos) {
+                                    cargarArchivosAdjuntos(data.archivos);
+                                }
                             } else {
-                                alert("Error al actualizar la incidencia");
+                                alert(data.error || "Error al actualizar la incidencia");
                             }
                         })
-                        .catch(error => console.error("Error al actualizar incidencia:", error));
+                        .catch(error => {
+                            console.error("Error al actualizar incidencia:", error);
+                            alert("Ocurrió un error al actualizar la incidencia");
+                        });
                     });
                 })
-                .catch(error => console.error("Error al cargar detalles:", error));
+                .catch(error => {
+                    console.error("Error al cargar detalles:", error);
+                    document.getElementById("detalle-incidencia").innerHTML = 
+                        "<p>Error al cargar los detalles de la incidencia. Por favor, intente nuevamente.</p>";
+                });
         });
     </script>
-
 </body>
 </html>
