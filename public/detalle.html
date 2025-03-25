@@ -105,9 +105,9 @@
                         } else if (ext === "pdf") {
                             const canvasId = `pdf-preview-${Math.random().toString(36).substr(2, 9)}`;
                             archivoHTML = `<div style="margin: 5px;">
-                                <canvas id="${canvasId}" style="width: 100px; height: auto;"></canvas>
+                                <a href="${archivo}" target="_blank"><canvas id="${canvasId}" style="width: 100px; height: auto;"></canvas>
                                 <br>
-                                <a href="${archivo}" target="_blank">Ver PDF completo</a>
+                                </a>
                             </div>`;
                             setTimeout(() => renderPDFThumbnail(archivo, canvasId), 500);
                         } else {
