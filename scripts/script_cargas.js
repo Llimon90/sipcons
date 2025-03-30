@@ -132,8 +132,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     fila.innerHTML = `
                         
                         
-                        <td>${incidencia.numero}</td>
+                        
                         <td></td> <!-- Esta celda se llenará con el hipervínculo -->
+                        <td>${incidencia.numero}</td>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
@@ -142,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     `;
 
                     // Insertar la celda con el hipervínculo en la posición correcta
-                    fila.children[1].replaceWith(celdaNumeroIncidente);
+                    fila.children[0].replaceWith(celdaNumeroIncidente);
 
                     tbody.appendChild(fila);
                 });
