@@ -131,8 +131,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Resto de las celdas
                     fila.innerHTML = `
                         
-                        <td></td> <!-- Esta celda se llenará con el hipervínculo -->
+                        
                         <td>${incidencia.numero}</td>
+                        <td></td> <!-- Esta celda se llenará con el hipervínculo -->
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.sucursal}</td>
                         <td>${incidencia.falla}</td>
