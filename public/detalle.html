@@ -6,6 +6,29 @@
     <title>Detalle de Incidencia</title>
     <link rel="stylesheet" href="../css/styles.css?v=3.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <style>
+        .archivo-container {
+            position: relative;
+            margin: 5px;
+            display: inline-block;
+        }
+        .eliminar-archivo {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
 
@@ -78,13 +101,51 @@
                     // Mostrar icono genérico si falla la renderización
                     const canvas = document.getElementById(canvasId);
                     if (canvas) {
-                        canvas.parentElement.innerHTML = `
-                            <div style="margin: 5px;">
-                                <a href="${url}" target="_blank">
-                                    <img src="../img/pdf-icon.png" alt="PDF" style="width: 100px;">
-                                </a>
-                            </div>`;
+                        const container = canvas.parentElement;
+                        container.innerHTML = `
+                            <a href="${url}" target="_blank">
+                                <img src="../img/pdf-icon.png" alt="PDF" style="width: 100px;">
+                            </a>
+                        `;
+                        // Reagregar el botón de eliminar
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'eliminar-archivo';
+                        deleteBtn.innerHTML = '×';
+                        deleteBtn.onclick = function() { eliminarArchivo(url); };
+                        container.appendChild(deleteBtn);
                     }
+                });
+            }
+
+            // Función para eliminar un archivo
+            function eliminarArchivo(urlArchivo) {
+                if (!confirm('¿Estás seguro de que deseas eliminar este archivo?')) {
+                    return;
+                }
+
+                fetch("../backend/eliminar_archivo.php", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_incidencia: id,
+                        url_archivo: urlArchivo
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Archivo eliminado correctamente");
+                        // Recargar los archivos
+                        cargarArchivosAdjuntos(data.archivos);
+                    } else {
+                        alert(data.error || "Error al eliminar el archivo");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al eliminar archivo:", error);
+                    alert("Ocurrió un error al eliminar el archivo");
                 });
             }
 
@@ -96,29 +157,38 @@
                 if (archivos && archivos.length > 0) {
                     archivos.forEach(archivo => {
                         const ext = archivo.split('.').pop().toLowerCase();
+                        const archivoContainer = document.createElement('div');
+                        archivoContainer.className = 'archivo-container';
+                        
                         let archivoHTML = '';
 
                         if (["jpg", "jpeg", "png"].includes(ext)) {
-                            archivoHTML = `<div style="margin: 5px;">
+                            archivoHTML = `
                                 <a href="${archivo}" target="_blank">
                                     <img src="${archivo}" alt="Imagen" style="width: 100px; height: 100px; object-fit: cover;">
-                                </a>
-                            </div>`;
+                                </a>`;
                         } else if (ext === "pdf") {
                             const canvasId = `pdf-preview-${Math.random().toString(36).substr(2, 9)}`;
-                            archivoHTML = `<div style="margin: 5px;">
-                                <a href="${archivo}" target="_blank"><canvas id="${canvasId}" style="width: 100px; height: auto;"></canvas>
-                                <br>
-                                </a>
-                            </div>`;
+                            archivoHTML = `
+                                <a href="${archivo}" target="_blank">
+                                    <canvas id="${canvasId}" style="width: 100px; height: auto;"></canvas>
+                                </a>`;
                             setTimeout(() => renderPDFThumbnail(archivo, canvasId), 500);
                         } else {
-                            archivoHTML = `<div style="margin: 5px;">
-                                <a href="${archivo}" target="_blank">${archivo.split('/').pop()}</a>
-                            </div>`;
+                            archivoHTML = `
+                                <a href="${archivo}" target="_blank">${archivo.split('/').pop()}</a>`;
                         }
 
-                        contenedorArchivos.innerHTML += archivoHTML;
+                        archivoContainer.innerHTML = archivoHTML;
+                        
+                        // Agregar botón de eliminar
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'eliminar-archivo';
+                        deleteBtn.innerHTML = '×';
+                        deleteBtn.onclick = function() { eliminarArchivo(archivo); };
+                        archivoContainer.appendChild(deleteBtn);
+                        
+                        contenedorArchivos.appendChild(archivoContainer);
                     });
                 } else {
                     contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
@@ -224,6 +294,8 @@
                                 alert("Incidencia actualizada correctamente");
                                 if (data.archivos) {
                                     cargarArchivosAdjuntos(data.archivos);
+                                    // Limpiar el input de archivos
+                                    document.getElementById("archivos").value = '';
                                 }
                             } else {
                                 alert(data.error || "Error al actualizar la incidencia");
