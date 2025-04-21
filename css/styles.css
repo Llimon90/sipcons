@@ -377,3 +377,35 @@ td {
   color: #333;
 }
 }
+
+/*ESTILOS PARA EDITAR CLIENTE DOM CLIENTES*/
+/* Estilos para los íconos de acciones */
+.acciones-cliente {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-editar, .btn-eliminar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+}
+
+.btn-editar {
+  color: #3498db;
+}
+
+.btn-eliminar {
+  color: #e74c3c;
+}
+
+.btn-editar:hover {
+  color: #2980b9;
+}
+
+.btn-eliminar:hover {
+  color: #c0392b;
+}
