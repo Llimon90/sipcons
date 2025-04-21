@@ -5,18 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Clientes</title>
   <link rel="stylesheet" href="../css/styles.css?v=4.9">
-  
-
 </head>
 
 <body>
-
-  <div class="retorna" >
-    <a href="/index.html">  <<- Inicio</a>
-    </div>
+  <div class="retorna">
+    <a href="/index.html"><<- Inicio</a>
+  </div>
+  
   <!-- Panel lateral -->
   <aside class="sidebar">
-    
     <ul>
       <li><a href="/index.html">Inicio</a></li>
       <li><a href="incidencias.html">Incidencias</a></li>
@@ -25,69 +22,51 @@
       <li><a href="usuarios.html">Usuarios</a></li>
       <li><a href="#">Configuración</a></li>
     </ul>
-
   </aside>
+  
   <main>
     <!-- Sección de registro de clientes -->
     <section class="encabezado">
-      
-
-
-        <form id="new-incidencia-form">
-
-          <h2>Registrar Cliente</h2>
-
-          <div class="form-row">
-
-            <div>  
-            
-              <label for="nombre">Nombre del Cliente o razón social:</label>
-              <input type="text" id="nombre" name="nombre" >
-
-            </div>
-          
-            <div>
-
-              <label for="rfc">RFC:</label>
-              <input type="text" id="rfc" name="rfc" >
-            
-            </div>
-          
-          </div>  
-
-          <div class="form-row">
-          
-            <div>  
-              <label for="direccion">Dirección:</label>
-              <input type="text" id="direccion" name="direccion" placeholder="Ejemplo: Corporativo" >
-            </div>
-          
-            <div>
-              <label for="telefono">Teléfono:</label>
-              <input type="text" id="telefono" name="telefono" placeholder="Con clave lada" >
-            </div>
-          
+      <form id="new-incidencia-form">
+        <h2>Registrar Cliente</h2>
+        <div class="form-row">
+          <div>  
+            <label for="nombre">Nombre del Cliente o razón social:</label>
+            <input type="text" id="nombre" name="nombre">
           </div>
-
-          <div class="form-row">
-          
-            <div>
-              <label for="contactos">Contactos:</label>
-              <input type="text" id="contactos" name="contactos" placeholder="Ejemplo: Juan Pérez; Pedro López; etc" >
-            </div>
-          
-            <div>
-              <label for="email">E-mail:</label>
-              <input type="text" id="email" name="email" placeholder="Ejemplo: cliente@dominio.com" >
-            </div>
-          
+          <div>
+            <label for="rfc">RFC:</label>
+            <input type="text" id="rfc" name="rfc">
           </div>
-          
-          <button type="submit">Guardar Cliente</button>
-        </form>
+        </div>  
 
-        <section class="lista-incidencias">        <h2>Lista de Clientes</h2>
-       
+        <div class="form-row">
+          <div>  
+            <label for="direccion">Dirección:</label>
+            <input type="text" id="direccion" name="direccion" placeholder="Ejemplo: Corporativo">
+          </div>
+          <div>
+            <label for="telefono">Teléfono:</label>
+            <input type="text" id="telefono" name="telefono" placeholder="Con clave lada">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="contactos">Contactos:</label>
+            <input type="text" id="contactos" name="contactos" placeholder="Ejemplo: Juan Pérez; Pedro López; etc">
+          </div>
+          <div>
+            <label for="email">E-mail:</label>
+            <input type="text" id="email" name="email" placeholder="Ejemplo: cliente@dominio.com">
+          </div>
+        </div>
+        
+        <button type="submit">Guardar Cliente</button>
+      </form>
+
+      <section class="lista-incidencias">
+        <h2>Lista de Clientes</h2>
         <table border="1">
           <thead>
             <tr>
@@ -97,18 +76,29 @@
               <th>Teléfono</th>
               <th>Contactos</th>
               <th>Email</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="lista-clientes">
             <!-- Los datos aparecerán aquí -->
           </tbody>
         </table>
-        
       </section>
-
     </section>
   </main>
-  <script src="../scripts/carga-clientes.js?v=4.2"></script>
-  <script src="../scripts/script-clientes.js?v=4.2"></script>
+  
+  <!-- Modal para edición de cliente (oculto inicialmente) -->
+  <div id="modal-edicion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="background-color: white; margin: 5% auto; padding: 20px; width: 80%; max-width: 600px; border-radius: 5px;">
+      <h2>Editar Cliente</h2>
+      <div id="formulario-edicion">
+        <!-- El formulario de edición se cargará aquí -->
+      </div>
+      <button onclick="document.getElementById('modal-edicion').style.display = 'none'">Cancelar</button>
+    </div>
+  </div>
+
+  <script src="../scripts/carga-clientes.js?v=5.3"></script>
+  <script src="../scripts/script-clientes.js?v=5.3"></script>
 </body>
 </html>
