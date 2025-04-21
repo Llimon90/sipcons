@@ -138,16 +138,19 @@
                     document.getElementById("detalle-incidencia").innerHTML = `
                         <form id="form-editar">
                             <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
+                            
                             <div>
-                                    <div>
+                                <div>
                                     <label># INCIDENCIA CLIENTE:</label> 
                                     <input type="text" id="numero" value="${data.numero}">
-                                </div>    
-                                <div>
+                                
+
+                                
                                     <label>CLIENTE:</label> 
                                     <input type="text" id="cliente" value="${data.cliente}" required>
                                 </div>  
                             </div>
+
                             <p><strong>CONTACTO:</strong> 
                                 <input type="text" id="contacto" value="${data.contacto}" required>
                             </p>
