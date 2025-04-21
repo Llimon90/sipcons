@@ -18,6 +18,10 @@ document.addEventListener("DOMContentLoaded", function() {
     cargarIncidencias();
   });
 
+
+
+
+
   // Función para cargar incidencias
   function cargarIncidencias() {
     const cliente = document.getElementById("cliente").value;
@@ -66,3 +70,27 @@ document.addEventListener("DOMContentLoaded", function() {
       });
   }
 });
+
+// Función para cargar los nombres de los clientes en el select
+async function cargarClientesEnSelect() {
+  try {
+    const response = await fetch('../backend/obtener-clientes.php');
+    const clientes = await response.json();
+
+    const selectClientes = document.getElementById('cliente');
+    selectClientes.innerHTML = '<option value="">Seleccione un cliente</option>';
+
+    clientes.forEach(cliente => {
+      const option = document.createElement('option');
+      option.value = cliente.nombre; // Usa el ID del cliente como valor
+      option.textContent = cliente.nombre; // Muestra el nombre en el select
+      selectClientes.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar clientes:', error);
+    alert('Error al cargar clientes en el select');
+  }
+}
+
+// Cargar clientes cuando se cargue la página
+document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
