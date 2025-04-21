@@ -136,6 +136,8 @@
 
                     // Mostrar formulario de edición
                     document.getElementById("detalle-incidencia").innerHTML = `
+                     <form id="new-incidencia-form">
+        
                         <form id="form-editar">
                             <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
                             <div>
@@ -183,6 +185,7 @@
                                 <input type="file" id="archivos" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png, .mp4">
                             </p>
                             <button type="submit">Guardar cambios</button>
+                        </form>
                         </form>
                     `;
 
