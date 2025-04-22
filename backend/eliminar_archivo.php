@@ -1,6 +1,6 @@
 
 <?php
-header('Content-Type: application/json');
+
 
 // Configurar conexión con la base de datos
 $host = "localhost";
@@ -14,6 +14,12 @@ $conn = new mysqli($host, $user, $password, $database);
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
+
+// Configurar cabeceras para permitir acceso desde el frontend
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
 // 2. Obtener datos del POST
 $idIncidencia = $_POST['id_incidencia'] ?? null;
