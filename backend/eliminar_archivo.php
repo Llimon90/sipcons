@@ -1,72 +1,66 @@
-
 <?php
+header('Content-Type: application/json');
 
-
-// Configurar conexión con la base de datos
+// 1. Configuración de conexión a la base de datos
 $host = "localhost";
 $user = "u179371012_root";
 $password = "Llimon.2025";
 $database = "u179371012_sipcons";
 
-$conn = new mysqli($host, $user, $password, $database);
-
-// Verificar la conexión
-if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8", $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error de conexión a la base de datos',
+        'details' => $e->getMessage()
+    ]);
+    exit;
 }
 
-// Configurar cabeceras para permitir acceso desde el frontend
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+// 2. Obtener y validar datos del POST
+$idIncidencia = isset($_POST['id_incidencia']) ? (int)$_POST['id_incidencia'] : null;
+$urlArchivo = isset($_POST['url_archivo']) ? $_POST['url_archivo'] : null;
 
-// 2. Obtener datos del POST
-$idIncidencia = $_POST['id_incidencia'] ?? null;
-$urlArchivo = $_POST['url_archivo'] ?? null;
-
-if (empty($idIncidencia) || empty($urlArchivo)) {
-    echo json_encode(['success' => false, 'error' => 'Datos incompletos']);
+if (!$idIncidencia || !$urlArchivo) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Datos incompletos',
+        'received' => [
+            'id_incidencia' => $idIncidencia,
+            'url_archivo' => $urlArchivo
+        ]
+    ]);
     exit;
 }
 
 try {
-    // 3. Obtener la ruta base de uploads (ajusta esta ruta según tu estructura)
-    $rutaBaseUploads = realpath($_SERVER['DOCUMENT_ROOT'] . '/uploads/') . '/';
-    
-    // 4. Extraer la parte relativa de la URL (manejo seguro)
-    $urlParts = parse_url($urlArchivo);
-    $rutaRelativa = ltrim($urlParts['path'], '/');
-    $rutaRelativa = str_replace(['../', '..\\'], '', $rutaRelativa); // Prevenir directory traversal
-    
-    // 5. Construir ruta completa del archivo
-    $rutaCompleta = realpath($rutaBaseUploads . $rutaRelativa);
-    
-    // 6. Validaciones de seguridad
-    if ($rutaCompleta === false) {
-        throw new Exception('El archivo no existe en el servidor');
-    }
-    
-    if (strpos($rutaCompleta, $rutaBaseUploads) !== 0) {
-        throw new Exception('Intento de acceso a ruta no permitida');
-    }
-
-    // 7. Eliminar el archivo físico
-    if (!unlink($rutaCompleta)) {
-        throw new Exception('No se pudo eliminar el archivo físico');
-    }
-
-    // 8. Eliminar de la base de datos
-    $stmt = $pdo->prepare("DELETE FROM archivos_incidencias WHERE incidencia_id = ? AND ruta_archivo = ?");
-    $stmt->execute([$idIncidencia, $urlArchivo]);
+    // 3. Eliminar registro de la base de datos
+    $stmt = $pdo->prepare("DELETE FROM archivos_incidnecias WHERE incidencia_id = :id AND ruta_archivo = :ruta");
+    $stmt->bindParam(':id', $idIncidencia, PDO::PARAM_INT);
+    $stmt->bindParam(':ruta', $urlArchivo, PDO::PARAM_STR);
+    $stmt->execute();
 
     if ($stmt->rowCount() === 0) {
         throw new Exception('No se encontró el registro en la base de datos');
     }
 
-    // 9. Obtener lista actualizada de archivos
-    $stmt = $pdo->prepare("SELECT ruta_archivo FROM archivos_incidencias WHERE incidencia_id = ?");
-    $stmt->execute([$idIncidencia]);
+    // 4. Eliminar archivo físico (si existe)
+    $rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+    $rutaRelativa = ltrim(parse_url($urlArchivo, PHP_URL_PATH), '/');
+    $rutaCompleta = realpath($rutaBase . $rutaRelativa);
+
+    if ($rutaCompleta && strpos($rutaCompleta, $rutaBase) === 0) {
+        if (file_exists($rutaCompleta) && !unlink($rutaCompleta)) {
+            throw new Exception('Archivo eliminado de la BD pero no del servidor');
+        }
+    }
+
+    // 5. Obtener archivos restantes (opcional)
+    $stmt = $pdo->prepare("SELECT ruta_archivo FROM archivos_incidnecias WHERE incidencia_id = :id");
+    $stmt->bindParam(':id', $idIncidencia, PDO::PARAM_INT);
+    $stmt->execute();
     $archivos = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
     echo json_encode([
@@ -80,7 +74,7 @@ try {
         'success' => false,
         'error' => $e->getMessage(),
         'debug' => [
-            'ruta_base' => $rutaBaseUploads ?? null,
+            'ruta_base' => $rutaBase ?? null,
             'ruta_relativa' => $rutaRelativa ?? null,
             'ruta_completa' => $rutaCompleta ?? null
         ]
