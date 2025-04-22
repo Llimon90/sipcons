@@ -415,7 +415,7 @@
                 setTimeout(() => notification.remove(), 3000);
             }
 
-            // Función para eliminar archivos (actualizada)
+         // Función para eliminar archivos (versión mejorada)
 async function eliminarArchivo(urlArchivo, containerElement) {
     if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
         return;
@@ -428,21 +428,21 @@ async function eliminarArchivo(urlArchivo, containerElement) {
         // Crear FormData para enviar los datos
         const formData = new FormData();
         formData.append('id_incidencia', id);
-        formData.append('url_archivo', urlArchivo);
+        
+        // Asegurarse de que la URL sea relativa al servidor
+        const urlRelativa = new URL(urlArchivo).pathname;
+        formData.append('url_archivo', urlRelativa);
 
         const response = await fetch("../backend/eliminar_archivo.php", {
             method: "POST",
-            body: formData  // Enviar como FormData, no como JSON
+            body: formData
         });
-
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-        }
 
         const data = await response.json();
 
-        if (!data.success) {
-            throw new Error(data.error || 'Error al eliminar el archivo');
+        if (!response.ok || !data.success) {
+            console.error('Error del servidor:', data);
+            throw new Error(data.error || `Error al eliminar el archivo. Código: ${response.status}`);
         }
 
         // Eliminar visualmente el contenedor del archivo
@@ -453,7 +453,11 @@ async function eliminarArchivo(urlArchivo, containerElement) {
         
     } catch (error) {
         console.error("Error al eliminar archivo:", error);
-        mostrarNotificacion(error.message, 'error');
+        
+        // Mostrar detalles de depuración si están disponibles
+        const mensajeError = error.message || 'Error desconocido al eliminar el archivo';
+        mostrarNotificacion(mensajeError, 'error');
+        
         containerElement.classList.remove('eliminando');
     }
 }
