@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 <option value="Abierta" ${incidencia.estatus === "Abierta" ? "selected" : ""}>Abierta</option>
                                 <option value="Pendiente" ${incidencia.estatus === "Pendiente" ? "selected" : ""}>Pendiente</option>
                                 <option value="En seguimiento" ${incidencia.estatus === "En seguimiento" ? "selected" : ""}>En Seguimiento</option>
+                                 <option value="Cerrada" ${incidencia.estatus === "Cerrada" ? "selected" : ""}>Cerrada</option>
                                 <option value="Facturada" ${incidencia.estatus === "Facturada" ? "selected" : ""}>Facturada</option>
                             </select>
                         </td>
