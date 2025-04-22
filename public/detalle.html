@@ -415,51 +415,58 @@
                 setTimeout(() => notification.remove(), 3000);
             }
 
-            // Función mejorada para eliminar archivos
-            async function eliminarArchivo(urlArchivo, containerElement) {
-                if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
-                    return;
-                }
+            // Función para eliminar archivos (actualizada)
+async function eliminarArchivo(urlArchivo, containerElement) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
+        return;
+    }
 
-                // Mostrar estado de eliminación
-                containerElement.classList.add('eliminando');
-                
-                try {
-                    const response = await fetch("../backend/eliminar_archivo.php", {
-                        method: "POST",
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            id_incidencia: id,
-                            url_archivo: urlArchivo
-                        })
-                    });
+    // Mostrar estado de carga
+    containerElement.classList.add('eliminando');
+    
+    try {
+        // Crear FormData para enviar los datos
+        const formData = new FormData();
+        formData.append('id_incidencia', id);
+        formData.append('url_archivo', urlArchivo);
 
-                    const data = await response.json();
+        const response = await fetch("../backend/eliminar_archivo.php", {
+            method: "POST",
+            body: formData  // Enviar como FormData, no como JSON
+        });
 
-                    if (!response.ok || !data.success) {
-                        throw new Error(data.error || 'Error al eliminar el archivo');
-                    }
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
 
-                    // Eliminar el elemento del DOM
-                    containerElement.remove();
-                    
-                    // Mostrar notificación de éxito
-                    showNotification('Archivo eliminado correctamente');
-                    
-                    // Actualizar lista de archivos si es necesario
-                    if (data.archivos) {
-                        // Si el backend devuelve la lista actualizada, podemos usarla
-                        // cargarArchivosAdjuntos(data.archivos);
-                    }
-                    
-                } catch (error) {
-                    console.error("Error al eliminar archivo:", error);
-                    showNotification(error.message, 'error');
-                    containerElement.classList.remove('eliminando');
-                }
-            }
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Error al eliminar el archivo');
+        }
+
+        // Eliminar visualmente el contenedor del archivo
+        containerElement.remove();
+        
+        // Mostrar notificación de éxito
+        mostrarNotificacion('Archivo eliminado correctamente', 'success');
+        
+    } catch (error) {
+        console.error("Error al eliminar archivo:", error);
+        mostrarNotificacion(error.message, 'error');
+        containerElement.classList.remove('eliminando');
+    }
+}
+
+// Función auxiliar para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo = 'success') {
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion ${tipo}`;
+    notificacion.textContent = mensaje;
+    document.body.appendChild(notificacion);
+    
+    setTimeout(() => notificacion.remove(), 3000);
+}
 
             // Función para cargar y mostrar archivos adjuntos
             function cargarArchivosAdjuntos(archivos) {
