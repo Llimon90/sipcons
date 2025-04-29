@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 
 // 1. Configuración de conexión a la base de datos
 $host = "localhost";
-$user = "";
+$user = "sipcons1";
 $password = "";
 $database = "sipcons1_appweb";
 

@@ -1,7 +1,7 @@
 <?php
 // Configurar conexión con la base de datos
 $host = "localhost";
-$user = "";
+$user = "sipcons1";
 $password = "";
 $database = "sipcons1_appweb";
 

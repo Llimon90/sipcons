@@ -2,7 +2,7 @@
 // Configurar conexión con la base de datos
 $host = "localhost";
 $user = "";
-$password = "";
+$password = "sipcons1";
 $database = "sipcons1_appweb";
 
 $conn = new mysqli($host, $user, $password, $database);
