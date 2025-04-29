@@ -3,9 +3,9 @@ header('Content-Type: application/json');
 
 // 1. Configuración de conexión a la base de datos
 $host = "localhost";
-$user = "u179371012_root";
-$password = "Llimon.2025";
-$database = "u179371012_sipcons";
+$user = "";
+$password = "";
+$database = "sipcons1_appweb";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8", $user, $password);

@@ -2,9 +2,9 @@
 header('Content-Type: application/json');
 
 $host = "localhost";
-$user = "u179371012_root";
-$password = "Llimon.2025";
-$database = "u179371012_sipcons";
+$user = "";
+$password = "";
+$database = "sipcons1_appweb";
 
 $conn = new mysqli($host, $user, $password, $database);
 

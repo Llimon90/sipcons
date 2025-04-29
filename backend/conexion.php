@@ -1,9 +1,9 @@
 <?php
 // Configurar conexión con la base de datos
 $host = "localhost";
-$user = "u179371012_root";
-$password = "Llimon.2025";
-$database = "u179371012_sipcons";
+$user = "";
+$password = "";
+$database = "sipcons1_appweb";
 
 // Crear conexión
 $conn = new mysqli($host, $user, $password, $database);

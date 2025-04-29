@@ -5,9 +5,9 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 $host = "localhost";
-$user = "u179371012_root";
-$password = "Llimon.2025";
-$database = "u179371012_sipcons";
+$user = "";
+$password = "";
+$database = "sipcons1_appweb";
 
 // Conexión a la base de datos
 $conn = new mysqli($host, $user, $password, $database);
