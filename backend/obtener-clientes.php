@@ -5,8 +5,8 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 $host = "localhost";
-$user = "";
-$password = "sipcons1";
+$user = "sipcons1_appweb";
+$password = "sip*SYS2025";
 $database = "sipcons1_appweb";
 
 // Conexión a la base de datos
