@@ -1,5 +1,5 @@
 <?php
-// Conexión a la base de datos
+// Cone xión a la base de datos
 $host = "localhost";
 $user = "sipcons1_appweb";
 $password = "sip*SYS2025";
