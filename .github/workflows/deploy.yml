@@ -22,7 +22,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: 21
-          server-dir: /home3/sipcons1/public_html/app/  # Ajusta según tu estructura
+          server-dir: app/  # Ajusta según tu estructura
           exclude: |
             **/.git*
             **/node_modules/**
