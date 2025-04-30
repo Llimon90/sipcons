@@ -10,256 +10,15 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Función para renderizar miniaturas de PDF
-    function renderPDFThumbnail(url, containerId) {
-        const loadingTask = pdfjsLib.getDocument(url);
-
-        loadingTask.promise.then(pdf => {
-            return pdf.getPage(1);
-        }).then(page => {
-            const viewport = page.getViewport({ scale: 1.0 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-
-            return page.render(renderContext).promise.then(() => {
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = '';
-
-                    // Ajustar canvas para miniatura (estilo consistente con imágenes)
-                    canvas.style.maxWidth = '100%';
-                    canvas.style.maxHeight = '150px';
-                    canvas.style.objectFit = 'contain';
-                    canvas.style.display = 'block';
-                    canvas.style.margin = '0 auto';
-                    container.appendChild(canvas);
-
-                    // Agregar metadatos
-                    addFileMetadata(container, url, 'PDF');
-                }
-            });
-        }).catch(error => {
-            console.error('Error al renderizar PDF:', error);
-            showFallbackThumbnail(containerId, url, 'PDF');
-        });
-    }
-
-    // Función para crear miniatura de video (estilo consistente)
-    function createVideoThumbnail(url, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const video = document.createElement('video');
-        video.src = url;
-        video.preload = 'metadata';
-
-        video.onloadedmetadata = function () {
-            video.currentTime = Math.min(1, video.duration / 4);
-        };
-
-        video.onseeked = function () {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            container.innerHTML = '';
-
-            const thumbnail = new Image();
-            thumbnail.src = canvas.toDataURL();
-            thumbnail.className = 'file-thumbnail'; // Clase consistente
-            thumbnail.style.maxWidth = '100%';
-            thumbnail.style.maxHeight = '150px';
-            thumbnail.style.objectFit = 'contain';
-            thumbnail.style.display = 'block';
-            thumbnail.style.margin = '0 auto';
-            container.appendChild(thumbnail);
-
-            // Agregar metadatos e icono de play
-            addFileMetadata(container, url, 'Video');
-            addPlayIcon(container);
-        };
-
-        video.onerror = function () {
-            showFallbackThumbnail(containerId, url, 'Video');
-        };
-    }
-
-    // Función para crear miniatura de imagen (base para otros tipos)
-    function createImageThumbnail(url, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const img = document.createElement('img');
-        img.src = url;
-        img.className = 'file-thumbnail';
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '150px';
-        img.style.objectFit = 'contain';
-        img.style.display = 'block';
-        img.style.margin = '0 auto';
-
-        img.onload = function() {
-            container.innerHTML = '';
-            container.appendChild(img);
-            addFileMetadata(container, url, 'Imagen');
-        };
-
-        img.onerror = function() {
-            showFallbackThumbnail(containerId, url, 'Imagen');
-        };
-    }
-
-    // Función auxiliar para agregar metadatos del archivo (estilo consistente)
-    function addFileMetadata(container, url, type) {
-        const metadataContainer = document.createElement('div');
-        metadataContainer.className = 'file-metadata';
-        metadataContainer.style.textAlign = 'center';
-        metadataContainer.style.marginTop = '8px';
-        metadataContainer.style.fontSize = '12px';
-
-        const fileName = document.createElement('div');
-        fileName.className = 'file-name';
-        fileName.textContent = getShortFileName(url);
-        fileName.style.whiteSpace = 'nowrap';
-        fileName.style.overflow = 'hidden';
-        fileName.style.textOverflow = 'ellipsis';
-        
-        const fileType = document.createElement('div');
-        fileType.className = 'file-type';
-        fileType.textContent = type;
-        fileType.style.color = '#666';
-        fileType.style.fontSize = '11px';
-
-        metadataContainer.appendChild(fileName);
-        metadataContainer.appendChild(fileType);
-        container.appendChild(metadataContainer);
-    }
-
-    // Función auxiliar para agregar icono de play (estilo consistente)
-    function addPlayIcon(container) {
-        const playIcon = document.createElement('div');
-        playIcon.innerHTML = '▶';
-        playIcon.style.position = 'absolute';
-        playIcon.style.top = '50%';
-        playIcon.style.left = '50%';
-        playIcon.style.transform = 'translate(-50%, -50%)';
-        playIcon.style.color = 'white';
-        playIcon.style.fontSize = '24px';
-        playIcon.style.textShadow = '0 0 5px rgba(0,0,0,0.5)';
-        container.appendChild(playIcon);
-    }
-
-    // Función auxiliar para mostrar miniatura genérica (estilo consistente)
-    function showFallbackThumbnail(containerId, url, type) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const icons = {
-            'PDF': '📄',
-            'Video': '🎬',
-            'Imagen': '🖼️',
-            'DOC': '📝',
-            'DOCX': '📝',
-            'XLS': '📊',
-            'XLSX': '📊',
-            'PPT': '📽️',
-            'PPTX': '📽️',
-            'TXT': '📑',
-            'ZIP': '🗄️',
-            'RAR': '🗄️',
-            'default': '📁'
-        };
-
-        container.innerHTML = `
-            <div class="file-icon" style="font-size: 50px; text-align: center; margin: 10px 0;">${icons[type] || icons.default}</div>
-        `;
-        
-        // Agregar metadatos con el mismo estilo
-        addFileMetadata(container, url, type);
-    }
-
-    // Función auxiliar para obtener nombre corto de archivo
-    function getShortFileName(url, maxLength = 20) {
-        const fileName = url.split('/').pop();
-        return fileName.length > maxLength
-            ? fileName.substring(0, maxLength) + '...'
-            : fileName;
-    }
-
-    // Función auxiliar para mostrar notificación
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `notificacion ${type}`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => notification.remove(), 3000);
-    }
-
-    // Función para eliminar archivos (versión mejorada)
-    async function eliminarArchivo(urlArchivo, containerElement) {
-        if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
-            return;
-        }
-
-        // Mostrar estado de carga
-        containerElement.classList.add('eliminando');
-
-        try {
-            // Crear FormData para enviar los datos
-            const formData = new FormData();
-            formData.append('id_incidencia', id);
-
-            // Asegurarse de que la URL sea relativa al servidor
-            const urlRelativa = new URL(urlArchivo).pathname;
-            formData.append('url_archivo', urlRelativa);
-
-            const response = await fetch("../backend/eliminar_archivo.php", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                console.error('Error del servidor:', data);
-                throw new Error(data.error || `Error al eliminar el archivo. Código: ${response.status}`);
-            }
-
-            // Eliminar visualmente el contenedor del archivo
-            containerElement.remove();
-
-            // Mostrar notificación de éxito
-            mostrarNotificacion('Archivo eliminado correctamente', 'success');
-
-        } catch (error) {
-            console.error("Error al eliminar archivo:", error);
-
-            // Mostrar detalles de depuración si están disponibles
-            const mensajeError = error.message || 'Error desconocido al eliminar el archivo';
-            mostrarNotificacion(mensajeError, 'error');
-
-            containerElement.classList.remove('eliminando');
-        }a
-    }
-
-    // Función para cargar y mostrar archivos adjuntos (versión mejorada para todos los tipos)
     function cargarArchivosAdjuntos(archivos) {
         const contenedorArchivos = document.getElementById("contenedor-archivos");
         contenedorArchivos.innerHTML = "";
-
+    
         if (archivos && archivos.length > 0) {
             archivos.forEach((archivo, index) => {
                 const ext = archivo.split('.').pop().toLowerCase();
+    
+                // Crear contenedor principal
                 const archivoContainer = document.createElement('div');
                 archivoContainer.className = 'archivo-container';
                 archivoContainer.style.position = 'relative';
@@ -271,48 +30,86 @@ document.addEventListener("DOMContentLoaded", function () {
                 archivoContainer.style.width = '200px';
                 archivoContainer.style.display = 'inline-block';
                 archivoContainer.style.verticalAlign = 'top';
-                
-                const containerId = `file-container-${index}`;
-                archivoContainer.id = containerId;
-
-                // Crear enlace para abrir el archivo
+    
+                // Crear subcontenedor para miniatura y metadatos
+                const thumbnailContainer = document.createElement('div');
+                thumbnailContainer.className = 'thumbnail-container';
+    
+                // Crear enlace
                 const link = document.createElement('a');
                 link.href = archivo;
                 link.target = '_blank';
                 link.style.textDecoration = 'none';
                 link.style.color = 'inherit';
                 link.style.display = 'block';
-
-                // Determinar el tipo de archivo y mostrar la miniatura apropiada
+    
+                // Determinar y crear miniatura
                 if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                    // Miniaturas para imágenes
-                    createImageThumbnail(archivo, containerId);
+                    const img = document.createElement('img');
+                    img.src = archivo;
+                    img.className = 'file-thumbnail';
+                    img.style.maxWidth = '100%';
+                    img.style.maxHeight = '150px';
+                    img.style.objectFit = 'contain';
+                    img.style.display = 'block';
+                    img.style.margin = '0 auto';
+                    link.appendChild(img);
+                    addFileMetadata(thumbnailContainer, archivo, 'Imagen');
                 } else if (ext === "pdf") {
-                    // Miniaturas para PDF
-                    showFallbackThumbnail(containerId, archivo, 'PDF');
-                    setTimeout(() => renderPDFThumbnail(archivo, containerId), 100);
+                    const canvas = document.createElement('canvas');
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.maxHeight = '150px';
+                    canvas.style.objectFit = 'contain';
+                    canvas.style.display = 'block';
+                    canvas.style.margin = '0 auto';
+                    link.appendChild(canvas);
+                    renderPDFThumbnail(archivo, canvas);
+                    addFileMetadata(thumbnailContainer, archivo, 'PDF');
                 } else if (["mp4", "webm", "ogg", "mov"].includes(ext)) {
-                    // Miniaturas para video
-                    showFallbackThumbnail(containerId, archivo, 'Video');
-                    setTimeout(() => createVideoThumbnail(archivo, containerId), 100);
-                } else if (["doc", "docx"].includes(ext)) {
-                    // Documentos de Word
-                    showFallbackThumbnail(containerId, archivo, 'DOC');
-                } else if (["xls", "xlsx"].includes(ext)) {
-                    // Hojas de cálculo
-                    showFallbackThumbnail(containerId, archivo, 'XLS');
-                } else if (["ppt", "pptx"].includes(ext)) {
-                    // Presentaciones
-                    showFallbackThumbnail(containerId, archivo, 'PPT');
-                } else if (["zip", "rar"].includes(ext)) {
-                    // Archivos comprimidos
-                    showFallbackThumbnail(containerId, archivo, 'ZIP');
+                    const video = document.createElement('video');
+                    video.src = archivo;
+                    video.preload = 'metadata';
+                    video.style.maxWidth = '100%';
+                    video.style.maxHeight = '150px';
+                    video.style.objectFit = 'contain';
+                    video.style.display = 'block';
+                    video.style.margin = '0 auto';
+                    video.onloadedmetadata = function () {
+                        video.currentTime = Math.min(1, video.duration / 4);
+                    };
+                    video.onseeked = function () {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        link.innerHTML = '';
+                        link.appendChild(canvas);
+                        addPlayIcon(thumbnailContainer);
+                    };
+                    video.onerror = function () {
+                        showFallbackThumbnail(thumbnailContainer, archivo, 'Video');
+                    };
+                    link.appendChild(video);
+                    addFileMetadata(thumbnailContainer, archivo, 'Video');
                 } else {
-                    // Icono genérico para otros tipos de archivo
-                    showFallbackThumbnail(containerId, archivo, ext.toUpperCase());
+                    const fallback = document.createElement('div');
+                    fallback.className = 'file-icon';
+                    fallback.style.fontSize = '50px';
+                    fallback.style.textAlign = 'center';
+                    fallback.style.margin = '10px 0';
+                    fallback.textContent = getFileIcon(ext.toUpperCase());
+                    link.appendChild(fallback);
+                    addFileMetadata(thumbnailContainer, archivo, ext.toUpperCase());
                 }
-
-                // Agregar botón de eliminar
+    
+                // Agregar enlace al subcontenedor
+                thumbnailContainer.appendChild(link);
+    
+                // Agregar subcontenedor al contenedor principal
+                archivoContainer.appendChild(thumbnailContainer);
+    
+                // Crear y agregar botón de eliminar
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'eliminar-archivo';
                 deleteBtn.innerHTML = '×';
@@ -335,9 +132,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.stopPropagation();
                     eliminarArchivo(archivo, archivoContainer);
                 };
-
-                archivoContainer.appendChild(link);
                 archivoContainer.appendChild(deleteBtn);
+    
+                // Agregar contenedor principal al DOM
                 contenedorArchivos.appendChild(archivoContainer);
             });
         } else {
@@ -345,6 +142,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    
+    
     // Cargar datos de la incidencia (sin cambios)
     async function cargarDetalleIncidencia() {
         try {
