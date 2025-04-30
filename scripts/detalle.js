@@ -172,11 +172,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 deleteBtn.style.justifyContent = 'center';
                 deleteBtn.style.padding = '0';
                 deleteBtn.onclick = (e) => {
-                    deleteBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        eliminarArchivo(archivo, archivoContainer); // 'archivo' es la URL completa
-                    };
+                    e.preventDefault();
+                    e.stopPropagation();
+                    eliminarArchivo(archivo, archivoContainer); // 'archivo' es la URL completa
+                };;
     
                 archivoContainer.appendChild(link);
                 archivoContainer.appendChild(deleteBtn);
