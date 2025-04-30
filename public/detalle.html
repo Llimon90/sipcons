@@ -473,98 +473,80 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Función para cargar y mostrar archivos adjuntos
-// Función para cargar y mostrar archivos adjuntos
-function cargarArchivosAdjuntos(archivos) {
-    const contenedorArchivos = document.getElementById("contenedor-archivos");
-    contenedorArchivos.innerHTML = "";
+    function cargarArchivosAdjuntos(archivos) {
+        const contenedorArchivos = document.getElementById("contenedor-archivos");
+        contenedorArchivos.innerHTML = "";
 
-    if (archivos && archivos.length > 0) {
-        archivos.forEach((archivo, index) => {
-            const ext = archivo.split('.').pop().toLowerCase();
-            const archivoContainer = document.createElement('div');
-            archivoContainer.className = 'archivo-container';
-            const containerId = `file-container-${index}`;
-            archivoContainer.id = containerId;
+        if (archivos && archivos.length > 0) {
+            archivos.forEach((archivo, index) => {
+                const ext = archivo.split('.').pop().toLowerCase();
+                const archivoContainer = document.createElement('div');
+                archivoContainer.className = 'archivo-container';
+                const containerId = `file-container-${index}`;
+                archivoContainer.id = containerId;
 
-            // Crear enlace para abrir el archivo en una nueva pestaña
-            const link = document.createElement('a');
-            link.href = archivo;
-            link.target = '_blank';
-            link.style.textDecoration = 'none';
-            link.style.color = 'inherit';
-            link.style.display = 'block';
-            link.style.height = '100%';
+                // Crear enlace para abrir el archivo
+                const link = document.createElement('a');
+                link.href = archivo;
+                link.target = '_blank';
+                link.style.textDecoration = 'none';
+                link.style.color = 'inherit';
+                link.style.display = 'block';
+                link.style.height = '100%';
 
-            // Determinar el tipo de archivo y mostrar la miniatura apropiada
-            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                // Miniaturas para imágenes
-                const img = document.createElement('img');
-                img.src = archivo;
-                img.className = 'image-thumbnail';
-                img.onerror = () => showFallbackThumbnail(containerId, archivo, 'Imagen');
-                link.appendChild(img);
-                addFileMetadata(link, archivo, 'Imagen');
-            } else if (ext === "pdf") {
-                // Miniaturas para PDF
-                const canvas = document.createElement('canvas');
-                canvas.style.maxWidth = '100%';
-                canvas.style.height = '100px';
-                canvas.style.objectFit = 'contain';
-                link.appendChild(canvas);
-                addFileMetadata(link, archivo, 'PDF');
-                renderPDFThumbnail(archivo, canvas);
-            } else if (["mp4", "webm", "ogg", "mov"].includes(ext)) {
-                // Miniaturas para video
-                const video = document.createElement('video');
-                video.src = archivo;
-                video.preload = 'metadata';
-                video.onloadedmetadata = function() {
-                    video.currentTime = Math.min(1, video.duration / 4);
-                };
-                video.onseeked = function() {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const thumbnail = new Image();
-                    thumbnail.src = canvas.toDataURL();
-                    thumbnail.className = 'video-thumbnail';
-                    link.appendChild(thumbnail);
-                    addFileMetadata(link, archivo, 'Video');
-                    addPlayIcon(link);
-                };
-                video.onerror = function() {
+                // Determinar el tipo de archivo y mostrar la miniatura apropiada
+                if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+                    // Miniaturas para imágenes
+                    const img = document.createElement('img');
+                    img.src = archivo;
+                    img.className = 'image-thumbnail';
+                    img.onerror = () => showFallbackThumbnail(containerId, archivo, 'Imagen');
+                    link.appendChild(img);
+                    addFileMetadata(link, archivo, 'Imagen');
+
+                } else if (ext === "pdf") {
+                    // Miniaturas para PDF
+                    showFallbackThumbnail(containerId, archivo, 'PDF');
+                    setTimeout(() => renderPDFThumbnail(archivo, containerId), 100);
+
+                } else if (["mp4", "webm", "ogg", "mov"].includes(ext)) {
+                    // Miniaturas para video
                     showFallbackThumbnail(containerId, archivo, 'Video');
+                    setTimeout(() => createVideoThumbnail(archivo, containerId), 100);
+
+                } else {
+                    // Icono genérico para otros tipos de archivo
+                    showFallbackThumbnail(containerId, archivo, ext.toUpperCase());
+                }
+
+                // Agregar botón de eliminar
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'eliminar-archivo';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    eliminarArchivo(archivo, archivoContainer);
                 };
-            } else {
-                // Icono genérico para otros tipos de archivo
-                const icon = document.createElement('div');
-                icon.className = 'file-icon';
-                icon.textContent = '📁';
-                link.appendChild(icon);
-                addFileMetadata(link, archivo, ext.toUpperCase());
-            }
 
-            // Agregar botón de eliminar
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'eliminar-archivo';
-            deleteBtn.innerHTML = '×';
-            deleteBtn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                eliminarArchivo(archivo, archivoContainer);
-            };
-
-            archivoContainer.appendChild(link);
-            archivoContainer.appendChild(deleteBtn);
-            contenedorArchivos.appendChild(archivoContainer);
-        });
-    } else {
-        contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
+                archivoContainer.appendChild(link);
+                archivoContainer.appendChild(deleteBtn);
+                contenedorArchivos.appendChild(archivoContainer);
+            });
+        } else {
+            contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
+        }
     }
-}
 
+    // Cargar datos de la incidencia
+    async function cargarDetalleIncidencia() {
+        try {
+            const response = await fetch(`../backend/detalle.php?id=${id}`);
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Error al cargar los detalles');
+            }
                     // Mostrar formulario de edición
                     document.getElementById("detalle-incidencia").innerHTML = `
                         <form id="form-editar">
