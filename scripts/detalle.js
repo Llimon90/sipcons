@@ -1,4 +1,3 @@
-// Configuración global de PDF.js (ya no es necesaria pero la dejamos por si acaso)
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -10,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Función auxiliar para obtener nombre corto de archivo
     function getShortFileName(url, maxLength = 20) {
         const fileName = url.split('/').pop();
         return fileName.length > maxLength
@@ -18,31 +16,24 @@ document.addEventListener("DOMContentLoaded", function () {
             : fileName;
     }
 
-    // Función auxiliar para mostrar notificación
     function showNotification(message, type = 'success') {
         const notification = document.createElement('div');
         notification.className = `notificacion ${type}`;
         notification.textContent = message;
         document.body.appendChild(notification);
-
         setTimeout(() => notification.remove(), 3000);
     }
 
-    // Función para eliminar archivos
     async function eliminarArchivo(urlArchivo, containerElement) {
         if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
             return;
         }
 
-        // Mostrar estado de carga
         containerElement.classList.add('eliminando');
 
         try {
-            // Crear FormData para enviar los datos
             const formData = new FormData();
             formData.append('id_incidencia', id);
-
-            // Asegurarse de que la URL sea relativa al servidor
             const urlRelativa = new URL(urlArchivo).pathname;
             formData.append('url_archivo', urlRelativa);
 
@@ -58,10 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 throw new Error(data.error || `Error al eliminar el archivo. Código: ${response.status}`);
             }
 
-            // Eliminar visualmente el contenedor del archivo
             containerElement.remove();
-
-            // Mostrar notificación de éxito
             showNotification('Archivo eliminado correctamente', 'success');
 
         } catch (error) {
@@ -71,7 +59,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Función para cargar y mostrar archivos adjuntos (versión simplificada)
     function cargarArchivosAdjuntos(archivos) {
         const contenedorArchivos = document.getElementById("contenedor-archivos");
         contenedorArchivos.innerHTML = "";
@@ -87,17 +74,70 @@ document.addEventListener("DOMContentLoaded", function () {
                 archivoContainer.style.border = '1px solid #ddd';
                 archivoContainer.style.borderRadius = '5px';
                 archivoContainer.style.display = 'inline-block';
-                
-                // Crear enlace para abrir el archivo
+
                 const link = document.createElement('a');
                 link.href = archivo;
                 link.target = '_blank';
                 link.style.textDecoration = 'none';
                 link.style.color = '#333';
                 link.style.display = 'block';
-                link.textContent = getShortFileName(archivo);
 
-                // Agregar botón de eliminar
+                let previewElement;
+
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                    previewElement = document.createElement('img');
+                    previewElement.src = archivo;
+                    previewElement.style.maxWidth = '100px';
+                    previewElement.style.maxHeight = '100px';
+                    previewElement.style.cursor = 'pointer';
+                    previewElement.onclick = () => window.open(archivo, '_blank');
+                    link.appendChild(previewElement);
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = getShortFileName(archivo);
+                    fileNameSpan.style.display = 'block';
+                    fileNameSpan.style.textAlign = 'center';
+                    link.appendChild(fileNameSpan);
+                } else if (ext === 'pdf') {
+                    previewElement = document.createElement('div');
+                    previewElement.style.width = '80px';
+                    previewElement.style.height = '100px';
+                    previewElement.style.backgroundColor = '#eee';
+                    previewElement.style.display = 'flex';
+                    previewElement.style.alignItems = 'center';
+                    previewElement.style.justifyContent = 'center';
+                    previewElement.style.fontSize = '12px';
+                    previewElement.style.textAlign = 'center';
+                    previewElement.textContent = 'Vista previa no disponible';
+                    previewElement.style.cursor = 'pointer';
+                    previewElement.onclick = () => window.open(archivo, '_blank');
+                    link.appendChild(previewElement);
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = getShortFileName(archivo);
+                    fileNameSpan.style.display = 'block';
+                    fileNameSpan.style.textAlign = 'center';
+                    link.appendChild(fileNameSpan);
+                } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                    previewElement = document.createElement('video');
+                    previewElement.src = archivo;
+                    previewElement.style.maxWidth = '100px';
+                    previewElement.style.maxHeight = '100px';
+                    previewElement.controls = false;
+                    previewElement.muted = true;
+                    previewElement.loop = true;
+                    previewElement.style.cursor = 'pointer';
+                    previewElement.onmouseover = () => previewElement.play();
+                    previewElement.onmouseout = () => previewElement.pause();
+                    previewElement.onclick = () => window.open(archivo, '_blank');
+                    link.appendChild(previewElement);
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.textContent = getShortFileName(archivo);
+                    fileNameSpan.style.display = 'block';
+                    fileNameSpan.style.textAlign = 'center';
+                    link.appendChild(fileNameSpan);
+                } else {
+                    link.textContent = getShortFileName(archivo);
+                }
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'eliminar-archivo';
                 deleteBtn.innerHTML = '×';
@@ -130,7 +170,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Cargar datos de la incidencia
     async function cargarDetalleIncidencia() {
         try {
             const response = await fetch(`../backend/detalle.php?id=${id}`);
@@ -140,21 +179,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 throw new Error(data.error || 'Error al cargar los detalles');
             }
 
-            // Mostrar formulario de edición
             document.getElementById("detalle-incidencia").innerHTML = `
                 <form id="form-editar">
                     <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
                     <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                         <div style="flex: 1;">
-                            <label># INCIDENCIA CLIENTE:</label> 
+                            <label># INCIDENCIA CLIENTE:</label>&nbsp;
                             <input type="text" id="numero" value="${data.numero || ''}" style="width: 100%;">
-                        </div>    
+                        </div>&nbsp; &nbsp;
                         <div style="flex: 1;">
-                            <label>CLIENTE:</label> 
+                            <label>CLIENTE:</label>&nbsp;
                             <input type="text" id="cliente" value="${data.cliente || ''}" required style="width: 100%;">
-                        </div>  
+                        </div>&nbsp;&nbsp;
                     </div>
-                    
+
                     <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                         <div style="flex: 1;">
                             <label>CONTACTO:</label>
@@ -165,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <input type="text" id="sucursal" value="${data.sucursal || ''}" required style="width: 100%;">
                         </div>
                     </div>
-                    
+
                     <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                         <div style="flex: 1;">
                             <label>FECHA:</label>
@@ -176,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <input type="text" id="tecnico" value="${data.tecnico || ''}" required style="width: 100%;">
                         </div>
                     </div>
-                    
+
                     <div style="margin-bottom: 15px;">
                         <label>ESTATUS:</label>
                         <select id="estatus" style="width: 100%;">
@@ -187,39 +225,37 @@ document.addEventListener("DOMContentLoaded", function () {
                             <option value="Facturada" ${data.estatus === "Facturada" ? 'selected' : ''}>Facturada</option>
                         </select>
                     </div>
-                    
+
                     <div style="margin-bottom: 15px;">
                         <label>FALLA:</label>
                         <textarea id="falla" required style="width: 100%;">${data.falla || ''}</textarea>
                     </div>
-                    
+
                     <div style="margin-bottom: 15px;">
                         <label>TRABAJO REALIZADO:</label>
                         <textarea id="accion" style="width: 100%;">${data.accion || ''}</textarea>
                     </div>
-                    
+
                     <div style="margin-bottom: 15px;">
                         <label>AGREGAR NUEVOS ARCHIVOS:</label>
-                        <input type="file" id="archivos" name="archivos[]" multiple 
-                               accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" 
+                        <input type="file" id="archivos" name="archivos[]" multiple
+                               accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
                                style="width: 100%;">
                     </div>
-                    
+
                     <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                         Guardar cambios
                     </button>
                 </form>
             `;
 
-            // Cargar archivos adjuntos
             if (data.archivos) {
                 cargarArchivosAdjuntos(data.archivos);
             }
 
-            // Configurar evento del formulario
             document.getElementById("form-editar").addEventListener("submit", async function (e) {
                 e.preventDefault();
-                
+
                 const formData = new FormData();
                 formData.append("id", id);
                 formData.append("numero", document.getElementById("numero").value);
@@ -232,7 +268,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append("falla", document.getElementById("falla").value);
                 formData.append("accion", document.getElementById("accion").value);
 
-                // Agregar archivos nuevos
                 const archivosInput = document.getElementById("archivos").files;
                 for (let i = 0; i < archivosInput.length; i++) {
                     formData.append("archivos[]", archivosInput[i]);
@@ -243,7 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         method: "POST",
                         body: formData
                     });
-                    
+
                     const data = await response.json();
 
                     if (!response.ok || !data.success) {
@@ -251,13 +286,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
 
                     showNotification('Incidencia actualizada correctamente');
-                    
-                    // Actualizar lista de archivos si hay nuevos
+
                     if (data.archivos) {
                         cargarArchivosAdjuntos(data.archivos);
                         document.getElementById("archivos").value = '';
                     }
-                    
+
                 } catch (error) {
                     console.error("Error al actualizar incidencia:", error);
                     showNotification(error.message, 'error');
@@ -266,11 +300,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         } catch (error) {
             console.error("Error al cargar detalles:", error);
-            document.getElementById("detalle-incidencia").innerHTML = 
+            document.getElementById("detalle-incidencia").innerHTML =
                 `<p>Error al cargar los detalles: ${error.message}</p>`;
         }
     }
 
-    // Iniciar la carga de datos
     cargarDetalleIncidencia();
 });
