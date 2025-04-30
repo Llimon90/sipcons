@@ -1,4 +1,4 @@
-// Configuración global de PDF.js
+// Configuración global de PDF.js (ya no es necesaria pero la dejamos por si acaso)
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -8,183 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!id) {
         document.getElementById("detalle-incidencia").innerHTML = "<p>Error: ID no encontrado.</p>";
         return;
-    }
-
-    // Función para renderizar miniaturas de PDF
-    function renderPDFThumbnail(url, containerId) {
-        const loadingTask = pdfjsLib.getDocument(url);
-
-        loadingTask.promise.then(pdf => {
-            return pdf.getPage(1);
-        }).then(page => {
-            const viewport = page.getViewport({ scale: 1.0 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-
-            return page.render(renderContext).promise.then(() => {
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = '';
-
-                    // Ajustar canvas para miniatura (estilo consistente con imágenes)
-                    canvas.style.maxWidth = '100%';
-                    canvas.style.maxHeight = '150px';
-                    canvas.style.objectFit = 'contain';
-                    canvas.style.display = 'block';
-                    canvas.style.margin = '0 auto';
-                    container.appendChild(canvas);
-
-                    // Agregar metadatos
-                    addFileMetadata(container, url, 'PDF');
-                }
-            });
-        }).catch(error => {
-            console.error('Error al renderizar PDF:', error);
-            showFallbackThumbnail(containerId, url, 'PDF');
-        });
-    }
-
-    // Función para crear miniatura de video (estilo consistente)
-    function createVideoThumbnail(url, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const video = document.createElement('video');
-        video.src = url;
-        video.preload = 'metadata';
-
-        video.onloadedmetadata = function () {
-            video.currentTime = Math.min(1, video.duration / 4);
-        };
-
-        video.onseeked = function () {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            container.innerHTML = '';
-
-            const thumbnail = new Image();
-            thumbnail.src = canvas.toDataURL();
-            thumbnail.className = 'file-thumbnail'; // Clase consistente
-            thumbnail.style.maxWidth = '100%';
-            thumbnail.style.maxHeight = '150px';
-            thumbnail.style.objectFit = 'contain';
-            thumbnail.style.display = 'block';
-            thumbnail.style.margin = '0 auto';
-            container.appendChild(thumbnail);
-
-            // Agregar metadatos e icono de play
-            addFileMetadata(container, url, 'Video');
-            addPlayIcon(container);
-        };
-
-        video.onerror = function () {
-            showFallbackThumbnail(containerId, url, 'Video');
-        };
-    }
-
-    // Función para crear miniatura de imagen (base para otros tipos)
-    function createImageThumbnail(url, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const img = document.createElement('img');
-        img.src = url;
-        img.className = 'file-thumbnail';
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '150px';
-        img.style.objectFit = 'contain';
-        img.style.display = 'block';
-        img.style.margin = '0 auto';
-
-        img.onload = function() {
-            container.innerHTML = '';
-            container.appendChild(img);
-            addFileMetadata(container, url, 'Imagen');
-        };
-
-        img.onerror = function() {
-            showFallbackThumbnail(containerId, url, 'Imagen');
-        };
-    }
-
-    // Función auxiliar para agregar metadatos del archivo (estilo consistente)
-    function addFileMetadata(container, url, type) {
-        const metadataContainer = document.createElement('div');
-        metadataContainer.className = 'file-metadata';
-        metadataContainer.style.textAlign = 'center';
-        metadataContainer.style.marginTop = '8px';
-        metadataContainer.style.fontSize = '12px';
-
-        const fileName = document.createElement('div');
-        fileName.className = 'file-name';
-        fileName.textContent = getShortFileName(url);
-        fileName.style.whiteSpace = 'nowrap';
-        fileName.style.overflow = 'hidden';
-        fileName.style.textOverflow = 'ellipsis';
-        
-        const fileType = document.createElement('div');
-        fileType.className = 'file-type';
-        fileType.textContent = type;
-        fileType.style.color = '#666';
-        fileType.style.fontSize = '11px';
-
-        metadataContainer.appendChild(fileName);
-        metadataContainer.appendChild(fileType);
-        container.appendChild(metadataContainer);
-    }
-
-    // Función auxiliar para agregar icono de play (estilo consistente)
-    function addPlayIcon(container) {
-        const playIcon = document.createElement('div');
-        playIcon.innerHTML = '▶';
-        playIcon.style.position = 'absolute';
-        playIcon.style.top = '50%';
-        playIcon.style.left = '50%';
-        playIcon.style.transform = 'translate(-50%, -50%)';
-        playIcon.style.color = 'white';
-        playIcon.style.fontSize = '24px';
-        playIcon.style.textShadow = '0 0 5px rgba(0,0,0,0.5)';
-        container.appendChild(playIcon);
-    }
-
-    // Función auxiliar para mostrar miniatura genérica (estilo consistente)
-    function showFallbackThumbnail(containerId, url, type) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const icons = {
-            'PDF': '📄',
-            'Video': '🎬',
-            'Imagen': '🖼️',
-            'DOC': '📝',
-            'DOCX': '📝',
-            'XLS': '📊',
-            'XLSX': '📊',
-            'PPT': '📽️',
-            'PPTX': '📽️',
-            'TXT': '📑',
-            'ZIP': '🗄️',
-            'RAR': '🗄️',
-            'default': '📁'
-        };
-
-        container.innerHTML = `
-            <div class="file-icon" style="font-size: 50px; text-align: center; margin: 10px 0;">${icons[type] || icons.default}</div>
-        `;
-        
-        // Agregar metadatos con el mismo estilo
-        addFileMetadata(container, url, type);
     }
 
     // Función auxiliar para obtener nombre corto de archivo
@@ -205,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(() => notification.remove(), 3000);
     }
 
-    // Función para eliminar archivos (versión mejorada)
+    // Función para eliminar archivos
     async function eliminarArchivo(urlArchivo, containerElement) {
         if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
             return;
@@ -239,20 +62,16 @@ document.addEventListener("DOMContentLoaded", function () {
             containerElement.remove();
 
             // Mostrar notificación de éxito
-            mostrarNotificacion('Archivo eliminado correctamente', 'success');
+            showNotification('Archivo eliminado correctamente', 'success');
 
         } catch (error) {
             console.error("Error al eliminar archivo:", error);
-
-            // Mostrar detalles de depuración si están disponibles
-            const mensajeError = error.message || 'Error desconocido al eliminar el archivo';
-            mostrarNotificacion(mensajeError, 'error');
-
+            showNotification(error.message || 'Error desconocido al eliminar el archivo', 'error');
             containerElement.classList.remove('eliminando');
-        }a
+        }
     }
 
-    // Función para cargar y mostrar archivos adjuntos (versión mejorada para todos los tipos)
+    // Función para cargar y mostrar archivos adjuntos (versión simplificada)
     function cargarArchivosAdjuntos(archivos) {
         const contenedorArchivos = document.getElementById("contenedor-archivos");
         contenedorArchivos.innerHTML = "";
@@ -263,54 +82,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 const archivoContainer = document.createElement('div');
                 archivoContainer.className = 'archivo-container';
                 archivoContainer.style.position = 'relative';
-                archivoContainer.style.textAlign = 'center';
                 archivoContainer.style.margin = '10px';
                 archivoContainer.style.padding = '10px';
                 archivoContainer.style.border = '1px solid #ddd';
                 archivoContainer.style.borderRadius = '5px';
-                archivoContainer.style.width = '200px';
                 archivoContainer.style.display = 'inline-block';
-                archivoContainer.style.verticalAlign = 'top';
                 
-                const containerId = `file-container-${index}`;
-                archivoContainer.id = containerId;
-
                 // Crear enlace para abrir el archivo
                 const link = document.createElement('a');
                 link.href = archivo;
                 link.target = '_blank';
                 link.style.textDecoration = 'none';
-                link.style.color = 'inherit';
+                link.style.color = '#333';
                 link.style.display = 'block';
-
-                // Determinar el tipo de archivo y mostrar la miniatura apropiada
-                if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                    // Miniaturas para imágenes
-                    createImageThumbnail(archivo, containerId);
-                } else if (ext === "pdf") {
-                    // Miniaturas para PDF
-                    showFallbackThumbnail(containerId, archivo, 'PDF');
-                    setTimeout(() => renderPDFThumbnail(archivo, containerId), 100);
-                } else if (["mp4", "webm", "ogg", "mov"].includes(ext)) {
-                    // Miniaturas para video
-                    showFallbackThumbnail(containerId, archivo, 'Video');
-                    setTimeout(() => createVideoThumbnail(archivo, containerId), 100);
-                } else if (["doc", "docx"].includes(ext)) {
-                    // Documentos de Word
-                    showFallbackThumbnail(containerId, archivo, 'DOC');
-                } else if (["xls", "xlsx"].includes(ext)) {
-                    // Hojas de cálculo
-                    showFallbackThumbnail(containerId, archivo, 'XLS');
-                } else if (["ppt", "pptx"].includes(ext)) {
-                    // Presentaciones
-                    showFallbackThumbnail(containerId, archivo, 'PPT');
-                } else if (["zip", "rar"].includes(ext)) {
-                    // Archivos comprimidos
-                    showFallbackThumbnail(containerId, archivo, 'ZIP');
-                } else {
-                    // Icono genérico para otros tipos de archivo
-                    showFallbackThumbnail(containerId, archivo, ext.toUpperCase());
-                }
+                link.textContent = getShortFileName(archivo);
 
                 // Agregar botón de eliminar
                 const deleteBtn = document.createElement('button');
@@ -345,7 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Cargar datos de la incidencia (sin cambios)
+    // Cargar datos de la incidencia
     async function cargarDetalleIncidencia() {
         try {
             const response = await fetch(`../backend/detalle.php?id=${id}`);
