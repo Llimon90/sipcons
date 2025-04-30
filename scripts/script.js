@@ -15,6 +15,7 @@ document.getElementById('new-incidencia-form').addEventListener('submit', functi
         fecha: document.getElementById('fecha').value,
         tecnico: document.getElementById('tecnico').value,
         status: document.getElementById('estatus').value,
+        notas: document.getElementById('notas').value,
     };
 
     fetch('../backend/server.php', { 

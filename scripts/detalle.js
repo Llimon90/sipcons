@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div style="flex: 1;">
                             <label>SUCURSAL:</label>
-                            <input type="text" id="sucursal" value="${data.sucursal || ''}" required style="width: 100%;">
+                            <input type="text" id="sucursal" value="${data.sucursal || ''}"  style="width: 100%;">
                         </div>
                     </div>
 
@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div style="flex: 1;">
                             <label>TÉCNICO:</label>
-                            <input type="text" id="tecnico" value="${data.tecnico || ''}" required style="width: 100%;">
+                            <input type="text" id="tecnico" value="${data.tecnico || ''}" style="width: 100%;">
                         </div>
                     </div>
 
@@ -241,6 +241,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         <label>FALLA:</label>
                         <textarea id="falla" required style="width: 100%;">${data.falla || ''}</textarea>
                     </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label>NOTAS:</label>
+                        <textarea id="notas" style="width: 100%;">${data.notas || ''}</textarea>
+                    </div>
+
 
                     <div style="margin-bottom: 15px;">
                         <label>TRABAJO REALIZADO:</label>
