@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
             mostrarNotificacion(mensajeError, 'error');
 
             containerElement.classList.remove('eliminando');
-        }
+        }a
     }
 
     // Función para cargar y mostrar archivos adjuntos (versión mejorada para todos los tipos)
@@ -426,10 +426,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 </form>
             `;
 
-            // // Cargar archivos adjuntos
-            // if (data.archivos) {
-            //     cargarArchivosAdjuntos(data.archivos);
-            // }
+            // Cargar archivos adjuntos
+            if (data.archivos) {
+                cargarArchivosAdjuntos(data.archivos);
+            }
 
             // Configurar evento del formulario
             document.getElementById("form-editar").addEventListener("submit", async function (e) {
