@@ -33,25 +33,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (container) {
                     container.innerHTML = '';
     
-                    // Crear enlace para abrir el archivo en nueva pestaña
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.target = '_blank';
-                    link.style.textDecoration = 'none';
-                    link.style.color = 'inherit';
-                    link.style.display = 'block';
-                    link.style.height = '100%';
-    
                     // Ajustar canvas para miniatura
                     canvas.style.maxWidth = '100%';
                     canvas.style.height = '100px';
                     canvas.style.objectFit = 'contain';
-                    link.appendChild(canvas);
+                    container.appendChild(canvas);
     
                     // Agregar metadatos
-                    addFileMetadata(link, url, 'PDF');
-    
-                    container.appendChild(link);
+                    addFileMetadata(container, url, 'PDF');
     
                     // Agregar botón de eliminar
                     const deleteBtn = document.createElement('button');
