@@ -36,48 +36,13 @@ if (!$idIncidencia || !$urlArchivo) {
 }
 
 try {
-    // 3. Eliminar registro de la base de datos
-    $stmt = $pdo->prepare("DELETE FROM archivos_incidnecias WHERE incidencia_id = :id AND ruta_archivo = :ruta");
-    $stmt->bindParam(':id', $idIncidencia, PDO::PARAM_INT);
-    $stmt->bindParam(':ruta', $urlArchivo, PDO::PARAM_STR);
-    $stmt->execute();
-
-    if ($stmt->rowCount() === 0) {
-        throw new Exception('No se encontró el registro en la base de datos');
-    }
-
-    // 4. Eliminar archivo físico (si existe)
+    // --- LOGGING PARA DEPURACIÓN ---
+    error_log("ID de Incidencia recibido: " . $idIncidencia);
+    error_log("URL de Archivo recibida: " . $urlArchivo);
+    error_log("DOCUMENT_ROOT: " . $_SERVER['DOCUMENT_ROOT']);
     $rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
-    $rutaRelativa = ltrim(parse_url($urlArchivo, PHP_URL_PATH), '/');
-    $rutaCompleta = realpath($rutaBase . $rutaRelativa);
-
-    if ($rutaCompleta && strpos($rutaCompleta, $rutaBase) === 0) {
-        if (file_exists($rutaCompleta) && !unlink($rutaCompleta)) {
-            throw new Exception('Archivo eliminado de la BD pero no del servidor');
-        }
-    }
-
-    // 5. Obtener archivos restantes (opcional)
-    $stmt = $pdo->prepare("SELECT ruta_archivo FROM archivos_incidnecias WHERE incidencia_id = :id");
-    $stmt->bindParam(':id', $idIncidencia, PDO::PARAM_INT);
-    $stmt->execute();
-    $archivos = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'Archivo eliminado correctamente',
-        'archivos' => $archivos
-    ]);
-
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage(),
-        'debug' => [
-            'ruta_base' => $rutaBase ?? null,
-            'ruta_relativa' => $rutaRelativa ?? null,
-            'ruta_completa' => $rutaCompleta ?? null
-        ]
-    ]);
-}
-?>
+    error_log("Ruta Base construida: " . $rutaBase);
+    $rutaCompleta = realpath($rutaBase . ltrim($urlArchivo, '/'));
+    error_log("Ruta Completa construida (realpath): " . $rutaCompleta);
+    error_log("¿Existe el archivo?: " . (file_exists($rutaCompleta) ? 'Sí' : 'No'));
+    // ---

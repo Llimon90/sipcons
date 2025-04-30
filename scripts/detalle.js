@@ -34,8 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const formData = new FormData();
             formData.append('id_incidencia', id);
-            const urlRelativa = new URL(urlArchivo).pathname;
-            formData.append('url_archivo', urlRelativa);
+            formData.append('url_archivo', new URL(urlArchivo).pathname); // Enviamos el pathname
 
             const response = await fetch("../backend/eliminar_archivo.php", {
                 method: "POST",
@@ -62,9 +61,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function cargarArchivosAdjuntos(archivos) {
         const contenedorArchivos = document.getElementById("contenedor-archivos");
         contenedorArchivos.innerHTML = "";
-    
+
         if (archivos && archivos.length > 0) {
-            archivos.forEach(async (archivo, index) => { // Marcamos el callback como async
+            archivos.forEach(async (archivo, index) => {
                 const ext = archivo.split('.').pop().toLowerCase();
                 const archivoContainer = document.createElement('div');
                 archivoContainer.className = 'archivo-container';
@@ -74,16 +73,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 archivoContainer.style.border = '1px solid #ddd';
                 archivoContainer.style.borderRadius = '5px';
                 archivoContainer.style.display = 'inline-block';
-    
+
                 const link = document.createElement('a');
                 link.href = archivo;
                 link.target = '_blank';
                 link.style.textDecoration = 'none';
                 link.style.color = '#333';
                 link.style.display = 'block';
-    
+
                 let previewElement;
-    
+
                 if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
                     previewElement = document.createElement('img');
                     previewElement.src = archivo;
@@ -109,28 +108,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     fileNameSpan.style.display = 'block';
                     fileNameSpan.style.textAlign = 'center';
                     link.appendChild(fileNameSpan);
-    
+
                     try {
-                        // Obtenemos el documento PDF
                         const pdf = await pdfjsLib.getDocument(archivo).promise;
-                        // Obtenemos la primera página (índice 1)
                         const page = await pdf.getPage(1);
                         const viewport = page.getViewport({ scale: 1 });
                         const context = canvas.getContext('2d');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
-    
-                        // Renderizamos la página en el canvas
                         await page.render({ canvasContext: context, viewport: viewport }).promise;
                     } catch (error) {
                         console.error('Error al renderizar miniatura de PDF:', error);
-                        canvas.remove(); // Si hay error, removemos el canvas
+                        canvas.remove();
                         const errorSpan = document.createElement('span');
                         errorSpan.textContent = 'Error al cargar miniatura';
                         errorSpan.style.display = 'block';
                         errorSpan.style.textAlign = 'center';
                         link.appendChild(errorSpan);
-                        link.onclick = () => window.open(archivo, '_blank'); // Aseguramos que el link siga funcionando
+                        link.onclick = () => window.open(archivo, '_blank');
                     }
                 } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
                     previewElement = document.createElement('video');
@@ -153,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     link.textContent = getShortFileName(archivo);
                 }
-    
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'eliminar-archivo';
                 deleteBtn.innerHTML = '×';
@@ -176,12 +171,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.stopPropagation();
                     eliminarArchivo(archivo, archivoContainer); // 'archivo' es la URL completa
                 };;
-    
+
                 archivoContainer.appendChild(link);
                 archivoContainer.appendChild(deleteBtn);
                 contenedorArchivos.appendChild(archivoContainer);
             });
-        }else {
+        } else {
             contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
         }
     }
