@@ -79,19 +79,58 @@ async function cargarArchivos(numeroIncidente) {
         const fileContainer = document.createElement('div');
         fileContainer.style.margin = '10px';
 
+        const rutaAjustada = ruta.replace('../', ''); // Ajustar la ruta si es necesario
+
         if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
             // Si es imagen, mostrarla
             const imgElement = document.createElement('img');
-            imgElement.src = ruta.replace('../', ''); // Ajustamos la ruta si es necesario
+            imgElement.src = rutaAjustada;
             imgElement.alt = 'Archivo de incidencia';
             imgElement.style.width = '150px';
+            imgElement.style.cursor = 'pointer';
+            imgElement.addEventListener('click', () => {
+                window.open(rutaAjustada, '_blank');
+            });
             fileContainer.appendChild(imgElement);
+        } else if (ext === 'pdf') {
+            // Si es PDF, mostrar una miniatura utilizando un iframe
+            const iframeElement = document.createElement('iframe');
+            iframeElement.src = rutaAjustada;
+            iframeElement.width = '150';
+            iframeElement.height = '200';
+            iframeElement.style.cursor = 'pointer';
+            iframeElement.addEventListener('click', () => {
+                window.open(rutaAjustada, '_blank');
+            });
+            fileContainer.appendChild(iframeElement);
+        } else if (['mp4', 'webm', 'ogg'].includes(ext)) {
+            // Si es video, mostrar una miniatura utilizando la etiqueta video
+            const videoElement = document.createElement('video');
+            videoElement.src = rutaAjustada;
+            videoElement.width = 150;
+            videoElement.controls = true;
+            videoElement.style.cursor = 'pointer';
+            videoElement.addEventListener('click', () => {
+                window.open(rutaAjustada, '_blank');
+            });
+            fileContainer.appendChild(videoElement);
+        } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+            // Si es audio, mostrar una miniatura utilizando la etiqueta audio
+            const audioElement = document.createElement('audio');
+            audioElement.src = rutaAjustada;
+            audioElement.controls = true;
+            audioElement.style.width = '150px';
+            audioElement.style.cursor = 'pointer';
+            audioElement.addEventListener('click', () => {
+                window.open(rutaAjustada, '_blank');
+            });
+            fileContainer.appendChild(audioElement);
         } else {
-            // Si es otro tipo de archivo, mostrar un enlace de descarga
+            // Para otros tipos de archivos, crear un enlace que abra en nueva pestaña
             const linkElement = document.createElement('a');
-            linkElement.href = ruta.replace('../', '');
+            linkElement.href = rutaAjustada;
             linkElement.target = '_blank';
-            linkElement.textContent = `Descargar: ${ruta.split('/').pop()}`;
+            linkElement.textContent = `Abrir: ${rutaAjustada.split('/').pop()}`;
             linkElement.style.display = 'block';
             fileContainer.appendChild(linkElement);
         }
@@ -99,6 +138,7 @@ async function cargarArchivos(numeroIncidente) {
         contenedor.appendChild(fileContainer);
     });
 }
+
 
 // Llamar a la función cuando se seleccione un incidente
 document.addEventListener("DOMContentLoaded", function () {
