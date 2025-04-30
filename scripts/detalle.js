@@ -62,9 +62,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function cargarArchivosAdjuntos(archivos) {
         const contenedorArchivos = document.getElementById("contenedor-archivos");
         contenedorArchivos.innerHTML = "";
-
+    
         if (archivos && archivos.length > 0) {
-            archivos.forEach((archivo, index) => {
+            archivos.forEach(async (archivo, index) => { // Marcamos el callback como async
                 const ext = archivo.split('.').pop().toLowerCase();
                 const archivoContainer = document.createElement('div');
                 archivoContainer.className = 'archivo-container';
@@ -74,16 +74,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 archivoContainer.style.border = '1px solid #ddd';
                 archivoContainer.style.borderRadius = '5px';
                 archivoContainer.style.display = 'inline-block';
-
+    
                 const link = document.createElement('a');
                 link.href = archivo;
                 link.target = '_blank';
                 link.style.textDecoration = 'none';
                 link.style.color = '#333';
                 link.style.display = 'block';
-
+    
                 let previewElement;
-
+    
                 if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
                     previewElement = document.createElement('img');
                     previewElement.src = archivo;
@@ -98,24 +98,40 @@ document.addEventListener("DOMContentLoaded", function () {
                     fileNameSpan.style.textAlign = 'center';
                     link.appendChild(fileNameSpan);
                 } else if (ext === 'pdf') {
-                    previewElement = document.createElement('div');
-                    previewElement.style.width = '80px';
-                    previewElement.style.height = '100px';
-                    previewElement.style.backgroundColor = '#eee';
-                    previewElement.style.display = 'flex';
-                    previewElement.style.alignItems = 'center';
-                    previewElement.style.justifyContent = 'center';
-                    previewElement.style.fontSize = '12px';
-                    previewElement.style.textAlign = 'center';
-                    previewElement.textContent = 'Vista previa no disponible';
-                    previewElement.style.cursor = 'pointer';
-                    previewElement.onclick = () => window.open(archivo, '_blank');
-                    link.appendChild(previewElement);
+                    const canvas = document.createElement('canvas');
+                    canvas.style.maxWidth = '100px';
+                    canvas.style.maxHeight = '100px';
+                    canvas.style.cursor = 'pointer';
+                    canvas.onclick = () => window.open(archivo, '_blank');
+                    link.appendChild(canvas);
                     const fileNameSpan = document.createElement('span');
                     fileNameSpan.textContent = getShortFileName(archivo);
                     fileNameSpan.style.display = 'block';
                     fileNameSpan.style.textAlign = 'center';
                     link.appendChild(fileNameSpan);
+    
+                    try {
+                        // Obtenemos el documento PDF
+                        const pdf = await pdfjsLib.getDocument(archivo).promise;
+                        // Obtenemos la primera página (índice 1)
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({ scale: 1 });
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+    
+                        // Renderizamos la página en el canvas
+                        await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    } catch (error) {
+                        console.error('Error al renderizar miniatura de PDF:', error);
+                        canvas.remove(); // Si hay error, removemos el canvas
+                        const errorSpan = document.createElement('span');
+                        errorSpan.textContent = 'Error al cargar miniatura';
+                        errorSpan.style.display = 'block';
+                        errorSpan.style.textAlign = 'center';
+                        link.appendChild(errorSpan);
+                        link.onclick = () => window.open(archivo, '_blank'); // Aseguramos que el link siga funcionando
+                    }
                 } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
                     previewElement = document.createElement('video');
                     previewElement.src = archivo;
@@ -137,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     link.textContent = getShortFileName(archivo);
                 }
-
+    
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'eliminar-archivo';
                 deleteBtn.innerHTML = '×';
@@ -160,12 +176,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     e.stopPropagation();
                     eliminarArchivo(archivo, archivoContainer);
                 };
-
+    
                 archivoContainer.appendChild(link);
                 archivoContainer.appendChild(deleteBtn);
                 contenedorArchivos.appendChild(archivoContainer);
             });
-        } else {
+        }else {
             contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
         }
     }
