@@ -486,6 +486,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Iniciar la carga de datos
-    cargarDetalleIncidencia();
-});
+//     // Iniciar la carga de datos
+//     cargarDetalleIncidencia();
+// });
