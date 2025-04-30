@@ -11,55 +11,125 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Función para renderizar miniaturas de PDF
-    function renderPDFThumbnail(url, containerId) {
-        const loadingTask = pdfjsLib.getDocument(url);
-    
-        loadingTask.promise.then(pdf => {
-            return pdf.getPage(1);
-        }).then(page => {
-            const viewport = page.getViewport({ scale: 1.0 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-    
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-    
-            return page.render(renderContext).promise.then(() => {
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = '';
-    
-                    // Ajustar canvas para miniatura
-                    canvas.style.maxWidth = '100%';
-                    canvas.style.height = '100px';
-                    canvas.style.objectFit = 'contain';
-                    container.appendChild(canvas);
-    
-                    // Agregar metadatos
-                    addFileMetadata(container, url, 'PDF');
-    
-                    // Agregar botón de eliminar
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'eliminar-archivo';
-                    deleteBtn.innerHTML = '×';
-                    deleteBtn.onclick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        eliminarArchivo(url, container);
-                    };
-                    container.appendChild(deleteBtn);
-                }
-            });
-        }).catch(error => {
-            console.error('Error al renderizar PDF:', error);
-            showFallbackThumbnail(containerId, url, 'PDF');
+function renderPDFThumbnail(url, containerId) {
+    const loadingTask = pdfjsLib.getDocument(url);
+
+    loadingTask.promise.then(pdf => {
+        return pdf.getPage(1);
+    }).then(page => {
+        const viewport = page.getViewport({ scale: 1.0 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+        };
+
+        return page.render(renderContext).promise.then(() => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = '';
+
+                // Crear enlace que envuelve la miniatura
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.style.textDecoration = 'none';
+                link.style.color = 'inherit';
+                link.style.display = 'block';
+                link.style.height = '100%';
+
+                // Ajustar canvas para miniatura
+                canvas.style.maxWidth = '100%';
+                canvas.style.height = '100px';
+                canvas.style.objectFit = 'contain';
+                link.appendChild(canvas);
+
+                // Agregar metadatos
+                addFileMetadata(link, url, 'PDF');
+
+                // Agregar botón de eliminar
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'eliminar-archivo';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    eliminarArchivo(url, container);
+                };
+
+                container.appendChild(link);
+                container.appendChild(deleteBtn);
+            }
         });
-    }
-    
+    }).catch(error => {
+        console.error('Error al renderizar PDF:', error);
+        showFallbackThumbnail(containerId, url, 'PDF');
+    });
+}
+
+// Función para crear miniatura de video
+function createVideoThumbnail(url, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const video = document.createElement('video');
+    video.src = url;
+    video.preload = 'metadata';
+
+    video.onloadedmetadata = function () {
+        video.currentTime = Math.min(1, video.duration / 4);
+    };
+
+    video.onseeked = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        container.innerHTML = '';
+
+        // Crear enlace que envuelve la miniatura
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.style.textDecoration = 'none';
+        link.style.color = 'inherit';
+        link.style.display = 'block';
+        link.style.height = '100%';
+
+        const thumbnail = new Image();
+        thumbnail.src = canvas.toDataURL();
+        thumbnail.className = 'video-thumbnail';
+        link.appendChild(thumbnail);
+
+        // Agregar metadatos e icono de play
+        addFileMetadata(link, url, 'Video');
+        addPlayIcon(link);
+
+        // Agregar botón de eliminar
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'eliminar-archivo';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            eliminarArchivo(url, container);
+        };
+
+        container.appendChild(link);
+        container.appendChild(deleteBtn);
+    };
+
+    video.onerror = function () {
+        showFallbackThumbnail(containerId, url, 'Video');
+    };
+}
+
     // Cargar datos de la incidencia
     async function cargarDetalleIncidencia() {
         try {
