@@ -467,11 +467,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     showNotification('Incidencia actualizada correctamente');
                     
-                    // Actualizar lista de archivos si hay nuevos
-                    if (data.archivos) {
-                        cargarArchivosAdjuntos(data.archivos);
-                        document.getElementById("archivos").value = '';
-                    }
+                    // // Actualizar lista de archivos si hay nuevos
+                    // if (data.archivos) {
+                    //     cargarArchivosAdjuntos(data.archivos);
+                    //     document.getElementById("archivos").value = '';
+                    // }
                     
                 } catch (error) {
                     console.error("Error al actualizar incidencia:", error);
@@ -486,6 +486,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-//     // Iniciar la carga de datos
-//     cargarDetalleIncidencia();
-// });
+    // Iniciar la carga de datos
+    cargarDetalleIncidencia();
+});
