@@ -27,7 +27,7 @@ if ($method === "GET") {
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
     // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierto', 'Asignado', 'Cerrado sin factura')";
+    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierto','Asignado', 'Completado', 'Cerrado sin factura')";
 
 
 
