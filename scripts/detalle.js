@@ -231,6 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <select id="estatus" style="width: 100%;">
                             <option value="Abierto" ${data.estatus === "Abierto" ? 'selected' : ''}>Abierto</option>
                             <option value="Asignado" ${data.estatus === "Asignado" ? 'selected' : ''}>Asignado</option>
+                            <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
                             <option value="Completado" ${data.estatus === "Completado" ? 'selected' : ''}>Completado</option>
                             <option value="Cerrado sin factura" ${data.estatus === "Cerrado sin factura" ? 'selected' : ''}>Cerrado sin factura</option>
                             <option value="Cerrado con factura" ${data.estatus === "Cerrado con factura" ? 'selected' : ''}>Cerrado con factura</option>
