@@ -27,7 +27,7 @@ if ($method === "GET") {
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
     // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierto','Asignado', 'Completado', 'Cerrado sin factura')";
+    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierto','Asignado', 'Pendiente', 'Completado', 'Cerrado sin factura')";
 
 
 
@@ -76,7 +76,7 @@ if ($method === "GET") {
     // Insertar la nueva incidencia
     $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["notas"], $data["falla"], $nuevoNumeroIncidente);
+    $stmt->bind_param("ssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
 
     if ($stmt->execute()) {
         echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
