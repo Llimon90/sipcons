@@ -23,11 +23,12 @@ $tecnico = $_POST['tecnico'];
 $estatus = $_POST['estatus'];
 $falla = $_POST['falla'];
 $accion = $_POST['accion'];
+$notas = $_POST['notas'];
 
 // Actualizar la incidencia en la base de datos
-$sql = "UPDATE incidencias SET numero = ?, cliente = ?, contacto = ?, sucursal = ?, fecha = ?, tecnico = ?, estatus = ?, falla = ?, accion = ? WHERE id = ?";
+$sql = "UPDATE incidencias SET numero = ?, cliente = ?, contacto = ?, sucursal = ?, fecha = ?, tecnico = ?, estatus = ?, falla = ?, accion = ?, notas = ? WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("sssssssssi", $numero, $cliente, $contacto, $sucursal, $fecha, $tecnico, $estatus, $falla, $accion, $id);
+$stmt->bind_param("ssssssssssi", $numero, $cliente, $contacto, $sucursal, $fecha, $tecnico, $estatus, $falla, $accion, $notas, $id);
 
 if ($stmt->execute()) {
     // Manejar la subida de archivos

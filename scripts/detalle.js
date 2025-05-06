@@ -247,6 +247,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         <label>TRABAJO REALIZADO:</label>
                         <textarea id="accion" style="width: 100%;">${data.accion || ''}</textarea>
                     </div>
+            
+                    <div style="margin-bottom: 15px;">
+                        <label>NOTAS ADICIONALES</label>
+                        <textarea id="notas" style="width: 100%;">${data.notas || ''}</textarea>
+                    </div>
+
+                    
 
                     <div style="margin-bottom: 15px;">
                         <label>AGREGAR NUEVOS ARCHIVOS:</label>
@@ -279,6 +286,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 formData.append("estatus", document.getElementById("estatus").value);
                 formData.append("falla", document.getElementById("falla").value);
                 formData.append("accion", document.getElementById("accion").value);
+                formData.append("notas", document.getElementById("notas").value);
+
 
                 const archivosInput = document.getElementById("archivos").files;
                 for (let i = 0; i < archivosInput.length; i++) {
