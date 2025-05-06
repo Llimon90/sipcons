@@ -20,7 +20,8 @@ $estatus = isset($_GET['estatus']) ? trim($_GET['estatus']) : '';
 $sucursal = isset($_GET['sucursal']) ? trim($_GET['sucursal']) : '';
 
 // Construir la consulta SQL con `prepared statements`
-$sql = "SELECT * FROM incidencias WHERE 1 ORDER BY numero_incidente DESC ";
+// $sql = "SELECT * FROM incidencias WHERE 1 ORDER BY numero_incidente DESC ";
+$sql = "SELECT * FROM incidencias ORDER BY numero_incidente DESC";
 $params = [];
 $types = "";
 
