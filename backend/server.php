@@ -55,7 +55,7 @@ if ($method === "GET") {
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Validar los datos
-    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $notas["notas"])) {
+    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"])) {
         echo json_encode(["error" => "Todos los campos son obligatorios"]);
         exit();
     }
