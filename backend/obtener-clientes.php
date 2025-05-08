@@ -1,34 +1,40 @@
-<?php
-// Asegurar que el contenido devuelto sea JSON
-header('Content-Type: application/json');
-error_reporting(0);
-ini_set('display_errors', 0);
+<!--  -->
 
+<?php
 $host = "localhost";
 $user = "sipcons1_appweb";
 $password = "sip*SYS2025";
 $database = "sipcons1_appweb";
 
-// Conexión a la base de datos
 $conn = new mysqli($host, $user, $password, $database);
-
 if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Error de conexión: ' . $conn->connect_error]);
-    exit;
+    die(json_encode(['success' => false, 'message' => 'Error de conexión: ' . $conn->connect_error]));
 }
 
-$sql = "SELECT * FROM clientes ORDER BY fecha_registro DESC";
-$result = $conn->query($sql);
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+
+$busqueda = isset($_GET['busqueda']) ? $conn->real_escape_string($_GET['busqueda']) : '';
+
+$sql = "SELECT id, nombre, rfc, direccion, telefono, contactos, email FROM clientes";
+
+if (!empty($busqueda)) {
+    $sql .= " WHERE nombre LIKE '%$busqueda%' 
+           OR rfc LIKE '%$busqueda%' 
+           OR email LIKE '%$busqueda%' 
+           OR telefono LIKE '%$busqueda%' 
+           OR contactos LIKE '%$busqueda%'";
+}
+
+$sql .= " ORDER BY nombre ASC";
+
+$resultado = $conn->query($sql);
 
 $clientes = [];
-
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $clientes[] = $row;
-    }
+while ($fila = $resultado->fetch_assoc()) {
+    $clientes[] = $fila;
 }
 
 echo json_encode($clientes);
 
 $conn->close();
-exit;
