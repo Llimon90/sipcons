@@ -1,19 +1,15 @@
 // Función para obtener y mostrar clientes
-async function cargarClientes(filtro = '') {
+async function cargarClientes() {
   try {
-    const response = await fetch(`../backend/obtener-clientes.php?busqueda=${encodeURIComponent(filtro)}`);
+    const response = await fetch('../backend/obtener-clientes.php');
     const clientes = await response.json();
 
     const listaClientes = document.getElementById('lista-clientes');
-    listaClientes.innerHTML = '';
-
-    if (clientes.length === 0) {
-      listaClientes.innerHTML = '<tr><td colspan="7">No se encontraron clientes.</td></tr>';
-      return;
-    }
+    listaClientes.innerHTML = ''; // Limpia la lista antes de mostrar nuevos datos
 
     clientes.forEach(cliente => {
       const row = document.createElement('tr');
+
       row.innerHTML = `
         <td>${cliente.nombre}</td>
         <td>${cliente.rfc}</td>
@@ -32,20 +28,25 @@ async function cargarClientes(filtro = '') {
           </div>
         </td>
       `;
+
       listaClientes.appendChild(row);
     });
 
+    // Agregar eventos a los botones de edición
     document.querySelectorAll('.btn-editar').forEach(boton => {
-      boton.addEventListener('click', function (e) {
+      boton.addEventListener('click', function(e) {
         e.preventDefault();
-        cargarFormularioEdicion(this.getAttribute('data-id'));
+        const id = this.getAttribute('data-id');
+        cargarFormularioEdicion(id);
       });
     });
 
+    // Agregar eventos a los botones de eliminación
     document.querySelectorAll('.btn-eliminar').forEach(boton => {
-      boton.addEventListener('click', function (e) {
+      boton.addEventListener('click', function(e) {
         e.preventDefault();
-        confirmarEliminacion(this.getAttribute('data-id'));
+        const id = this.getAttribute('data-id');
+        confirmarEliminacion(id);
       });
     });
   } catch (error) {
@@ -54,12 +55,14 @@ async function cargarClientes(filtro = '') {
   }
 }
 
+// Función para confirmar eliminación
 function confirmarEliminacion(id) {
   if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
     eliminarCliente(id);
   }
 }
 
+// Función para eliminar cliente
 async function eliminarCliente(id) {
   try {
     const response = await fetch(`../backend/eliminar-cliente.php?id=${id}`, {
@@ -70,7 +73,7 @@ async function eliminarCliente(id) {
 
     if (resultado.success) {
       alert('Cliente eliminado correctamente');
-      cargarClientes();
+      cargarClientes(); // Recargar la lista de clientes
     } else {
       alert(resultado.error || 'Error al eliminar el cliente');
     }
@@ -80,11 +83,12 @@ async function eliminarCliente(id) {
   }
 }
 
+// Función para cargar el formulario de edición
 async function cargarFormularioEdicion(id) {
   try {
     const response = await fetch(`../backend/detalle-cliente.php?id=${id}`);
     const cliente = await response.json();
-
+    
     if (cliente.error) {
       alert(cliente.error);
       return;
@@ -131,8 +135,10 @@ async function cargarFormularioEdicion(id) {
       </form>
     `;
 
+    // Mostrar el modal
     document.getElementById('modal-edicion').style.display = 'block';
 
+    // Agregar evento al formulario de edición
     document.getElementById('form-editar-cliente').addEventListener('submit', function(e) {
       e.preventDefault();
       actualizarCliente();
@@ -143,6 +149,7 @@ async function cargarFormularioEdicion(id) {
   }
 }
 
+// Función para actualizar el cliente
 async function actualizarCliente() {
   const id = document.getElementById('id-cliente').value;
   const datos = {
@@ -169,7 +176,7 @@ async function actualizarCliente() {
     if (resultado.success) {
       alert('Cliente actualizado correctamente');
       document.getElementById('modal-edicion').style.display = 'none';
-      cargarClientes();
+      cargarClientes(); // Recargar la lista de clientes
     } else {
       alert(resultado.error || 'Error al actualizar el cliente');
     }
@@ -179,13 +186,5 @@ async function actualizarCliente() {
   }
 }
 
-// Cargar todos los clientes al iniciar
-document.addEventListener('DOMContentLoaded', () => {
-  cargarClientes();
-
-  // Búsqueda en vivo
-  document.getElementById('busqueda_cliente').addEventListener('input', function () {
-    const valorBusqueda = this.value.trim();
-    cargarClientes(valorBusqueda);
-  });
-});
+// Cargar clientes automáticamente al cargar la página
+document.addEventListener('DOMContentLoaded', cargarClientes);
