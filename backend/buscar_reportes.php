@@ -51,9 +51,12 @@ if (!empty($estatus)) {
 
 if (!empty($sucursal)) {
     $sql .= " AND sucursal LIKE ?";
-    $params[] = "%$sucursal%"; // Permite buscar por parte del nombre
+    $params[] = "%$sucursal%";
     $types .= "s";
 }
+
+// Agregar orden de más reciente a más antiguo
+$sql .= " ORDER BY id DESC";
 
 // Preparar y ejecutar la consulta
 $stmt = $conn->prepare($sql);
