@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de ventas</title>
-    <link rel="stylesheet" href="../css/styles.css?v=1.9">
+    <link rel="stylesheet" href="../css/styles.css?v=8">
+   
 
 
 </head>
 <body>
 
-  <div class="retorna" >
-    <a href="../index.html">  <<- Inicio</a>    </div>
+    <div class="retorna" >
+        <a href="../index.html">  <<- Inicio</a>    </div>
     
-  <!-- Panel lateral -->
-  <aside class="sidebar">
+    <!-- Panel lateral -->
+    <aside class="sidebar">
     
     <ul>
       <li><a href="../index.html">Inicio</a></li>
@@ -26,6 +27,81 @@
     </ul>
 
   </aside>
+<section class="encabezado">
+    <main>
+        <form id="form-venta">
+        
+            <div class="form-row">
+
+                <div>
+                    <label for="cliente">Cliente:</label>
+                    <input type="text" id="cliente" name="cliente" required />
+                </div>
+
+                <div>
+                    <label for="sucursal">Sucursal:</label>
+                    <input type="text" id="sucursal" name="sucursal"  />
+                </div>
+            </div>    
     
-</body>
+            <div class="form-row">
+        
+                <div>
+                    <label for="equipo">Equipo:</label>
+                    <input type="text" id="equipo" name="equipo" required />
+                </div> 
+
+                <div>
+
+                    <label for="marca">Marca:</label>
+                    <input type="text" id="marca" name="marca"  />
+                </div>
+            </div>
+    
+            <div class="form-row">
+        
+                <div>
+                    <label for="modelo">Modelo:</label>
+                    <input type="text" id="modelo" name="modelo"  />
+                </div>    
+                
+                <div>
+                    <label for="numero_serie">Número de Serie:</label>
+                    <input type="text" id="numero_serie" name="numero_serie"  />
+                </div>
+            </div>    
+    
+            <div class="form-row">
+
+                <label for="qty">Cantidad:</label>
+                <input type="number" id="qty" name="qty" min="0">
+                
+                <label for="garantia">Tiempo de Garantía (meses):</label>
+                <input type="number" id="garantia" name="garantia" min="0"  />
+
+                <label for="servicio">Clausula de servicio:</label>
+                <input type="checkbox" id="servicio" name="servicio"  />
+
+            </div>
+
+            <div class="form-row">
+                <label for="notas">Notas:</label>
+                <textarea type="text" id="notas" name="notas" min="0"  > </textarea>
+            </div>
+    
+            <button type="submit">Registrar Venta</button>
+        
+  </form>
+
+
+  <div id="mensaje"></div>
+
+
+
+  
+
+        </main>
+        </section>
+        <!-- <script src="../scripts/registro_venta.js?v=7" defer></script> -->
+    </body>
 </html>
