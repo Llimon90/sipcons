@@ -1,7 +1,7 @@
 // Función para obtener y mostrar clientes
-async function cargarClientes() {
+async function cargarClientes(busqueda = '') {
   try {
-    const response = await fetch('../backend/obtener-clientes.php');
+    const response = await fetch(`../backend/obtener-clientes.php?busqueda=${encodeURIComponent(busqueda)}`);
     const clientes = await response.json();
 
     const listaClientes = document.getElementById('lista-clientes');
@@ -187,4 +187,18 @@ async function actualizarCliente() {
 }
 
 // Cargar clientes automáticamente al cargar la página
-document.addEventListener('DOMContentLoaded', cargarClientes);
+document.addEventListener('DOMContentLoaded', () => {
+  cargarClientes();
+
+  // Agregar evento al campo de búsqueda
+  const campoBusqueda = document.getElementById('campo-busqueda');
+  let timeout = null;
+
+  campoBusqueda.addEventListener('input', () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      const query = campoBusqueda.value.trim();
+      cargarClientes(query);
+    }, 300); // Retraso de 300 milisegundos
+  });
+});
