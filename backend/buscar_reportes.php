@@ -1,11 +1,6 @@
 <?php
 // Configurar conexión con la base de datos
-$host = "localhost";
-$user = "sipcons1_appweb";
-$password = "sip*SYS2025";
-$database = "sipcons1_appweb";
-// Crear conexión
-$conn = new mysqli($host, $user, $password, $database);
+require_once 'conexion.php';
 
 // Verificar conexión
 if ($conn->connect_error) {
@@ -18,6 +13,7 @@ $fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
 $fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
 $estatus = isset($_GET['estatus']) ? trim($_GET['estatus']) : '';
 $sucursal = isset($_GET['sucursal']) ? trim($_GET['sucursal']) : '';
+$tecnico = isset($_GET['tecnico']) ? trim($_GET['tecnico']) : '';
 
 // Construir la consulta SQL con `prepared statements`
 $sql = "SELECT * FROM incidencias WHERE 1";
@@ -52,6 +48,12 @@ if (!empty($estatus)) {
 if (!empty($sucursal)) {
     $sql .= " AND sucursal LIKE ?";
     $params[] = "%$sucursal%";
+    $types .= "s";
+}
+
+if (!empty($tecnico)) {
+    $sql .= " AND tecnico LIKE ?";
+    $params[] = "%$tecnico%";
     $types .= "s";
 }
 

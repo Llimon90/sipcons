@@ -22,8 +22,9 @@ async function cargarIncidencias() {
   const fechaFin = document.getElementById("fecha-fin").value;
   const estatus = document.getElementById("estatus").value;
   const sucursal = document.getElementById("sucursal").value;
+  const tecnico = document.getElementById("tecnico").value;
 
-  const url = `../backend/buscar_reportes.php?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}`;
+  const url = `../backend/buscar_reportes.php?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}&tecnico=${encodeURIComponent(tecnico)}`;
 
   console.log("📡 Enviando petición a:", url);
 
