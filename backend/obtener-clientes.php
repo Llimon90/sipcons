@@ -17,7 +17,7 @@ if ($conn->connect_error) {
     exit;
 }
 
-$sql = "SELECT * FROM clientes ORDER BY nombre DESC";
+$sql = "SELECT * FROM clientes ORDER BY nombre";
 $result = $conn->query($sql);
 
 $clientes = [];
