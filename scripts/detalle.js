@@ -1,5 +1,6 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+
 document.addEventListener("DOMContentLoaded", function () {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
@@ -25,39 +26,44 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function eliminarArchivo(urlArchivo, containerElement) {
-        if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
-            return;
-        }
-
-        containerElement.classList.add('eliminando');
-
-        try {
-            const formData = new FormData();
-            formData.append('id_incidencia', id);
-            formData.append('url_archivo', new URL(urlArchivo).pathname); // Enviamos el pathname
-
-            const response = await fetch("../backend/eliminar_archivo.php", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                console.error('Error del servidor:', data);
-                throw new Error(data.error || `Error al eliminar el archivo. Código: ${response.status}`);
-            }
-
-            containerElement.remove();
-            showNotification('Archivo eliminado correctamente', 'success');
-
-        } catch (error) {
-            console.error("Error al eliminar archivo:", error);
-            showNotification(error.message || 'Error desconocido al eliminar el archivo', 'error');
-            containerElement.classList.remove('eliminando');
-        }
+    if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
+        return;
     }
 
+    containerElement.classList.add('eliminando');
+
+    try {
+        const formData = new FormData();
+        formData.append('id_incidencia', id);
+
+        // Extraer la ruta relativa completa del archivo desde la URL
+        const url = new URL(urlArchivo, window.location.origin);
+        const rutaRelativa = url.pathname.replace(/^\/+/, ''); // Elimina las barras iniciales
+        formData.append('url_archivo', rutaRelativa);
+
+        const response = await fetch("../backend/eliminar_archivo.php", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            console.error('Error del servidor:', data);
+            throw new Error(data.error || `Error al eliminar el archivo. Código: ${response.status}`);
+        }
+
+        containerElement.remove();
+        showNotification('Archivo eliminado correctamente', 'success');
+
+    } catch (error) {
+        console.error("Error al eliminar archivo:", error);
+        showNotification(error.message || 'Error desconocido al eliminar el archivo', 'error');
+        containerElement.classList.remove('eliminando');
+    }
+}
+
+    
     function cargarArchivosAdjuntos(archivos) {
         const contenedorArchivos = document.getElementById("contenedor-archivos");
         contenedorArchivos.innerHTML = "";
@@ -220,22 +226,24 @@ document.addEventListener("DOMContentLoaded", function () {
                             <label>FECHA:</label>
                             <input type="date" id="fecha" value="${data.fecha || ''}" required style="width: 100%;">
                         </div>
-                        <div style="flex: 1;">
-                            <label>TÉCNICO:</label>
-                            <label>TÉCNICO:</label>
-                            <select id="tecnico" name="tecnico" >
-                            <option value="" selected disabled>Seleccione una opción</option>
-                            <option value="Victor Cordoba">Victor Cordoba</option>
-                            <option value="Tomás Vázquez">Tomás Valdéz</option>
-                            <option value="Francisco Aguiar">Francisco Aguiar</option>
-                            <option value="Mauricio Díaz">Mauricio Diaz</option>
-                            <option value="Humberto Vázquez">Humberto Vázquez</option>
-                            <option value="Jose López">José López</option>
-                            <option value="Hoscar Martínez">Hoscar Martínez</option>
-                            <option value="Jacob Ventura">Jacob Ventura</option>
-                            <option value="Luis Limón">Luis Limón</option>
-                            <option value="Ernesto Chávez">Ernesto Chávez</option>
-                             value="${data.tecnico || ''}" required style="width: 100%;"> </select>
+
+                        
+                        <div id="tecnicos-container" style="flex: 1;">
+                            <label for="tecnico">TÉCNICO:</label>
+                                <select id="tecnico" name="tecnico" required style="width: 100%;">
+                                    <option value="" disabled ${!data.tecnico ? 'selected' : ''}>Seleccione una opción</option>
+                                    <option value="Victor Cordoba" ${data.tecnico === "Victor Cordoba" ? 'selected' : ''}>Victor Cordoba</option>
+                                    <option value="Tomás Vázquez" ${data.tecnico === "Tomás Vázquez" ? 'selected' : ''}>Tomás Vázquez</option>
+                                    <option value="Francisco Aguiar" ${data.tecnico === "Francisco Aguiar" ? 'selected' : ''}>Francisco Aguiar</option>
+                                    <option value="Mauricio Díaz" ${data.tecnico === "Mauricio Díaz" ? 'selected' : ''}>Mauricio Díaz</option>
+                                    <option value="Humberto Vázquez" ${data.tecnico === "Humberto Vázquez" ? 'selected' : ''}>Humberto Vázquez</option>
+                                    <option value="Jose López" ${data.tecnico === "Jose López" ? 'selected' : ''}>José López</option>
+                                    <option value="Hoscar Martínez" ${data.tecnico === "Hoscar Martínez" ? 'selected' : ''}>Hoscar Martínez</option>
+                                    <option value="Jacob Ventura" ${data.tecnico === "Jacob Ventura" ? 'selected' : ''}>Jacob Ventura</option>
+                                    <option value="Luis Limón" ${data.tecnico === "Luis Limón" ? 'selected' : ''}>Luis Limón</option>
+                                    <option value="Ernesto Chávez" ${data.tecnico === "Ernesto Chávez" ? 'selected' : ''}>Ernesto Chávez</option>
+                                </select>
+
                         </div>
                     </div>
 
@@ -341,3 +349,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     cargarDetalleIncidencia();
 });
+
+
+  
