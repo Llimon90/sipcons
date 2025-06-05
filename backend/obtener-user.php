@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 require_once 'conexion.php';
 
 try {
-    $stmt = $conn->prepare("SELECT id, nombre, usuario, rol FROM usuarios");
+    $stmt = $conn->prepare("SELECT id, nombre, usuario, rol FROM usuarios ORDER BY nombre");
     $stmt->execute();
     $result = $stmt->get_result();
 
