@@ -126,7 +126,7 @@ async function editarUsuario(id) {
                     </div>
                     <div>
                         <label for="correo-editar">Correo electrónico:</label>
-                        <input type="email" id="correo-editar" value="${usuario.correo}" required>
+                        <input type="email" id="correo-editar" value="${usuario.correo}" >
                     </div>
                 </div>
                 <div class="form-row">
@@ -136,7 +136,7 @@ async function editarUsuario(id) {
                     </div>
                     <div>
                         <label for="usuario-editar">Usuario:</label>
-                        <input type="text" id="usuario-editar" value="${usuario.usuario}" required>
+                        <input type="text" id="usuario-editar" value="${usuario.usuario}" >
                     </div>
                 </div>
                 <div class="form-row">
@@ -147,9 +147,9 @@ async function editarUsuario(id) {
                     <div>
                         <label for="rol-editar">Rol:</label>
                         <select id="rol-editar" required>
-                            <option value="administrador" ${usuario.rol === 'administrador' ? 'selected' : ''}>Administrador</option>
-                            <option value="tecnico" ${usuario.rol === 'tecnico' ? 'selected' : ''}>Técnico</option>
-                            <option value="administrativo" ${usuario.rol === 'administrativo' ? 'selected' : ''}>Administrativo</option>
+                            <option value="Administrador" ${usuario.rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
+                            <option value="Técnico" ${usuario.rol === 'Técnico' ? 'selected' : ''}>Técnico</option>
+                            <option value="Administrativo" ${usuario.rol === 'Administrativo' ? 'selected' : ''}>Administrativo</option>
                         </select>
                     </div>
                 </div>
