@@ -67,14 +67,19 @@ async function cargarUsuarios() {
                     <td>${usuario.usuario}</td>
                     <td>${usuario.rol}</td>
                     <td>
-                        <button class="btn-editar" data-id="${usuario.id}">Editar</button>
-                        <button class="btn-eliminar" data-id="${usuario.id}">Eliminar</button>
+                        <div class="acciones-usuario">
+                            <button class="btn-editar" data-id="${usuario.id}" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-eliminar" data-id="${usuario.id}" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </td>
                 `;
 
                 tbody.appendChild(fila);
             });
-
             // Agregar eventos a los botones de edición
             document.querySelectorAll('.btn-editar').forEach(boton => {
                 boton.addEventListener('click', function() {
