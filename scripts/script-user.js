@@ -148,6 +148,7 @@ async function editarUsuario(id) {
                         <label for="rol-editar">Rol:</label>
                         <select id="rol-editar" required>
                             <option value="Administrador" ${usuario.rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
+                             <option value="Técnico/Administrativo" ${usuario.rol === 'Técnico/Administrativo' ? 'selected' : ''}>Técnico/Administrativo</option>
                             <option value="Técnico" ${usuario.rol === 'Técnico' ? 'selected' : ''}>Técnico</option>
                             <option value="Administrativo" ${usuario.rol === 'Administrativo' ? 'selected' : ''}>Administrativo</option>
                         </select>
