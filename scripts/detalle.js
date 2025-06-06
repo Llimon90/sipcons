@@ -1,31 +1,23 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+// Funciones de utilidad
+function getShortFileName(url, maxLength = 20) {
+    const fileName = url.split('/').pop();
+    return fileName.length > maxLength
+        ? fileName.substring(0, maxLength) + '...'
+        : fileName;
+}
 
-document.addEventListener("DOMContentLoaded", function () {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notificacion ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
 
-    if (!id) {
-        document.getElementById("detalle-incidencia").innerHTML = "<p>Error: ID no encontrado.</p>";
-        return;
-    }
-
-    function getShortFileName(url, maxLength = 20) {
-        const fileName = url.split('/').pop();
-        return fileName.length > maxLength
-            ? fileName.substring(0, maxLength) + '...'
-            : fileName;
-    }
-
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `notificacion ${type}`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
-    }
-
-    async function eliminarArchivo(urlArchivo, containerElement) {
+// Funciones relacionadas con archivos
+async function eliminarArchivo(urlArchivo, containerElement, id) {
     if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
         return;
     }
@@ -36,9 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = new FormData();
         formData.append('id_incidencia', id);
 
-        // Extraer la ruta relativa completa del archivo desde la URL
         const url = new URL(urlArchivo, window.location.origin);
-        const rutaRelativa = url.pathname.replace(/^\/+/, ''); // Elimina las barras iniciales
+        const rutaRelativa = url.pathname.replace(/^\/+/, '');
         formData.append('url_archivo', rutaRelativa);
 
         const response = await fetch("../backend/eliminar_archivo.php", {
@@ -63,292 +54,519 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 }
 
-    
-    function cargarArchivosAdjuntos(archivos) {
-        const contenedorArchivos = document.getElementById("contenedor-archivos");
-        contenedorArchivos.innerHTML = "";
+async function renderPdfThumbnail(archivo, canvas) {
+    try {
+        const pdf = await pdfjsLib.getDocument(archivo).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 1 });
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+    } catch (error) {
+        console.error('Error al renderizar miniatura de PDF:', error);
+        throw error;
+    }
+}
 
-        if (archivos && archivos.length > 0) {
-            archivos.forEach(async (archivo, index) => {
-                const ext = archivo.split('.').pop().toLowerCase();
-                const archivoContainer = document.createElement('div');
-                archivoContainer.className = 'archivo-container';
-                archivoContainer.style.position = 'relative';
-                archivoContainer.style.margin = '10px';
-                archivoContainer.style.padding = '10px';
-                archivoContainer.style.border = '1px solid #ddd';
-                archivoContainer.style.borderRadius = '5px';
-                archivoContainer.style.display = 'inline-block';
+function createFilePreview(archivo, ext) {
+    let previewElement;
 
-                const link = document.createElement('a');
-                link.href = archivo;
-                link.target = '_blank';
-                link.style.textDecoration = 'none';
-                link.style.color = '#333';
-                link.style.display = 'block';
-
-                let previewElement;
-
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-                    previewElement = document.createElement('img');
-                    previewElement.src = archivo;
-                    previewElement.style.maxWidth = '100px';
-                    previewElement.style.maxHeight = '100px';
-                    previewElement.style.cursor = 'pointer';
-                    previewElement.onclick = () => window.open(archivo, '_blank');
-                    link.appendChild(previewElement);
-                    const fileNameSpan = document.createElement('span');
-                    fileNameSpan.textContent = getShortFileName(archivo);
-                    fileNameSpan.style.display = 'block';
-                    fileNameSpan.style.textAlign = 'center';
-                    link.appendChild(fileNameSpan);
-                } else if (ext === 'pdf') {
-                    const canvas = document.createElement('canvas');
-                    canvas.style.maxWidth = '100px';
-                    canvas.style.maxHeight = '100px';
-                    canvas.style.cursor = 'pointer';
-                    canvas.onclick = () => window.open(archivo, '_blank');
-                    link.appendChild(canvas);
-                    const fileNameSpan = document.createElement('span');
-                    fileNameSpan.textContent = getShortFileName(archivo);
-                    fileNameSpan.style.display = 'block';
-                    fileNameSpan.style.textAlign = 'center';
-                    link.appendChild(fileNameSpan);
-
-                    try {
-                        const pdf = await pdfjsLib.getDocument(archivo).promise;
-                        const page = await pdf.getPage(1);
-                        const viewport = page.getViewport({ scale: 1 });
-                        const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
-                        await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    } catch (error) {
-                        console.error('Error al renderizar miniatura de PDF:', error);
-                        canvas.remove();
-                        const errorSpan = document.createElement('span');
-                        errorSpan.textContent = 'Error al cargar miniatura';
-                        errorSpan.style.display = 'block';
-                        errorSpan.style.textAlign = 'center';
-                        link.appendChild(errorSpan);
-                        link.onclick = () => window.open(archivo, '_blank');
-                    }
-                } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
-                    previewElement = document.createElement('video');
-                    previewElement.src = archivo;
-                    previewElement.style.maxWidth = '100px';
-                    previewElement.style.maxHeight = '100px';
-                    previewElement.controls = false;
-                    previewElement.muted = true;
-                    previewElement.loop = true;
-                    previewElement.style.cursor = 'pointer';
-                    previewElement.onmouseover = () => previewElement.play();
-                    previewElement.onmouseout = () => previewElement.pause();
-                    previewElement.onclick = () => window.open(archivo, '_blank');
-                    link.appendChild(previewElement);
-                    const fileNameSpan = document.createElement('span');
-                    fileNameSpan.textContent = getShortFileName(archivo);
-                    fileNameSpan.style.display = 'block';
-                    fileNameSpan.style.textAlign = 'center';
-                    link.appendChild(fileNameSpan);
-                } else {
-                    link.textContent = getShortFileName(archivo);
-                }
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'eliminar-archivo';
-                deleteBtn.innerHTML = '×';
-                deleteBtn.style.position = 'absolute';
-                deleteBtn.style.top = '5px';
-                deleteBtn.style.right = '5px';
-                deleteBtn.style.background = 'red';
-                deleteBtn.style.color = 'white';
-                deleteBtn.style.border = 'none';
-                deleteBtn.style.borderRadius = '50%';
-                deleteBtn.style.width = '20px';
-                deleteBtn.style.height = '20px';
-                deleteBtn.style.cursor = 'pointer';
-                deleteBtn.style.display = 'flex';
-                deleteBtn.style.alignItems = 'center';
-                deleteBtn.style.justifyContent = 'center';
-                deleteBtn.style.padding = '0';
-                deleteBtn.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    eliminarArchivo(archivo, archivoContainer); // 'archivo' es la URL completa
-                };;
-
-                archivoContainer.appendChild(link);
-                archivoContainer.appendChild(deleteBtn);
-                contenedorArchivos.appendChild(archivoContainer);
-            });
-        } else {
-            contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
-        }
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        previewElement = document.createElement('img');
+        previewElement.src = archivo;
+        previewElement.style.maxWidth = '100px';
+        previewElement.style.maxHeight = '100px';
+        previewElement.style.cursor = 'pointer';
+    } else if (ext === 'pdf') {
+        previewElement = document.createElement('canvas');
+        previewElement.style.maxWidth = '100px';
+        previewElement.style.maxHeight = '100px';
+        previewElement.style.cursor = 'pointer';
+    } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+        previewElement = document.createElement('video');
+        previewElement.src = archivo;
+        previewElement.style.maxWidth = '100px';
+        previewElement.style.maxHeight = '100px';
+        previewElement.controls = false;
+        previewElement.muted = true;
+        previewElement.loop = true;
+        previewElement.style.cursor = 'pointer';
+        previewElement.onmouseover = () => previewElement.play();
+        previewElement.onmouseout = () => previewElement.pause();
     }
 
-    async function cargarDetalleIncidencia() {
-        try {
-            const response = await fetch(`../backend/detalle.php?id=${id}`);
-            const data = await response.json();
+    return previewElement;
+}
 
-            if (!response.ok || data.error) {
-                throw new Error(data.error || 'Error al cargar los detalles');
-            }
+function createFileContainer(archivo, ext, id) {
+    const archivoContainer = document.createElement('div');
+    archivoContainer.className = 'archivo-container';
+    archivoContainer.style.position = 'relative';
+    archivoContainer.style.margin = '10px';
+    archivoContainer.style.padding = '10px';
+    archivoContainer.style.border = '1px solid #ddd';
+    archivoContainer.style.borderRadius = '5px';
+    archivoContainer.style.display = 'inline-block';
 
-            document.getElementById("detalle-incidencia").innerHTML = `
-                <form id="form-editar">
-                    <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
-                    <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                        <div style="flex: 1;">
-                            <label># INCIDENCIA CLIENTE:</label>&nbsp;
-                            <input type="text" id="numero" value="${data.numero || ''}" style="width: 100%;">
-                        </div>&nbsp; &nbsp;
-                        <div style="flex: 1;">
-                            <label>CLIENTE:</label>&nbsp;
-                            <input type="text" id="cliente" value="${data.cliente || ''}" required style="width: 100%;">
-                        </div>&nbsp;&nbsp;
-                    </div>
+    const link = document.createElement('a');
+    link.href = archivo;
+    link.target = '_blank';
+    link.style.textDecoration = 'none';
+    link.style.color = '#333';
+    link.style.display = 'block';
 
-                    <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                        <div style="flex: 1;">
-                            <label>CONTACTO:</label>
-                            <input type="text" id="contacto" value="${data.contacto || ''}" required style="width: 100%;">
-                        </div>
-                        <div style="flex: 1;">
-                            <label>SUCURSAL:</label>
-                            <input type="text" id="sucursal" value="${data.sucursal || ''}" required style="width: 100%;">
-                        </div>
-                    </div>
+    const previewElement = createFilePreview(archivo, ext);
+    if (previewElement) {
+        previewElement.onclick = () => window.open(archivo, '_blank');
+        link.appendChild(previewElement);
+    }
 
-                    <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                        <div style="flex: 1;">
-                            <label>FECHA:</label>
-                            <input type="date" id="fecha" value="${data.fecha || ''}" required style="width: 100%;">
-                        </div>
+    const fileNameSpan = document.createElement('span');
+    fileNameSpan.textContent = getShortFileName(archivo);
+    fileNameSpan.style.display = 'block';
+    fileNameSpan.style.textAlign = 'center';
+    link.appendChild(fileNameSpan);
 
-                        
-                        <div id="tecnicos-container" style="flex: 1;">
-                            <label for="tecnico">TÉCNICO:</label>
-                                <select id="tecnico" name="tecnico" required style="width: 100%;">
-                                    <option value="" disabled ${!data.tecnico ? 'selected' : ''}>Seleccione una opción</option>
-                                    <option value="Victor Cordoba" ${data.tecnico === "Victor Cordoba" ? 'selected' : ''}>Victor Cordoba</option>
-                                    <option value="Tomás Vázquez" ${data.tecnico === "Tomás Vázquez" ? 'selected' : ''}>Tomás Vázquez</option>
-                                    <option value="Francisco Aguiar" ${data.tecnico === "Francisco Aguiar" ? 'selected' : ''}>Francisco Aguiar</option>
-                                    <option value="Mauricio Díaz" ${data.tecnico === "Mauricio Díaz" ? 'selected' : ''}>Mauricio Díaz</option>
-                                    <option value="Humberto Vázquez" ${data.tecnico === "Humberto Vázquez" ? 'selected' : ''}>Humberto Vázquez</option>
-                                    <option value="Jose López" ${data.tecnico === "Jose López" ? 'selected' : ''}>José López</option>
-                                    <option value="Hoscar Martínez" ${data.tecnico === "Hoscar Martínez" ? 'selected' : ''}>Hoscar Martínez</option>
-                                    <option value="Jacob Ventura" ${data.tecnico === "Jacob Ventura" ? 'selected' : ''}>Jacob Ventura</option>
-                                    <option value="Luis Limón" ${data.tecnico === "Luis Limón" ? 'selected' : ''}>Luis Limón</option>
-                                    <option value="Ernesto Chávez" ${data.tecnico === "Ernesto Chávez" ? 'selected' : ''}>Ernesto Chávez</option>
-                                </select>
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'eliminar-archivo';
+    deleteBtn.innerHTML = '×';
+    deleteBtn.style.position = 'absolute';
+    deleteBtn.style.top = '5px';
+    deleteBtn.style.right = '5px';
+    deleteBtn.style.background = 'red';
+    deleteBtn.style.color = 'white';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.borderRadius = '50%';
+    deleteBtn.style.width = '20px';
+    deleteBtn.style.height = '20px';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.display = 'flex';
+    deleteBtn.style.alignItems = 'center';
+    deleteBtn.style.justifyContent = 'center';
+    deleteBtn.style.padding = '0';
+    deleteBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        eliminarArchivo(archivo, archivoContainer, id);
+    };
 
-                        </div>
-                    </div>
+    archivoContainer.appendChild(link);
+    archivoContainer.appendChild(deleteBtn);
 
-                    <div style="margin-bottom: 15px;">
-                        <label>ESTATUS:</label>
-                        <select id="estatus" style="width: 100%;">
-                            <option value="Abierto" ${data.estatus === "Abierto" ? 'selected' : ''}>Abierto</option>
-                            <option value="Asignado" ${data.estatus === "Asignado" ? 'selected' : ''}>Asignado</option>
-                            <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
-                            <option value="Completado" ${data.estatus === "Completado" ? 'selected' : ''}>Completado</option>
-                            <option value="Cerrado sin factura" ${data.estatus === "Cerrado sin factura" ? 'selected' : ''}>Cerrado sin factura</option>
-                            <option value="Cerrado con factura" ${data.estatus === "Cerrado con factura" ? 'selected' : ''}>Cerrado con factura</option>
-                        </select>
-                    </div>
+    return { container: archivoContainer, preview: previewElement };
+}
 
-                    <div style="margin-bottom: 15px;">
-                        <label>FALLA:</label>
-                        <textarea id="falla" required style="width: 100%;">${data.falla || ''}</textarea>
-                    </div>
+async function cargarArchivosAdjuntos(archivos, id) {
+    const contenedorArchivos = document.getElementById("contenedor-archivos");
+    contenedorArchivos.innerHTML = "";
 
-                    <div style="margin-bottom: 15px;">
-                        <label>TRABAJO REALIZADO:</label>
-                        <textarea id="accion" style="width: 100%;">${data.accion || ''}</textarea>
-                    </div>
-            
-                    <div style="margin-bottom: 15px;">
-                        <label>NOTAS ADICIONALES</label>
-                        <textarea id="notas" style="width: 100%;">${data.notas || ''}</textarea>
-                    </div>
+    if (archivos && archivos.length > 0) {
+        for (const archivo of archivos) {
+            const ext = archivo.split('.').pop().toLowerCase();
+            const { container, preview } = createFileContainer(archivo, ext, id);
 
-                    
-
-                    <div style="margin-bottom: 15px;">
-                        <label>AGREGAR NUEVOS ARCHIVOS:</label>
-                        <input type="file" id="archivos" name="archivos[]" multiple
-                               accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-                               style="width: 100%;">
-                    </div>
-
-                    <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        Guardar cambios
-                    </button>
-                </form>
-            `;
-
-            if (data.archivos) {
-                cargarArchivosAdjuntos(data.archivos);
-            }
-
-            document.getElementById("form-editar").addEventListener("submit", async function (e) {
-                e.preventDefault();
-
-                const formData = new FormData();
-                formData.append("id", id);
-                formData.append("numero", document.getElementById("numero").value);
-                formData.append("cliente", document.getElementById("cliente").value);
-                formData.append("contacto", document.getElementById("contacto").value);
-                formData.append("sucursal", document.getElementById("sucursal").value);
-                formData.append("fecha", document.getElementById("fecha").value);
-                formData.append("tecnico", document.getElementById("tecnico").value);
-                formData.append("estatus", document.getElementById("estatus").value);
-                formData.append("falla", document.getElementById("falla").value);
-                formData.append("accion", document.getElementById("accion").value);
-                formData.append("notas", document.getElementById("notas").value);
-
-
-                const archivosInput = document.getElementById("archivos").files;
-                for (let i = 0; i < archivosInput.length; i++) {
-                    formData.append("archivos[]", archivosInput[i]);
-                }
-
+            if (ext === 'pdf' && preview) {
                 try {
-                    const response = await fetch("../backend/actualiza.php", {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok || !data.success) {
-                        throw new Error(data.error || 'Error al actualizar la incidencia');
-                    }
-
-                    showNotification('Incidencia actualizada correctamente');
-
-                    if (data.archivos) {
-                        cargarArchivosAdjuntos(data.archivos);
-                        document.getElementById("archivos").value = '';
-                    }
-
+                    await renderPdfThumbnail(archivo, preview);
                 } catch (error) {
-                    console.error("Error al actualizar incidencia:", error);
-                    showNotification(error.message, 'error');
+                    preview.remove();
+                    const errorSpan = document.createElement('span');
+                    errorSpan.textContent = 'Error al cargar miniatura';
+                    errorSpan.style.display = 'block';
+                    errorSpan.style.textAlign = 'center';
+                    container.querySelector('a').appendChild(errorSpan);
+                }
+            }
+
+            contenedorArchivos.appendChild(container);
+        }
+    } else {
+        contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
+    }
+}
+
+// Funciones relacionadas con el formulario
+function createFormHTML(data) {
+    // Convertir técnico existente en array si no lo es
+    const tecnicosIniciales = Array.isArray(data.tecnico) ? data.tecnico : 
+                            (data.tecnico ? [data.tecnico] : []);
+
+                            
+
+    return `
+        <form id="form-editar">
+            <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
+            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label># INCIDENCIA CLIENTE:</label>&nbsp;
+                    <input type="text" id="numero" value="${data.numero || ''}" style="width: 100%;">
+                </div>&nbsp; &nbsp;
+                <div style="flex: 1;">
+                    <label>CLIENTE:</label>&nbsp;
+                    <input type="text" id="cliente" value="${data.cliente || ''}" required style="width: 100%;">
+                </div>&nbsp;&nbsp;
+            </div>
+
+            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label>CONTACTO:</label>
+                    <input type="text" id="contacto" value="${data.contacto || ''}" required style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label>SUCURSAL:</label>
+                    <input type="text" id="sucursal" value="${data.sucursal || ''}"  style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label>FECHA:</label>
+                    <input type="date" id="fecha" value="${data.fecha || ''}" required style="width: 100%;">
+                </div>
+                
+                <div style="flex: 1;">
+                    <label>TÉCNICOS:</label>
+                    <div id="tecnicos-container">
+                        ${tecnicosIniciales.map((tecnico, index) => `
+                            <div class="tecnico-group" style="margin-bottom: 10px; display: flex; align-items: center;">
+                                <select name="tecnicos[]" class="tecnico-select" required style="width: 90%;">
+                                    <option value="" disabled ${!tecnico ? 'selected' : ''}>Seleccione un técnico</option>
+                                    <option value="Victor Cordoba" ${tecnico === "Victor Cordoba" ? 'selected' : ''}>Victor Cordoba</option>
+                                    <option value="Tomás Vázquez" ${tecnico === "Tomás Vázquez" ? 'selected' : ''}>Tomás Vázquez</option>
+                                    <option value="Francisco Aguiar" ${tecnico === "Francisco Aguiar" ? 'selected' : ''}>Francisco Aguiar</option>
+                                    <option value="Mauricio Díaz" ${tecnico === "Mauricio Díaz" ? 'selected' : ''}>Mauricio Díaz</option>
+                                    <option value="Humberto Vázquez" ${tecnico === "Humberto Vázquez" ? 'selected' : ''}>Humberto Vázquez</option>
+                                    <option value="Jose López" ${tecnico === "Jose López" ? 'selected' : ''}>José López</option>
+                                    <option value="Hoscar Martínez" ${tecnico === "Hoscar Martínez" ? 'selected' : ''}>Hoscar Martínez</option>
+                                    <option value="Jacob Ventura" ${tecnico === "Jacob Ventura" ? 'selected' : ''}>Jacob Ventura</option>
+                                    <option value="Luis Limón" ${tecnico === "Luis Limón" ? 'selected' : ''}>Luis Limón</option>
+                                    <option value="Ernesto Chávez" ${tecnico === "Ernesto Chávez" ? 'selected' : ''}>Ernesto Chávez</option>
+                                </select>
+                                ${index > 0 ? '<button type="button" class="eliminar-tecnico" style="background: none; border: none; color: #ff0000; font-weight: bold;font-size: 16px;cursor: pointer; padding: 0;margin-left: 5px;line-height: 1;>×</button>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button type="button" id="agregar-tecnico" style="margin-top: 5px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Agregar otro técnico
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>ESTATUS:</label>
+                <select id="estatus" style="width: 100%;">
+                    <option value="Abierto" ${data.estatus === "Abierto" ? 'selected' : ''}>Abierto</option>
+                    <option value="Asignado" ${data.estatus === "Asignado" ? 'selected' : ''}>Asignado</option>
+                    <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
+                    <option value="Completado" ${data.estatus === "Completado" ? 'selected' : ''}>Completado</option>
+                    <option value="Cerrado sin factura" ${data.estatus === "Cerrado sin factura" ? 'selected' : ''}>Cerrado sin factura</option>
+                    <option value="Cerrado con factura" ${data.estatus === "Cerrado con factura" ? 'selected' : ''}>Cerrado con factura</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>FALLA:</label>
+                <textarea id="falla" required style="width: 100%;">${data.falla || ''}</textarea>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>TRABAJO REALIZADO:</label>
+                <textarea id="accion" style="width: 100%;">${data.accion || ''}</textarea>
+            </div>
+    
+            <div style="margin-bottom: 15px;">
+                <label>NOTAS ADICIONALES</label>
+                <textarea id="notas" style="width: 100%;">${data.notas || ''}</textarea>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>AGREGAR NUEVOS ARCHIVOS:</label>
+                <input type="file" id="archivos" name="archivos[]" multiple
+                       accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                       style="width: 100%;">
+            </div>
+
+            <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Guardar cambios
+            </button>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const tecnicosContainer = document.getElementById('tecnicos-container');
+                const agregarTecnicoBtn = document.getElementById('agregar-tecnico');
+                
+                // Función para actualizar las opciones disponibles en los selects
+                function actualizarOpcionesTecnicos() {
+                    const selects = document.querySelectorAll('.tecnico-select');
+                    const selectedValues = Array.from(selects).map(select => select.value);
+                    
+                    selects.forEach(select => {
+                        const currentValue = select.value;
+                        Array.from(select.options).forEach(option => {
+                            if (option.value && option.value !== '') {
+                                option.disabled = selectedValues.includes(option.value) && option.value !== currentValue;
+                            }
+                        });
+                    });
+                }
+                
+                // Agregar nuevo técnico
+                agregarTecnicoBtn.addEventListener('click', function() {
+                    const tecnicoGroup = document.createElement('div');
+                    tecnicoGroup.className = 'tecnico-group';
+                    tecnicoGroup.style.marginBottom = '10px';
+                    tecnicoGroup.style.display = 'flex';
+                    tecnicoGroup.style.alignItems = 'center';
+                    
+                    const select = document.createElement('select');
+                    select.name = 'tecnicos[]';
+                    select.className = 'tecnico-select';
+                    select.required = true;
+                    select.style.width = '90%';
+                    
+                    select.innerHTML = \`
+                        <option value="" disabled selected>Seleccione un técnico</option>
+                        <option value="Victor Cordoba">Victor Cordoba</option>
+                        <option value="Tomás Vázquez">Tomás Vázquez</option>
+                        <option value="Francisco Aguiar">Francisco Aguiar</option>
+                        <option value="Mauricio Díaz">Mauricio Díaz</option>
+                        <option value="Humberto Vázquez">Humberto Vázquez</option>
+                        <option value="Jose López">José López</option>
+                        <option value="Hoscar Martínez">Hoscar Martínez</option>
+                        <option value="Jacob Ventura">Jacob Ventura</option>
+                        <option value="Luis Limón">Luis Limón</option>
+                        <option value="Ernesto Chávez">Ernesto Chávez</option>
+                    \`;
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'eliminar-tecnico';
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.style.marginLeft = '5px';
+                    deleteBtn.style.background = 'red';
+                    deleteBtn.style.color = 'white';
+                    deleteBtn.style.border = 'none';
+                    deleteBtn.style.borderRadius = '50%';
+                    deleteBtn.style.width = '20px';
+                    deleteBtn.style.height = '20px';
+                    deleteBtn.style.cursor = 'pointer';
+                    
+                    deleteBtn.addEventListener('click', function() {
+                        tecnicoGroup.remove();
+                        actualizarOpcionesTecnicos();
+                    });
+                    
+                    select.addEventListener('change', actualizarOpcionesTecnicos);
+                    
+                    tecnicoGroup.appendChild(select);
+                    tecnicoGroup.appendChild(deleteBtn);
+                    tecnicosContainer.appendChild(tecnicoGroup);
+                    
+                    actualizarOpcionesTecnicos();
+                });
+                
+                // Configurar eventos para los selects existentes
+                document.querySelectorAll('.tecnico-select').forEach(select => {
+                    select.addEventListener('change', actualizarOpcionesTecnicos);
+                });
+                
+                // Configurar eventos para los botones de eliminar existentes
+                document.querySelectorAll('.eliminar-tecnico').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        this.closest('.tecnico-group').remove();
+                        actualizarOpcionesTecnicos();
+                    });
+                });
+            });
+        </script>
+    `;
+}
+
+function setupTecnicosMultiples() {
+    const tecnicosContainer = document.getElementById('tecnicos-container');
+    const agregarTecnicoBtn = document.getElementById('agregar-tecnico');
+    
+    if (!agregarTecnicoBtn) return; // Si no existe el botón, salir
+    
+    // Función para actualizar las opciones disponibles
+    function actualizarOpcionesTecnicos() {
+        const selects = document.querySelectorAll('.tecnico-select');
+        const selectedValues = Array.from(selects)
+            .map(select => select.value)
+            .filter(val => val);
+        
+        selects.forEach(select => {
+            const currentValue = select.value;
+            Array.from(select.options).forEach(option => {
+                if (option.value && option.value !== '') {
+                    option.disabled = selectedValues.includes(option.value) && option.value !== currentValue;
                 }
             });
+        });
+    }
+    
+    // Función para crear un nuevo select de técnico
+    function crearSelectTecnico() {
+        const tecnicoGroup = document.createElement('div');
+        tecnicoGroup.className = 'tecnico-group';
+        tecnicoGroup.style.marginBottom = '10px';
+        tecnicoGroup.style.display = 'flex';
+        tecnicoGroup.style.alignItems = 'center';
+        
+        const select = document.createElement('select');
+        select.name = 'tecnicos[]';
+        select.className = 'tecnico-select';
+        select.required = true;
+        select.style.width = '90%';
+        
+        select.innerHTML = `
+            <option value="" disabled selected>Seleccione un técnico</option>
+            <option value="Victor Cordoba">Victor Cordoba</option>
+            <option value="Tomás Vázquez">Tomás Vázquez</option>
+            <option value="Francisco Aguiar">Francisco Aguiar</option>
+            <option value="Mauricio Díaz">Mauricio Díaz</option>
+            <option value="Humberto Vázquez">Humberto Vázquez</option>
+            <option value="Jose López">José López</option>
+            <option value="Hoscar Martínez">Hoscar Martínez</option>
+            <option value="Jacob Ventura">Jacob Ventura</option>
+            <option value="Luis Limón">Luis Limón</option>
+            <option value="Ernesto Chávez">Ernesto Chávez</option>
+        `;
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'eliminar-tecnico';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.style.marginLeft = '5px';
+        deleteBtn.style.background = 'red';
+        deleteBtn.style.color = 'white';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.borderRadius = '50%';
+        deleteBtn.style.width = '20px';
+        deleteBtn.style.height = '20px';
+        deleteBtn.style.cursor = 'pointer';
+        
+        deleteBtn.addEventListener('click', function() {
+            tecnicoGroup.remove();
+            actualizarOpcionesTecnicos();
+        });
+        
+        select.addEventListener('change', actualizarOpcionesTecnicos);
+        
+        tecnicoGroup.appendChild(select);
+        tecnicoGroup.appendChild(deleteBtn);
+        tecnicosContainer.appendChild(tecnicoGroup);
+        
+        actualizarOpcionesTecnicos();
+    }
+    
+    // Evento para el botón de agregar técnico
+    agregarTecnicoBtn.addEventListener('click', crearSelectTecnico);
+    
+    // Configurar eventos para los selects existentes
+    document.querySelectorAll('.tecnico-select').forEach(select => {
+        select.addEventListener('change', actualizarOpcionesTecnicos);
+    });
+    
+    // Configurar eventos para los botones de eliminar existentes
+    document.querySelectorAll('.eliminar-tecnico').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.tecnico-group').remove();
+            actualizarOpcionesTecnicos();
+        });
+    });
+}
+async function handleFormSubmit(e, id) {
+    e.preventDefault();
 
-        } catch (error) {
-            console.error("Error al cargar detalles:", error);
-            document.getElementById("detalle-incidencia").innerHTML =
-                `<p>Error al cargar los detalles: ${error.message}</p>`;
-        }
+    const formData = new FormData();
+    formData.append("id", id);
+    formData.append("numero", document.getElementById("numero").value);
+    formData.append("cliente", document.getElementById("cliente").value);
+    formData.append("contacto", document.getElementById("contacto").value);
+    formData.append("sucursal", document.getElementById("sucursal").value);
+    formData.append("fecha", document.getElementById("fecha").value);
+    
+    // Obtener todos los técnicos seleccionados y unirlos con "/"
+    const tecnicosSelects = document.querySelectorAll('.tecnico-select');
+    const tecnicos = Array.from(tecnicosSelects)
+        .map(select => select.value)
+        .filter(tecnico => tecnico); // Filtrar valores vacíos
+    
+    formData.append("tecnico", tecnicos.join('/')); // Unir con "/"
+    
+    formData.append("estatus", document.getElementById("estatus").value);
+    formData.append("falla", document.getElementById("falla").value);
+    formData.append("accion", document.getElementById("accion").value);
+    formData.append("notas", document.getElementById("notas").value);
+
+    const archivosInput = document.getElementById("archivos").files;
+    for (let i = 0; i < archivosInput.length; i++) {
+        formData.append("archivos[]", archivosInput[i]);
     }
 
-    cargarDetalleIncidencia();
+    try {
+        const response = await fetch("../backend/actualiza.php", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Error al actualizar la incidencia');
+        }
+
+        showNotification('Incidencia actualizada correctamente');
+
+        if (data.archivos) {
+            cargarArchivosAdjuntos(data.archivos, id);
+            document.getElementById("archivos").value = '';
+        }
+
+    } catch (error) {
+        console.error("Error al actualizar incidencia:", error);
+        showNotification(error.message, 'error');
+    }
+}
+// Función principal para cargar los detalles
+async function cargarDetalleIncidencia(id) {
+    try {
+        const response = await fetch(`../backend/detalle.php?id=${id}`);
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            throw new Error(data.error || 'Error al cargar los detalles');
+        }
+
+        document.getElementById("detalle-incidencia").innerHTML = createFormHTML(data);
+        
+        // Configurar la funcionalidad de múltiples técnicos
+        setupTecnicosMultiples();
+
+        if (data.archivos) {
+            cargarArchivosAdjuntos(data.archivos, id);
+        }
+
+        document.getElementById("form-editar").addEventListener("submit", (e) => handleFormSubmit(e, id));
+
+    } catch (error) {
+        console.error("Error al cargar detalles:", error);
+        document.getElementById("detalle-incidencia").innerHTML =
+            `<p>Error al cargar los detalles: ${error.message}</p>`;
+    }
+}
+// Inicialización
+document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    if (!id) {
+        document.getElementById("detalle-incidencia").innerHTML = "<p>Error: ID no encontrado.</p>";
+        return;
+    }
+
+    cargarDetalleIncidencia(id);
 });
-
-
-  
