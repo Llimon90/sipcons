@@ -243,7 +243,7 @@ function createFormHTML(data) {
                                     <option value="Luis Limón" ${tecnico === "Luis Limón" ? 'selected' : ''}>Luis Limón</option>
                                     <option value="Ernesto Chávez" ${tecnico === "Ernesto Chávez" ? 'selected' : ''}>Ernesto Chávez</option>
                                 </select>
-                                ${index > 0 ? '<button type="button" class="eliminar-tecnico" style="background: none; border: none; color: #ff0000; font-weight: bold;font-size: 16px;cursor: pointer; padding: 0;margin-left: 5px;line-height: 1;>×</button>' : ''}
+                                ${index > 0 ? '<button type="button" class="eliminar-tecnico" style="background: none; border: none; color: #ff0000; font-weight: bold;font-size: 16px;cursor: pointer; padding: 0;margin-left: 5px;line-height: 1;">×</button>' : ''}
                             </div>
                         `).join('')}
                     </div>
