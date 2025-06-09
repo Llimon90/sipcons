@@ -58,7 +58,7 @@ try {
     // ==============================================
     // 5. Eliminar archivo físico
     // ==============================================
-    $rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/apptest/uploads/';
+    $rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/app/uploads/';
     $rutaCompleta = $rutaBase . $nombreArchivo;
 
     if (!file_exists($rutaCompleta)) {
