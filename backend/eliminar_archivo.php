@@ -1,48 +1,125 @@
 <?php
 header('Content-Type: application/json');
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
-// 1. Configuración de conexión a la base de datos
-$host = "localhost";
-$user = "sipcons1_appweb";
-$password = "sip*SYS2025";
-$database = "sipcons1_appweb";
+// ==============================================
+// 1. Conexión a la base de datos
+// ==============================================
+require_once 'conexion.php';
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8", $user, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode([
+// ==============================================
+// 2. Validación de datos POST
+// ==============================================
+$idIncidencia = filter_input(INPUT_POST, 'id_incidencia', FILTER_VALIDATE_INT);
+$rutaArchivo = filter_input(INPUT_POST, 'url_archivo', FILTER_SANITIZE_STRING);
+$nombreArchivo = basename($rutaArchivo);
+
+if (!$idIncidencia || !$rutaArchivo) {
+    http_response_code(400);
+    die(json_encode([
         'success' => false,
-        'error' => 'Error de conexión a la base de datos',
-        'details' => $e->getMessage()
-    ]);
-    exit;
+        'error' => 'Datos incompletos o inválidos',
+        'received' => $_POST
+    ]));
 }
 
-// 2. Obtener y validar datos del POST
-$idIncidencia = isset($_POST['id_incidencia']) ? (int)$_POST['id_incidencia'] : null;
-$urlArchivo = isset($_POST['url_archivo']) ? $_POST['url_archivo'] : null;
+// ==============================================
+// 3. Iniciar transacción
+// ==============================================
+$pdo->beginTransaction();
 
-if (!$idIncidencia || !$urlArchivo) {
+try {
+    // ==============================================
+    // 4. Eliminar registro de la BD (ajustado a tu estructura)
+    // ==============================================
+    $sql = "DELETE FROM archivos_incidencias WHERE incidencia_id = ? AND ruta_archivo LIKE ?";
+    $stmt = $pdo->prepare($sql);
+    
+    // Buscar tanto por ruta completa como solo por nombre de archivo
+    $stmt->execute([$idIncidencia, '%'.$nombreArchivo]);
+    
+    $deletedFromDb = $stmt->rowCount() > 0;
+    
+    if (!$deletedFromDb) {
+        $pdo->rollBack();
+        http_response_code(404);
+        die(json_encode([
+            'success' => false,
+            'error' => 'Registro no encontrado en la base de datos',
+            'debug' => [
+                'query' => $sql,
+                'params' => [$idIncidencia, '%'.$nombreArchivo],
+                'table_structure' => 'id, incidencia_id, ruta_archivo'
+            ]
+        ]));
+    }
+
+    // ==============================================
+    // 5. Eliminar archivo físico
+    // ==============================================
+    $rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/apptest/uploads/';
+    $rutaCompleta = $rutaBase . $nombreArchivo;
+
+    if (!file_exists($rutaCompleta)) {
+        $pdo->rollBack();
+        http_response_code(404);
+        die(json_encode([
+            'success' => false,
+            'error' => 'Archivo no encontrado en el servidor',
+            'searched_path' => $rutaCompleta
+        ]));
+    }
+
+    if (!unlink($rutaCompleta)) {
+        $pdo->rollBack();
+        http_response_code(500);
+        die(json_encode([
+            'success' => false,
+            'error' => 'Error al eliminar archivo físico',
+            'file_permissions' => [
+                'readable' => is_readable($rutaCompleta),
+                'writable' => is_writable($rutaCompleta)
+            ]
+        ]));
+    }
+
+    // Confirmar transacción si todo fue exitoso
+    $pdo->commit();
+
     echo json_encode([
-        'success' => false,
-        'error' => 'Datos incompletos',
-        'received' => [
-            'id_incidencia' => $idIncidencia,
-            'url_archivo' => $urlArchivo
+        'success' => true,
+        'message' => 'Archivo eliminado completamente',
+        'details' => [
+            'db_deleted' => true,
+            'file_deleted' => true,
+            'incidencia_id' => $idIncidencia,
+            'archivo' => $nombreArchivo
         ]
     ]);
-    exit;
+    
+} catch (PDOException $e) {
+    $pdo->rollBack();
+    error_log("Error BD al eliminar archivo: " . $e->getMessage());
+    http_response_code(500);
+    die(json_encode([
+        'success' => false,
+        'error' => 'Error en base de datos',
+        'debug' => [
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'query' => $sql ?? 'No ejecutada'
+        ]
+    ]));
+} catch (Exception $e) {
+    $pdo->rollBack();
+    error_log("Error general: " . $e->getMessage());
+    http_response_code(500);
+    die(json_encode([
+        'success' => false,
+        'error' => 'Error al procesar la solicitud',
+        'exception' => get_class($e),
+        'message' => $e->getMessage()
+    ]));
 }
-
-try {
-    // --- LOGGING PARA DEPURACIÓN ---
-    error_log("ID de Incidencia recibido: " . $idIncidencia);
-    error_log("URL de Archivo recibida: " . $urlArchivo);
-    error_log("DOCUMENT_ROOT: " . $_SERVER['DOCUMENT_ROOT']);
-    $rutaBase = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
-    error_log("Ruta Base construida: " . $rutaBase);
-    $rutaCompleta = realpath($rutaBase . ltrim($urlArchivo, '/'));
-    error_log("Ruta Completa construida (realpath): " . $rutaCompleta);
-    error_log("¿Existe el archivo?: " . (file_exists($rutaCompleta) ? 'Sí' : 'No'));
-    // ---
+?>
