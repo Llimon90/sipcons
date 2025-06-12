@@ -1,3 +1,5 @@
+//SCRIPT PARA GUARDAR VENTAS
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('form-venta');
   const btn = document.getElementById('btn-registrar-venta');
