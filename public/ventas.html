@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de ventas</title>
-    <link rel="stylesheet" href="../css/styles.css?v=8">
-   
-
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de ventas</title>
+  <link rel="stylesheet" href="../css/styles.css?v=9">
 </head>
-<body>
 
-    <div class="retorna" >
-        <a href="../index.html">  <<- Inicio</a>    </div>
-    
-    <!-- Panel lateral -->
-    <aside class="sidebar">
+
+<body>
+  <div class="retorna" >
+    <a href="../index.html">  <<- Inicio</a>  </div>
+
+  <!-- Panel lateral  -->
+  <aside class="sidebar">
     
     <ul>
       <li><a href="../index.html">Inicio</a></li>
@@ -27,81 +25,62 @@
     </ul>
 
   </aside>
-<section class="encabezado">
+  <section class="encabezado">
     <main>
-        <form id="form-venta">
+      <form id="form-venta">
+        <!-- Cliente y Sucursal -->
+        <div class="form-row">
+          <div><label for="cliente">Cliente</label> <select id="cliente" name="cliente" required><option value="" selected disabled>Seleccione una opción</option></select></div>
+          <div><label for="sucursal">Sucursal:</label><input type="text" id="sucursal" name="sucursal"></div>
+        </div>
+
+        <!-- Equipo y Marca -->
+        <div class="form-row">
+          <div><label for="equipo">Equipo:</label><input type="text" id="equipo" name="equipo" required></div>
+          <div><label for="marca">Marca:</label><input type="text" id="marca" name="marca"></div>
+        </div>
+
+        <!-- Modelo -->
+        <div class="form-row">
+            <div><label for="modelo">Modelo:</label><input type="text" id="modelo" name="modelo"></div>
+
+        </div>
+
+        </div>
+
+        <!-- Cantidad y Número(s) de Serie -->
+        <div class="form-row" style="display: flex; text-align: center;">
+            <div><label for="qty">Cantidad:</label><input type="number" id="qty" name="qty" min="1" value="1"></div>
+            <div><label for="garantia">Garantía (meses):</label> <input type="number" id="garantia" name="garantia" min="0" required></div>
+            <div><label for="servicio">Cláusula de servicio:</label><input type="checkbox" id="servicio" name="servicio"></div>
+        </div>
+
+        <!-- Aquí se insertan dinámicamente los inputs de serie -->
+        <div id="series-container"></div>
         
-            <div class="form-row">
-
-                <div>
-                    <label for="cliente">Cliente:</label>
-                    <input type="text" id="cliente" name="cliente" required />
-                </div>
-
-                <div>
-                    <label for="sucursal">Sucursal:</label>
-                    <input type="text" id="sucursal" name="sucursal"  />
-                </div>
-            </div>    
-    
-            <div class="form-row">
         
-                <div>
-                    <label for="equipo">Equipo:</label>
-                    <input type="text" id="equipo" name="equipo" required />
-                </div> 
 
-                <div>
-
-                    <label for="marca">Marca:</label>
-                    <input type="text" id="marca" name="marca"  />
-                </div>
-            </div>
-    
-            <div class="form-row">
-        
-                <div>
-                    <label for="modelo">Modelo:</label>
-                    <input type="text" id="modelo" name="modelo"  />
-                </div>    
-                
-                <div>
-                    <label for="numero_serie">Número(s) de Serie:</label>
-                    <input type="text" id="numero_serie" name="numero_serie"  />
-                </div>
-            </div>    
-    
-            <div class="form-row">
-
-                <label for="qty">Cantidad:</label>
-                <input type="number" id="qty" name="qty" min="0">
-                
-                <label for="garantia">Tiempo de Garantía (meses):</label>
-                <input type="number" id="garantia" name="garantia" min="0"  />
-
-                <label for="servicio">Clausula de servicio:</label>
-                <input type="checkbox" id="servicio" name="servicio"  />
-
-            </div>
-
-            <div class="form-row">
-                <label for="notas">Notas:</label>
-                <textarea type="text" id="notas" name="notas" min="0"  > </textarea>
-            </div>
-    
-            <button type="submit">Registrar Venta</button>
-        
-  </form>
+          
 
 
-  <div id="mensaje"></div>
+        <!-- Notas -->
+        <div class="form-row">
+          <div>
+            <label for="notas">Notas:</label>
+            <textarea id="notas" name="notas"></textarea>
+          </div>
+        </div>
 
+        <!-- Botón registrar venta -->
+        <div class="form-row">
+          <button type="button" id="btn-registrar-venta">Registrar Venta</button>
+        </div>
+      </form>
 
+      <div id="mensaje"></div>
+    </main>
+  </section>
 
-  
-
-        </main>
-        </section>
-        <!-- <script src="../scripts/registro_venta.js?v=7" defer></script> -->
-    </body>
+  <script src="../scripts/registro_venta.js?v=10"></script>
+</body>
 </html>
