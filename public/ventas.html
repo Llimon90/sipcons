@@ -36,7 +36,7 @@
 
         <!-- Equipo y Marca -->
         <div class="form-row">
-          <div><label for="equipo">Equipo:</label><input type="text" id="equipo" name="equipo" required></div>
+          <div><label for="equipo">Equipo:</label><input type="text" id="equipo" name="equipo" ></div>
           <div><label for="marca">Marca:</label><input type="text" id="marca" name="marca"></div>
         </div>
 
@@ -50,8 +50,9 @@
 
         <!-- Cantidad y Número(s) de Serie -->
         <div class="form-row" style="display: flex; text-align: center;">
-            <div><label for="qty">Cantidad:</label><input type="number" id="qty" name="qty" min="1" value="1"></div>
-            <div><label for="garantia">Garantía (meses):</label> <input type="number" id="garantia" name="garantia" min="0" required></div>
+            <div><label for="qty">Cantidad:</label><input type="number" id="qty" name="qty" min="1" value="1" required></div>
+            <div><label for="garantia">Garantía (meses):</label> <input type="number" id="garantia" name="garantia" min="0" ></div>
+            <div><label for="calibracion">Sugerir calibración  en (meses):</label> <input type="number" id="calibracion" name="calibracion" min="0" ></div>
             <div><label for="servicio">Cláusula de servicio:</label><input type="checkbox" id="servicio" name="servicio"></div>
         </div>
 
