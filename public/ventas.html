@@ -27,6 +27,7 @@
     <main>
       <form id="form-venta">
         <!-- Cliente y Sucursal -->
+
         <div class="form-row">
           <div><label for="cliente">Cliente</label> <select id="cliente" name="cliente" required><option value="" selected disabled>Seleccione una opción</option></select></div>
           <div><label for="sucursal">Sucursal:</label><input type="text" id="sucursal" name="sucursal"></div>
@@ -73,19 +74,27 @@
       <section class="lista-incidencias">
         <section class="lista-ventas">
           <h2>Ventas Registradas</h2>
+          
+          
           <div class="filtros">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
-              <input type="date" id="filtro-fecha" placeholder="Filtrar por fecha">
-              <input type="text" id="filtro-cliente" placeholder="Filtrar por cliente">
-              <input type="text" id="filtro-sucursal" placeholder="Filtrar por sucursal">
-            </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
-              <input type="text" id="filtro-equipo" placeholder="Filtrar por equipo">
-              <input type="text" id="filtro-marca" placeholder="Filtrar por marca">
-              <input type="text" id="filtro-modelo" placeholder="Filtrar por modelo">
-              <input type="text" id="filtro-serie" placeholder="Filtrar por número de serie">
+              <div><input type="date" id="filtro-fecha" placeholder="Filtrar por fecha"></div>
+              <div><input type="text" id="filtro-cliente" placeholder="Filtrar por cliente"></div>
+              <div><input type="text" id="filtro-sucursal" placeholder="Filtrar por sucursal"></div>
+              <div><input type="text" id="filtro-equipo" placeholder="Filtrar por equipo"></div>
             </div>
-            <div style="display: flex; gap: 10px;">
+
+          </div>  
+
+          <div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+
+            <div><input type="text" id="filtro-marca" placeholder="Filtrar por marca"></div>
+            <div><input type="text" id="filtro-modelo" placeholder="Filtrar por modelo"></div>
+            <div><input type="text" id="filtro-serie" placeholder="Filtrar por número de serie"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; padding: 20px;">
               <button id="btn-filtrar">Filtrar</button>
               <button id="btn-limpiar-filtros">Limpiar Filtros</button>
               <button id="btn-refrescar">Refrescar</button>
