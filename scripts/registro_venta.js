@@ -104,3 +104,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     alert('Error al cargar clientes en el select');
   }
 });
+
+// Función para cargar y mostrar las ventas
+const cargarVentas = async (filtroCliente = '', filtroEquipo = '') => {
+  try {
+    const response = await fetch(`../backend/obtener-ventas.php`);
+    const data = await response.json();
+    
+    if (!data.exito) throw new Error(data.mensaje || 'Error al cargar ventas');
+    
+    const tbody = document.getElementById('ventas-body');
+    tbody.innerHTML = '';
+    
+    // Filtrar ventas si hay filtros aplicados
+    const ventasFiltradas = data.ventas.filter(venta => {
+      const clienteMatch = venta.cliente.toLowerCase().includes(filtroCliente.toLowerCase());
+      const equipoMatch = venta.equipo.toLowerCase().includes(filtroEquipo.toLowerCase());
+      return clienteMatch && equipoMatch;
+    });
+    
+    if (ventasFiltradas.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8">No se encontraron ventas</td></tr>';
+      return;
+    }
+    
+    ventasFiltradas.forEach(venta => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${new Date(venta.fecha_registro).toLocaleDateString()}</td>
+        <td>${venta.cliente}</td>
+        <td>${venta.sucursal || '-'}</td>
+        <td>${venta.equipo}</td>
+        <td>${venta.marca || ''} ${venta.modelo || ''}</td>
+        <td>${venta.numero_serie}</td>
+        <td>${venta.garantia} meses</td>
+        <td>${venta.notas || '-'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    
+  } catch (error) {
+    console.error('Error al cargar ventas:', error);
+    showMessage(error.message, 'error');
+  }
+};
+
+// Event listeners para filtros y botón refrescar
+document.addEventListener('DOMContentLoaded', () => {
+  // Cargar ventas al iniciar
+  cargarVentas();
+  
+  // Configurar filtros
+  const filtroCliente = document.getElementById('filtro-cliente');
+  const filtroEquipo = document.getElementById('filtro-equipo');
+  const btnRefrescar = document.getElementById('btn-refrescar');
+  
+  const aplicarFiltros = () => {
+    cargarVentas(filtroCliente.value, filtroEquipo.value);
+  };
+  
+  filtroCliente.addEventListener('input', aplicarFiltros);
+  filtroEquipo.addEventListener('input', aplicarFiltros);
+  btnRefrescar.addEventListener('click', aplicarFiltros);
+  
+  // También puedes recargar las ventas después de registrar una nueva
+  const btnRegistrar = document.getElementById('btn-registrar-venta');
+  btnRegistrar.addEventListener('click', async () => {
+    await submitForm();
+    cargarVentas(); // Recargar la lista después de registrar
+  });
+});

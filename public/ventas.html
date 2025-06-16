@@ -79,6 +79,37 @@
       </form>
 
       <div id="mensaje"></div>
+
+    <section class="lista-incidencias">
+
+    <section class="lista-ventas">
+    <h2>Ventas Registradas</h2>
+    <div class="filtros">
+      <input type="text" id="filtro-cliente" placeholder="Filtrar por cliente">
+      <input type="text" id="filtro-equipo" placeholder="Filtrar por equipo">
+      <button id="btn-refrescar">Refrescar</button>
+    </div>
+    <div id="tabla-ventas-container">
+      <table id="tabla-ventas">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Sucursal</th>
+            <th>Equipo</th>
+            <th>Marca/Modelo</th>
+            <th>N° Serie</th>
+            <th>Garantía</th>
+            <th>Notas</th>
+          </tr>
+        </thead>
+        <tbody id="ventas-body">
+          <!-- Las ventas se cargarán aquí -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+   </section>
     </main>
   </section>
 
