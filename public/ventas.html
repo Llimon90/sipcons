@@ -4,17 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de ventas</title>
-  <link rel="stylesheet" href="../css/styles.css?v=9">
+  <link rel="stylesheet" href="../css/styles.css?v=1">
 </head>
 
-
 <body>
-  <div class="retorna" >
+  <div class="retorna">
     <a href="../index.html">  <<- Inicio</a>  </div>
 
   <!-- Panel lateral  -->
   <aside class="sidebar">
-    
     <ul>
       <li><a href="../index.html">Inicio</a></li>
       <li><a href="incidencias.html">Incidencias</a></li>
@@ -23,8 +21,8 @@
       <li><a href="usuarios.html">Usuarios</a></li>
       <li><a href="#">Configuración</a></li>
     </ul>
-
   </aside>
+  
   <section class="encabezado">
     <main>
       <form id="form-venta">
@@ -42,27 +40,19 @@
 
         <!-- Modelo -->
         <div class="form-row">
-            <div><label for="modelo">Modelo:</label><input type="text" id="modelo" name="modelo"></div>
-
-        </div>
-
+          <div><label for="modelo">Modelo:</label><input type="text" id="modelo" name="modelo"></div>
         </div>
 
         <!-- Cantidad y Número(s) de Serie -->
         <div class="form-row" style="display: flex; text-align: center;">
-            <div><label for="qty">Cantidad:</label><input type="number" id="qty" name="qty" min="1" value="1" required></div>
-            <div><label for="garantia">Garantía (meses):</label> <input type="number" id="garantia" name="garantia" min="0" ></div>
-            <div><label for="calibracion">Sugerir calibración  en (meses):</label> <input type="number" id="calibracion" name="calibracion" min="0" ></div>
-            <div><label for="servicio">Cláusula de servicio:</label><input type="checkbox" id="servicio" name="servicio"></div>
+          <div><label for="qty">Cantidad:</label><input type="number" id="qty" name="qty" min="1" value="1" required></div>
+          <div><label for="garantia">Garantía (meses):</label> <input type="number" id="garantia" name="garantia" min="0" ></div>
+          <div><label for="calibracion">Sugerir calibración en (meses):</label> <input type="number" id="calibracion" name="calibracion" min="0" ></div>
+          <div><label for="servicio">Cláusula de servicio:</label><input type="checkbox" id="servicio" name="servicio"></div>
         </div>
 
         <!-- Aquí se insertan dinámicamente los inputs de serie -->
         <div id="series-container"></div>
-        
-        
-
-          
-
 
         <!-- Notas -->
         <div class="form-row">
@@ -80,39 +70,52 @@
 
       <div id="mensaje"></div>
 
-    <section class="lista-incidencias">
-
-    <section class="lista-ventas">
-    <h2>Ventas Registradas</h2>
-    <div class="filtros">
-      <input type="text" id="filtro-cliente" placeholder="Filtrar por cliente">
-      <input type="text" id="filtro-equipo" placeholder="Filtrar por equipo">
-      <button id="btn-refrescar">Refrescar</button>
-    </div>
-    <div id="tabla-ventas-container">
-      <table id="tabla-ventas">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Sucursal</th>
-            <th>Equipo</th>
-            <th>Marca/Modelo</th>
-            <th>N° Serie</th>
-            <th>Garantía</th>
-            <th>Notas</th>
-          </tr>
-        </thead>
-        <tbody id="ventas-body">
-          <!-- Las ventas se cargarán aquí -->
-        </tbody>
-      </table>
-    </div>
-  </section>
-   </section>
+      <section class="lista-incidencias">
+        <section class="lista-ventas">
+          <h2>Ventas Registradas</h2>
+          <div class="filtros">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
+              <input type="date" id="filtro-fecha" placeholder="Filtrar por fecha">
+              <input type="text" id="filtro-cliente" placeholder="Filtrar por cliente">
+              <input type="text" id="filtro-sucursal" placeholder="Filtrar por sucursal">
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
+              <input type="text" id="filtro-equipo" placeholder="Filtrar por equipo">
+              <input type="text" id="filtro-marca" placeholder="Filtrar por marca">
+              <input type="text" id="filtro-modelo" placeholder="Filtrar por modelo">
+              <input type="text" id="filtro-serie" placeholder="Filtrar por número de serie">
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button id="btn-filtrar">Filtrar</button>
+              <button id="btn-limpiar-filtros">Limpiar Filtros</button>
+              <button id="btn-refrescar">Refrescar</button>
+            </div>
+          </div>
+          
+          <div id="tabla-ventas-container">
+            <table id="tabla-ventas">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Sucursal</th>
+                  <th>Equipo</th>
+                  <th>Marca/Modelo</th>
+                  <th>N° Serie</th>
+                  <th>Garantía</th>
+                  <th>Notas</th>
+                </tr>
+              </thead>
+              <tbody id="ventas-body">
+                <!-- Las ventas se cargarán aquí -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
     </main>
   </section>
 
-  <script src="../scripts/registro_venta.js?v=3" defer></script>
+  <script src="../scripts/registro_venta.js?v=34" defer></script>
 </body>
 </html>
