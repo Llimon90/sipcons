@@ -232,8 +232,8 @@ function createFormHTML(data) {
 <div class="tecnico-group" style="margin-bottom: 10px; display: flex; align-items: center;">
     <select name="tecnicos[]" class="tecnico-select" ${index === 0 ? '' : 'required'} style="width: 90%;">
         <option value="" ${!tecnico ? 'selected' : ''}>Sin técnico asignado</option>
-        <option value="Victor Cordoba" ${tecnico === "Victor Cordoba" ? 'selected' : ''}>Victor Cordoba</option>
-        <option value="Tomás Vázquez" ${tecnico === "Tomás Vázquez" ? 'selected' : ''}>Tomás Vázquez</option>
+        <option value="Victor Hugo Cordoba" ${tecnico === "Victor Hugo Cordoba" ? 'selected' : ''}>Victor Hugo Cordoba</option>
+        <option value="Tomás Valdéz" ${tecnico === "Tomás Valdéz" ? 'selected' : ''}>Tomás Valdéz</option>
         <option value="Francisco Aguiar" ${tecnico === "Francisco Aguiar" ? 'selected' : ''}>Francisco Aguiar</option>
         <option value="Mauricio Díaz" ${tecnico === "Mauricio Díaz" ? 'selected' : ''}>Mauricio Díaz</option>
         <option value="Humberto Vázquez" ${tecnico === "Humberto Vázquez" ? 'selected' : ''}>Humberto Vázquez</option>
@@ -251,17 +251,17 @@ function createFormHTML(data) {
 ${tecnicosIniciales.length === 0 ? `
     <div class="tecnico-group" style="margin-bottom: 10px; display: flex; align-items: center;">
         <select name="tecnicos[]" class="tecnico-select" style="width: 90%;">
-            <option value="" selected>Sin técnico asignado</option>
-            <option value="Victor Cordoba">Victor Cordoba</option>
-            <option value="Tomás Vázquez">Tomás Vázquez</option>
-            <option value="Francisco Aguiar">Francisco Aguiar</option>
-            <option value="Mauricio Díaz">Mauricio Díaz</option>
-            <option value="Humberto Vázquez">Humberto Vázquez</option>
-            <option value="Jose López">José López</option>
-            <option value="Hoscar Martínez">Hoscar Martínez</option>
-            <option value="Jacob Ventura">Jacob Ventura</option>
-            <option value="Luis Limón">Luis Limón</option>
-            <option value="Ernesto Chávez">Ernesto Chávez</option>
+              <option value="">Seleccione una opción</option>
+              <option value="Victor Hugo Cordoba">Victor Cordoba</option>
+              <option value="Tomás Valdéz">Tomás Valdéz</option>
+              <option value="Francisco Aguiar">Francisco Aguiar</option>
+              <option value="Mauricio Díaz">Mauricio Diaz</option>
+              <option value="Humberto Vázquez">Humberto Vázquez</option>
+              <option value="Jose López">José López</option>
+              <option value="Hoscar Martínez">Hoscar Martínez</option>
+              <option value="Jacob Ventura">Jacob Ventura</option>
+              <option value="Luis Limón">Luis Limón</option>
+              <option value="Ernesto Chávez">Ernesto Chávez</option>
         </select>
         <button type="button" class="eliminar-tecnico" style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 5px;">
             <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
@@ -350,17 +350,17 @@ ${tecnicosIniciales.length === 0 ? `
                     select.style.width = '90%';
                     
                     select.innerHTML = \`
-                        <option value="" disabled selected>Seleccione un técnico</option>
-                        <option value="Victor Cordoba">Victor Cordoba</option>
-                        <option value="Tomás Vázquez">Tomás Vázquez</option>
-                        <option value="Francisco Aguiar">Francisco Aguiar</option>
-                        <option value="Mauricio Díaz">Mauricio Díaz</option>
-                        <option value="Humberto Vázquez">Humberto Vázquez</option>
-                        <option value="Jose López">José López</option>
-                        <option value="Hoscar Martínez">Hoscar Martínez</option>
-                        <option value="Jacob Ventura">Jacob Ventura</option>
-                        <option value="Luis Limón">Luis Limón</option>
-                        <option value="Ernesto Chávez">Ernesto Chávez</option>
+              <option value="">Seleccione una opción</option>
+              <option value="Victor Hugo Cordoba">Victor Cordoba</option>
+              <option value="Tomás Valdéz">Tomás Valdéz</option>
+              <option value="Francisco Aguiar">Francisco Aguiar</option>
+              <option value="Mauricio Díaz">Mauricio Diaz</option>
+              <option value="Humberto Vázquez">Humberto Vázquez</option>
+              <option value="Jose López">José López</option>
+              <option value="Hoscar Martínez">Hoscar Martínez</option>
+              <option value="Jacob Ventura">Jacob Ventura</option>
+              <option value="Luis Limón">Luis Limón</option>
+              <option value="Ernesto Chávez">Ernesto Chávez</option>
                     \`;
                     
                     const deleteBtn = document.createElement('button');
@@ -445,17 +445,17 @@ function crearSelectTecnico() {
     select.style.width = '90%';
     
     select.innerHTML = `
-        <option value="" disabled selected>Seleccione un técnico</option>
-        <option value="Victor Cordoba">Victor Cordoba</option>
-        <option value="Tomás Vázquez">Tomás Vázquez</option>
-        <option value="Francisco Aguiar">Francisco Aguiar</option>
-        <option value="Mauricio Díaz">Mauricio Díaz</option>
-        <option value="Humberto Vázquez">Humberto Vázquez</option>
-        <option value="Jose López">José López</option>
-        <option value="Hoscar Martínez">Hoscar Martínez</option>
-        <option value="Jacob Ventura">Jacob Ventura</option>
-        <option value="Luis Limón">Luis Limón</option>
-        <option value="Ernesto Chávez">Ernesto Chávez</option>
+              <option value="">Seleccione una opción</option>
+              <option value="Victor Hugo Cordoba">Victor Cordoba</option>
+              <option value="Tomás Valdéz">Tomás Valdéz</option>
+              <option value="Francisco Aguiar">Francisco Aguiar</option>
+              <option value="Mauricio Díaz">Mauricio Diaz</option>
+              <option value="Humberto Vázquez">Humberto Vázquez</option>
+              <option value="Jose López">José López</option>
+              <option value="Hoscar Martínez">Hoscar Martínez</option>
+              <option value="Jacob Ventura">Jacob Ventura</option>
+              <option value="Luis Limón">Luis Limón</option>
+              <option value="Ernesto Chávez">Ernesto Chávez</option>
     `;
     
         
