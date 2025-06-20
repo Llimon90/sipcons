@@ -1,31 +1,340 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soporte</title>
-    <link rel="stylesheet" href="../css/styles.css?v=1.9">
-
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soporte Técnico - Documentación</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css?v=1.15">
+  <style>
+    /* Estilos adicionales específicos para documentación técnica */
+    .breadcrumb {
+      padding: 10px 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .model-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .model-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .model-icon {
+      font-size: 2rem;
+      color: #3498db;
+      margin-bottom: 10px;
+    }
+    .doc-type {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .doc-type i {
+      margin-right: 10px;
+      color: #e74c3c;
+      width: 20px;
+    }
+    .back-button {
+      background: #f1f1f1;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 <body>
+  
+  <div class="retorna">
+    <a href="../index.html"><<- Inicio</a>
+  </div>
 
-  <div class="retorna" >
-    <a href="../index.html">  <<- Inicio</a>    </div>
-    
   <!-- Panel lateral -->
   <aside class="sidebar">
-    
     <ul>
       <li><a href="../index.html">Inicio</a></li>
       <li><a href="incidencias.html">Incidencias</a></li>
       <li><a href="reportes.html">Buscar incidencias</a></li>
       <li><a href="clientes.html">Clientes</a></li>
       <li><a href="usuarios.html">Usuarios</a></li>
+      <li><a href="soporte.html" class="active">Soporte Técnico</a></li>
       <li><a href="#">Configuración</a></li>
     </ul>
-
   </aside>
-    
+
+  <!-- Contenido principal -->
+  <main>  
+    <!-- Encabezado y buscador -->
+    <section class="encabezado">
+      <h2><i class="fas fa-folder-open"></i> Documentación Técnica</h2>
+      
+      <div class="breadcrumb" id="breadcrumb">
+        <a href="soporte.html">Inicio</a> > <span>Marcas</span>
+      </div>
+      
+      <div class="form-row">
+        <div class="search-container">
+          <input type="text" id="searchInput" placeholder="Buscar modelo, número de parte...">
+          <button id="searchBtn"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contenedor de marcas/modelos/documentos -->
+    <section class="lista-incidencias">
+      <div id="content-container">
+        <!-- Vista de Marcas (inicial) -->
+        <div class="model-grid" id="marcas-container">
+          <!-- Marcas se cargarán aquí -->
+        </div>
+        
+        <!-- Vista de Modelos -->
+        <div class="model-grid" id="modelos-container" style="display:none;"></div>
+        
+        <!-- Vista de Documentos -->
+        <div id="documentos-container" style="display:none;">
+          <button class="back-button" id="back-to-models"><i class="fas fa-arrow-left"></i> Volver a modelos</button>
+          <h3 id="modelo-title"></h3>
+          <div class="doc-list" id="doc-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal para vista previa -->
+    <div id="previewModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <iframe id="pdfViewer" src="" frameborder="0"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Datos de ejemplo (en producción esto vendría de una API)
+    const marcas = [
+      { id: 1, nombre: "RHINO", logo: "rhino.png" },
+      { id: 2, nombre: "METTLER TOLEDO", logo: "mettler.png" },
+      { id: 3, nombre: "TORREY", logo: "torrey.png" },
+      { id: 4, nombre: "TOSHIBA", logo: "toshiba.png" },
+      { id: 5, nombre: "NCR", logo: "ncr.png" },
+      { id: 6, nombre: "DATALOGIC", logo: "datalogic.png" },
+      { id: 7, nombre: "EPSON", logo: "epson.png" }
+    ];
+
+    const modelos = {
+      1: [ // RHINO
+        { id: 101, nombre: "RH-2000", tipo: "Báscula industrial" },
+        { id: 102, nombre: "RH-3000", tipo: "Báscula comercial" }
+      ],
+      2: [ // METTLER TOLEDO
+        { id: 201, nombre: "PL1501S", tipo: "Báscula de precisión" },
+        { id: 202, nombre: "IND560", tipo: "Indicador industrial" }
+      ],
+      3: [ // TORREY
+        { id: 301, nombre: "T-15", tipo: "Cortadora de carne" },
+        { id: 302, nombre: "T-800", tipo: "Báscula etiquetadora" }
+      ],
+      4: [ // TOSHIBA
+        { id: 401, nombre: "TEC-B852", tipo: "Impresora térmica" },
+        { id: 402, nombre: "POS-5000", tipo: "Sistema POS" }
+      ],
+      5: [ // NCR
+        { id: 501, nombre: "RealPOS 82", tipo: "Terminal POS" },
+        { id: 502, nombre: "Aloha POS", tipo: "Sistema de restaurante" }
+      ],
+      6: [ // DATALOGIC
+        { id: 601, nombre: "Gryphon GD4400", tipo: "Lector de códigos" },
+        { id: 602, nombre: "Memor X3", tipo: "Terminal portátil" }
+      ],
+      7: [ // EPSON
+        { id: 701, nombre: "TM-T20II", tipo: "Impresora ticket" },
+        { id: 702, nombre: "TM-U220", tipo: "Impresora recibo" }
+      ]
+    };
+
+    const documentos = {
+      101: [ // RHINO RH-2000
+        { tipo: "manual", nombre: "Manual de Usuario", archivo: "RH-2000_Manual.pdf" },
+        { tipo: "partes", nombre: "Lista de Números de Parte", archivo: "RH-2000_Partes.pdf" },
+        { tipo: "tutorial", nombre: "Configuración Inicial", archivo: "RH-2000_Config.mp4" }
+      ],
+      // ... otros modelos seguirían el mismo patrón
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const marcasContainer = document.getElementById('marcas-container');
+      const modelosContainer = document.getElementById('modelos-container');
+      const documentosContainer = document.getElementById('documentos-container');
+      const breadcrumb = document.getElementById('breadcrumb');
+      const backToModelsBtn = document.getElementById('back-to-models');
+      const modeloTitle = document.getElementById('modelo-title');
+      const docList = document.getElementById('doc-list');
+      
+      let currentMarca = null;
+      let currentModelo = null;
+
+      // Cargar marcas
+      function loadMarcas() {
+        marcasContainer.innerHTML = '';
+        marcas.forEach(marca => {
+          const card = document.createElement('div');
+          card.className = 'model-card';
+          card.innerHTML = `
+            <div class="model-icon"><i class="fas fa-industry"></i></div>
+            <h3>${marca.nombre}</h3>
+          `;
+          card.addEventListener('click', () => showModelos(marca));
+          marcasContainer.appendChild(card);
+        });
+        
+        // Actualizar breadcrumb
+        breadcrumb.innerHTML = `<a href="soporte.html">Inicio</a> > <span>Marcas</span>`;
+        
+        // Mostrar contenedor correcto
+        marcasContainer.style.display = 'grid';
+        modelosContainer.style.display = 'none';
+        documentosContainer.style.display = 'none';
+      }
+
+      // Mostrar modelos de una marca
+      function showModelos(marca) {
+        currentMarca = marca;
+        modelosContainer.innerHTML = '';
+        
+        if(modelos[marca.id]) {
+          modelos[marca.id].forEach(modelo => {
+            const card = document.createElement('div');
+            card.className = 'model-card';
+            card.innerHTML = `
+              <div class="model-icon"><i class="fas fa-cube"></i></div>
+              <h3>${modelo.nombre}</h3>
+              <p>${modelo.tipo}</p>
+            `;
+            card.addEventListener('click', () => showDocumentos(modelo));
+            modelosContainer.appendChild(card);
+          });
+        } else {
+          modelosContainer.innerHTML = '<p>No hay modelos registrados para esta marca.</p>';
+        }
+        
+        // Actualizar breadcrumb
+        breadcrumb.innerHTML = `
+          <a href="soporte.html">Inicio</a> > 
+          <a href="#" id="back-to-marcas">Marcas</a> > 
+          <span>${marca.nombre}</span>
+        `;
+        
+        document.getElementById('back-to-marcas').addEventListener('click', (e) => {
+          e.preventDefault();
+          loadMarcas();
+        });
+        
+        // Mostrar contenedor correcto
+        marcasContainer.style.display = 'none';
+        modelosContainer.style.display = 'grid';
+        documentosContainer.style.display = 'none';
+      }
+
+      // Mostrar documentos de un modelo
+      function showDocumentos(modelo) {
+        currentModelo = modelo;
+        modeloTitle.textContent = `${currentMarca.nombre} ${modelo.nombre}`;
+        docList.innerHTML = '';
+        
+        if(documentos[modelo.id]) {
+          documentos[modelo.id].forEach(doc => {
+            const docEl = document.createElement('div');
+            docEl.className = 'doc-type';
+            
+            let icon = 'fa-file';
+            if(doc.tipo === 'manual') icon = 'fa-book';
+            else if(doc.tipo === 'partes') icon = 'fa-list-ol';
+            else if(doc.tipo === 'tutorial') icon = 'fa-video';
+            
+            docEl.innerHTML = `
+              <i class="fas ${icon}"></i>
+              <span>${doc.nombre}</span>
+              <div style="flex-grow:1"></div>
+              <button class="btn-download"><i class="fas fa-download"></i></button>
+              ${doc.tipo !== 'tutorial' ? '<button class="btn-preview"><i class="far fa-eye"></i></button>' : ''}
+            `;
+            
+            // Añadir funcionalidad a los botones
+            if(doc.tipo !== 'tutorial') {
+              docEl.querySelector('.btn-preview').addEventListener('click', () => {
+                document.getElementById('pdfViewer').src = `../manuales/${currentMarca.nombre}/${currentModelo.nombre}/${doc.archivo}`;
+                document.getElementById('previewModal').style.display = 'block';
+              });
+            }
+            
+            docEl.querySelector('.btn-download').addEventListener('click', () => {
+              // Lógica para descargar el archivo
+              window.open(`../manuales/${currentMarca.nombre}/${currentModelo.nombre}/${doc.archivo}`, '_blank');
+            });
+            
+            docList.appendChild(docEl);
+          });
+        } else {
+          docList.innerHTML = '<p>No hay documentos registrados para este modelo.</p>';
+        }
+        
+        // Actualizar breadcrumb
+        breadcrumb.innerHTML = `
+          <a href="soporte.html">Inicio</a> > 
+          <a href="#" id="back-to-marcas">Marcas</a> > 
+          <a href="#" id="back-to-modelos">${currentMarca.nombre}</a> > 
+          <span>${modelo.nombre}</span>
+        `;
+        
+        document.getElementById('back-to-marcas').addEventListener('click', (e) => {
+          e.preventDefault();
+          loadMarcas();
+        });
+        
+        document.getElementById('back-to-modelos').addEventListener('click', (e) => {
+          e.preventDefault();
+          showModelos(currentMarca);
+        });
+        
+        // Mostrar contenedor correcto
+        marcasContainer.style.display = 'none';
+        modelosContainer.style.display = 'none';
+        documentosContainer.style.display = 'block';
+      }
+
+      // Botón volver atrás
+      backToModelsBtn.addEventListener('click', () => {
+        showModelos(currentMarca);
+      });
+
+      // Cerrar modal
+      document.querySelector('.close-modal').addEventListener('click', function() {
+        document.getElementById('previewModal').style.display = 'none';
+        document.getElementById('pdfViewer').src = "";
+      });
+
+      // Inicializar
+      loadMarcas();
+    });
+  </script>
 </body>
 </html>
