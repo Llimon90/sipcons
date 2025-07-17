@@ -24,7 +24,7 @@ async function eliminarArchivo(urlArchivo, containerElement, id) {
 
     containerElement.classList.add('eliminando');
 
-        try {
+    try {
         const formData = new FormData();
         formData.append('id_incidencia', id);
 
@@ -191,8 +191,6 @@ function createFormHTML(data) {
     // Convertir técnico existente en array si no lo es
     const tecnicosIniciales = Array.isArray(data.tecnico) ? data.tecnico : 
                             (data.tecnico ? [data.tecnico] : []);
-
-                            
 
     return `
         <form id="form-editar">
@@ -407,7 +405,6 @@ ${tecnicosIniciales.length === 0 ? `
     `;
 }
 
-// En la función setupTecnicosMultiples, modificar la creación del botón de eliminar
 function setupTecnicosMultiples() {
     const tecnicosContainer = document.getElementById('tecnicos-container');
     const agregarTecnicoBtn = document.getElementById('agregar-tecnico');
@@ -431,20 +428,20 @@ function setupTecnicosMultiples() {
         });
     }
     
-function crearSelectTecnico() {
-    const tecnicoGroup = document.createElement('div');
-    tecnicoGroup.className = 'tecnico-group';
-    tecnicoGroup.style.marginBottom = '10px';
-    tecnicoGroup.style.display = 'flex';
-    tecnicoGroup.style.alignItems = 'center';
-    
-    const select = document.createElement('select');
-    select.name = 'tecnicos[]';
-    select.className = 'tecnico-select';
-    select.required = true;
-    select.style.width = '90%';
-    
-    select.innerHTML = `
+    function crearSelectTecnico() {
+        const tecnicoGroup = document.createElement('div');
+        tecnicoGroup.className = 'tecnico-group';
+        tecnicoGroup.style.marginBottom = '10px';
+        tecnicoGroup.style.display = 'flex';
+        tecnicoGroup.style.alignItems = 'center';
+        
+        const select = document.createElement('select');
+        select.name = 'tecnicos[]';
+        select.className = 'tecnico-select';
+        select.required = true;
+        select.style.width = '90%';
+        
+        select.innerHTML = `
               <option value="">Seleccione una opción</option>
               <option value="Victor Hugo Cordoba">Victor Cordoba</option>
               <option value="Tomás Valdéz">Tomás Valdéz</option>
@@ -456,8 +453,7 @@ function crearSelectTecnico() {
               <option value="Jacob Ventura">Jacob Ventura</option>
               <option value="Luis Limón">Luis Limón</option>
               <option value="Ernesto Chávez">Ernesto Chávez</option>
-    `;
-    
+        `;
         
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -470,7 +466,6 @@ function crearSelectTecnico() {
         deleteBtn.style.marginLeft = '5px';
         
         deleteBtn.addEventListener('click', function() {
-            // Permitir eliminar incluso si es el único técnico
             tecnicoGroup.remove();
             actualizarOpcionesTecnicos();
         });
@@ -495,13 +490,11 @@ function crearSelectTecnico() {
     // Configurar eventos para los botones de eliminar existentes
     document.querySelectorAll('.eliminar-tecnico').forEach(btn => {
         btn.addEventListener('click', function() {
-            // Permitir eliminar incluso técnicos precargados
             this.closest('.tecnico-group').remove();
             actualizarOpcionesTecnicos();
         });
     });
 }
-
 
 async function handleFormSubmit(e, id) {
     e.preventDefault();
@@ -545,17 +538,18 @@ async function handleFormSubmit(e, id) {
         }
 
         showNotification('Incidencia actualizada correctamente');
-
-        if (data.archivos) {
-            cargarArchivosAdjuntos(data.archivos, id);
-            document.getElementById("archivos").value = '';
-        }
+        
+        // Actualizar la página después de guardar los cambios
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
 
     } catch (error) {
         console.error("Error al actualizar incidencia:", error);
         showNotification(error.message, 'error');
     }
 }
+
 // Función principal para cargar los detalles
 async function cargarDetalleIncidencia(id) {
     try {
@@ -583,6 +577,7 @@ async function cargarDetalleIncidencia(id) {
             `<p>Error al cargar los detalles: ${error.message}</p>`;
     }
 }
+
 // Inicialización
 document.addEventListener("DOMContentLoaded", function () {
     const params = new URLSearchParams(window.location.search);
