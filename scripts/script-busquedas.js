@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
     allowInput: true
   });
 
+  // Inicializar tooltips de Bootstrap
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
   cargarIncidencias();
   cargarClientes();
 
@@ -47,6 +51,44 @@ document.addEventListener("DOMContentLoaded", function () {
     paginaActual = 1;
     mostrarIncidenciasPagina();
   });
+
+  // Botones para filtros rápidos
+  document.querySelectorAll('.btn-filtro-rapido').forEach(button => {
+    button.addEventListener('click', function() {
+      const filtro = this.getAttribute('data-filtro');
+      
+      // Resetear todos los filtros primero
+      document.getElementById("solo-activas").checked = false;
+      document.getElementById("tipo-equipo").value = "";
+      document.getElementById("cliente").value = "";
+      document.getElementById("estatus").value = "";
+      document.getElementById("fecha-inicio").value = "";
+      document.getElementById("fecha-fin").value = "";
+      document.getElementById("sucursal").value = "";
+      document.getElementById("tecnico").value = "";
+      
+      switch(filtro) {
+        case 'activas':
+          document.getElementById("solo-activas").checked = true;
+          break;
+        case 'bascula':
+          document.getElementById("tipo-equipo").value = "bascula";
+          break;
+        case 'mr-tienda':
+          document.getElementById("tipo-equipo").value = "mr-tienda";
+          break;
+        case 'plataforma':
+          document.getElementById("tipo-equipo").value = "plataforma";
+          break;
+        case 'todos':
+          // Ya están reseteados los valores
+          break;
+      }
+      
+      paginaActual = 1;
+      cargarIncidencias();
+    });
+  });
 });
 
 async function cargarIncidencias() {
@@ -56,6 +98,8 @@ async function cargarIncidencias() {
   const estatus = document.getElementById("estatus").value;
   const sucursal = document.getElementById("sucursal").value;
   const tecnico = document.getElementById("tecnico").value;
+  const tipoEquipo = document.getElementById("tipo-equipo").value;
+  const soloActivas = document.getElementById("solo-activas").checked;
 
   // Validación de fechas
   if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
@@ -63,14 +107,27 @@ async function cargarIncidencias() {
     return;
   }
 
-  const url = `../backend/buscar_reportes.php?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}&tecnico=${encodeURIComponent(tecnico)}`;
+  // Construir URL con parámetros
+  let url = `../backend/buscar_reportes.php?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}&tecnico=${encodeURIComponent(tecnico)}`;
+  
+  // Agregar parámetros nuevos si existen
+  if (tipoEquipo) {
+    url += `&tipo_equipo=${encodeURIComponent(tipoEquipo)}`;
+  }
+  
+  if (soloActivas) {
+    url += `&solo_activas=1`;
+  }
 
   try {
+    // Mostrar indicador de carga
+    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="9" class="text-center">Buscando incidencias...</td></tr>`;
+    
     const response = await fetch(url);
     const data = await response.json();
 
     if (data.message) {
-      document.getElementById("tabla-body").innerHTML = `<tr><td colspan="7">${data.message}</td></tr>`;
+      document.getElementById("tabla-body").innerHTML = `<tr><td colspan="9">${data.message}</td></tr>`;
       incidenciasTotales = [];
       actualizarControlesPaginacion();
       return;
@@ -80,7 +137,7 @@ async function cargarIncidencias() {
     mostrarIncidenciasPagina();
   } catch (error) {
     console.error("❌ Error al cargar las incidencias:", error);
-    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="7">Error al cargar los datos.</td></tr>`;
+    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="9">Error al cargar los datos.</td></tr>`;
     incidenciasTotales = [];
     actualizarControlesPaginacion();
   }
@@ -95,7 +152,7 @@ function mostrarIncidenciasPagina() {
   tablaBody.innerHTML = "";
 
   if (incidenciasPagina.length === 0) {
-    tablaBody.innerHTML = `<tr><td colspan="7">No se encontraron incidencias</td></tr>`;
+    tablaBody.innerHTML = `<tr><td colspan="9" class="text-center">No se encontraron incidencias con los filtros aplicados</td></tr>`;
   } else {
     incidenciasPagina.forEach(incidencia => {
       const row = document.createElement("tr");
@@ -110,12 +167,21 @@ function mostrarIncidenciasPagina() {
       row.appendChild(celdaInterna);
 
       // Celdas restantes
-      const columnas = ['numero', 'cliente', 'sucursal', 'falla', 'fecha', 'estatus'];
+      const columnas = ['numero', 'cliente', 'sucursal', 'falla', 'tipo_equipo', 'fecha', 'estatus'];
       columnas.forEach(campo => {
         const td = document.createElement("td");
         td.textContent = incidencia[campo] || "N/A";
         row.appendChild(td);
       });
+
+      // Celda para estado activo/inactivo
+      const tdEstado = document.createElement("td");
+      const esActiva = ['Abierto', 'Asignado', 'Pendiente', 'Completado'].includes(incidencia.estatus);
+      const badge = document.createElement("span");
+      badge.className = esActiva ? "badge-activo" : "badge-inactivo";
+      badge.textContent = esActiva ? "Activa" : "Inactiva";
+      tdEstado.appendChild(badge);
+      row.appendChild(tdEstado);
 
       tablaBody.appendChild(row);
     });
@@ -148,7 +214,7 @@ async function cargarClientes() {
     const clientes = await response.json();
 
     const selectClientes = document.getElementById('cliente');
-    selectClientes.innerHTML = '<option value="">Seleccionar Cliente</option><option value="todos">Todos</option>';
+    selectClientes.innerHTML = '<option value="">Seleccionar Cliente</option><option value="todos">Todos los clientes</option>';
 
     clientes.forEach(cliente => {
       const option = document.createElement('option');
@@ -162,7 +228,7 @@ async function cargarClientes() {
   }
 }
 
-// Función para limpiar filtros (si la necesitas)
+// Función para limpiar filtros
 function limpiarFiltros() {
   document.getElementById("report-form").reset();
   paginaActual = 1;
