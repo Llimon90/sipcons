@@ -82,7 +82,7 @@ if (!empty($tipo_equipo)) {
             $palabras_clave = [
                 "iqy", "ipes", "celda", "baccula", "plaba", "cas", "plaba-12", 
                 "indicador", "calibracion", "celda de carga", "florido", "bpro", 
-                "bplus", "bcom s", "bcoms", "etiquetadora", "impresora", "cabeza termica", 
+                "bplus", "bcom s", "bcoms", "etiquetadora", "cabeza termica", 
                 "cabezal", "mecanismo", "sensor", "plato", "display", "rodillo", 
                 "etiquetas", "etiqueta", "interfaz", "head", "muelle", "teclado", "membrana", "nodo"
             ];
