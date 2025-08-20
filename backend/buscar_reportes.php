@@ -69,41 +69,23 @@ if (!empty($tipo_equipo)) {
     $palabras_clave = [];
     
     switch($tipo_equipo) {
-        case 'mr-tienda':
+        case 'mr-tienda-chef':
             $palabras_clave = [
                 "cajon de dinero", "gaveta", "mr tienda", "mr chef", "nube", 
                 "back office", "capacitacion", "escaner", "pos", "punto de venta", 
-                "jose lopez"
-            ];
-            break;
-        case 'plataforma':
-            $palabras_clave = [
-                "iqy", "ipes", "celda", "baccula", "plaba", "cas", "plaba-12", 
-                "indicador", "calibracion", "celda de carga", "florido"
-            ];
-            break;
-        case 'bascula':
-            $palabras_clave = [
-                "bpro", "bplus", "bcom s", "bcoms", "etiquetadora", "impresora", 
-                "cabeza termica", "cabezal", "mecanismo", "sensor", "plato", 
-                "display", "florido", "rodillo", "etiquetas", "etiqueta", 
-                "interfaz", "head", "muelle", "teclado", "membrana", "nodo"
-            ];
-            break;
-        case 'pos':
-            $palabras_clave = [
-                "pos", "punto de venta", "terminal", "tarjeta", "pinpad", 
-                "lector", "codigo de barras", "facturacion", "ticket", "caja registradora"
-            ];
-            break;
-        case 'mr-chef':
-            $palabras_clave = [
-                "mr chef", "cocina", "restaurante", "comanda", "menu", 
-                "inventario", "receta", "mesero", "chef"
+                "jose lopez", "terminal", "tarjeta", "pinpad", "lector", "codigo de barras", 
+                "facturacion", "ticket", "caja registradora", "cocina", "restaurante", 
+                "comanda", "menu", "inventario", "receta", "mesero", "chef"
             ];
             break;
         case 'otros':
-            // Para "otros", no aplicamos filtro por palabras clave
+            $palabras_clave = [
+                "iqy", "ipes", "celda", "baccula", "plaba", "cas", "plaba-12", 
+                "indicador", "calibracion", "celda de carga", "florido", "bpro", 
+                "bplus", "bcom s", "bcoms", "etiquetadora", "impresora", "cabeza termica", 
+                "cabezal", "mecanismo", "sensor", "plato", "display", "rodillo", 
+                "etiquetas", "etiqueta", "interfaz", "head", "muelle", "teclado", "membrana", "nodo"
+            ];
             break;
     }
     
@@ -111,8 +93,8 @@ if (!empty($tipo_equipo)) {
     if (!empty($palabras_clave)) {
         $condiciones_keywords = [];
         foreach ($palabras_clave as $keyword) {
-            $condiciones_keywords[] = "(falla LIKE ? OR accion LIKE ? OR notas LIKE ?)";
-            for ($i = 0; $i < 3; $i++) {
+            $condiciones_keywords[] = "(falla LIKE ? OR notas LIKE ? OR equipo LIKE ? OR tecnico LIKE ?)";
+            for ($i = 0; $i < 4; $i++) {
                 $params[] = "%$keyword%";
                 $types .= "s";
             }

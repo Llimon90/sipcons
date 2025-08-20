@@ -68,17 +68,11 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("tecnico").value = "";
       
       switch(filtro) {
-        case 'activas':
-          document.getElementById("solo-activas").checked = true;
+        case 'mr-tienda-chef':
+          document.getElementById("tipo-equipo").value = "mr-tienda-chef";
           break;
-        case 'bascula':
-          document.getElementById("tipo-equipo").value = "bascula";
-          break;
-        case 'mr-tienda':
-          document.getElementById("tipo-equipo").value = "mr-tienda";
-          break;
-        case 'plataforma':
-          document.getElementById("tipo-equipo").value = "plataforma";
+        case 'otros':
+          document.getElementById("tipo-equipo").value = "otros";
           break;
         case 'todos':
           // Ya están reseteados los valores
@@ -121,13 +115,13 @@ async function cargarIncidencias() {
 
   try {
     // Mostrar indicador de carga
-    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="9" class="text-center">Buscando incidencias...</td></tr>`;
+    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8" class="text-center">Buscando incidencias...</td></tr>`;
     
     const response = await fetch(url);
     const data = await response.json();
 
     if (data.message) {
-      document.getElementById("tabla-body").innerHTML = `<tr><td colspan="9">${data.message}</td></tr>`;
+      document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8">${data.message}</td></tr>`;
       incidenciasTotales = [];
       actualizarControlesPaginacion();
       return;
@@ -137,7 +131,7 @@ async function cargarIncidencias() {
     mostrarIncidenciasPagina();
   } catch (error) {
     console.error("❌ Error al cargar las incidencias:", error);
-    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="9">Error al cargar los datos.</td></tr>`;
+    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8">Error al cargar los datos.</td></tr>`;
     incidenciasTotales = [];
     actualizarControlesPaginacion();
   }
@@ -152,7 +146,7 @@ function mostrarIncidenciasPagina() {
   tablaBody.innerHTML = "";
 
   if (incidenciasPagina.length === 0) {
-    tablaBody.innerHTML = `<tr><td colspan="9" class="text-center">No se encontraron incidencias con los filtros aplicados</td></tr>`;
+    tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">No se encontraron incidencias con los filtros aplicados</td></tr>`;
   } else {
     incidenciasPagina.forEach(incidencia => {
       const row = document.createElement("tr");
@@ -166,8 +160,8 @@ function mostrarIncidenciasPagina() {
       celdaInterna.appendChild(enlace);
       row.appendChild(celdaInterna);
 
-      // Celdas restantes
-      const columnas = ['numero', 'cliente', 'sucursal', 'falla', 'tipo_equipo', 'fecha', 'estatus'];
+      // Celdas restantes (sin la columna de tipo equipo)
+      const columnas = ['numero', 'cliente', 'sucursal', 'falla', 'fecha', 'estatus'];
       columnas.forEach(campo => {
         const td = document.createElement("td");
         td.textContent = incidencia[campo] || "N/A";
