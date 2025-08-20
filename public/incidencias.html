@@ -3,153 +3,276 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Incidencias</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css?v=1.15">
-  <script src="../scripts/script.js?v=7" defer></script>
+  <title>Buscar Incidencias</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- Agrega Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css?v=1.18">
+  <style>
+    .filtros-avanzados {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 4px solid #0d6efd;
+    }
+    
+    .filtros-avanzados summary {
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    
+    .badge-activo {
+      background-color: #198754;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    
+    .badge-inactivo {
+      background-color: #6c757d;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    
+    .btn-filtro-rapido {
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border-width: 2px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-filtro-rapido:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-filtro-rapido i {
+      margin-right: 5px;
+    }
+    
+    .filtros-rapidos {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .filtros-rapidos h5 {
+      color: #495057;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .info-filtro {
+      font-size: 0.8rem;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+    
+    .tooltip-inner {
+      max-width: 300px;
+      text-align: left;
+    }
+  </style>
 </head>
 <body>
-  
-  <div class="retorna">
-    <a href="../index.html"><<- Inicio</a>
-  </div>
 
+   <div class="retorna">
+    <a href="../index.html">  <<- Inicio</a>  
+   </div>
+
+  <!-- Panel lateral -->
   <aside class="sidebar">
     <ul>
       <li><a href="../index.html">Inicio</a></li>
       <li><a href="incidencias.html">Incidencias</a></li>
-      <li><a href="reportes.html">Buscar incidencias</a></li>
+      <li><a href="reportes.html" class="active">Buscar incidencias</a></li>
       <li><a href="clientes.html">Clientes</a></li>
       <li><a href="usuarios.html">Usuarios</a></li>
       <li><a href="#">Configuración</a></li>
     </ul>
   </aside>
 
-  <main>  
+  <!-- Contenido principal -->
+  <main>
     <section class="encabezado">
-      <h2>Registrar nueva incidencia</h2>
+      <h2>Filtrar incidencias</h2>
       
-      <form id="new-incidencia-form">
-        <div class="form-row">
-          <div>
-            <label for="cliente">Cliente</label>
-            <select id="cliente" name="cliente" required>
-              <option value="" selected disabled>Seleccione una opción</option>
-            </select>
-          </div>    
-
-          <div>
-            <label for="numero"># Incidencia Cliente</label>
-            <input type="text" id="numero" name="numero" placeholder="Ejemplo: ST-66477">
-          </div>
+      <!-- Filtros rápidos -->
+      <div class="filtros-rapidos">
+        <h5>Filtros rápidos:</h5>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn btn-outline-success btn-sm btn-filtro-rapido" data-filtro="mr-tienda-chef" 
+                  data-bs-toggle="tooltip" data-bs-placement="top" >
+            <i class="bi bi-cash-register"></i> Mr. Tienda/Mr. Chef
+          </button>
+          <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="otros" 
+                  data-bs-toggle="tooltip" data-bs-placement="top" >
+            <i class="bi bi-speedometer2"></i> Otros
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm btn-filtro-rapido" data-filtro="todos">
+            <i class="bi bi-list-ul"></i> Mostrar Todos
+          </button>
         </div>
-
-        <div class="form-row">
-          <div>
-            <label for="sucursal">Sucursal</label>
-            <input type="text" id="sucursal" name="sucursal" placeholder="Sucursal o dirección">
-          </div>
+      </div>
       
-          <div>
-            <label for="contacto">Reporta</label>
-            <input type="text" id="contacto" name="contacto" required placeholder="Persona que reporta incidencia">
+      <form id="report-form">
+        <details class="filtros-avanzados" open>
+          <summary>Filtros avanzados</summary>
+          
+          <div class="form-row mt-3">
+            <div class="col-md-6">
+              <label for="cliente">Cliente:</label>
+              <select id="cliente" name="cliente" class="form-select">
+                <option value="">Seleccionar Cliente</option>
+                <option value="todos">Todos los clientes</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="tipo-equipo">Tipo de Equipo:</label>
+              <select id="tipo-equipo" name="tipo_equipo" class="form-select">
+                <option value="">Seleccionar Tipo</option>
+                <option value="mr-tienda-chef">Mr. Tienda/Mr. Chef</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
           </div>
-        </div>
-
-        <div class="form-row">
-          <div>
-            <label for="equipo">Equipo</label>
-            <select id="equipo" name="equipo">
-              <option value="">Seleccione un equipo</option>
-              <option value="Mr Tienda/Mr Chef">Mr Tienda/Mr Chef</option>
-              <option value="Otros">Otros</option>
-            </select>
+        
+          <div class="form-row mt-3">
+            <div class="col-md-4">
+              <label for="fecha-inicio">Fecha de Inicio:</label>
+              <input type="date" id="fecha-inicio" name="fecha_inicio" class="form-control">
+            </div>
+        
+            <div class="col-md-4">
+              <label for="fecha-fin">Fecha de Fin:</label>
+              <input type="date" id="fecha-fin" name="fecha_fin" class="form-control">
+            </div>
+            
+            <div class="col-md-4">
+              <label for="estatus">Estatus:</label>
+              <select id="estatus" name="estatus" class="form-select">
+                <option value="">Seleccionar Estatus</option>
+                <option value="Abierto">Abierto</option>
+                <option value="Asignado">Asignado</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Completado">Completado</option>
+                <option value="Cerrado sin factura">Cerrado sin factura</option>
+                <option value="Cerrado con factura">Cerrado con factura</option>
+              </select>
+            </div>
           </div>
-
-          <div>
-            <label for="fecha">Fecha de Reporte</label>
-            <input type="date" id="fecha" name="fecha" required>
+        
+          <div class="form-row mt-3">
+            <div class="col-md-6">
+              <label for="sucursal">Sucursal:</label>
+              <input type="text" id="sucursal" name="sucursal" class="form-control" placeholder="Nombre de sucursal">
+            </div>
+            
+            <div class="col-md-6">
+              <label for="tecnico">Técnico Asignado:</label>
+              <select id="tecnico" name="tecnico" class="form-select">
+                <option value="" selected>Seleccione un técnico</option>
+                <option value="Victor Hugo Cordoba">Victor Hugo Cordoba</option>
+                <option value="Tomás Valdéz">Tomás Valdéz</option>
+                <option value="Francisco Aguiar">Francisco Aguiar</option>
+                <option value="Mauricio Díaz">Mauricio Diaz</option>
+                <option value="Humberto Vázquez">Humberto Vázquez</option>
+                <option value="Jose López">José López</option>
+                <option value="Hoscar Martínez">Hoscar Martínez</option>
+                <option value="Jacob Ventura">Jacob Ventura</option>
+                <option value="Luis Limón">Luis Limón</option>
+                <option value="Ernesto Chávez">Ernesto Chávez</option>
+              </select>
+            </div>
           </div>
-        </div>
-
-        <div class="form-row">
-          <div>
-            <label for="falla">Falla Reportada</label>
-            <input type="text" id="falla" name="falla" maxlength="500">
+          
+          <div class="form-row mt-3">
+            <div class="col-md-6">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="solo-activas" name="solo_activas">
+                <label class="form-check-label" for="solo-activas">
+                  Mostrar solo incidencias activas
+                </label>
+              </div>
+            </div>
           </div>
-
-          <div>
-            <label for="tecnico">Técnico Asignado</label>
-            <select id="tecnico" name="tecnico">
-              <option value="">Seleccione una opción</option>
-              <option value="Victor Hugo Cordoba">Victor Cordoba</option>
-              <option value="Tomás Valdéz">Tomás Valdéz</option>
-              <option value="Francisco Aguiar">Francisco Aguiar</option>
-              <option value="Mauricio Díaz">Mauricio Diaz</option>
-              <option value="Humberto Vázquez">Humberto Vázquez</option>
-              <option value="Jose López">José López</option>
-              <option value="Hoscar Martínez">Hoscar Martínez</option>
-              <option value="Jacob Ventura">Jacob Ventura</option>
-              <option value="Luis Limón">Luis Limón</option>
-              <option value="Ernesto Chávez">Ernesto Chávez</option>
-            </select>
+        
+          <div class="form-row mt-3">
+            <button type="submit" class="btn btn-primary me-2" aria-label="Buscar incidencias">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+              <i class="bi bi-x-circle"></i> Limpiar Filtros
+            </button>
           </div>
-        </div>
-
-        <div class="form-row">
-          <div>
-            <label for="estatus">Estatus</label>
-            <select id="estatus" name="estatus" required>
-              <option value="Abierto">Abierto</option>
-              <option value="Asignado">Asignado</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="Completado">Completado</option>
-              <option value="Cerrado sin factura">Cerrado sin factura</option>
-              <option value="Cerrado con factura">Cerrado con factura</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="notas">Notas</label>
-            <input type="text" id="notas" name="notas" maxlength="500" placeholder="Información adicional sobre el servicio">
-          </div>
-        </div>  
-
-        <button type="submit" id="btn-registrar">Registrar Incidencia</button>
-        <button type="button" id="btn-actualizar" style="display: none;">Actualizar</button>
-        <button type="button" id="btn-eliminar" style="display: none;" class="btn-rojo">Eliminar</button>
-        <input type="hidden" id="incidencia-id">
+        </details>
       </form>
     </section>
+    
 
+    <!-- Resultados del Reporte -->
     <section class="lista-incidencias">
-      <h2>Incidencias Activas <a href="incidencias.html"><i class="fas fa-sync-alt" style="cursor: pointer; color: #1637cc"></i></a></h2>
-      
-      <table>
-        <thead>
-          <tr>
-            <th># Reporte interno</th>
-            <th># Incidencia cliente</th>
-            <th>Cliente</th>
-            <th>Sucursal</th>
-            <th>Falla</th>
-            <th>Fecha</th>
-            <th>Estatus</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-body">
-          <!-- Las filas se llenarán aquí mediante JavaScript -->
-        </tbody>
-      </table>
+      <h2>Historial de incidencias</h2>
+      <div id="report-data" style="overflow-x: auto;">
+        <table class="table table-striped table-hover">
+          <thead class="table-light">
+            <tr>
+              <th># Reporte Interno</th>
+              <th># Incidencia Cliente</th>
+              <th>Cliente</th>
+              <th>Sucursal</th>
+              <th>Falla</th>
+              <th>Fecha</th>
+              <th>Estatus</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body">
+            <!-- Los reportes generados dinámicamente aparecerán aquí -->
+          </tbody>
+        </table>
+        
+        <!-- Paginación con Bootstrap -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="d-flex align-items-center">
+            <select class="form-select form-select-sm me-2" id="select-registros" style="width: auto;">
+              <option value="10">10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+              <option value="100">100 por página</option>
+            </select>
+            <span id="contador-registros" class="text-muted small"></span>
+          </div>
+          
+          <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled" id="btn-prev">
+                <a class="page-link" href="#" tabindex="-1">Anterior</a>
+              </li>
+              <li class="page-item" id="btn-next">
+                <a class="page-link" href="#">Siguiente</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
     </section>
   </main>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
-    });
-  </script>
-
-  <script src="../scripts/script_cargas.js?v=19"></script>
+  <!-- Agrega Bootstrap JS al final del body -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../scripts/script-busquedas.js?v=9" defer></script>
+  
 </body>
 </html>
