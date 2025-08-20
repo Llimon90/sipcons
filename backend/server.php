@@ -2,129 +2,78 @@
 // Configurar conexión con la base de datos
 require_once 'conexion.php';
 
-// Verificar conexión
+// Verificar la conexión
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// Recibir los parámetros de búsqueda y sanitizarlos
-$cliente = isset($_GET['cliente']) ? trim($_GET['cliente']) : '';
-$fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
-$fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
-$estatus = isset($_GET['estatus']) ? trim($_GET['estatus']) : '';
-$sucursal = isset($_GET['sucursal']) ? trim($_GET['sucursal']) : '';
-$tecnico = isset($_GET['tecnico']) ? trim($_GET['tecnico']) : '';
-$tipo_equipo = isset($_GET['tipo_equipo']) ? trim($_GET['tipo_equipo']) : '';
-$solo_activas = isset($_GET['solo_activas']) ? trim($_GET['solo_activas']) : '';
+// Permitir solicitudes desde el frontend
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-// Construir la consulta SQL con `prepared statements`
-$sql = "SELECT * FROM incidencias WHERE 1";
+// Leer el método HTTP
+$method = $_SERVER["REQUEST_METHOD"];
 
-$params = [];
-$types = "";
-
-if (!empty($cliente) && $cliente !== 'todos') {
-    $sql .= " AND cliente = ?";
-    $params[] = $cliente;
-    $types .= "s";
-}
-
-if (!empty($fecha_inicio)) {
-    $sql .= " AND fecha >= ?";
-    $params[] = $fecha_inicio;
-    $types .= "s";
-}
-
-if (!empty($fecha_fin)) {
-    $sql .= " AND fecha <= ?";
-    $params[] = $fecha_fin;
-    $types .= "s";
-}
-
-if (!empty($estatus)) {
-    $sql .= " AND estatus = ?";
-    $params[] = $estatus;
-    $types .= "s";
-}
-
-if (!empty($sucursal)) {
-    $sql .= " AND sucursal LIKE ?";
-    $params[] = "%$sucursal%";
-    $types .= "s";
-}
-
-if (!empty($tecnico)) {
-    $sql .= " AND tecnico LIKE ?";
-    $params[] = "%$tecnico%";
-    $types .= "s";
-}
-
-// Filtrar por incidencias activas (Abierto, Asignado, Pendiente, Completado)
-if (!empty($solo_activas) && $solo_activas === '1') {
-    $sql .= " AND estatus IN ('Abierto', 'Asignado', 'Pendiente', 'Completado')";
-}
-
-// Búsqueda por palabras clave según el tipo de equipo
-if (!empty($tipo_equipo)) {
-    $palabras_clave = [];
+if ($method === "GET") {
+    // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
-    switch($tipo_equipo) {
-        case 'mr-tienda-chef':
-            $palabras_clave = [
-                "cajon de dinero", "gaveta", "mr tienda", "mr chef", "nube", 
-                "back office", "capacitacion", "escaner", "pos", "punto de venta", 
-                "jose lopez", "terminal", "tarjeta", "pinpad", "lector", "codigo de barras", 
-                "facturacion", "ticket", "caja registradora", "cocina", "restaurante", 
-                "comanda", "menu", "inventario", "receta", "mesero", "chef"
-            ];
-            break;
-        case 'otros':
-            $palabras_clave = [
-                "iqy", "ipes", "celda", "baccula", "plaba", "cas", "plaba-12", 
-                "indicador", "calibracion", "celda de carga", "florido", "bpro", 
-                "bplus", "bcom s", "bcoms", "etiquetadora", "impresora", "cabeza termica", 
-                "cabezal", "mecanismo", "sensor", "plato", "display", "rodillo", 
-                "etiquetas", "etiqueta", "interfaz", "head", "muelle", "teclado", "membrana", "nodo"
-            ];
-            break;
+    // Consulta para obtener todas las incidencias sin filtrar
+    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierto','Asignado', 'Pendiente', 'Completado') ORDER BY numero_incidente DESC;";
+
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $incidencias = [];
+        while($row = $result->fetch_assoc()) {
+            $incidencias[] = $row;
+        }
+        echo json_encode($incidencias);
+    } else {
+        echo json_encode(["message" => "No hay incidencias abiertas"]);
     }
     
-    // Si hay palabras clave para el tipo seleccionado, agregar condición a la consulta
-    if (!empty($palabras_clave)) {
-        $condiciones_keywords = [];
-        foreach ($palabras_clave as $keyword) {
-            $condiciones_keywords[] = "(falla LIKE ? OR notas LIKE ? OR equipo LIKE ? OR tecnico LIKE ?)";
-            for ($i = 0; $i < 4; $i++) {
-                $params[] = "%$keyword%";
-                $types .= "s";
-            }
-        }
-        
-        if (!empty($condiciones_keywords)) {
-            $sql .= " AND (" . implode(" OR ", $condiciones_keywords) . ")";
-        }
+    // **FIN - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
+    
+} elseif ($method === "POST") {
+    // **INICIO - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
+    
+    // Leer los datos enviados desde fetch()
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    // Validar los datos
+    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"])) {
+        echo json_encode(["error" => "Todos los campos son obligatorios"]);
+        exit();
     }
+
+    // Obtener el último número de incidencia
+    $sqlUltimoNumero = "SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1";
+    $result = $conn->query($sqlUltimoNumero);
+
+    $nuevoNumeroIncidente = "SIP-0001"; // Valor inicial si no hay registros
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $ultimoNumero = $row["numero_incidente"]; // "SIP-0001"
+        $numeroIncremental = intval(explode("-", $ultimoNumero)[1]) + 1;
+        $nuevoNumeroIncidente = "SIP-" . str_pad($numeroIncremental, 4, "0", STR_PAD_LEFT);
+    }
+
+    // Insertar la nueva incidencia con el campo equipo
+    $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, equipo, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
+
+    if ($stmt->execute()) {
+        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
+    } else {
+        echo json_encode(["error" => "Error al insertar incidencia"]);
+    }
+
+    $stmt->close();
 }
 
-// Agregar orden de más reciente a más antiguo
-$sql .= " ORDER BY id DESC";
-
-// Preparar y ejecutar la consulta
-$stmt = $conn->prepare($sql);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-
-$incidencias = [];
-while ($row = $result->fetch_assoc()) {
-    $incidencias[] = $row;
-}
-
-echo json_encode($incidencias ?: ["message" => "No se encontraron datos"]);
-
-// Cerrar la conexión
-$stmt->close();
 $conn->close();
 ?>
