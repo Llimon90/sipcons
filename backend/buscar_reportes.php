@@ -1,28 +1,28 @@
 <?php
-// Configurar conexión con la base de datos
+// buscar_reportes.php
+
 require_once 'conexion.php';
 
-// Verificar conexión
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 
-// Recibir los parámetros de búsqueda y sanitizarlos
-$cliente = isset($_GET['cliente']) ? trim($_GET['cliente']) : '';
+// Obtener parámetros
+$cliente      = isset($_GET['cliente']) ? trim($_GET['cliente']) : '';
 $fecha_inicio = isset($_GET['fecha_inicio']) ? trim($_GET['fecha_inicio']) : '';
-$fecha_fin = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
-$estatus = isset($_GET['estatus']) ? trim($_GET['estatus']) : '';
-$sucursal = isset($_GET['sucursal']) ? trim($_GET['sucursal']) : '';
-$tecnico = isset($_GET['tecnico']) ? trim($_GET['tecnico']) : '';
-$tipo_equipo = isset($_GET['tipo_equipo']) ? trim($_GET['tipo_equipo']) : '';
+$fecha_fin    = isset($_GET['fecha_fin']) ? trim($_GET['fecha_fin']) : '';
+$estatus      = isset($_GET['estatus']) ? trim($_GET['estatus']) : '';
+$sucursal     = isset($_GET['sucursal']) ? trim($_GET['sucursal']) : '';
+$tecnico      = isset($_GET['tecnico']) ? trim($_GET['tecnico']) : '';
+$tipo_equipo  = isset($_GET['tipo_equipo']) ? trim($_GET['tipo_equipo']) : '';
 $solo_activas = isset($_GET['solo_activas']) ? trim($_GET['solo_activas']) : '';
 
-// Construir la consulta SQL con `prepared statements`
-$sql = "SELECT * FROM incidencias WHERE 1";
-
+// Comenzar consulta
+$sql = "SELECT * FROM incidencias WHERE 1=1";
 $params = [];
 $types = "";
 
+// Filtros comunes
 if (!empty($cliente) && $cliente !== 'todos') {
     $sql .= " AND cliente = ?";
     $params[] = $cliente;
@@ -34,7 +34,6 @@ if (!empty($fecha_inicio)) {
     $params[] = $fecha_inicio;
     $types .= "s";
 }
-
 if (!empty($fecha_fin)) {
     $sql .= " AND fecha <= ?";
     $params[] = $fecha_fin;
@@ -59,72 +58,53 @@ if (!empty($tecnico)) {
     $types .= "s";
 }
 
-// Filtrar por incidencias activas (Abierto, Asignado, Pendiente, Completado)
 if (!empty($solo_activas) && $solo_activas === '1') {
     $sql .= " AND estatus IN ('Abierto', 'Asignado', 'Pendiente', 'Completado')";
 }
 
-// Búsqueda por palabras clave según el tipo de equipo
-if (!empty($tipo_equipo)) {
-    $palabras_clave = [];
-    
-    switch($tipo_equipo) {
-        case 'mr-tienda-chef':
-            $palabras_clave = [
-                "cajon de dinero", "gaveta", "mr tienda", "mr chef", "nube", 
-                "back office", "capacitacion", "escaner", "pos", "punto de venta", 
-                "jose lopez", "terminal", "tarjeta", "pinpad", "lector", "codigo de barras", 
-                "facturacion", "ticket", "caja registradora", "cocina", "restaurante", 
-                "comanda", "menu", "inventario", "receta", "mesero", "chef"
-            ];
-            break;
-        case 'otros':
-            $palabras_clave = [
-                "iqy", "ipes", "celda", "baccula", "plaba", "cas", "plaba-12", 
-                "indicador", "calibracion", "celda de carga", "florido", "bpro", 
-                "bplus", "bcom s", "bcoms", "etiquetadora", "cabeza termica", 
-                "cabezal", "mecanismo", "sensor", "plato", "display", "rodillo", 
-                "etiquetas", "etiqueta", "interfaz", "head", "muelle", "teclado", "membrana", "nodo"
-            ];
-            break;
-    }
-    
-    // Si hay palabras clave para el tipo seleccionado, agregar condición a la consulta
-    if (!empty($palabras_clave)) {
-        $condiciones_keywords = [];
-        foreach ($palabras_clave as $keyword) {
-            $condiciones_keywords[] = "(falla LIKE ? OR notas LIKE ? OR equipo LIKE ? OR tecnico LIKE ?)";
-            for ($i = 0; $i < 4; $i++) {
-                $params[] = "%$keyword%";
-                $types .= "s";
-            }
-        }
-        
-        if (!empty($condiciones_keywords)) {
-            $sql .= " AND (" . implode(" OR ", $condiciones_keywords) . ")";
-        }
+// Filtro rápido basado en “equipo”
+if (!empty($tipo_equipo) && $tipo_equipo !== 'todos') {
+    if ($tipo_equipo === 'mr-tienda-chef') {
+        // Solo buscar en la columna equipo
+        $sql .= " AND (equipo LIKE '%Mr Tienda%' OR equipo LIKE '%Mr Chef%' OR equipo = 'Mr Tienda/Mr Chef')";
+    } elseif ($tipo_equipo === 'otros') {
+        $sql .= " AND (equipo NOT LIKE '%Mr Tienda%' AND equipo NOT LIKE '%Mr Chef%' AND equipo <> 'Mr Tienda/Mr Chef')";
     }
 }
 
-// Agregar orden de más reciente a más antiguo
+// Orden
 $sql .= " ORDER BY id DESC";
 
-// Preparar y ejecutar la consulta
+// Preparar
 $stmt = $conn->prepare($sql);
+if (!$stmt) {
+    // En caso de error en la preparación, devolver mensaje
+    die(json_encode(["error" => "Error en prepare(): " . $conn->error, "sql" => $sql]));
+}
+
+// Vincular parámetros si los hay
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
 }
-$stmt->execute();
-$result = $stmt->get_result();
 
+// Ejecutar
+$stmt->execute();
+
+// Obtener resultados
+$result = $stmt->get_result();
 $incidencias = [];
-while ($row = $result->fetch_assoc()) {
-    $incidencias[] = $row;
+while ($fila = $result->fetch_assoc()) {
+    $incidencias[] = $fila;
 }
 
-echo json_encode($incidencias ?: ["message" => "No se encontraron datos"]);
+// Si no hay resultados
+if (empty($incidencias)) {
+    echo json_encode(["message" => "No se encontraron datos", "debug_sql" => $sql]);
+} else {
+    echo json_encode($incidencias);
+}
 
-// Cerrar la conexión
+// Cerrar
 $stmt->close();
 $conn->close();
 ?>
