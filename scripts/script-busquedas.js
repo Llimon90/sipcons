@@ -68,17 +68,22 @@ document.addEventListener("DOMContentLoaded", function () {
       // Resetear todos los filtros del formulario
       document.getElementById("report-form").reset();
       
+      // Referencia al checkbox “solo activas”
+      const soloActivasCheckbox = document.getElementById("solo-activas");
+      
       // Configurar el filtro rápido seleccionado
       switch(filtro) {
         case 'mr-tienda-chef':
           document.getElementById("tipo-equipo").value = "mr-tienda-chef";
+          soloActivasCheckbox.checked = true;   // activar el checkbox
           break;
         case 'otros':
           document.getElementById("tipo-equipo").value = "otros";
+          soloActivasCheckbox.checked = true;   // activar el checkbox
           break;
         case 'todos':
-          // No establecer valor, mostrar todos
           document.getElementById("tipo-equipo").value = "";
+          soloActivasCheckbox.checked = false;  // desactivar el checkbox
           break;
       }
       
