@@ -213,16 +213,28 @@ function createFormHTML(data) {
                 </div>
                 <div style="flex: 1;">
                     <label>SUCURSAL:</label>
-                    <input type="text" id="sucursal" value="${data.sucursal || ''}"  style="width: 100%;">
+                    <input type="text" id="sucursal" value="${data.sucursal || ''}" style="width: 100%;">
                 </div>
             </div>
 
+        
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label>EQUIPO:</label>
+                        <select id="equipo" style="width: 100%;">
+                            <option value="">SELECCIONE UNA OPCIÓN</option>
+                            <option value="Mr. Tienda/Mr. Chef" ${data.equipo === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
+                            <option value="Otros" ${data.equipo === 'Otros' ? 'selected' : ''}>Otros</option>
+                        </select>
+                </div>
+
+
                 <div style="flex: 1;">
                     <label>FECHA:</label>
                     <input type="date" id="fecha" value="${data.fecha || ''}" required style="width: 100%;">
                 </div>
-                
+            </div>
+
             <div style="flex: 1;">
                 <label>TÉCNICOS:</label>
                 <div id="tecnicos-container">
@@ -505,6 +517,7 @@ async function handleFormSubmit(e, id) {
     formData.append("cliente", document.getElementById("cliente").value);
     formData.append("contacto", document.getElementById("contacto").value);
     formData.append("sucursal", document.getElementById("sucursal").value);
+    formData.append("equipo", document.getElementById("equipo").value); // NUEVO CAMPO AGREGADO
     formData.append("fecha", document.getElementById("fecha").value);
     
     // Obtener todos los técnicos seleccionados y unirlos con "/"
