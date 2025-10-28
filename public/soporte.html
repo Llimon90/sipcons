@@ -5,24 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Soporte Técnico - Documentación</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css?v=1.15">
   <style>
-    /* Estilos adicionales específicos para documentación técnica */
+    /* Estilos generales */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .retorna {
+      background: #2c3e50;
+      padding: 10px 20px;
+    }
+    
+    .retorna a {
+      color: white;
+      text-decoration: none;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: #34495e;
+      color: white;
+      height: 100vh;
+      position: fixed;
+      padding-top: 20px;
+    }
+    
+    .sidebar ul {
+      list-style: none;
+    }
+    
+    .sidebar li {
+      padding: 12px 20px;
+    }
+    
+    .sidebar a {
+      color: #ecf0f1;
+      text-decoration: none;
+      display: block;
+    }
+    
+    .sidebar a:hover, .sidebar a.active {
+      background: #3498db;
+    }
+    
+    /* Contenido principal */
+    main {
+      margin-left: 250px;
+      padding: 20px;
+    }
+    
+    .encabezado {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .encabezado h2 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+    
     .breadcrumb {
       padding: 10px 0;
       font-size: 0.9rem;
       color: #666;
     }
+    
     .breadcrumb a {
       color: #3498db;
       text-decoration: none;
     }
+    
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      align-items: center;
+    }
+    
+    .search-container {
+      display: flex;
+      flex-grow: 1;
+    }
+    
+    .search-container input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px 0 0 4px;
+    }
+    
+    .search-container button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+    }
+    
+    /* Grid de modelos */
     .model-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 15px;
       margin: 20px 0;
     }
+    
     .model-card {
       background: white;
       border-radius: 8px;
@@ -32,26 +133,35 @@
       cursor: pointer;
       transition: transform 0.2s;
     }
+    
     .model-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
+    
     .model-icon {
       font-size: 2rem;
       color: #3498db;
       margin-bottom: 10px;
     }
+    
+    /* Lista de documentos */
     .doc-type {
       display: flex;
       align-items: center;
-      padding: 8px;
+      padding: 12px;
       border-bottom: 1px solid #eee;
+      background: white;
+      margin-bottom: 8px;
+      border-radius: 4px;
     }
+    
     .doc-type i {
       margin-right: 10px;
       color: #e74c3c;
       width: 20px;
     }
+    
     .back-button {
       background: #f1f1f1;
       border: none;
@@ -59,6 +169,127 @@
       border-radius: 4px;
       cursor: pointer;
       margin-bottom: 15px;
+    }
+    
+    .btn-download, .btn-preview {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 900px;
+      position: relative;
+    }
+    
+    .close-modal {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close-modal:hover {
+      color: black;
+    }
+    
+    #pdfViewer {
+      width: 100%;
+      height: 600px;
+      margin-top: 20px;
+    }
+    
+    /* Botones y formularios */
+    .btn-primary {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+    
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    
+    .message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
     }
   </style>
 </head>
@@ -96,6 +327,11 @@
           <input type="text" id="searchInput" placeholder="Buscar modelo, número de parte...">
           <button id="searchBtn"><i class="fas fa-search"></i></button>
         </div>
+        
+        <!-- Botón para agregar nuevo modelo -->
+        <button id="addModelBtn" class="btn-primary">
+          <i class="fas fa-plus"></i> Agregar Nuevo Modelo
+        </button>
       </div>
     </section>
 
@@ -123,7 +359,45 @@
     <div id="previewModal" class="modal">
       <div class="modal-content">
         <span class="close-modal">&times;</span>
+        <h3>Vista Previa del Documento</h3>
         <iframe id="pdfViewer" src="" frameborder="0"></iframe>
+      </div>
+    </div>
+
+    <!-- Modal para agregar nuevo modelo -->
+    <div id="addModelModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Agregar Nuevo Modelo</h3>
+        <form id="modelForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="marca">Marca:</label>
+            <select id="marca" name="marca" required>
+              <option value="">Seleccionar marca</option>
+              <!-- Las opciones se llenarán con JavaScript -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="modelo_nombre">Nombre del Modelo:</label>
+            <input type="text" id="modelo_nombre" name="modelo_nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="modelo_tipo">Tipo de Equipo:</label>
+            <input type="text" id="modelo_tipo" name="modelo_tipo" required>
+          </div>
+          <div class="form-group">
+            <label for="manual_file">Manual (PDF):</label>
+            <input type="file" id="manual_file" name="manual_file" accept=".pdf">
+          </div>
+          <div class="form-group">
+            <label for="partes_file">Lista de Partes (PDF):</label>
+            <input type="file" id="partes_file" name="partes_file" accept=".pdf">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar Modelo</button>
+            <button type="button" class="btn-secondary" id="cancelAddModel">Cancelar</button>
+          </div>
+        </form>
       </div>
     </div>
   </main>
@@ -142,26 +416,24 @@
 
     const modelos = {
       1: [ // RHINO
-        { id: 101, nombre: "BAR-8", tipo: "Báscula Comercial" },
-         { id: 102, nombre: "IPES", tipo: "Indicador Comercial" },
-        { id: 103, nombre: "PLABA-12", tipo: "Plataforma" }
+        { id: 101, nombre: "RH-2000", tipo: "Báscula industrial" },
+        { id: 102, nombre: "RH-3000", tipo: "Báscula comercial" }
       ],
       2: [ // METTLER TOLEDO
-        { id: 201, nombre: "BPRO", tipo: "Báscula Etiquetadora" },
-        { id: 202, nombre: "BPLUS", tipo: "Báscula Etiquetadora" },
-        { id: 203, nombre: "FRESH BASE", tipo: "Báscula Etiquetadora" }
+        { id: 201, nombre: "PL1501S", tipo: "Báscula de precisión" },
+        { id: 202, nombre: "IND560", tipo: "Indicador industrial" }
       ],
       3: [ // TORREY
-       
+        { id: 301, nombre: "T-15", tipo: "Cortadora de carne" },
         { id: 302, nombre: "T-800", tipo: "Báscula etiquetadora" }
       ],
       4: [ // TOSHIBA
-        { id: 401, nombre: "TEC-BSX5T", tipo: "Impresora de CENEFAS" }
-      
+        { id: 401, nombre: "TEC-B852", tipo: "Impresora térmica" },
+        { id: 402, nombre: "POS-5000", tipo: "Sistema POS" }
       ],
       5: [ // NCR
-        { id: 501, nombre: "RealPOS 82", tipo: "Terminal POS" }
-      
+        { id: 501, nombre: "RealPOS 82", tipo: "Terminal POS" },
+        { id: 502, nombre: "Aloha POS", tipo: "Sistema de restaurante" }
       ],
       6: [ // DATALOGIC
         { id: 601, nombre: "Gryphon GD4400", tipo: "Lector de códigos" },
@@ -176,10 +448,12 @@
     const documentos = {
       101: [ // RHINO RH-2000
         { tipo: "manual", nombre: "Manual de Usuario", archivo: "RH-2000_Manual.pdf" },
-        { tipo: "partes", nombre: "Lista de Números de Parte", archivo: "RH-2000_Partes.pdf" },
-        { tipo: "tutorial", nombre: "Configuración Inicial", archivo: "RH-2000_Config.mp4" }
+        { tipo: "partes", nombre: "Lista de Números de Parte", archivo: "RH-2000_Partes.pdf" }
       ],
-      // ... otros modelos seguirían el mismo patrón
+      201: [ // METTLER TOLEDO PL1501S
+        { tipo: "manual", nombre: "Manual de Usuario", archivo: "PL1501S_Manual.pdf" },
+        { tipo: "partes", nombre: "Lista de Números de Parte", archivo: "PL1501S_Partes.pdf" }
+      ]
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -190,9 +464,25 @@
       const backToModelsBtn = document.getElementById('back-to-models');
       const modeloTitle = document.getElementById('modelo-title');
       const docList = document.getElementById('doc-list');
+      const addModelBtn = document.getElementById('addModelBtn');
+      const addModelModal = document.getElementById('addModelModal');
+      const modelForm = document.getElementById('modelForm');
+      const cancelAddModel = document.getElementById('cancelAddModel');
+      const marcaSelect = document.getElementById('marca');
       
       let currentMarca = null;
       let currentModelo = null;
+
+      // Llenar select de marcas
+      function llenarSelectMarcas() {
+        marcaSelect.innerHTML = '<option value="">Seleccionar marca</option>';
+        marcas.forEach(marca => {
+          const option = document.createElement('option');
+          option.value = marca.id;
+          option.textContent = marca.nombre;
+          marcaSelect.appendChild(option);
+        });
+      }
 
       // Cargar marcas
       function loadMarcas() {
@@ -328,14 +618,66 @@
         showModelos(currentMarca);
       });
 
-      // Cerrar modal
-      document.querySelector('.close-modal').addEventListener('click', function() {
-        document.getElementById('previewModal').style.display = 'none';
-        document.getElementById('pdfViewer').src = "";
+      // Funcionalidad del modal para agregar modelos
+      addModelBtn.addEventListener('click', function() {
+        addModelModal.style.display = 'block';
+      });
+
+      // Cerrar modales
+      document.querySelectorAll('.close-modal').forEach(closeBtn => {
+        closeBtn.addEventListener('click', function() {
+          document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+          });
+        });
+      });
+
+      cancelAddModel.addEventListener('click', function() {
+        addModelModal.style.display = 'none';
+      });
+
+      // Envío del formulario para agregar modelo
+      modelForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Simulación de envío a servidor
+        const marcaId = document.getElementById('marca').value;
+        const modeloNombre = document.getElementById('modelo_nombre').value;
+        const modeloTipo = document.getElementById('modelo_tipo').value;
+        
+        // En un caso real, aquí enviarías los datos al servidor
+        // Por ahora simulamos la respuesta
+        
+        // Simular éxito
+        setTimeout(() => {
+          // Mostrar mensaje de éxito
+          const message = document.createElement('div');
+          message.className = 'message success';
+          message.textContent = 'Modelo agregado correctamente. Se ha creado la carpeta correspondiente.';
+          document.querySelector('.encabezado').appendChild(message);
+          
+          // Ocultar mensaje después de 3 segundos
+          setTimeout(() => {
+            message.remove();
+          }, 3000);
+          
+          // Cerrar modal y resetear formulario
+          addModelModal.style.display = 'none';
+          modelForm.reset();
+          
+          // En un caso real, aquí recargarías los datos desde el servidor
+          // Por ahora, solo recargamos la vista actual
+          if (currentMarca) {
+            showModelos(currentMarca);
+          } else {
+            loadMarcas();
+          }
+        }, 1000);
       });
 
       // Inicializar
       loadMarcas();
+      llenarSelectMarcas();
     });
   </script>
 </body>
