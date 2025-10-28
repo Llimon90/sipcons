@@ -500,26 +500,31 @@ function actualizarBreadcrumbDocumentos(modeloNombre) {
     `;
 }
 
-// Funciones para documentos
+// Funciones para documentos - ACTUALIZADAS
 function verDocumento(ruta) {
     console.log('Viendo documento:', ruta);
     const modal = document.getElementById('previewModal');
     const pdfViewer = document.getElementById('pdfViewer');
     
-    // Usar ruta pública directamente
-    pdfViewer.src = ruta;
+    // Usar el script de descarga para visualizar
+    const url = `../backend/descargar_documento.php?archivo=${encodeURIComponent(ruta)}`;
+    pdfViewer.src = url;
     modal.style.display = 'block';
 }
 
 function descargarDocumento(ruta, nombre) {
     console.log('Descargando documento:', nombre);
+    const url = `../backend/descargar_documento.php?archivo=${encodeURIComponent(ruta)}&download=1`;
+    
+    // Crear link temporal para descarga
     const link = document.createElement('a');
-    link.href = ruta;
+    link.href = url;
     link.download = nombre;
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
-}
-
-// Buscar contenido
+    document.body.removeChild(link);
+}// Buscar contenido
 function buscarContenido() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     console.log('Buscando:', searchTerm);
