@@ -451,3 +451,198 @@ main {
         margin: 10% auto;
     }
 }
+
+/* Estilos para búsqueda */
+.search-results-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3498db;
+}
+
+.search-results-header h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.search-stats {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+}
+
+.search-section {
+    margin-bottom: 30px;
+}
+
+.search-section h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ecf0f1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-section h4 i {
+    color: #3498db;
+}
+
+.search-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #3498db;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+.search-highlight {
+    background-color: #ffeaa7;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Mejoras para las tarjetas en resultados de búsqueda */
+.model-card {
+    position: relative;
+}
+
+.model-card small {
+    display: block;
+    margin-top: 5px;
+    color: #7f8c8d;
+    font-size: 0.8em;
+}
+
+/* Estilos para el input de búsqueda mejorado */
+.search-container {
+    position: relative;
+    display: flex;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 25px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-container input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.search-container button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s ease;
+}
+
+.search-container button:hover {
+    background: #2980b9;
+}
+
+/* Loading para búsqueda */
+.search-loading {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+}
+
+.search-loading .fas {
+    margin-bottom: 10px;
+}
+
+/* Estilos para botones de acción */
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-warning {
+    background: #f39c12;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-warning:hover {
+    background: #d35400;
+}
+
+/* Mejoras para las acciones de modelo */
+.model-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+}
+
+.model-actions .btn-small {
+    padding: 5px 8px;
+    font-size: 0.7em;
+}
+
+/* Header para documentos */
+.documentos-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+/* Mejoras para items de documento */
+.doc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.doc-actions .btn-danger {
+    padding: 8px 12px;
+    font-size: 0.8em;
+}
+
+/* Iconos para tipos de documento */
+.doc-icon i {
+    font-size: 1.5em;
+}
+
+.fa-book { color: #3498db; }
+.fa-list { color: #27ae60; }
+.fa-video { color: #e74c3c; }
+.fa-image { color: #9b59b6; }
+.fa-project-diagram { color: #f39c12; }
+.fa-sitemap { color: #1abc9c; }
+.fa-microchip { color: #34495e; }
+.fa-desktop { color: #2980b9; }
+.fa-file { color: #7f8c8d; }
