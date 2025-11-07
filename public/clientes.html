@@ -1,31 +1,87 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Clientes</title>
     <link rel="stylesheet" href="../css/styles.css?v=9.0">
-    <!-- Agregamos Font Awesome  para los íconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  </head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
 
 <body>
-  <div class="retorna">
-    <a href="../index.html">  <<- Inicio</a>  </div>
-  
-   <!-- Panel lateral -->
+  <!-- Botón Inicio Móvil -->
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <!-- Panel lateral mejorado -->
   <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">
+        <i class="fas fa-tools"></i>
+        Panel
+      </h2>
+      <button id="toggleSidebar" class="toggle-sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+    
     <ul>
-      <li><a href="../index.html">Inicio</a></li>
-      <li><a href="incidencias.html">Incidencias</a></li>
-      <li><a href="reportes.html">Buscar incidencias</a></li>
-      <li><a href="clientes.html">Clientes</a></li>
-      <li><a href="usuarios.html">Usuarios</a></li>
-      <li><a href="soporte.html" class="active">Soporte Técnico</a></li>
-      <li><a href="#">Configuración</a></li>
+      <li>
+        <a href="../index.html" title="Inicio">
+          <i class="fas fa-home"></i>
+          <span class="sidebar-link-text">Inicio</span>
+        </a>
+      </li>
+      <li>
+        <a href="incidencias.html" title="Incidencias">
+          <i class="fas fa-tasks"></i>
+          <span class="sidebar-link-text">Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="reportes.html" title="Buscar Incidencias">
+          <i class="fas fa-search"></i>
+          <span class="sidebar-link-text">Buscar Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="clientes.html" title="Clientes" class="active">
+          <i class="fas fa-users"></i>
+          <span class="sidebar-link-text">Clientes</span>
+        </a>
+      </li>
+      <li>
+        <a href="usuarios.html" title="Usuarios">
+          <i class="fas fa-user-friends"></i>
+          <span class="sidebar-link-text">Usuarios</span>
+        </a>
+      </li>
+      <li>
+        <a href="soporte.html" title="Soporte Técnico">
+          <i class="fas fa-headset"></i>
+          <span class="sidebar-link-text">Soporte Técnico</span>
+        </a>
+      </li>
+      <li>
+        <a href="ajustes.html" title="Ajustes">
+          <i class="fas fa-cog"></i>
+          <span class="sidebar-link-text">Ajustes</span>
+        </a>
+      </li>
     </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Técnico</span>
+      </div>
+    </div>
   </aside>
-  <main>
+
+  <!-- CONTENIDO ORIGINAL EXACTO -->
+  <main id="mainContent">
     <!-- Sección de registr o de clientes -->
     <section class="encabezado">
       <form id="new-incidencia-form">
@@ -70,7 +126,6 @@
         <h2>Lista de Clientes</h2>     
         
         <div class="form-row">
-
             <input type="text" id="campo-busqueda" name="busqueda-cliente" placeholder="Buscar un cliente">
         </div>
         
@@ -105,6 +160,7 @@
     </div>
   </div>
 
+  <script src="../scripts/sidebar-state.js"></script>
   <script src="../scripts/carga-clientes.js?v=4"></script>
   <script src="../scripts/script-clientes.js?v=5"></script>
 </body>

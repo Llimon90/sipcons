@@ -1,498 +1,2037 @@
-
-
-/* Estilos generales */
+/* ===== ESTILOS GENERALES ===== */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4; /* Fondo general */
+  background-color: #f4f4f4;
+  transition: margin-left 0.3s ease;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Panel lateral */
+* {
+  box-sizing: border-box;
+}
+
+/* ===== ESTILOS PARA SIDEBAR CONTRAÍBLE ===== */
 .sidebar {
-  width: 250px;
-  background-color: #2c3e50;
+  width: 280px;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   color: #ecf0f1;
-  padding: 15px;
+  padding: 20px;
   height: 100vh;
   position: fixed;
+  left: 0;
+  top: 0;
+  transition: all 0.3s ease;
+  overflow-x: hidden;
+  z-index: 1000;
+  box-sizing: border-box;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar h2 {
-  margin-top: 0;
+/* Estado contraído del sidebar - SIN SCROLL HORIZONTAL */
+.sidebar.contraida {
+  width: 80px;
+  padding: 20px 12px;
+  overflow: hidden;
 }
 
+/* Header del sidebar con botón de toggle */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+  position: relative;
+}
+
+.sidebar-title {
+  color: #ecf0f1;
+  font-size: 1.6em;
+  margin: 0;
+  white-space: nowrap;
+  opacity: 1;
+  transition: all 0.3s ease;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-title i {
+  color: #3498db;
+  font-size: 1.4em;
+  margin-right: 12px;
+  transition: all 0.3s ease;
+}
+
+.sidebar.contraida .sidebar-title {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+.sidebar.contraida .sidebar-title i {
+  margin-right: 0;
+  font-size: 1.6em;
+  color: #ecf0f1;
+}
+
+.sidebar-title:hover i {
+  transform: rotate(15deg);
+  color: #2980b9;
+}
+
+/* Botón de toggle - SIEMPRE VISIBLE */
+.toggle-sidebar {
+  background: rgba(52, 152, 219, 0.2);
+  border: 2px solid rgba(52, 152, 219, 0.5);
+  color: #3498db;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1002;
+}
+
+.toggle-sidebar:hover {
+  background: rgba(52, 152, 219, 0.3);
+  border-color: #3498db;
+  transform: rotate(180deg);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.toggle-sidebar i {
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+/* Lista de navegación */
 .sidebar ul {
   list-style: none;
   padding: 0;
+  margin: 0;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar ul::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar ul::-webkit-scrollbar-track {
+  background: rgba(52, 73, 94, 0.5);
+  border-radius: 3px;
+}
+
+.sidebar ul::-webkit-scrollbar-thumb {
+  background: #3498db;
+  border-radius: 3px;
+}
+
+.sidebar.contraida ul {
+  overflow-x: hidden;
 }
 
 .sidebar li {
   margin: 10px 0;
+  white-space: nowrap;
+  position: relative;
 }
 
 .sidebar a {
   color: #ecf0f1;
   text-decoration: none;
-  transition: color 0.3s;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  border-radius: 12px;
+  position: relative;
+  font-size: 15px;
+  font-weight: 500;
+  border: 2px solid transparent;
+}
+
+/* Estado expandido - iconos alineados normalmente */
+.sidebar a i {
+  margin-right: 18px;
+  min-width: 24px;
+  text-align: center;
+  font-size: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Estado contraído - iconos CENTRADOS y más a la izquierda */
+.sidebar.contraida a {
+  padding: 15px 10px;
+  justify-content: center;
+}
+
+.sidebar.contraida a i {
+  margin-right: 0;
+  margin-left: -2px;
+  transform: scale(1.1);
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .sidebar a:hover {
   color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+  border-color: rgba(52, 152, 219, 0.3);
+  transform: translateX(8px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
 }
 
-/* Contenido principal */
+.sidebar.contraida a:hover {
+  transform: translateX(3px);
+}
+
+.sidebar a.active {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border-color: #3498db;
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+  transform: translateX(5px);
+}
+
+.sidebar.contraida a.active {
+  transform: translateX(2px);
+}
+
+.sidebar a.active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: #3498db;
+  border-radius: 2px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+/* Efectos hover en iconos */
+.sidebar a:hover i {
+  transform: scale(1.2) rotate(5deg);
+  color: #3498db;
+}
+
+.sidebar.contraida a:hover i {
+  transform: scale(1.3) rotate(10deg);
+}
+
+.sidebar a.active i {
+  transform: scale(1.3);
+  color: white;
+  animation: bounce 0.5s ease;
+}
+
+.sidebar.contraida a.active i {
+  transform: scale(1.4);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1.3); }
+  50% { transform: scale(1.5); }
+}
+
+/* Texto de los enlaces */
+.sidebar-link-text {
+  opacity: 1;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.sidebar.contraida .sidebar-link-text {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+/* Tooltip para sidebar contraído - MEJORADO */
+.sidebar.contraida a::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 15px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: #ecf0f1;
+  padding: 12px 18px;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1001;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border: 2px solid #3498db;
+  backdrop-filter: blur(10px);
+}
+
+.sidebar.contraida a:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Indicador de página activa para sidebar contraído */
+.sidebar.contraida a.active::after {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border-color: #2980b9;
+}
+
+/* ===== CONTENIDO PRINCIPAL ===== */
 main {
-  margin-left: 260px; /* Espacio para el panel lateral */
-  padding: 20px;
+  margin-left: 320px;
+  padding: 30px;
+  transition: all 0.3s ease;
+  min-height: 100vh;
+  box-sizing: border-box;
+  width: calc(100% - 320px);
+  max-width: 100%;
 }
 
+main.contraido {
+  margin-left: 110px;
+  width: calc(100% - 110px);
+}
 
 main textarea {
-  width: 100%; /* O un valor específico en píxeles, como 300px */
-  height: 150px; /* Altura fija */
-  resize: none; /* Evita que el usuario cambie el tamaño del textarea */
-  padding: 8px; /* Espaciado interno */
-  border: 1px solid #ccc; /* Borde */
-  border-radius: 4px; /* Bordes redondeados */
-  box-sizing: border-box; /* Incluye el padding en el tamaño total del textarea */
+  width: 100%;
+  height: 150px;
+  resize: none;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  max-width: 100%;
 }
-
 
 .encabezado {
-  background-color: #ffffff;
+  background-color: white ;
+  color: black;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin-bottom: 30px;
+  text-align: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+.encabezado h1 {
+  margin: 0;
+  font-size: 2.5em;
+  font-weight: 300;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  word-wrap: break-word;
+}
+
+/* ===== BOTÓN INICIO MÓVIL ===== */
+.mobile-home-btn {
+  display: none;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
 }
 
-h2 {
-  color: #34495e;
+.mobile-home-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
 
-/*Estilos del formulario*/
+.mobile-home-btn i {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+
+.mobile-home-btn span {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* ===== ESTILOS DE FORMULARIOS RESPONSIVE ===== */
 .new-incidencia-form {
   display: flex;
   flex-direction: column;
-  max-width: 800px;
-  margin: auto;
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-row {
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 25px;
+  margin-bottom: 25px;
+  width: 100%;
 }
 
-/*ESTILOS PARA FORMS */
-
-/*ESTILOS PARA FORMULARIOS DE ALTA*/
 .form-row div {
   flex: 1;
+  min-width: 0; /* Previene el desbordamiento */
 }
 
-/* Etiquetas */
 label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #34495e;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 15px;
 }
 
-/* Inputs y select */
 input[type="text"],
 input[type="date"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
 select {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
+  padding: 14px 18px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
   box-sizing: border-box;
-  transition: border 0.3s;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  background-color: #f8f9fa;
+  max-width: 100%;
 }
 
 input[type="text"]:focus,
 input[type="date"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
 select:focus {
-  border: 1px solid #3498db;
+  border-color: #3498db;
+  background-color: white;
   outline: none;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
 }
 
-/* Botón */
 button {
-  background-color: #3498db;
+  background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
-  padding: 10px 15px;
+  padding: 16px 32px;
   border: none;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+  max-width: 100%;
 }
 
 button:hover {
-  background-color: #2980b9;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
 }
 
-/* Responsividad */
-@media (max-width: 600px) {
-  .form-row {
-    flex-direction: column;
-  }
+button:active {
+  transform: translateY(-1px);
 }
 
-
-/* Estilo para TABLAS de incidencias */
-.lista-incidencias  {
+/* ===== ESTILOS PARA TABLAS RESPONSIVE ===== */
+.lista-incidencias,
+.lista-clientes,
+.lista-usuarios,
+.lista-ventas {
   margin-top: 20px;
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-
-
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
 }
 
-.lista-incidencias table {
+.lista-incidencias table,
+.lista-clientes table,
+.lista-usuarios table,
+.lista-ventas table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 16px;
-  text-align: center;
+  font-size: 15px;
+  text-align: left;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 600px;
 }
 
-.lista-incidencias thead {
-  background-color: #1637cc;
+.lista-incidencias thead,
+.lista-clientes thead,
+.lista-usuarios thead,
+.lista-ventas thead {
+  background: linear-gradient(135deg, #1637cc, #1a4de4);
   color: white;
 }
 
 .lista-incidencias th, 
-.lista-incidencias td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: center; /* Centrar contenido horizontalmente */
-  vertical-align: middle; /* Centrar contenido verticalmente */
+.lista-incidencias td,
+.lista-clientes th,
+.lista-clientes td,
+.lista-usuarios th,
+.lista-usuarios td,
+.lista-ventas th,
+.lista-ventas td {
+  padding: 18px 25px;
+  border-bottom: 1px solid #e9ecef;
+  text-align: left;
+  vertical-align: middle;
 }
 
-.lista-incidencias tbody tr:nth-child(even) {
-  background-color: #f3f3f3;
+.lista-incidencias th,
+.lista-clientes th,
+.lista-usuarios th,
+.lista-ventas th {
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.lista-incidencias tbody tr:hover {
-  background-color: #e0e0ff;
+.lista-incidencias tbody tr:nth-child(even),
+.lista-clientes tbody tr:nth-child(even),
+.lista-usuarios tbody tr:nth-child(even),
+.lista-ventas tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
 }
 
+.lista-incidencias tbody tr:hover,
+.lista-clientes tbody tr:hover,
+.lista-usuarios tbody tr:hover,
+.lista-ventas tbody tr:hover {
+  background-color: #e3f2fd;
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+}
 
-
-/* ESTILOS INDEX menu */
-
-/* Contenedor principal del contenido del administrador */
+/* ===== ESTILOS INDEX MENU RESPONSIVE ===== */
 #admin-content {
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Alinea al inicio */
-  min-height: 85vh; /* Ocupa toda la altura de la ventana */
-  padding: 40px 20px; /* Espaciado en la parte superior e inferior */
+  align-items: flex-start;
+  min-height: calc(100vh - 100px);
+  padding: 40px 30px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* Contenedor de opciones */
 .options-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* Cuatro columnas */
-  gap: 20px; /* Espacio entre las tarjetas */
-  max-width: 1800px; /* Ancho máximo del contenedor */
-  width: 100%; /* Asegura que el contenedor ocupe el ancho completo */
-  margin: 0 auto; /* Centra el contenedor horizontalmente */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* Estilo de cada opción */
 .option-box {
-  display: flex; /* Flexbox para alinear icono y texto */
-  flex-direction: column; /* Disposición vertical */
-  align-items: start; /* Centra horizontalmente el contenido */
-  justify-content: center; /* Centra verticalmente el contenido */
-  color: #333333; /* Texto oscuro */
-  border-radius: 8px; /* Bordes redondeados */
-  text-align: center; /* Centra el texto */
-  padding: 20px;
-  height: 200px; /* Ajusta la altura de las cajas */
-  transition: transform 0.3s, box-shadow 0.3s; /* Efecto de transición */
-  text-decoration: none; /* Elimina subrayado en enlaces */
-  background-color: rgba(255, 255, 255, 0.9); /* Color de fondo blanco con transparencia */
-  box-shadow: 0 2px 5px rgba(102, 102, 102, 0.5); /* Sombra gris oscuro */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #2c3e50;
+  border-radius: 15px;
+  text-align: center;
+  padding: 40px 30px;
+  height: 240px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  background: white;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* Efecto de hover */
 .option-box:hover {
-  transform: translateY(-5px); /* Eleva la tarjeta al pasar el mouse */
-  box-shadow: 0 2px 10px rgba(5, 97, 216, 0.8); /* Sombra azul oscuro al hacer hover */
+  transform: translateY(-10px);
+  box-shadow: 0 15px 35px rgba(5, 97, 216, 0.2);
+  border-color: #3498db;
 }
 
-/* Estilos de los iconos */
 .option-box i {
-  font-size: 40px; /* Tamaño del icono */
-  margin-bottom: 10px; /* Espacio entre el icono y el texto */
-  color: #2679a0; /* Color diferente para los íconos */
+  font-size: 52px;
+  margin-bottom: 25px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
 }
 
-/* Estilo de texto */
+.option-box:hover i {
+  transform: scale(1.2) rotate(5deg);
+}
+
 .option-box h3 {
-  margin: 0; /* Elimina margen */
-  font-size: 18px; /* Tamaño de fuente */
-  font-weight: bold; /* Negrita */
+  margin: 0 0 15px 0;
+  font-size: 22px;
+  font-weight: 600;
+  word-wrap: break-word;
 }
 
-/* Descripción breve */
 .option-box p {
-  font-size: 14px; /* Tamaño de fuente para la descripción */
-  color: #666666; /* Color más claro para la descripción */
-  margin: 5px 0 0; /* Margen superior */
+  font-size: 15px;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.6;
+  word-wrap: break-word;
 }
 
+/* ===== RESPONSIVE DESIGN ===== */
 
-/*ESTILOS RESPONSIVE*/
+/* ESCRITORIO: Sidebar visible */
+@media (min-width: 1025px) {
+  .sidebar {
+    display: block !important;
+  }
+  
+  .mobile-home-btn {
+    display: none !important;
+  }
+  
+  main {
+    margin-left: 320px !important;
+    width: calc(100% - 320px) !important;
+    padding: 30px !important;
+  }
+  
+  main.contraido {
+    margin-left: 110px !important;
+    width: calc(100% - 110px) !important;
+  }
+}
 
-/* Responsive para dispositivos móviles */
-/* Responsive para dispositivos móviles */
+/* TABLETS: Sidebar oculto, botón inicio */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .sidebar {
+    display: none !important;
+  }
+  
+  .mobile-home-btn {
+    display: block !important;
+  }
+  
+  main {
+    margin-left: 0 !important;
+    padding: 30px 20px !important;
+    margin-top: 70px !important;
+    width: 100% !important;
+  }
+  
+  .options-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+  }
+  
+  .option-box {
+    height: 220px;
+    padding: 30px 25px;
+  }
+}
+
+/* MÓVIL: Diseño completamente responsive */
 @media (max-width: 768px) {
   .sidebar {
-    width: 100%; /* Panel lateral ocupa el 100% */
-    height: auto; /* Altura automática para contenido */
-    position: relative; /* Cambia la posición para que no se superponga */
-    text-align: center; /* Centrar texto en la barra lateral */
+    display: none !important;
   }
-
+  
+  .mobile-home-btn {
+    display: block !important;
+  }
+  
   main {
-    margin-left: 0; /* Sin margen para el contenido principal */
-    padding: 10px; /* Espaciado reducido */
-    text-align: center; /* Centrar contenido principal */
+    margin-left: 0 !important;
+    padding: 20px 15px !important;
+    margin-top: 70px !important;
+    width: 100% !important;
+    overflow-x: hidden;
   }
 
+  /* Ajustes para móvil */
+  .encabezado {
+    padding: 25px 20px;
+    margin-bottom: 20px;
+  }
+  
+  .encabezado h1 {
+    font-size: 1.8em;
+  }
+  
   .options-container {
-    grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
-    justify-items: center; /* Centra cada opción en la grilla */
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .option-box {
-    display: flex; /* Flexbox para centrar el contenido */
-    flex-direction: column; /* Disposición vertical */
-    align-items: center; /* Centra horizontalmente el contenido */
-    justify-content: center; /* Centra verticalmente el contenido */
-    height: auto; /* Altura automática para que se ajuste al contenido */
-    width: 100%; /* Ancho completo para las cajas de opción */
-    max-width: 300px; /* Ancho máximo para que no sea demasiado ancho */
-    margin: 10px 0; /* Margen entre las opciones */
-    text-align: center; /* Centrar texto en las cajas */
+    height: 180px;
+    padding: 25px 20px;
+  }
+  
+  .option-box h3 {
+    font-size: 18px;
+  }
+  
+  .option-box i {
+    font-size: 42px;
   }
 
-  /* Estilo de texto */
-  .option-box h3, .option-box p {
-    margin: 0; /* Elimina margen para evitar desbordamiento */
+  /* Formularios en móvil */
+  .new-incidencia-form {
+    padding: 25px 20px;
   }
-}
-
-/* Asegúrate de que el icono de menú no se muestre en pantallas grandes */
-@media (min-width: 769px) {
-  .retorna  {
-    display: none; /* Ocultar el icono en pantallas grandes */
+  
+  .form-row {
+    flex-direction: column;
+    gap: 20px;
   }
-}
-
-
-
-/* Ocultar la barra lateral en pantallas pequeñas */
-@media (max-width: 768px) {
-  .sidebar {
-    display: none; /* Ocultar la barra lateral */
-    transition: all 0.3s ease; /* Animación para la transición */
+  
+  /* Tablas en móvil */
+  .lista-incidencias,
+  .lista-clientes,
+  .lista-usuarios,
+  .lista-ventas {
+    padding: 20px 15px;
+    margin-top: 15px;
   }
-
-  .retorna.active {
-    display: block; /* Mostrar la barra lateral */
-    position: absolute; /* Posicionarla respecto al icono */
-    top: 50px; /* Ajusta según la altura del icono */
-    left: 50%; /* Centrar horizontalmente */
-    transform: translateX(-50%); /* Ajuste para centrar */
-    z-index: 1000; /* Asegúrate de que esté por encima del contenido */
-    background-color: #2c3e50; /* Fondo del menú */
-    width: 250px; /* Ancho del menú */
-    padding: 15px; /* Espaciado interno */
-    border-radius: 8px; /* Bordes redondeados */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Sombra para el menú */
-    max-height: 80vh; /* Altura máxima para el menú */
-    overflow-y: auto; /* Habilita el desplazamiento si el contenido es demasiado */
-    text-align: center;
-   
+  
+  .lista-incidencias th, 
+  .lista-incidencias td,
+  .lista-clientes th,
+  .lista-clientes td,
+  .lista-usuarios th,
+  .lista-usuarios td,
+  .lista-ventas th,
+  .lista-ventas td {
+    padding: 12px 15px;
+    font-size: 14px;
   }
-
-
-}
-
-/* Asegúrate de que el icono de menú no se muestre en pantallas grandes */
-@media (min-width: 769px) {
-  .menu-icon {
-    display: none; /* Ocultar el icono en pantallas grandes */
+  
+  /* Botones en móvil */
+  button {
+    padding: 14px 25px;
+    font-size: 15px;
+    width: 100%;
   }
 }
 
-
-/*ESTILOS TABLA*/
-.lista-incidencias{
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: Arial, sans-serif;
-  font-size: 16px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
+/* Tabletas pequeñas */
+@media (max-width: 480px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  main {
+    padding: 15px 10px !important;
+    width: 100% !important;
+  }
+  
+  .encabezado {
+    padding: 20px 15px;
+  }
+  
+  .encabezado h1 {
+    font-size: 1.5em;
+  }
+  
+  .options-container {
+    gap: 15px;
+  }
+  
+  .option-box {
+    height: 160px;
+    padding: 20px 15px;
+  }
+  
+  .option-box h3 {
+    font-size: 16px;
+  }
+  
+  .option-box p {
+    font-size: 13px;
+  }
+  
+  .option-box i {
+    font-size: 36px;
+  }
+  
+  .mobile-home-btn {
+    padding: 18px;
+  }
+  
+  .mobile-home-btn span {
+    font-size: 15px;
+  }
+  
+  /* Asegurar que las tablas no desborden */
+  .lista-incidencias,
+  .lista-clientes,
+  .lista-usuarios,
+  .lista-ventas {
+    padding: 15px 10px;
+    margin: 10px -10px;
+    width: calc(100% + 20px);
+  }
 }
 
-th, td {
-  padding: 12px 15px;
-  text-align: left;
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-th {
-  background: #4A90E2;
-  color: white;
-  font-weight: bold;
-  text-transform: uppercase;
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-tr {
-  border-bottom: 1px solid #ddd;
-  transition: background 0.3s ease;
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border-radius: 4px;
 }
 
-tr:hover {
-  background: #f5f5f5;
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
 }
 
-tbody tr:last-child {
-  border-bottom: none;
+/* ===== ESTILOS PARA BOTONES ESPECIALES ===== */
+.btn-rojo {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    color: white !important;
 }
 
-td {
-  color: #333;
-}
-}
-
-/*ESTILOS PARA EDITAR CLIENTE DOM CLIENTES*/
-/* Estilos para los íconos de acciones */
-.acciones-cliente {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
+.btn-rojo:hover {
+    background: linear-gradient(135deg, #c0392b, #a93226) !important;
+    transform: translateY(-2px);
 }
 
-.btn-editar, .btn-eliminar {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 5px;
+/* Mejora para los botones del formulario */
+.form-row:last-child {
+    justify-content: flex-start;
+    gap: 15px;
 }
 
-.btn-editar {
-  color: #3498db;
+.form-row:last-child button {
+    flex: none;
+    min-width: 140px;
 }
 
-.btn-eliminar {
-  color: #e74c3c;
-}
-
-.btn-editar:hover {
-  color: #2980b9;
-}
-
-.btn-eliminar:hover {
-  color: #c0392b;
-}
-
-/*SECCION DE AGREGAR TECNICO*/
-
+/* ===== ESTILOS PARA GESTIÓN DE TÉCNICOS ===== */
 #tecnicos-container {
-  margin-top: 5px;
+    margin-bottom: 10px;
 }
 
 .select-tecnico {
-  margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.select-tecnico select {
+    flex: 1;
 }
 
 .eliminar-tecnico {
-  margin-left: 10px;
-  background-color: #ff6b6b;
-  color: white;
-  border: none;
-  padding: 2px 5px;
-  border-radius: 3px;
-  cursor: pointer;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .eliminar-tecnico:hover {
-  background-color: #ff5252;
+    background: #c0392b;
+    transform: scale(1.05);
 }
 
-#agregar-tecnico:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.btn-secundario {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
 }
 
+.btn-secundario:hover {
+    background: linear-gradient(135deg, #7f8c8d, #6c7a7d);
+    transform: translateY(-2px);
+}
 
-/*ESTILO TABLA VENTAS*/
+/* Responsive para técnicos */
+@media (max-width: 768px) {
+    .select-tecnico {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .eliminar-tecnico {
+        align-self: flex-end;
+        width: auto;
+    }
+}
 
-/* Estilos para la sección de ventas */
+/* ===== ESTILOS PARA ESTADÍSTICAS ===== */
+.estadisticas-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.estadistica-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid #3498db;
+}
+
+.estadistica-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.estadistica-icon {
+    font-size: 2.5em;
+    color: #3498db;
+    margin-bottom: 15px;
+}
+
+.estadistica-numero {
+    font-size: 2.8em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 10px 0;
+}
+
+.estadistica-titulo {
+    font-size: 14px;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Contenedor de gráficos */
+.graficos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin: 30px 0;
+}
+
+.grafico-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+
+.grafico-card h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.grafico-placeholder {
+    flex: 1;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Filtros de estadísticas */
+.filtros-estadisticas {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin: 30px 0;
+}
+
+.filtros-estadisticas h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Responsive para estadísticas */
+@media (max-width: 768px) {
+    .estadisticas-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .graficos-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .grafico-card {
+        height: 300px;
+        padding: 20px;
+    }
+    
+    .estadistica-card {
+        padding: 20px;
+    }
+    
+    .estadistica-numero {
+        font-size: 2.2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .graficos-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .grafico-card {
+        height: 250px;
+    }
+    
+    .filtros-estadisticas .form-row {
+        flex-direction: column;
+    }
+}
+
+/* Estilos específicos para los botones de filtro rápido */
+.btn-filtro-rapido {
+    background: white;
+    border: 2px solid #3498db;
+    color: #3498db;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-filtro-rapido:hover {
+    background: #3498db;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-filtro-rapido.active {
+    background: #3498db;
+    color: white;
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA SOPORTE TÉCNICO ===== */
+.breadcrumb {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.breadcrumb a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.model-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.model-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #3498db;
+}
+
+.model-icon {
+    font-size: 2.5em;
+    color: #3498db;
+    margin-bottom: 15px;
+}
+
+.model-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.model-type {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.back-button {
+    background: #95a5a6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background: #7f8c8d;
+    transform: translateX(-3px);
+}
+
+.doc-list {
+    display: grid;
+    gap: 15px;
+}
+
+.doc-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.doc-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.doc-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Modales */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close-modal {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: #000;
+}
+
+#pdfViewer {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Responsive para soporte */
+@media (max-width: 768px) {
+    .model-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 20px;
+        width: 95%;
+    }
+    
+    #pdfViewer {
+        height: 400px;
+    }
+    
+    .search-container {
+        flex-direction: column;
+    }
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA USUARIOS ===== */
+.lista-usuarios {
+    margin-top: 20px;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.lista-usuarios table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.lista-usuarios thead {
+    background: linear-gradient(135deg, #1637cc, #1a4de4);
+    color: white;
+}
+
+.lista-usuarios th, 
+.lista-usuarios td {
+    padding: 18px 25px;
+    border-bottom: 1px solid #e9ecef;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.lista-usuarios th {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lista-usuarios tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.lista-usuarios tbody tr:hover {
+    background-color: #e3f2fd;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Estilos para el modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.close-modal {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: #000;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+/* Badges para estatus */
+.badge-activo {
+    background: linear-gradient(135deg, #27ae60, #219a52);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.badge-inactivo {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+/* Responsive para usuarios */
+@media (max-width: 768px) {
+    .lista-usuarios {
+        padding: 20px 15px;
+    }
+    
+    .lista-usuarios th, 
+    .lista-usuarios td {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 20px;
+        width: 95%;
+    }
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA VENTAS ===== */
 .lista-ventas {
-  margin-top: 2rem;
-  padding: 1rem;
-  background: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
 }
 
+.lista-ventas table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.lista-ventas thead {
+    background: linear-gradient(135deg, #1637cc, #1a4de4);
+    color: white;
+}
+
+.lista-ventas th, 
+.lista-ventas td {
+    padding: 18px 25px;
+    border-bottom: 1px solid #e9ecef;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.lista-ventas th {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lista-ventas tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.lista-ventas tbody tr:hover {
+    background-color: #e3f2fd;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+/* Filtros mejorados */
 .filtros {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border-left: 4px solid #3498db;
+}
+
+.filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.filtros-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filtros label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
 }
 
 .filtros input {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  flex-grow: 1;
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Checkbox personalizado */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 25px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background: #3498db;
+    border-color: #3498db;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Mensajes */
+.mensaje {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: center;
+    font-weight: 500;
+    display: none;
+}
+
+.mensaje.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+}
+
+.mensaje.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+}
+
+.mensaje.info {
+    background: #cce7ff;
+    color: #004085;
+    border: 1px solid #b3d7ff;
+    display: block;
+}
+
+/* Responsive para ventas */
+@media (max-width: 768px) {
+    .filtros-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filtros-actions {
+        flex-direction: column;
+    }
+    
+    .lista-ventas {
+        padding: 20px 15px;
+    }
+    
+    .lista-ventas th, 
+    .lista-ventas td {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .checkbox-group {
+        margin-top: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .filtros {
+        padding: 15px;
+    }
+    
+    .lista-ventas {
+        padding: 15px 10px;
+    }
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA VENTAS ===== */
+
+/* Contenedor de series */
+.series-container {
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-medium);
+}
+
+.serie-input {
+    margin-bottom: 8px;
+}
+
+/* Checkbox personalizado */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+    font-weight: normal;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--gray-medium);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Filtros */
+.filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.filtro-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.filtro-input {
+    padding: 8px 12px;
+    border: 1px solid var(--gray-medium);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Tabla de ventas */
+.tabla-ventas {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.tabla-ventas th {
+    background: var(--primary-color);
+    color: var(--white);
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.tabla-ventas td {
+    padding: 12px;
+    border-bottom: 1px solid var(--gray-medium);
+    vertical-align: middle;
+}
+
+.tabla-ventas tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Paginación */
+.paginacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 15px 0;
+    border-top: 1px solid var(--gray-medium);
+}
+
+.info-paginacion {
+    color: var(--gray-medium);
+    font-size: 14px;
+}
+
+.controles-paginacion {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-paginacion {
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-paginacion:hover:not(:disabled) {
+    background: var(--primary-hover);
+}
+
+.btn-paginacion:disabled {
+    background: var(--gray-medium);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.info-pagina {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* Mensajes */
+.mensaje {
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    margin: 15px 0;
+    font-weight: 500;
+}
+
+.mensaje.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.mensaje.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.mensaje.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filtros-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .paginacion {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .tabla-container {
+        overflow-x: auto;
+    }
+    
+    .tabla-ventas {
+        min-width: 800px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .full-width {
+        width: 100%;
+    }
+}
+
+/* ===== CORRECCIÓN ESPACIO BARRA LATERAL CONTRAÍDA ===== */
+main {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    flex: 1;
+    min-width: 0;
+    transition: var(--transition);
+    width: calc(100% - var(--sidebar-width));
+}
+
+main.contraido {
+    margin-left: var(--sidebar-collapsed);
+    width: calc(100% - var(--sidebar-collapsed));
+}
+
+/* Cuando la barra está contraída, el contenido debe expandirse */
+.sidebar.contraida + main {
+    margin-left: var(--sidebar-collapsed);
+    width: calc(100% - var(--sidebar-collapsed));
+}
+
+/* Asegurar que las secciones ocupen todo el espacio disponible */
+.encabezado,
+.lista-incidencias,
+.lista-ventas {
+    width: 100%;
+    max-width: none;
+}
+
+/* Corrección específica para el contenido dentro del main */
+main .encabezado,
+main .lista-incidencias,
+main .lista-ventas {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Para formularios y contenedores principales */
+.form-row,
+.filtros,
+.tabla-container {
+    width: 100%;
+}
+
+/* Asegurar que los elementos no tengan márgenes izquierdos innecesarios */
+.encabezado > *,
+.lista-incidencias > *,
+.lista-ventas > * {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Corrección para elementos específicos que podrían tener márgenes */
+.form-row > div,
+.filtros-grid,
+.search-container {
+    margin-left: 0;
+}
+
+/* ===== RESPONSIVE MEJORADO ===== */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .sidebar.contraida {
+        transform: translateX(-100%);
+        width: var(--sidebar-collapsed);
+    }
+    
+    main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px;
+    }
+    
+    .sidebar.contraida + main,
+    .sidebar.active + main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* ===== CORRECCIÓN ESPECÍFICA PARA VENTAS ===== */
+/* Asegurar que los filtros ocupen todo el espacio */
+.filtros {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.filtros-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+/* Corrección para la tabla */
+.tabla-container {
+    width: 100%;
+    overflow-x: auto;
 }
 
 #tabla-ventas {
-  width: 100%;
-  border-collapse: collapse;
+    width: 100%;
+    min-width: auto;
 }
 
-#tabla-ventas th, #tabla-ventas td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+/* ===== GARANTIZAR EXPANSIÓN COMPLETA ===== */
+/* Reset de márgenes para todos los elementos dentro del main */
+main > * {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
 }
 
-#tabla-ventas th {
-  background-color: rgb(36, 96, 206);
-  font-weight: bold;
+/* Contenedores principales sin restricciones de ancho */
+.encabezado,
+.lista-incidencias,
+.lista-ventas,
+.model-grid {
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
-#tabla-ventas tr:hover {
-  background-color: #f5f5f5;
+/* Formularios ocupan todo el espacio disponible */
+#form-venta,
+#report-form,
+.new-incidencia-form {
+    width: 100%;
+    max-width: none;
 }
 
-#btn-refrescar {
-  padding: 0.5rem 1rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+/* ===== AJUSTES FINOS PARA ELEMENTOS INTERNOS ===== */
+/* Asegurar que los elementos de formulario no tengan márgenes que causen espacios */
+.form-row {
+    gap: 15px;
+    margin-left: 0;
+    margin-right: 0;
 }
 
-#btn-refrescar:hover {
-  background-color: #45a049;
+.form-row > div {
+    flex: 1;
+    min-width: 200px;
+    margin: 0;
+}
+
+/* Corrección para elementos de búsqueda */
+.search-container {
+    max-width: none;
+    margin-left: 0;
+}
+
+/* Para el contenido de soporte técnico */
+#content-container,
+#marcas-container,
+#modelos-container,
+#documentos-container {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* ===== MODO OSCURO CONSISTENTE ===== */
+body.modo-oscuro main,
+body.modo-oscuro .encabezado,
+body.modo-oscuro .lista-incidencias,
+body.modo-oscuro .lista-ventas {
+    margin-left: 0;
+    margin-right: 0;
+
+    /* ===== CORRECCIÓN DEL ESPACIO ===== */
+main {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    flex: 1;
+    min-width: 0;
+    transition: var(--transition);
+    width: calc(100% - var(--sidebar-width));
+    /* Asegurar que no haya espacios adicionales */
+    box-sizing: border-box;
+}
+
+main.contraido {
+    margin-left: var(--sidebar-collapsed);
+    width: calc(100% - var(--sidebar-collapsed));
+}
+
+/* Eliminar cualquier margen o padding no deseado */
+.encabezado,
+.lista-incidencias,
+.lista-ventas,
+.model-grid,
+.new-incidencia-form,
+.filtros {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+}
+
+/* Contenedor principal sin espacios */
+#admin-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Grid containers ajustados */
+.model-grid-content,
+.options-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
 }
