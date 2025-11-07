@@ -1,11 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estadísticas</title>
-    <link rel="stylesheet" href="../css/styles.css?v=8">
+    <title>Estadísticas e Informes - Panel de Control</title>
+    <link rel="stylesheet" href="../css/styles.css?v=1.9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --info-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--box-shadow);
+            border-left: 5px solid var(--primary-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: rgba(67, 97, 238, 0.05);
+            border-radius: 0 0 0 80px;
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 12px 0;
+            color: #495057;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            opacity: 0.7;
+        }
+        
+        .stat-change {
+            font-size: 13px;
+            color: #28a745;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.negative {
+            color: #dc3545;
+        }
+        
+        .chart-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .chart-container:hover {
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            margin-bottom: 18px;
+            color: var(--dark-color);
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .chart-btn:hover {
+            background: #e9ecef;
+            color: var(--primary-color);
+        }
+        
+        .filters {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+        
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .filter-item label {
+            font-size: 13px;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .filter-item select, .filter-item input {
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .filter-item select:focus, .filter-item input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            outline: none;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(67, 97, 238, 0.05);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(67, 97, 238, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        @media (max-width: 1024px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filter-item {
+                min-width: 100%;
+            }
+
+            .chart-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 8px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kpi-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .kpi-positive {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .kpi-negative {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,8 +366,8 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2 class="sidebar-title">
-        <i class="fas fa-tools"></i>
-        Panel
+        <i class="fas fa-chart-line"></i>
+        Analytics
       </h2>
       <button id="toggleSidebar" class="toggle-sidebar">
         <i class="fas fa-chevron-left"></i>
@@ -59,9 +406,15 @@
         </a>
       </li>
       <li>
-        <a href="soporte.html" title="Soporte Técnico" class="active">
+        <a href="soporte.html" title="Soporte Técnico">
           <i class="fas fa-headset"></i>
           <span class="sidebar-link-text">Soporte Técnico</span>
+        </a>
+      </li>
+      <li>
+        <a href="informes.html" title="Estadísticas" class="active">
+          <i class="fas fa-chart-bar"></i>
+          <span class="sidebar-link-text">Estadísticas</span>
         </a>
       </li>
       <li>
@@ -80,13 +433,361 @@
     </div>
   </aside>
 
-  <!-- CONTENIDO ORIGINAL EXACTO -->
+  <!-- Contenido Principal Actualizado -->
   <main id="mainContent">
     <section class="encabezado">
-      <h1> EN DESARROLLO...</h1>
+      <h1><i class="fas fa-chart-pie"></i> Panel de Estadísticas</h1>
+      <p>Análisis en tiempo real de las gestiones técnicas</p>
     </section>
+
+    <!-- Pestañas para diferentes vistas -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Resumen General</button>
+      <button class="tab" data-tab="incidencias">Análisis de Incidencias</button>
+      <button class="tab" data-tab="tecnicos">Rendimiento de Técnicos</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+      <div class="filter-group">
+        <div class="filter-item">
+          <label for="rangoFecha"><i class="far fa-calendar-alt"></i> Rango de Fechas</label>
+          <select id="rangoFecha">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="90">Últimos 3 meses</option>
+            <option value="180">Últimos 6 meses</option>
+            <option value="365">Último año</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+        <div class="filter-item" id="customDateRange" style="display: none;">
+          <label for="fechaInicio"><i class="far fa-calendar"></i> Fecha Inicio</label>
+          <input type="date" id="fechaInicio">
+        </div>
+        <div class="filter-item" id="customDateRangeEnd" style="display: none;">
+          <label for="fechaFin"><i class="far fa-calendar"></i> Fecha Fin</label>
+          <input type="date" id="fechaFin">
+        </div>
+        <div class="filter-item">
+          <label for="tecnico"><i class="fas fa-user-cog"></i> Técnico</label>
+          <select id="tecnico">
+            <option value="">Todos los técnicos</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="sucursal"><i class="fas fa-building"></i> Sucursal</label>
+          <select id="sucursal">
+            <option value="">Todas las sucursales</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="estatus"><i class="fas fa-filter"></i> Estatus</label>
+          <select id="estatus">
+            <option value="">Todos los estatus</option>
+            <option value="abierto">Abierto</option>
+            <option value="asignado">Asignado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="completado">Completado</option>
+            <option value="cerrado con factura">Cerrado con Factura</option>
+            <option value="cerrado sin factura">Cerrado sin Factura</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>&nbsp;</label>
+          <div style="display: flex; gap: 10px;">
+            <button onclick="cargarEstadisticas()" class="btn btn-primary">
+              <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+            <button onclick="exportarDatos()" class="btn btn-outline">
+              <i class="fas fa-download"></i> Exportar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="export-options" id="exportOptions" style="display: none;">
+        <button onclick="exportarPDF()" class="btn btn-outline">
+          <i class="fas fa-file-pdf"></i> PDF
+        </button>
+        <button onclick="exportarExcel()" class="btn btn-outline">
+          <i class="fas fa-file-excel"></i> Excel
+        </button>
+        <button onclick="exportarImagen()" class="btn btn-outline">
+          <i class="fas fa-image"></i> Imagen
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenido de pestaña: Resumen General -->
+    <div class="tab-content active" id="overview-tab">
+      <!-- Estadísticas Generales -->
+      <div class="stats-grid" id="statsGeneral">
+        <div class="stat-card">
+          <h3><i class="fas fa-tasks"></i> Total Incidencias</h3>
+          <div class="stat-value">
+            <span id="totalIncidencias">0</span>
+            <i class="fas fa-clipboard-list stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <i class="fas fa-chart-line"></i>
+            <span id="tendenciaIncidencias">+0% vs mes anterior</span>
+          </div>
+          <div class="last-updated" id="lastUpdated"></div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-users"></i> Total Clientes</h3>
+          <div class="stat-value">
+            <span id="totalClientes">0</span>
+            <i class="fas fa-user-friends stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <i class="fas fa-chart-line"></i>
+            <span>Clientes registrados</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-check-circle"></i> Resueltas Este Mes</h3>
+          <div class="stat-value">
+            <span id="resueltasMes">0</span>
+            <i class="fas fa-check-double stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <i class="fas fa-chart-line"></i>
+            <span id="eficienciaMensual">0% de eficiencia</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-clock"></i> Tiempo Promedio</h3>
+          <div class="stat-value">
+            <span id="tiempoPromedio">0d</span>
+            <i class="fas fa-stopwatch stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <i class="fas fa-chart-line"></i>
+            <span>Resolución de incidencias</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos principales -->
+      <div class="stats-row">
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Incidencias por Estatus</span>
+            <div class="chart-actions">
+              <button class="chart-btn" onclick="toggleChartType('chartEstatus')">
+                <i class="fas fa-exchange-alt"></i> Cambiar vista
+              </button>
+              <button class="chart-btn" onclick="downloadChart('chartEstatus')">
+                <i class="fas fa-download"></i> Descargar
+              </button>
+            </div>
+          </div>
+          <canvas id="chartEstatus" height="250"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Incidencias por Técnico</span>
+            <div class="chart-actions">
+              <button class="chart-btn" onclick="toggleChartType('chartTecnico')">
+                <i class="fas fa-exchange-alt"></i> Cambiar vista
+              </button>
+              <button class="chart-btn" onclick="downloadChart('chartTecnico')">
+                <i class="fas fa-download"></i> Descargar
+              </button>
+            </div>
+          </div>
+          <canvas id="chartTecnico" height="250"></canvas>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Incidencias por Sucursal</span>
+            <div class="chart-actions">
+              <button class="chart-btn" onclick="toggleChartType('chartSucursal')">
+                <i class="fas fa-exchange-alt"></i> Cambiar vista
+              </button>
+              <button class="chart-btn" onclick="downloadChart('chartSucursal')">
+                <i class="fas fa-download"></i> Descargar
+              </button>
+            </div>
+          </div>
+          <canvas id="chartSucursal" height="250"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Evolución Mensual</span>
+            <div class="chart-actions">
+              <button class="chart-btn" onclick="toggleChartType('chartMensual')">
+                <i class="fas fa-exchange-alt"></i> Cambiar vista
+              </button>
+              <button class="chart-btn" onclick="downloadChart('chartMensual')">
+                <i class="fas fa-download"></i> Descargar
+              </button>
+            </div>
+          </div>
+          <canvas id="chartMensual" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido de pestaña: Análisis de Incidencias -->
+    <div class="tab-content" id="incidencias-tab">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3><i class="fas fa-exclamation-circle"></i> Incidencias Abiertas</h3>
+          <div class="stat-value">
+            <span id="incidenciasAbiertas">0</span>
+            <i class="fas fa-door-open stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Actualmente pendientes</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-user-clock"></i> Asignadas</h3>
+          <div class="stat-value">
+            <span id="incidenciasAsignadas">0</span>
+            <i class="fas fa-user-check stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>En proceso</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-flag-checkered"></i> Completadas</h3>
+          <div class="stat-value">
+            <span id="incidenciasCompletadas">0</span>
+            <i class="fas fa-flag stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Finalizadas este mes</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-file-invoice-dollar"></i> Cerradas con Factura</h3>
+          <div class="stat-value">
+            <span id="incidenciasFacturadas">0</span>
+            <i class="fas fa-file-invoice stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Ingresos generados</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container full-width">
+        <div class="chart-title">
+          <span>Top 10 Clientes con Más Incidencias</span>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="toggleChartType('chartClientes')">
+              <i class="fas fa-exchange-alt"></i> Cambiar vista
+            </button>
+            <button class="chart-btn" onclick="downloadChart('chartClientes')">
+              <i class="fas fa-download"></i> Descargar
+            </button>
+          </div>
+        </div>
+        <canvas id="chartClientes" height="300"></canvas>
+      </div>
+
+      <div class="stats-row">
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Tipos de Falla Más Comunes</span>
+          </div>
+          <canvas id="chartFallas" height="250"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Distribución por Prioridad</span>
+          </div>
+          <canvas id="chartPrioridad" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido de pestaña: Rendimiento de Técnicos -->
+    <div class="tab-content" id="tecnicos-tab">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3><i class="fas fa-trophy"></i> Técnico Más Eficiente</h3>
+          <div class="stat-value">
+            <span id="tecnicoEficiente">-</span>
+            <i class="fas fa-crown stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Mayor tasa de resolución</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-bolt"></i> Técnico Más Rápido</h3>
+          <div class="stat-value">
+            <span id="tecnicoRapido">-</span>
+            <i class="fas fa-bolt stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Menor tiempo promedio</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-chart-line"></i> Técnico del Mes</h3>
+          <div class="stat-value">
+            <span id="tecnicoMes">-</span>
+            <i class="fas fa-award stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Más incidencias resueltas</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fas fa-users"></i> Total de Técnicos</h3>
+          <div class="stat-value">
+            <span id="totalTecnicos">0</span>
+            <i class="fas fa-users stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <span>Activos en el sistema</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-container full-width">
+        <div class="chart-title">
+          <span>Rendimiento de Técnicos</span>
+          <div class="chart-actions">
+            <button class="chart-btn" onclick="toggleChartType('chartRendimiento')">
+              <i class="fas fa-exchange-alt"></i> Cambiar vista
+            </button>
+            <button class="chart-btn" onclick="downloadChart('chartRendimiento')">
+              <i class="fas fa-download"></i> Descargar
+            </button>
+          </div>
+        </div>
+        <canvas id="chartRendimiento" height="300"></canvas>
+      </div>
+
+      <div class="stats-row">
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Tiempos de Respuesta por Técnico</span>
+          </div>
+          <canvas id="chartTiempos" height="250"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">
+            <span>Satisfacción del Cliente</span>
+          </div>
+          <canvas id="chartSatisfaccion" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script src="../scripts/sidebar-state.js"></script>
+  <script src="../scripts/estadisticas.js?v=9"></script>
 </body>
 </html>
