@@ -32,28 +32,33 @@ function inicializarInterfaz() {
             } else {
                 if (customDateRange) customDateRange.style.display = 'none';
                 if (customDateRangeEnd) customDateRangeEnd.style.display = 'none';
+                // Aplicar filtros inmediatamente al cambiar rango predefinido
+                aplicarFiltros();
             }
         });
     }
 
-    // Configurar botón de exportación
-    const exportBtn = document.querySelector('.btn-outline');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
-            const exportOptions = document.getElementById('exportOptions');
-            if (exportOptions) {
-                exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
-            }
-        });
+    // Configurar inputs de fecha personalizada
+    const fechaInicio = document.getElementById('fechaInicio');
+    const fechaFin = document.getElementById('fechaFin');
+    if (fechaInicio && fechaFin) {
+        fechaInicio.addEventListener('change', aplicarFiltros);
+        fechaFin.addEventListener('change', aplicarFiltros);
     }
+
+    // Configurar otros filtros
+    const tecnico = document.getElementById('tecnico');
+    const sucursal = document.getElementById('sucursal');
+    const estatus = document.getElementById('estatus');
+    
+    if (tecnico) tecnico.addEventListener('change', aplicarFiltros);
+    if (sucursal) sucursal.addEventListener('change', aplicarFiltros);
+    if (estatus) estatus.addEventListener('change', aplicarFiltros);
 
     // Inicializar fecha actual para filtros personalizados
     const hoy = new Date();
     const hace30Dias = new Date();
     hace30Dias.setDate(hoy.getDate() - 30);
-    
-    const fechaInicio = document.getElementById('fechaInicio');
-    const fechaFin = document.getElementById('fechaFin');
     
     if (fechaInicio) fechaInicio.value = hace30Dias.toISOString().split('T')[0];
     if (fechaFin) fechaFin.value = hoy.toISOString().split('T')[0];
@@ -77,18 +82,41 @@ function cambiarPestaña(tabId) {
     
     currentTab = tabId;
     
-    // Cargar datos específicos de la pestaña si es necesario
-    if (tabId === 'tecnicos') {
-        cargarDatosTecnicos();
-    }
+    // Recargar datos específicos de la pestaña
+    cargarEstadisticas();
 }
 
 async function cargarEstadisticas() {
     try {
         mostrarLoading(true);
         
+        // Construir parámetros de filtro
+        const params = new URLSearchParams();
+        
+        // Agregar filtros actuales
+        const rangoFecha = document.getElementById('rangoFecha')?.value || '30';
+        params.append('rangoFecha', rangoFecha);
+        
+        if (rangoFecha === 'custom') {
+            const fechaInicio = document.getElementById('fechaInicio')?.value;
+            const fechaFin = document.getElementById('fechaFin')?.value;
+            if (fechaInicio) params.append('fechaInicio', fechaInicio);
+            if (fechaFin) params.append('fechaFin', fechaFin);
+        }
+        
+        const tecnico = document.getElementById('tecnico')?.value;
+        const sucursal = document.getElementById('sucursal')?.value;
+        const estatus = document.getElementById('estatus')?.value;
+        
+        if (tecnico) params.append('tecnico', tecnico);
+        if (sucursal) params.append('sucursal', sucursal);
+        if (estatus) params.append('estatus', estatus);
+        
         // Cargar estadísticas generales
-        const responseGeneral = await fetch('../backend/estadisticas.php?action=estadisticas_generales');
+        const urlGeneral = `../backend/estadisticas.php?action=estadisticas_generales&${params.toString()}`;
+        console.log('Cargando:', urlGeneral);
+        
+        const responseGeneral = await fetch(urlGeneral);
         if (!responseGeneral.ok) {
             throw new Error('Error en la respuesta del servidor: ' + responseGeneral.status);
         }
@@ -103,7 +131,9 @@ async function cargarEstadisticas() {
         }
         
         // Cargar estadísticas detalladas de incidencias
-        const responseIncidencias = await fetch('../backend/estadisticas.php?action=estadisticas_incidencias');
+        const urlIncidencias = `../backend/estadisticas.php?action=estadisticas_incidencias&${params.toString()}`;
+        const responseIncidencias = await fetch(urlIncidencias);
+        
         if (!responseIncidencias.ok) {
             throw new Error('Error en la respuesta del servidor: ' + responseIncidencias.status);
         }
@@ -117,6 +147,19 @@ async function cargarEstadisticas() {
             throw new Error(dataIncidencias.error || 'Error en los datos de incidencias');
         }
         
+        // Cargar datos de técnicos si estamos en esa pestaña
+        if (currentTab === 'tecnicos') {
+            const urlTecnicos = `../backend/estadisticas.php?action=estadisticas_tecnicos&${params.toString()}`;
+            const responseTecnicos = await fetch(urlTecnicos);
+            
+            if (responseTecnicos.ok) {
+                const dataTecnicos = await responseTecnicos.json();
+                if (dataTecnicos.success) {
+                    actualizarEstadisticasTecnicos(dataTecnicos.data);
+                }
+            }
+        }
+        
     } catch (error) {
         console.error('Error cargando estadísticas:', error);
         mostrarError('Error al cargar las estadísticas: ' + error.message);
@@ -128,16 +171,25 @@ async function cargarEstadisticas() {
 function actualizarEstadisticasGenerales(data) {
     console.log('Actualizando estadísticas generales:', data);
     
-    // Actualizar tarjetas principales con verificación de elementos
+    // Actualizar tarjetas principales
     actualizarElementoSiExiste('totalIncidencias', data.total_incidencias || '0');
     actualizarElementoSiExiste('totalClientes', data.total_clientes || '0');
-    actualizarElementoSiExiste('resueltasMes', data.incidencias_resueltas_mes || '0');
-    actualizarElementoSiExiste('incidenciasPendientes', data.incidencias_pendientes || '0');
+    actualizarElementoSiExiste('resueltasMes', data.incidencias_resueltas || '0');
+    actualizarElementoSiExiste('eficienciaMensual', `${data.eficiencia_total || 0}% de eficiencia`);
     
-    // Actualizar tiempo promedio
-    actualizarElementoSiExiste('tiempoPromedio', data.tiempo_promedio || '0d');
+    // Actualizar tarjetas de la pestaña de incidencias
+    actualizarElementoSiExiste('incidenciasAbiertas', data.incidencias_abiertas || '0');
+    actualizarElementoSiExiste('incidenciasAsignadas', data.incidencias_asignadas || '0');
+    actualizarElementoSiExiste('incidenciasCompletadas', data.incidencias_completadas || '0');
+    actualizarElementoSiExiste('incidenciasFacturadas', data.incidencias_cerradas_factura || '0');
     
-    // Calcular y mostrar tendencias
+    // Nueva estadística: Total de equipos
+    actualizarElementoSiExiste('totalEquipos', data.total_equipos || '0');
+    
+    // Tiempo promedio (placeholder - necesitarías fecha_cierre en tu tabla)
+    actualizarElementoSiExiste('tiempoPromedio', 'N/A');
+    
+    // Tendencia
     const tendencia = data.tendencia_incidencias || 0;
     const elemento = document.getElementById('tendenciaIncidencias');
     if (elemento) {
@@ -145,34 +197,21 @@ function actualizarEstadisticasGenerales(data) {
         elemento.className = `stat-change ${tendencia >= 0 ? '' : 'negative'}`;
     }
     
-    // Calcular eficiencia
-    const total = data.total_incidencias || 1;
-    const resueltas = data.incidencias_resueltas_mes || 0;
-    const eficiencia = Math.round((resueltas / total) * 100);
-    actualizarElementoSiExiste('eficienciaMensual', `${eficiencia}% de eficiencia`);
-    
-    // Actualizar estadísticas de la pestaña de incidencias
-    actualizarElementoSiExiste('incidenciasAbiertas', data.incidencias_activas || '0');
-    actualizarElementoSiExiste('incidenciasAsignadas', data.incidencias_activas || '0');
-    actualizarElementoSiExiste('incidenciasCompletadas', data.incidencias_completadas || '0');
-    actualizarElementoSiExiste('incidenciasFacturadas', data.incidencias_facturadas || '0');
-    
-    // Actualizar última actualización
-    actualizarElementoSiExiste('lastUpdated', `Actualizado: ${new Date().toLocaleTimeString()}`);
-    
-    // Mostrar detalles de estatus en consola para debugging
-    if (data.detalle_estatus) {
-        console.log('Detalle de estatus:', data.detalle_estatus);
-    }
+    // Última actualización
+    actualizarElementoSiExiste('lastUpdated', `Actualizado: ${data.last_updated || new Date().toLocaleTimeString()}`);
 }
 
-function actualizarElementoSiExiste(id, valor) {
-    const elemento = document.getElementById(id);
-    if (elemento) {
-        elemento.textContent = valor;
-    } else {
-        console.warn(`Elemento con ID '${id}' no encontrado`);
-    }
+function actualizarEstadisticasTecnicos(data) {
+    console.log('Actualizando estadísticas de técnicos:', data);
+    
+    // Actualizar tarjetas de técnicos
+    actualizarElementoSiExiste('tecnicoEficiente', data.tecnico_eficiente || 'N/A');
+    actualizarElementoSiExiste('tecnicoMes', data.tecnico_mas_completadas || 'N/A');
+    actualizarElementoSiExiste('tecnicoRapido', data.tecnico_eficiente || 'N/A');
+    actualizarElementoSiExiste('totalTecnicos', data.total_tecnicos || '0');
+    
+    // Crear gráficos de técnicos
+    crearGraficosTecnicos(data);
 }
 
 function crearGraficos(data) {
@@ -180,16 +219,20 @@ function crearGraficos(data) {
     
     // Destruir charts existentes
     Object.values(charts).forEach(chart => {
-        if (chart) chart.destroy();
+        if (chart && typeof chart.destroy === 'function') {
+            chart.destroy();
+        }
     });
+    charts = {};
     
     // Colores para los gráficos
     const colores = [
         '#4361ee', '#3a0ca3', '#4cc9f0', '#f72585', '#7209b7',
-        '#4895ef', '#560bad', '#b5179e', '#f15bb5', '#00bbf9'
+        '#4895ef', '#560bad', '#b5179e', '#f15bb5', '#00bbf9',
+        '#28a745', '#20c997', '#ffc107', '#dc3545', '#6c757d'
     ];
     
-    // Gráfico de estatus - CON VALIDACIÓN
+    // Gráfico de estatus
     if (data.por_estatus && data.por_estatus.length > 0) {
         const ctxEstatus = document.getElementById('chartEstatus');
         if (ctxEstatus) {
@@ -225,11 +268,9 @@ function crearGraficos(data) {
                 }
             });
         }
-    } else {
-        console.warn('No hay datos para el gráfico de estatus');
     }
     
-    // Gráfico por técnico - CON VALIDACIÓN
+    // Gráfico por técnico
     if (data.por_tecnico && data.por_tecnico.length > 0) {
         const ctxTecnico = document.getElementById('chartTecnico');
         if (ctxTecnico) {
@@ -238,7 +279,7 @@ function crearGraficos(data) {
                 data: {
                     labels: data.por_tecnico.map(item => item.tecnico || 'Sin técnico'),
                     datasets: [{
-                        label: 'Incidencias',
+                        label: 'Incidencias Asignadas',
                         data: data.por_tecnico.map(item => item.cantidad),
                         backgroundColor: '#4361ee',
                         borderColor: '#3a0ca3',
@@ -255,11 +296,9 @@ function crearGraficos(data) {
                 }
             });
         }
-    } else {
-        console.warn('No hay datos para el gráfico de técnicos');
     }
     
-    // Gráfico por sucursal - CON VALIDACIÓN
+    // Gráfico por sucursal
     if (data.por_sucursal && data.por_sucursal.length > 0) {
         const ctxSucursal = document.getElementById('chartSucursal');
         if (ctxSucursal) {
@@ -284,11 +323,9 @@ function crearGraficos(data) {
                 }
             });
         }
-    } else {
-        console.warn('No hay datos para el gráfico de sucursales');
     }
     
-    // Gráfico mensual - CON VALIDACIÓN
+    // Gráfico mensual
     if (data.mensuales && data.mensuales.length > 0) {
         const ctxMensual = document.getElementById('chartMensual');
         if (ctxMensual) {
@@ -316,11 +353,9 @@ function crearGraficos(data) {
                 }
             });
         }
-    } else {
-        console.warn('No hay datos para el gráfico mensual');
     }
     
-    // Gráfico top clientes - CON VALIDACIÓN
+    // Gráfico top clientes
     if (data.top_clientes && data.top_clientes.length > 0) {
         const ctxClientes = document.getElementById('chartClientes');
         if (ctxClientes) {
@@ -347,48 +382,63 @@ function crearGraficos(data) {
                 }
             });
         }
-    } else {
-        console.warn('No hay datos para el gráfico de clientes');
+    }
+    
+    // Gráfico por equipo
+    if (data.por_equipo && data.por_equipo.length > 0) {
+        const ctxEquipo = document.getElementById('chartFallas');
+        if (ctxEquipo) {
+            charts.equipo = new Chart(ctxEquipo, {
+                type: 'bar',
+                data: {
+                    labels: data.por_equipo.map(item => item.equipo || 'Sin equipo'),
+                    datasets: [{
+                        label: 'Incidencias',
+                        data: data.por_equipo.map(item => item.cantidad),
+                        backgroundColor: '#4cc9f0',
+                        borderColor: '#3a0ca3',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
     }
 }
 
-function cargarDatosTecnicos() {
-    // Esta función cargaría datos específicos para la pestaña de técnicos
-    console.log('Cargando datos específicos de técnicos...');
-    
-    // Simular datos de técnicos (en una implementación real, harías una llamada API)
-    setTimeout(() => {
-        actualizarElementoSiExiste('tecnicoEficiente', 'Juan Pérez');
-        actualizarElementoSiExiste('tecnicoRapido', 'María García');
-        actualizarElementoSiExiste('tecnicoMes', 'Carlos López');
-        actualizarElementoSiExiste('totalTecnicos', '8');
-        
-        // Simular gráficos de técnicos
-        crearGraficosTecnicos();
-    }, 500);
-}
-
-function crearGraficosTecnicos() {
-    // Datos de ejemplo para gráficos de técnicos
-    const datosTecnicos = {
-        labels: ['Juan Pérez', 'María García', 'Carlos López', 'Ana Martínez', 'Pedro Rodríguez'],
-        datos: [45, 38, 32, 28, 25]
-    };
+function crearGraficosTecnicos(data) {
+    if (!data.graficos) return;
     
     // Gráfico de rendimiento de técnicos
     const ctxRendimiento = document.getElementById('chartRendimiento');
-    if (ctxRendimiento) {
+    if (ctxRendimiento && data.graficos.rendimiento) {
         charts.rendimiento = new Chart(ctxRendimiento, {
             type: 'bar',
             data: {
-                labels: datosTecnicos.labels,
-                datasets: [{
-                    label: 'Incidencias Resueltas',
-                    data: datosTecnicos.datos,
-                    backgroundColor: '#4361ee',
-                    borderColor: '#3a0ca3',
-                    borderWidth: 1
-                }]
+                labels: data.graficos.rendimiento.labels,
+                datasets: [
+                    {
+                        label: 'Incidencias Asignadas',
+                        data: data.graficos.rendimiento.datos_asignadas,
+                        backgroundColor: '#4361ee',
+                        borderColor: '#3a0ca3',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Incidencias Completadas',
+                        data: data.graficos.rendimiento.datos_completadas,
+                        backgroundColor: '#28a745',
+                        borderColor: '#20a745',
+                        borderWidth: 1
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -401,18 +451,18 @@ function crearGraficosTecnicos() {
         });
     }
     
-    // Gráfico de tiempos de respuesta
-    const ctxTiempos = document.getElementById('chartTiempos');
-    if (ctxTiempos) {
-        charts.tiempos = new Chart(ctxTiempos, {
+    // Gráfico de eficiencia
+    const ctxEficiencia = document.getElementById('chartTiempos');
+    if (ctxEficiencia && data.graficos.eficiencia) {
+        charts.eficiencia = new Chart(ctxEficiencia, {
             type: 'bar',
             data: {
-                labels: datosTecnicos.labels,
+                labels: data.graficos.eficiencia.labels,
                 datasets: [{
-                    label: 'Tiempo Promedio (días)',
-                    data: [2.5, 3.1, 1.8, 4.2, 2.9],
-                    backgroundColor: '#4cc9f0',
-                    borderColor: '#3a0ca3',
+                    label: 'Eficiencia (%)',
+                    data: data.graficos.eficiencia.datos,
+                    backgroundColor: '#ffc107',
+                    borderColor: '#e0a800',
                     borderWidth: 1
                 }]
             },
@@ -420,14 +470,19 @@ function crearGraficosTecnicos() {
                 responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Porcentaje (%)'
+                        }
                     }
                 }
             }
         });
     }
     
-    // Gráfico de satisfacción
+    // Gráfico de satisfacción (placeholder)
     const ctxSatisfaccion = document.getElementById('chartSatisfaccion');
     if (ctxSatisfaccion) {
         charts.satisfaccion = new Chart(ctxSatisfaccion, {
@@ -435,7 +490,7 @@ function crearGraficosTecnicos() {
             data: {
                 labels: ['Excelente', 'Bueno', 'Regular', 'Malo'],
                 datasets: [{
-                    data: [45, 35, 15, 5],
+                    data: [65, 25, 7, 3],
                     backgroundColor: ['#28a745', '#20c997', '#ffc107', '#dc3545'],
                     borderWidth: 2,
                     borderColor: '#fff'
@@ -453,6 +508,13 @@ function crearGraficosTecnicos() {
     }
 }
 
+function actualizarElementoSiExiste(id, valor) {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+        elemento.textContent = valor;
+    }
+}
+
 function formatearMes(mesString) {
     if (!mesString) return 'Sin fecha';
     const [year, month] = mesString.split('-');
@@ -463,16 +525,11 @@ function formatearMes(mesString) {
 function mostrarLoading(mostrar) {
     const elementos = document.querySelectorAll('.stat-value, .chart-container');
     elementos.forEach(elemento => {
-        if (mostrar) {
-            elemento.style.opacity = '0.5';
-        } else {
-            elemento.style.opacity = '1';
-        }
+        elemento.style.opacity = mostrar ? '0.5' : '1';
     });
 }
 
 function mostrarError(mensaje) {
-    // Crear o mostrar un mensaje de error
     let errorDiv = document.getElementById('errorMessage');
     if (!errorDiv) {
         errorDiv = document.createElement('div');
@@ -495,7 +552,6 @@ function mostrarError(mensaje) {
     errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${mensaje}`;
     errorDiv.style.display = 'block';
     
-    // Ocultar después de 5 segundos
     setTimeout(() => {
         errorDiv.style.display = 'none';
     }, 5000);
@@ -509,7 +565,6 @@ function toggleChartType(chartId) {
     const currentType = chart.config.type;
     let newType = currentType;
     
-    // Ciclo entre tipos de gráficos
     if (currentType === 'bar') newType = 'line';
     else if (currentType === 'line') newType = 'pie';
     else if (currentType === 'pie') newType = 'doughnut';
@@ -529,62 +584,16 @@ function downloadChart(chartId) {
     link.click();
 }
 
-function exportarDatos() {
-    // Mostrar/ocultar opciones de exportación
-    const exportOptions = document.getElementById('exportOptions');
-    if (exportOptions) {
-        exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
-    }
-}
-
-function exportarPDF() {
-    alert('Funcionalidad de exportación PDF - En desarrollo');
-    // En una implementación real, usarías una librería como jsPDF
-}
-
-function exportarExcel() {
-    alert('Funcionalidad de exportación Excel - En desarrollo');
-    // En una implementación real, usarías una librería como SheetJS
-}
-
-function exportarImagen() {
-    // Verificar si html2canvas está disponible
-    if (typeof html2canvas === 'undefined') {
-        alert('Para exportar como imagen, necesita incluir la librería html2canvas');
-        return;
-    }
-    
-    // Crear una imagen del dashboard completo
-    html2canvas(document.getElementById('mainContent')).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `dashboard-${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-    });
-}
-
-// Función para aplicar filtros
 function aplicarFiltros() {
-    const rangoFecha = document.getElementById('rangoFecha').value;
-    const tecnico = document.getElementById('tecnico').value;
-    const sucursal = document.getElementById('sucursal').value;
-    const estatus = document.getElementById('estatus').value;
-    
-    console.log('Aplicando filtros:', { rangoFecha, tecnico, sucursal, estatus });
-    
-    // Aquí podrías recargar los datos con los filtros aplicados
+    console.log('Aplicando filtros...');
     cargarEstadisticas();
 }
 
-// Actualizar cada 5 minutos
-setInterval(cargarEstadisticas, 300000);
-
 // Hacer funciones globales para los botones HTML
 window.cargarEstadisticas = cargarEstadisticas;
-window.exportarDatos = exportarDatos;
-window.exportarPDF = exportarPDF;
-window.exportarExcel = exportarExcel;
-window.exportarImagen = exportarImagen;
+window.aplicarFiltros = aplicarFiltros;
 window.toggleChartType = toggleChartType;
 window.downloadChart = downloadChart;
-window.aplicarFiltros = aplicarFiltros;
+
+// Actualizar cada 5 minutos
+setInterval(cargarEstadisticas, 300000);
