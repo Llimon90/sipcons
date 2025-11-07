@@ -5,15 +5,10 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
-$host = "localhost";
-$user = "sipcons1_test";
-$password = "sip*SYS2025";
-$database = "sipcons1_sipcons_test";
+// Incluir el archivo de conexión
+require_once 'conexion.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8", $user, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
     // Obtener estadísticas de incidencias
     if ($_GET['action'] == 'estadisticas_incidencias') {
         
@@ -21,7 +16,7 @@ try {
         $stmt = $pdo->query("SELECT COUNT(*) as total FROM incidencias");
         $total_incidencias = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Incidencias por estatus - CORREGIDO: incluir todos los registros
+        // Incidencias por estatus
         $stmt = $pdo->query("
             SELECT 
                 CASE 
@@ -35,7 +30,7 @@ try {
         ");
         $incidencias_estatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Incidencias por técnico - CORREGIDO: incluir todos los registros
+        // Incidencias por técnico
         $stmt = $pdo->query("
             SELECT 
                 CASE 
@@ -49,7 +44,7 @@ try {
         ");
         $incidencias_tecnico = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Incidencias por sucursal - CORREGIDO: incluir todos los registros
+        // Incidencias por sucursal
         $stmt = $pdo->query("
             SELECT 
                 CASE 
@@ -75,7 +70,7 @@ try {
         ");
         $incidencias_mensuales = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Top 5 clientes con más incidencias - CORREGIDO: incluir todos los registros
+        // Top 5 clientes con más incidencias
         $stmt = $pdo->query("
             SELECT 
                 CASE 
@@ -115,11 +110,11 @@ try {
         $stmt = $pdo->query("SELECT COUNT(*) as total FROM usuarios");
         $stats['total_usuarios'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
-        // Total de incidencias - CORREGIDO
+        // Total de incidencias
         $stmt = $pdo->query("SELECT COUNT(*) as total FROM incidencias");
         $stats['total_incidencias'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
-        // Incidencias completadas este mes - CORREGIDO: usar 'completado' en lugar de 'Resuelto'
+        // Incidencias completadas este mes
         $stmt = $pdo->query("
             SELECT COUNT(*) as total 
             FROM incidencias 
@@ -129,7 +124,7 @@ try {
         ");
         $stats['incidencias_resueltas_mes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
-        // Incidencias pendientes - CORREGIDO: usar los estatus correctos
+        // Incidencias pendientes
         $stmt = $pdo->query("
             SELECT COUNT(*) as total 
             FROM incidencias 
@@ -138,13 +133,48 @@ try {
         ");
         $stats['incidencias_pendientes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
-        // Estadísticas detalladas por estatus para debugging
+        // Estadísticas adicionales por estatus
         $stmt = $pdo->query("
             SELECT estatus, COUNT(*) as cantidad 
             FROM incidencias 
             GROUP BY estatus
         ");
         $stats['detalle_estatus'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Tiempo promedio de resolución (en días)
+        $stmt = $pdo->query("
+            SELECT AVG(DATEDIFF(
+                COALESCE(fecha_cierre, CURDATE()), 
+                fecha
+            )) as tiempo_promedio 
+            FROM incidencias 
+            WHERE fecha IS NOT NULL
+        ");
+        $tiempo_promedio = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stats['tiempo_promedio'] = round($tiempo_promedio['tiempo_promedio'] ?? 0) . 'd';
+        
+        // Tendencia vs mes anterior
+        $stmt = $pdo->query("
+            SELECT 
+                COUNT(*) as actual,
+                (SELECT COUNT(*) FROM incidencias 
+                 WHERE MONTH(fecha) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) 
+                 AND YEAR(fecha) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)))
+                as anterior
+            FROM incidencias 
+            WHERE MONTH(fecha) = MONTH(CURDATE()) 
+            AND YEAR(fecha) = YEAR(CURDATE())
+        ");
+        $tendencia = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $actual = $tendencia['actual'] ?? 0;
+        $anterior = $tendencia['anterior'] ?? 0;
+        
+        if ($anterior > 0) {
+            $stats['tendencia_incidencias'] = round((($actual - $anterior) / $anterior) * 100);
+        } else {
+            $stats['tendencia_incidencias'] = $actual > 0 ? 100 : 0;
+        }
         
         echo json_encode([
             'success' => true,
