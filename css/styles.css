@@ -434,7 +434,7 @@ input[type="number"],
 select {
   width: 100%;
   padding: 14px 18px;
-  border: 2px solid #e9ecef;
+  border: 2px solid #9aa3ad;
   border-radius: 10px;
   box-sizing: border-box;
   transition: all 0.3s ease;
