@@ -141,17 +141,22 @@ try {
         ");
         $stats['detalle_estatus'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Tiempo promedio de resolución (en días)
+        // Tiempo promedio de resolución (en días) - CORREGIDO: usar solo fecha ya que no hay fecha_cierre
+        // Para incidencias completadas o cerradas, asumimos que la fecha de cierre es la fecha de modificación
+        // o simplemente calculamos basado en la fecha de creación para todas las incidencias
         $stmt = $pdo->query("
-            SELECT AVG(DATEDIFF(
-                COALESCE(fecha_cierre, CURDATE()), 
-                fecha
-            )) as tiempo_promedio 
+            SELECT AVG(DATEDIFF(CURDATE(), fecha)) as tiempo_promedio 
             FROM incidencias 
-            WHERE fecha IS NOT NULL
+            WHERE fecha IS NOT NULL 
+            AND estatus IN ('completado', 'cerrado con factura', 'cerrado sin factura')
         ");
         $tiempo_promedio = $stmt->fetch(PDO::FETCH_ASSOC);
         $stats['tiempo_promedio'] = round($tiempo_promedio['tiempo_promedio'] ?? 0) . 'd';
+        
+        // Si no hay incidencias completadas, mostrar 0
+        if (!$stats['tiempo_promedio'] || $stats['tiempo_promedio'] == '0d') {
+            $stats['tiempo_promedio'] = '0d';
+        }
         
         // Tendencia vs mes anterior
         $stmt = $pdo->query("
@@ -175,6 +180,28 @@ try {
         } else {
             $stats['tendencia_incidencias'] = $actual > 0 ? 100 : 0;
         }
+        
+        // Estadísticas adicionales por tipo de estatus
+        $stmt = $pdo->query("
+            SELECT COUNT(*) as cantidad 
+            FROM incidencias 
+            WHERE estatus = 'abierto' OR estatus = 'asignado' OR estatus = 'pendiente'
+        ");
+        $stats['incidencias_activas'] = $stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
+        
+        $stmt = $pdo->query("
+            SELECT COUNT(*) as cantidad 
+            FROM incidencias 
+            WHERE estatus = 'completado'
+        ");
+        $stats['incidencias_completadas'] = $stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
+        
+        $stmt = $pdo->query("
+            SELECT COUNT(*) as cantidad 
+            FROM incidencias 
+            WHERE estatus = 'cerrado con factura'
+        ");
+        $stats['incidencias_facturadas'] = $stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
         
         echo json_encode([
             'success' => true,

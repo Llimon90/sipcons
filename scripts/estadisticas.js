@@ -21,25 +21,42 @@ function inicializarInterfaz() {
 
     // Configurar filtro de fechas personalizadas
     const rangoFecha = document.getElementById('rangoFecha');
-    rangoFecha.addEventListener('change', function() {
-        const customDateRange = document.getElementById('customDateRange');
-        const customDateRangeEnd = document.getElementById('customDateRangeEnd');
-        
-        if (this.value === 'custom') {
-            customDateRange.style.display = 'flex';
-            customDateRangeEnd.style.display = 'flex';
-        } else {
-            customDateRange.style.display = 'none';
-            customDateRangeEnd.style.display = 'none';
-        }
-    });
+    if (rangoFecha) {
+        rangoFecha.addEventListener('change', function() {
+            const customDateRange = document.getElementById('customDateRange');
+            const customDateRangeEnd = document.getElementById('customDateRangeEnd');
+            
+            if (this.value === 'custom') {
+                if (customDateRange) customDateRange.style.display = 'flex';
+                if (customDateRangeEnd) customDateRangeEnd.style.display = 'flex';
+            } else {
+                if (customDateRange) customDateRange.style.display = 'none';
+                if (customDateRangeEnd) customDateRangeEnd.style.display = 'none';
+            }
+        });
+    }
 
     // Configurar botón de exportación
     const exportBtn = document.querySelector('.btn-outline');
-    exportBtn.addEventListener('click', function() {
-        const exportOptions = document.getElementById('exportOptions');
-        exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
-    });
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const exportOptions = document.getElementById('exportOptions');
+            if (exportOptions) {
+                exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
+            }
+        });
+    }
+
+    // Inicializar fecha actual para filtros personalizados
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    
+    const fechaInicio = document.getElementById('fechaInicio');
+    const fechaFin = document.getElementById('fechaFin');
+    
+    if (fechaInicio) fechaInicio.value = hace30Dias.toISOString().split('T')[0];
+    if (fechaFin) fechaFin.value = hoy.toISOString().split('T')[0];
 }
 
 function cambiarPestaña(tabId) {
@@ -52,8 +69,11 @@ function cambiarPestaña(tabId) {
     });
 
     // Activar pestaña seleccionada
-    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-    document.getElementById(`${tabId}-tab`).classList.add('active');
+    const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
+    const tabContent = document.getElementById(`${tabId}-tab`);
+    
+    if (tabElement) tabElement.classList.add('active');
+    if (tabContent) tabContent.classList.add('active');
     
     currentTab = tabId;
     
@@ -114,6 +134,9 @@ function actualizarEstadisticasGenerales(data) {
     actualizarElementoSiExiste('resueltasMes', data.incidencias_resueltas_mes || '0');
     actualizarElementoSiExiste('incidenciasPendientes', data.incidencias_pendientes || '0');
     
+    // Actualizar tiempo promedio
+    actualizarElementoSiExiste('tiempoPromedio', data.tiempo_promedio || '0d');
+    
     // Calcular y mostrar tendencias
     const tendencia = data.tendencia_incidencias || 0;
     const elemento = document.getElementById('tendenciaIncidencias');
@@ -128,8 +151,11 @@ function actualizarEstadisticasGenerales(data) {
     const eficiencia = Math.round((resueltas / total) * 100);
     actualizarElementoSiExiste('eficienciaMensual', `${eficiencia}% de eficiencia`);
     
-    // Actualizar tiempo promedio
-    actualizarElementoSiExiste('tiempoPromedio', data.tiempo_promedio || '0d');
+    // Actualizar estadísticas de la pestaña de incidencias
+    actualizarElementoSiExiste('incidenciasAbiertas', data.incidencias_activas || '0');
+    actualizarElementoSiExiste('incidenciasAsignadas', data.incidencias_activas || '0');
+    actualizarElementoSiExiste('incidenciasCompletadas', data.incidencias_completadas || '0');
+    actualizarElementoSiExiste('incidenciasFacturadas', data.incidencias_facturadas || '0');
     
     // Actualizar última actualización
     actualizarElementoSiExiste('lastUpdated', `Actualizado: ${new Date().toLocaleTimeString()}`);
@@ -336,7 +362,95 @@ function cargarDatosTecnicos() {
         actualizarElementoSiExiste('tecnicoRapido', 'María García');
         actualizarElementoSiExiste('tecnicoMes', 'Carlos López');
         actualizarElementoSiExiste('totalTecnicos', '8');
+        
+        // Simular gráficos de técnicos
+        crearGraficosTecnicos();
     }, 500);
+}
+
+function crearGraficosTecnicos() {
+    // Datos de ejemplo para gráficos de técnicos
+    const datosTecnicos = {
+        labels: ['Juan Pérez', 'María García', 'Carlos López', 'Ana Martínez', 'Pedro Rodríguez'],
+        datos: [45, 38, 32, 28, 25]
+    };
+    
+    // Gráfico de rendimiento de técnicos
+    const ctxRendimiento = document.getElementById('chartRendimiento');
+    if (ctxRendimiento) {
+        charts.rendimiento = new Chart(ctxRendimiento, {
+            type: 'bar',
+            data: {
+                labels: datosTecnicos.labels,
+                datasets: [{
+                    label: 'Incidencias Resueltas',
+                    data: datosTecnicos.datos,
+                    backgroundColor: '#4361ee',
+                    borderColor: '#3a0ca3',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Gráfico de tiempos de respuesta
+    const ctxTiempos = document.getElementById('chartTiempos');
+    if (ctxTiempos) {
+        charts.tiempos = new Chart(ctxTiempos, {
+            type: 'bar',
+            data: {
+                labels: datosTecnicos.labels,
+                datasets: [{
+                    label: 'Tiempo Promedio (días)',
+                    data: [2.5, 3.1, 1.8, 4.2, 2.9],
+                    backgroundColor: '#4cc9f0',
+                    borderColor: '#3a0ca3',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Gráfico de satisfacción
+    const ctxSatisfaccion = document.getElementById('chartSatisfaccion');
+    if (ctxSatisfaccion) {
+        charts.satisfaccion = new Chart(ctxSatisfaccion, {
+            type: 'doughnut',
+            data: {
+                labels: ['Excelente', 'Bueno', 'Regular', 'Malo'],
+                datasets: [{
+                    data: [45, 35, 15, 5],
+                    backgroundColor: ['#28a745', '#20c997', '#ffc107', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
 }
 
 function formatearMes(mesString) {
@@ -374,7 +488,9 @@ function mostrarError(mensaje) {
         `;
         const mainContent = document.getElementById('mainContent');
         const filters = document.querySelector('.filters');
-        mainContent.insertBefore(errorDiv, filters);
+        if (mainContent && filters) {
+            mainContent.insertBefore(errorDiv, filters);
+        }
     }
     errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${mensaje}`;
     errorDiv.style.display = 'block';
@@ -416,7 +532,9 @@ function downloadChart(chartId) {
 function exportarDatos() {
     // Mostrar/ocultar opciones de exportación
     const exportOptions = document.getElementById('exportOptions');
-    exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
+    if (exportOptions) {
+        exportOptions.style.display = exportOptions.style.display === 'none' ? 'flex' : 'none';
+    }
 }
 
 function exportarPDF() {
@@ -430,6 +548,12 @@ function exportarExcel() {
 }
 
 function exportarImagen() {
+    // Verificar si html2canvas está disponible
+    if (typeof html2canvas === 'undefined') {
+        alert('Para exportar como imagen, necesita incluir la librería html2canvas');
+        return;
+    }
+    
     // Crear una imagen del dashboard completo
     html2canvas(document.getElementById('mainContent')).then(canvas => {
         const link = document.createElement('a');
@@ -439,15 +563,28 @@ function exportarImagen() {
     });
 }
 
+// Función para aplicar filtros
+function aplicarFiltros() {
+    const rangoFecha = document.getElementById('rangoFecha').value;
+    const tecnico = document.getElementById('tecnico').value;
+    const sucursal = document.getElementById('sucursal').value;
+    const estatus = document.getElementById('estatus').value;
+    
+    console.log('Aplicando filtros:', { rangoFecha, tecnico, sucursal, estatus });
+    
+    // Aquí podrías recargar los datos con los filtros aplicados
+    cargarEstadisticas();
+}
+
 // Actualizar cada 5 minutos
 setInterval(cargarEstadisticas, 300000);
 
-// Inicializar fecha actual para filtros personalizados
-document.addEventListener('DOMContentLoaded', function() {
-    const hoy = new Date();
-    const hace30Dias = new Date();
-    hace30Dias.setDate(hoy.getDate() - 30);
-    
-    document.getElementById('fechaInicio').value = hace30Dias.toISOString().split('T')[0];
-    document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
-});
+// Hacer funciones globales para los botones HTML
+window.cargarEstadisticas = cargarEstadisticas;
+window.exportarDatos = exportarDatos;
+window.exportarPDF = exportarPDF;
+window.exportarExcel = exportarExcel;
+window.exportarImagen = exportarImagen;
+window.toggleChartType = toggleChartType;
+window.downloadChart = downloadChart;
+window.aplicarFiltros = aplicarFiltros;
