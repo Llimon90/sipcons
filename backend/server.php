@@ -1,20 +1,24 @@
 <?php
-// Configurar conexión con la base de datos
 require_once 'conexion.php';
 
-// Verificar la conexión
-if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
-}
-
-// Permitir solicitudes desde el frontend
+// Encabezados generales
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
-// Leer el método HTTP
+// 🔒 Evitar caché del lado del cliente y del servidor
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
+if ($conn->connect_error) {
+    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+}
+
 $method = $_SERVER["REQUEST_METHOD"];
+
 
 if ($method === "GET") {
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
