@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
     dateFormat: "Y-m-d",
     allowInput: true
   });
-  
+
   flatpickr("#fecha-fin", {
     dateFormat: "Y-m-d",
     allowInput: true
@@ -52,25 +52,25 @@ document.addEventListener("DOMContentLoaded", function () {
     mostrarIncidenciasPagina();
   });
 
-  // Botones para filtros rápidos - INTEGRADO
+  // Botones para filtros rápidos
   document.querySelectorAll('.btn-filtro-rapido').forEach(button => {
     button.addEventListener('click', function() {
       const filtro = this.getAttribute('data-filtro');
-      
+
       // Remover clase active de todos los botones
       document.querySelectorAll('.btn-filtro-rapido').forEach(btn => {
         btn.classList.remove('active');
       });
-      
+
       // Agregar clase active al botón clickeado
       this.classList.add('active');
-      
+
       // Resetear todos los filtros del formulario
       document.getElementById("report-form").reset();
-      
+
       // Referencia al checkbox "solo activas"
       const soloActivasCheckbox = document.getElementById("solo-activas");
-      
+
       // Configurar el filtro rápido seleccionado
       switch(filtro) {
         case 'Mr. Tienda/Mr. Chef':
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
           soloActivasCheckbox.checked = false;  // desactivar el checkbox
           break;
       }
-      
+
       // Aplicar filtro
       paginaActual = 1;
       cargarIncidencias();
@@ -120,23 +120,26 @@ async function cargarIncidencias() {
 
   // Construir URL con parámetros
   let url = `../backend/buscar_reportes.php?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}&tecnico=${encodeURIComponent(tecnico)}`;
-  
+
   // Agregar parámetros nuevos si existen
   if (tipoEquipo) {
     url += `&tipo_equipo=${encodeURIComponent(tipoEquipo)}`;
   }
-  
+
   if (soloActivas) {
     url += `&solo_activas=1`;
   }
+
+  // Añadir parámetro de busting para caché
+  url += `&t=${Date.now()}`;
 
   console.log("URL de búsqueda:", url); // DEBUG
 
   try {
     // Mostrar indicador de carga
     document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8" class="text-center">Buscando incidencias...</td></tr>`;
-    
-    const response = await fetch(url);
+
+    const response = await fetch(url, { cache: 'no-store' });
     const data = await response.json();
 
     console.log("Datos recibidos:", data); // DEBUG
@@ -210,22 +213,22 @@ function actualizarControlesPaginacion() {
   const totalRegistros = incidenciasTotales.length;
   const inicio = Math.min((paginaActual - 1) * registrosPorPagina + 1, totalRegistros);
   const fin = Math.min(inicio + registrosPorPagina - 1, totalRegistros);
-  
+
   // Actualizar contador de registros
-  document.getElementById("contador-registros").textContent = 
+  document.getElementById("contador-registros").textContent =
     `Mostrando ${inicio}-${fin} de ${totalRegistros} registros`;
-  
+
   // Actualizar estado de botones
   const btnPrev = document.getElementById("btn-prev");
   const btnNext = document.getElementById("btn-next");
-  
+
   btnPrev.classList.toggle("disabled", paginaActual <= 1);
   btnNext.classList.toggle("disabled", paginaActual >= totalPaginas);
 }
 
 async function cargarClientes() {
   try {
-    const response = await fetch('../backend/obtener-clientes.php');
+    const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: 'no-store' });
     const clientes = await response.json();
 
     const selectClientes = document.getElementById('cliente');
@@ -246,12 +249,12 @@ async function cargarClientes() {
 // Función para limpiar filtros
 function limpiarFiltros() {
   document.getElementById("report-form").reset();
-  
+
   // Remover clase active de todos los botones de filtros rápidos
   document.querySelectorAll('.btn-filtro-rapido').forEach(btn => {
     btn.classList.remove('active');
   });
-  
+
   paginaActual = 1;
   cargarIncidencias();
 }
