@@ -1,4 +1,11 @@
 <?php
+
+// --- DEBUG (COMENTAR EN PRODUCCIÓN PARA NO ROMPER EL JSON) ---
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+// ---------------------------------
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -165,6 +172,7 @@ function ejecutarConsulta($conn, $sql) {
     $resultado = $conn->query($sql);
     $data = [];
     if ($resultado === false) {
+        // Loguear error pero no romper JSON si es posible
         error_log("Error SQL: " . $conn->error . "\nConsulta: " . $sql);
         return [];
     }
@@ -284,7 +292,9 @@ switch ($action) {
         $total_equipos = ejecutarConsulta($conn, $sql_equipos)[0]['total_equipos'] ?? 0;
         
         // 7. Top tipos de falla (CON filtros)
-        $sql_fallas = "SELECT falla, COUNT(*) as cantidad FROM {$tabla_incidencias} i {$filtros_where} WHERE falla IS NOT NULL AND falla != '' GROUP BY falla ORDER BY cantidad DESC LIMIT 5";
+        // CORRECCIÓN: Detectamos si hay WHERE previo para usar AND o WHERE
+        $conector = empty($filtros_where) ? "WHERE" : "AND";
+        $sql_fallas = "SELECT falla, COUNT(*) as cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} falla IS NOT NULL AND falla != '' GROUP BY falla ORDER BY cantidad DESC LIMIT 5";
         $top_fallas = ejecutarConsulta($conn, $sql_fallas);
         
         $response['success'] = true;
@@ -296,7 +306,7 @@ switch ($action) {
             'incidencias_cerradas_factura' => (int)$cerradas_factura,
             'incidencias_cerradas_sin_factura' => (int)$cerradas_sin_factura,
             'incidencias_resueltas' => (int)$resueltas_totales,
-            'total_clientes' => (int)$total_clientes, // SIEMPRE total general
+            'total_clientes' => (int)$total_clientes, 
             'total_equipos' => (int)$total_equipos,
             'eficiencia_total' => $eficiencia_total,
             'top_fallas' => $top_fallas,
@@ -308,27 +318,31 @@ switch ($action) {
     case 'estadisticas_incidencias':
         $data_incidencias = [];
 
-        // Gráfico 1: Por Estatus (CON filtros)
+        // Gráfico 1: Por Estatus
         $sql_estatus = "SELECT estatus, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} GROUP BY estatus ORDER BY cantidad DESC";
         $data_incidencias['por_estatus'] = ejecutarConsulta($conn, $sql_estatus);
 
-        // Gráfico 2: Por Sucursal (CON filtros)
+        // Gráfico 2: Por Sucursal
         $sql_sucursal = "SELECT sucursal, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} GROUP BY sucursal ORDER BY cantidad DESC";
         $data_incidencias['por_sucursal'] = ejecutarConsulta($conn, $sql_sucursal);
         
-        // Gráfico 3: Histórico mensual (CON filtros)
+        // Gráfico 3: Histórico mensual
         $sql_mensual = "SELECT DATE_FORMAT(fecha, '%Y-%m') as mes, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} GROUP BY mes ORDER BY mes ASC";
         $data_incidencias['mensuales'] = ejecutarConsulta($conn, $sql_mensual);
 
-        // Gráfico 4: Top 10 Clientes con más incidencias (CON filtros)
-        $sql_clientes = "SELECT cliente, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} WHERE cliente IS NOT NULL AND cliente != '' GROUP BY cliente ORDER BY cantidad DESC LIMIT 10";
+        // Gráfico 4: Top 10 Clientes con más incidencias
+        // CORRECCIÓN: Usar conector correcto
+        $conector = empty($filtros_where) ? "WHERE" : "AND";
+        $sql_clientes = "SELECT cliente, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} cliente IS NOT NULL AND cliente != '' GROUP BY cliente ORDER BY cantidad DESC LIMIT 10";
         $data_incidencias['top_clientes'] = ejecutarConsulta($conn, $sql_clientes);
         
-        // Gráfico 5: Por Técnico - USAR FUNCIÓN CORREGIDA
+        // Gráfico 5: Por Técnico
         $data_incidencias['por_tecnico'] = contarIncidenciasPorTecnico($conn, $filtros_where);
         
-        // Gráfico 6: Top tipos de equipo (CON filtros)
-        $sql_equipos = "SELECT equipo, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} WHERE equipo IS NOT NULL AND equipo != '' GROUP BY equipo ORDER BY cantidad DESC LIMIT 8";
+        // Gráfico 6: Top tipos de equipo
+        // CORRECCIÓN: Usar conector correcto
+        $conector = empty($filtros_where) ? "WHERE" : "AND";
+        $sql_equipos = "SELECT equipo, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} equipo IS NOT NULL AND equipo != '' GROUP BY equipo ORDER BY cantidad DESC LIMIT 8";
         $data_incidencias['por_equipo'] = ejecutarConsulta($conn, $sql_equipos);
         
         $response['success'] = true;
