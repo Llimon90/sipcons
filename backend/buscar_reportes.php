@@ -68,7 +68,18 @@ if (!empty($solo_activas) && $solo_activas === '1') {
 if (!empty($tipo_equipo)) {
     if ($tipo_equipo === 'Mr. Tienda/Mr. Chef') {
         $sql .= " AND equipo = 'Mr. Tienda/Mr. Chef'";
-    } elseif ($tipo_equipo === 'Otros') {
+
+    } elseif ($tipo_equipo === 'Distribuidora el Florido') {
+        $sql .= " AND equipo = 'Distribuidora el Florido'";
+        
+    }elseif ($tipo_equipo === 'Calimax') {
+        $sql .= " AND equipo = 'Calimax'";
+
+
+    }elseif ($tipo_equipo === 'Recolección') {
+        $sql .= " AND equipo = 'Recolección'";
+
+    }elseif ($tipo_equipo === 'Otros') {
         $sql .= " AND equipo = 'Otros'";
     }
 }

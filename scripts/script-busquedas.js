@@ -77,10 +77,28 @@ document.addEventListener("DOMContentLoaded", function () {
           document.getElementById("tipo-equipo").value = "Mr. Tienda/Mr. Chef";
           soloActivasCheckbox.checked = true;   // activar el checkbox
           break;
-        case 'Otros':
+
+        
+          case 'Distribuidora el Florido':
+          document.getElementById("tipo-equipo").value = "Distribuidora el Florido";
+          soloActivasCheckbox.checked = true;   // activar el checkbox
+          break;
+
+          case 'Calimax':
+          document.getElementById("tipo-equipo").value = "Calimax";
+          soloActivasCheckbox.checked = true;   // activar el checkbox
+          break;
+
+          case 'Recolección':
+          document.getElementById("tipo-equipo").value = "Recolección";
+          soloActivasCheckbox.checked = true;   // activar el checkbox
+          break;
+
+          case 'Otros':
           document.getElementById("tipo-equipo").value = "Otros";
           soloActivasCheckbox.checked = true;   // activar el checkbox
           break;
+
         case 'todos':
           document.getElementById("tipo-equipo").value = "";
           soloActivasCheckbox.checked = false;  // desactivar el checkbox

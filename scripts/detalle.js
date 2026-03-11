@@ -221,11 +221,15 @@ function createFormHTML(data) {
             
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                 <div style="flex: 1;">
-                    <label>EQUIPO:</label>
+                    <label>Categoría:</label>
                         <select id="equipo" style="width: 100%;">
                             <option value="">SELECCIONE UNA OPCIÓN</option>
                             <option value="Mr. Tienda/Mr. Chef" ${data.equipo && data.equipo.trim() === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
+                            <option value="Distribuidora el Florido" ${data.equipo && data.equipo.trim() === 'Distribuidora el Florido' ? 'selected' : ''}>Distribuidora el Florido</option>
+                            <option value="Calimax" ${data.equipo && data.equipo.trim() === 'Calimax' ? 'selected' : ''}>Calimax</option>
+                            <option value="Recolección" ${data.equipo && data.equipo.trim() === 'Recolección' ? 'selected' : ''}>Recolección</option>
                             <option value="Otros" ${data.equipo && data.equipo.trim() === 'Otros' ? 'selected' : ''}>Otros</option>
+                            
                         </select>
                     
                 </div>
@@ -336,7 +340,7 @@ ${tecnicosIniciales.length === 0 ? `
                 // Función para actualizar las opciones disponibles en los selects
                 function actualizarOpcionesTecnicos() {
                     const selects = document.querySelectorAll('.tecnico-select');
-                    const selectedValues = Array.from(selects).map(select => select.value);
+                    const selectedValues = Array.from(selects).map(selfect => select.value);
                     
                     selects.forEach(select => {
                         const currentValue = select.value;
