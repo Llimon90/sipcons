@@ -198,11 +198,29 @@
     </section>
   </main>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // 1. Establecer fecha por defecto (tu código original)
+    document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+
+    // 2. Lógica de automatización de Categoría
+    const selectCliente = document.getElementById("cliente");
+    const selectCategoria = document.getElementById("equipo"); // ID "equipo" en tu HTML
+
+    selectCliente.addEventListener("change", function() {
+      // Usamos toUpperCase() para que la comparación sea más robusta
+      const clienteSeleccionado = this.value.toUpperCase().trim();
+
+      if (clienteSeleccionado === "CENTRAL DETALLISTA") {
+        selectCategoria.value = "Calimax";
+      } 
+      else if (clienteSeleccionado === "DISTRIBUIDORA EL FLORIDO") {
+        selectCategoria.value = "Distribuidora el Florido";
+      }
+      // Opcional: else { selectCategoria.value = ""; } si quieres resetearlo
     });
-  </script>
+  });
+</script>
 
 
 
