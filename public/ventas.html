@@ -3,19 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro de ventas</title>
-  <link rel="stylesheet" href="../css/styles.css?v=3">
+  <title>SIPCONS - Registro de Ventas</title>
+  <link rel="stylesheet" href="../css/styles.css?v=4">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="../scripts/ventas.js?v=4" defere></script>
+  <script src="../scripts/ventas.js?v=5" defer></script>
 </head>
 
 <body>
-  <!-- Botón Inicio Móvil -->
   <div class="retorna">
     <a href="../index.html"><i class="fas fa-arrow-left"></i> Inicio</a>
   </div>
 
-  <!-- Panel lateral - CORREGIDO para coincidir con incidencias.html -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2 class="sidebar-title">
@@ -27,56 +25,16 @@
       </button>
     </div>
     
-    <!-- NAVEGACIÓN CORREGIDA - usando la misma estructura que incidencias.html -->
     <ul>
-      <li>
-        <a href="../index.html" title="Inicio">
-          <i class="fas fa-home"></i>
-          <span class="sidebar-link-text">Inicio</span>
-        </a>
-      </li>
-      <li>
-        <a href="incidencias.html" title="Incidencias">
-          <i class="fas fa-tasks"></i>
-          <span class="sidebar-link-text">Incidencias</span>
-        </a>
-      </li>
-      <li>
-        <a href="reportes.html" title="Buscar Incidencias">
-          <i class="fas fa-search"></i>
-          <span class="sidebar-link-text">Buscar Incidencias</span>
-        </a>
-      </li>
-      <li>
-        <a href="clientes.html" title="Clientes">
-          <i class="fas fa-users"></i>
-          <span class="sidebar-link-text">Clientes</span>
-        </a>
-      </li>
-      <li>
-        <a href="usuarios.html" title="Usuarios">
-          <i class="fas fa-user-friends"></i>
-          <span class="sidebar-link-text">Usuarios</span>
-        </a>
-      </li>
-      <li>
-        <a href="ventas.html" title="Ventas" class="active">
-          <i class="fas fa-chart-line"></i>
-          <span class="sidebar-link-text">Ventas</span>
-        </a>
-      </li>
-      <li>
-        <a href="soporte.html" title="Soporte Técnico">
-          <i class="fas fa-headset"></i>
-          <span class="sidebar-link-text">Soporte Técnico</span>
-        </a>
-      </li>
-      <li>
-        <a href="ajustes.html" title="Ajustes">
-          <i class="fas fa-cog"></i>
-          <span class="sidebar-link-text">Ajustes</span>
-        </a>
-      </li>
+      <li><a href="../index.html" title="Inicio"><i class="fas fa-home"></i><span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html" title="Incidencias"><i class="fas fa-tasks"></i><span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html" title="Buscar Incidencias"><i class="fas fa-search"></i><span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html" title="Clientes"><i class="fas fa-users"></i><span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="usuarios.html" title="Usuarios"><i class="fas fa-user-friends"></i><span class="sidebar-link-text">Usuarios</span></a></li>
+      <li><a href="ventas.html" title="Registro de Ventas" class="active"><i class="fas fa-cash-register"></i><span class="sidebar-link-text">Registro Ventas</span></a></li>
+      <li><a href="admin-ventas.html" title="Administrar Ventas"><i class="fas fa-chart-line"></i><span class="sidebar-link-text">Admin Ventas</span></a></li>
+      <li><a href="soporte.html" title="Soporte Técnico"><i class="fas fa-headset"></i><span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html" title="Ajustes"><i class="fas fa-cog"></i><span class="sidebar-link-text">Ajustes</span></a></li>
     </ul>
 
     <div class="sidebar-footer">
@@ -87,17 +45,21 @@
     </div>
   </aside>
   
-  <!-- Contenido Principal -->
   <main id="mainContent">
     <section class="encabezado">
-      <h2><i class="fas fa-cash-register"></i> Registro de Ventas</h2>
       
-      <form id="form-venta">
-        <!-- Cliente y Sucursal -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0;"><i class="fas fa-cash-register"></i> Registro de Ventas</h2>
+          <a href="admin-ventas.html" style="background-color: #34495e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s;">
+              <i class="fas fa-cogs"></i> Administrar Ventas
+          </a>
+      </div>
+      
+      <form id="form-venta" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div class="form-row">
           <div>
             <label for="cliente"><i class="fas fa-building"></i> Cliente:</label>
-            <select id="cliente" name="cliente" >
+            <select id="cliente" name="cliente" required>
               <option value="" selected disabled>Seleccione un cliente</option>
             </select>
           </div>
@@ -107,53 +69,56 @@
           </div>
         </div>
 
-        <!-- Equipo y Marca -->
         <div class="form-row">
           <div>
             <label for="equipo"><i class="fas fa-desktop"></i> Equipo:</label>
-            <input type="text" id="equipo" name="equipo" placeholder="Tipo de equipo">
+            <input type="text" id="equipo" name="equipo" placeholder="Tipo de equipo" required>
           </div>
           <div>
             <label for="marca"><i class="fas fa-tag"></i> Marca:</label>
-            <input type="text" id="marca" name="marca" placeholder="Marca del equipo">
+            <input type="text" id="marca" name="marca" placeholder="Marca del equipo" required>
           </div>
         </div>
 
-        <!-- Modelo -->
         <div class="form-row">
-          <div>
+          <div class="full-width">
             <label for="modelo"><i class="fas fa-cube"></i> Modelo:</label>
-            <input type="text" id="modelo" name="modelo" placeholder="Modelo específico">
+            <input type="text" id="modelo" name="modelo" placeholder="Modelo específico" required>
           </div>
         </div>
 
-        <!-- Cantidad y Configuraciones -->
-        <div class="form-row">
+        <div class="form-row" style="align-items: flex-start;">
           <div>
             <label for="qty"><i class="fas fa-boxes"></i> Cantidad:</label>
-            <input type="number" id="qty" name="qty" min="1" value="1" required>
+            <input type="number" id="qty" name="qty" min="1" value="1" required style="font-weight: bold;">
           </div>
           <div>
             <label for="garantia"><i class="fas fa-shield-alt"></i> Garantía (meses):</label>
             <input type="number" id="garantia" name="garantia" min="0" placeholder="0">
           </div>
           <div>
-            <label for="calibracion"><i class="fas fa-tools"></i> Calibración (meses):</label>
+            <label for="calibracion"><i class="fas fa-tools"></i> Calibración Recomendada (meses):</label>
             <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0">
           </div>
+          
           <div class="checkbox-container">
-            <label for="servicio" class="checkbox-label">
+            <label for="servicio" class="checkbox-label" style="margin-top: 10px; cursor: pointer;">
               <input type="checkbox" id="servicio" name="servicio">
               <span class="checkmark"></span>
-              <i class="fas fa-concierge-bell"></i> Cláusula de servicio
+              <strong><i class="fas fa-concierge-bell"></i> Cláusula de servicio</strong>
             </label>
+            
+            <div id="contenedor-frecuencia" style="display: none; margin-top: 10px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db; width: 100%; box-sizing: border-box;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">
+                    <i class="fas fa-calendar-alt"></i> FRECUENCIA (MESES):
+                </label>
+                <input type="number" id="frecuencia_servicio" name="frecuencia_servicio" min="1" placeholder="Ej. 6" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box;">
+            </div>
           </div>
         </div>
 
-        <!-- Aquí se insertan dinámicamente los inputs de serie -->
         <div id="series-container" class="series-container"></div>
 
-        <!-- Notas -->
         <div class="form-row">
           <div class="full-width">
             <label for="notas"><i class="fas fa-sticky-note"></i> Notas:</label>
@@ -161,149 +126,46 @@
           </div>
         </div>
 
-<div class="filtro-item">
-    <label for="facturas"><i class="fas fa-file-invoice"></i> Adjuntar Facturas/Archivos (Opcional):</label>
-    <input type="file" id="facturas" name="facturas[]" accept=".pdf, .jpg, .png, .docx" multiple class="form-control">
-    <small>Puedes seleccionar varios archivos a la vez.</small>
-</div>
-        <!-- Botón registrar venta -->
+        <div class="filtro-item" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <label for="facturas"><i class="fas fa-file-upload"></i> Adjuntar Facturas/Archivos (Opcional):</label>
+            <input type="file" id="facturas" name="facturas[]" accept=".pdf, .jpg, .png, .docx" multiple class="form-control" style="margin-top: 10px;">
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">Puedes seleccionar varios archivos a la vez.</small>
+        </div>
+        
         <div class="form-row">
-          <button type="button" id="btn-registrar-venta" class="btn-primary">
-            <i class="fas fa-save"></i> Registrar Venta
+          <button type="button" id="btn-registrar-venta" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+            <i class="fas fa-save"></i> Procesar y Registrar Venta
           </button>
         </div>
       </form>
 
       <div id="mensaje" class="mensaje"></div>
     </section>
-
-    <!-- Lista de Ventas Registradas -->
-    <section class="lista-incidencias">
-      <div class="lista-ventas">
-        <h2><i class="fas fa-history"></i> Ventas Registradas</h2>
-        
-        <!-- Filtros -->
-        <div class="filtros">
-          <div class="filtros-grid">
-            <div class="filtro-item">
-              <label for="filtro-fecha"><i class="fas fa-calendar"></i> Fecha:</label>
-              <input type="date" id="filtro-fecha" class="filtro-input">
-            </div>
-            <div class="filtro-item">
-              <label for="filtro-cliente"><i class="fas fa-building"></i> Cliente:</label>
-              <input type="text" id="filtro-cliente" class="filtro-input" placeholder="Filtrar por cliente">
-            </div>
-            <div class="filtro-item">
-              <label for="filtro-sucursal"><i class="fas fa-store"></i> Sucursal:</label>
-              <input type="text" id="filtro-sucursal" class="filtro-input" placeholder="Filtrar por sucursal">
-            </div>
-            <div class="filtro-item">
-              <label for="filtro-equipo"><i class="fas fa-desktop"></i> Equipo:</label>
-              <input type="text" id="filtro-equipo" class="filtro-input" placeholder="Filtrar por equipo">
-            </div>
-          </div>
-
-          <div class="filtros-grid">
-            <div class="filtro-item">
-              <label for="filtro-marca"><i class="fas fa-tag"></i> Marca:</label>
-              <input type="text" id="filtro-marca" class="filtro-input" placeholder="Filtrar por marca">
-            </div>
-            <div class="filtro-item">
-              <label for="filtro-modelo"><i class="fas fa-cube"></i> Modelo:</label>
-              <input type="text" id="filtro-modelo" class="filtro-input" placeholder="Filtrar por modelo">
-            </div>
-            <div class="filtro-item">
-              <button type="button" id="btn-limpiar-filtros" class="btn-secondary">
-                <i class="fas fa-times"></i> Limpiar Filtros
-              </button>
-            </div>
-            <div class="filtro-item">
-              <button type="button" id="btn-refrescar" class="btn-primary">
-                <i class="fas fa-sync"></i> Actualizar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tabla de Ventas -->
-        <div class="tabla-container">
-          <table id="tabla-ventas" class="tabla-ventas">
-            <thead>
-              <tr>
-                <th><i class="fas fa-calendar"></i> Fecha</th>
-                <th><i class="fas fa-building"></i> Cliente</th>
-                <th><i class="fas fa-store"></i> Sucursal</th>
-                <th><i class="fas fa-desktop"></i> Equipo</th>
-                <th><i class="fas fa-tag"></i> Marca</th>
-                <th><i class="fas fa-cube"></i> Modelo</th>
-                <th><i class="fas fa-boxes"></i> Cantidad</th>
-                <th><i class="fas fa-shield-alt"></i> Garantía</th>
-                <th><i class="fas fa-cog"></i> Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="cuerpo-tabla-ventas">
-              <!-- Los datos de ventas se cargarán aquí dinámicamente -->
-              <tr>
-                <td colspan="9" class="no-data">
-                  <i class="fas fa-inbox"></i>
-                  <br>
-                  No hay ventas registradas
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Paginación -->
-        <div class="paginacion">
-          <div class="info-paginacion">
-            Mostrando <span id="registros-mostrados">0</span> de <span id="total-registros">0</span> registros
-          </div>
-          <div class="controles-paginacion">
-            <button id="btn-anterior" class="btn-paginacion" disabled>
-              <i class="fas fa-chevron-left"></i> Anterior
-            </button>
-            <span id="info-pagina" class="info-pagina">Página 1</span>
-            <button id="btn-siguiente" class="btn-paginacion" disabled>
-              Siguiente <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
+  <script>
+    async function cargarClientesEnSelect() {
+        try {
+            const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: "no-store" });
+            const clientes = await response.json();
 
-  <script>// --- Cargar clientes (Versión usada, con anti-cache) ---
-async function cargarClientesEnSelect() {
-    try {
-        const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: "no-store" });
-        const clientes = await response.json();
+            const selectClientes = document.getElementById('cliente');
+            selectClientes.innerHTML = '<option value="" selected disabled>Seleccione un cliente</option>'; 
 
-        const selectClientes = document.getElementById('cliente');
-        // Asegura que siempre tenga la opción inicial
-        selectClientes.innerHTML = '<option value="" selected disabled>Seleccione un cliente</option>'; 
-
-        clientes.forEach(cliente => {
-            const option = document.createElement('option');
-            option.value = cliente.nombre;
-            option.textContent = cliente.nombre;
-            selectClientes.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error al cargar clientes:', error);
-        alert('Error al cargar clientes en el select');
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.nombre;
+                option.textContent = cliente.nombre;
+                selectClientes.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error al cargar clientes:', error);
+            alert('Error al cargar clientes en el select');
+        }
     }
-}
-
-// Se ejecuta al cargar el contenido del DOM
-document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
-</script>
-
-<!-- Scripts - ORDEN CORREGIDO -->
+    document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
+  </script>
 
   <script src="../scripts/sidebar-state.js?v=1"></script>
-
-
 </body>
 </html>

@@ -1,5 +1,7 @@
 <?php
 require_once 'conexion.php';
+// DISPARADOR AUTOMÁTICO: Revisa si hay mantenimientos antes de cargar la tabla
+require_once 'generador_tickets.php';
 
 // Encabezados generales
 header("Access-Control-Allow-Origin: *");

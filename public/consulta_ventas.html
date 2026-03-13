@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes</title>
+    <link rel="stylesheet" href="../css/styles.css?v=2.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../scripts/dark-mode.js?v=1"></script>
+</head>
+<body>
+
+  <!-- Botón Inicio Móvil -->
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+    
+  <!-- Panel lateral (solo visible en escritorio) -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">
+        <i class="fas fa-tools"></i>
+        Panel
+      </h2>
+      <button id="toggleSidebar" class="toggle-sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+    
+    <ul>
+      <li>
+        <a href="../index.html" title="Inicio">
+          <i class="fas fa-home"></i>
+          <span class="sidebar-link-text">Inicio</span>
+        </a>
+      </li>
+      <li>
+        <a href="incidencias.html" title="Incidencias">
+          <i class="fas fa-exclamation-circle"></i>
+          <span class="sidebar-link-text">Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="reportes.html" title="Buscar Incidencias">
+          <i class="fas fa-search"></i>
+          <span class="sidebar-link-text">Buscar Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="clientes.html" title="Clientes" class="active">
+          <i class="fas fa-users"></i>
+          <span class="sidebar-link-text">Clientes</span>
+        </a>
+      </li>
+      <li>
+        <a href="usuarios.html" title="Usuarios">
+          <i class="fas fa-user-cog"></i>
+          <span class="sidebar-link-text">Usuarios</span>
+        </a>
+      </li>
+      <li>
+        <a href="soporte.html" title="Consulta Ventas">
+          <i class="fas fa-headset"></i>
+          <span class="sidebar-link-text">Consulta Ventas</span>
+        </a>
+      </li>
+      <li>
+        <a href="ajustes.html" title="Ajustes">
+          <i class="fas fa-cog"></i>
+          <span class="sidebar-link-text">Ajustes</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Footer del sidebar con información del usuario -->
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Técnico</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <!-- Sección de registro de clientes -->
+    <section class="encabezado">
+      <form id="new-incidencia-form" class="new-incidencia-form">
+        <h2>Registrar Cliente</h2>
+        <div class="form-row">
+          <div>  
+            <label for="nombre">Nombre del Cliente o razón social:</label>
+            <input type="text" id="nombre" name="nombre">
+          </div>
+          <div>
+            <label for="rfc">RFC:</label>
+            <input type="text" id="rfc" name="rfc">
+          </div>
+        </div>  
+
+        <div class="form-row">
+          <div>  
+            <label for="direccion">Dirección:</label>
+            <input type="text" id="direccion" name="direccion" placeholder="Ejemplo: Corporativo">
+          </div>
+          <div>
+            <label for="telefono">Teléfono:</label>
+            <input type="text" id="telefono" name="telefono" placeholder="Con clave lada">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="contactos">Contactos:</label>
+            <input type="text" id="contactos" name="contactos" placeholder="Ejemplo: Juan Pérez; Pedro López; etc">
+          </div>
+          <div>
+            <label for="email">E-mail:</label>
+            <input type="text" id="email" name="email" placeholder="Ejemplo: cliente@dominio.com">
+          </div>
+        </div>
+        
+        <button type="submit">Guardar Cliente</button>
+      </form>
+    </section>
+
+    <section class="lista-clientes">
+      <h2>Lista de Clientes</h2>     
+      
+      <div class="form-row">
+          <input type="text" id="campo-busqueda" name="busqueda-cliente" placeholder="Buscar un cliente">
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>RFC</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Contactos</th>
+            <th>Email</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="lista-clientes">
+          <!-- Los datos aparecerán aquí -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+  
+  <!-- Modal para edición de cliente (oculto inicialmente) -->
+  <div id="modal-edicion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="background-color: white; margin: 5% auto; padding: 20px; width: 80%; max-width: 600px; border-radius: 5px;">
+      <h2>Editar Cliente</h2>
+      <div id="formulario-edicion">
+        <!-- El formulario de edición se cargará aquí -->
+      </div>
+      <button onclick="document.getElementById('modal-edicion').style.display = 'none'">Cancelar</button>
+    </div>
+  </div>
+
+  <script src="../scripts/sidebar-state.js"></script>
+  <script src="../scripts/carga-clientes.js?v=4"></script>
+  <script src="../scripts/script-clientes.js?v=5"></script>
+</body>
+</html>

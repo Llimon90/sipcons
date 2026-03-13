@@ -1,6 +1,6 @@
 /**
  * scripts/ventas.js - Lumina-ERP
- * Módulo de Ventas: Gestión de Series, Integridad y Multi-archivos.
+ * Módulo de Ventas: Gestión de Series, Integridad, Multi-archivos y Frecuencia de Servicio.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,9 +10,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const seriesContainer = document.getElementById('series-container');
     const btnRegistrar = document.getElementById('btn-registrar-venta');
     const clienteSelect = document.getElementById('cliente');
-    const multiFiles = document.getElementById('facturas'); // <input type="file" multiple>
+    const multiFiles = document.getElementById('facturas'); 
+
+    // Elementos de la Cláusula de Servicio
+    const checkServicio = document.getElementById('servicio');
+    const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
+    const inputFrecuencia = document.getElementById('frecuencia_servicio');
 
     let valorPrevioQty = 0;
+
+    // --- EVENTO CLÁUSULA DE SERVICIO ---
+    checkServicio.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            contenedorFrecuencia.style.display = 'block';
+            inputFrecuencia.required = true;
+            if (!inputFrecuencia.value) inputFrecuencia.value = 6; // Valor sugerido
+        } else {
+            contenedorFrecuencia.style.display = 'none';
+            inputFrecuencia.required = false;
+            inputFrecuencia.value = ''; 
+        }
+    });
 
     // --- VALIDACIÓN DE SERIES (DUPLICADOS) ---
     const validarSeries = () => {
@@ -113,7 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('marca', document.getElementById('marca').value);
         formData.append('modelo', document.getElementById('modelo').value);
         formData.append('garantia', document.getElementById('garantia').value);
-        formData.append('servicio', document.getElementById('servicio').checked ? 1 : 0);
+        
+        // Agregar los datos del servicio
+        const servicioActivado = document.getElementById('servicio').checked;
+        formData.append('servicio', servicioActivado ? 1 : 0);
+        formData.append('frecuencia_servicio', servicioActivado ? (inputFrecuencia.value || 0) : 0);
+        
         formData.append('notas', document.getElementById('notas').value);
 
         // Múltiples archivos
@@ -148,4 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     qtyInput.addEventListener('input', actualizarCamposSerie);
+    
+    // Disparar evento inicial para que cargue la primer caja de serie
+    actualizarCamposSerie(); 
 });

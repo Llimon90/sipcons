@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Venta</title>
+    <link rel="stylesheet" href="../css/styles.css?v=2">
+    <script src="../scripts/dark-mode.js?v=1"></script>  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+</head>
+<body>
+
+  <!-- Botón Inicio Móvil -->
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <!-- Panel lateral mejorado -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">
+        <i class="fas fa-tools"></i>
+        Panel
+      </h2>
+      <button id="toggleSidebar" class="toggle-sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+    
+    <ul>
+      <li>
+        <a href="../index.html" title="Inicio">
+          <i class="fas fa-home"></i>
+          <span class="sidebar-link-text">Inicio</span>
+        </a>
+      </li>
+      <li>
+        <a href="incidencias.html" title="Incidencias">
+          <i class="fas fa-tasks"></i>
+          <span class="sidebar-link-text">Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="reportes.html" title="Buscar Incidencias">
+          <i class="fas fa-search"></i>
+          <span class="sidebar-link-text">Buscar Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="clientes.html" title="Clientes">
+          <i class="fas fa-users"></i>
+          <span class="sidebar-link-text">Clientes</span>
+        </a>
+      </li>
+      <li>
+        <a href="usuarios.html" title="Usuarios">
+          <i class="fas fa-user-friends"></i>
+          <span class="sidebar-link-text">Usuarios</span>
+        </a>
+      </li>
+      <li>
+        <a href="soporte.html" title="Soporte Técnico" class="active">
+          <i class="fas fa-headset"></i>
+          <span class="sidebar-link-text">Soporte Técnico</span>
+        </a>
+      </li>
+      <li>
+        <a href="ajustes.html" title="Ajustes">
+          <i class="fas fa-cog"></i>
+          <span class="sidebar-link-text">Ajustes</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Técnico</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO ORIGINAL EXACTO -->
+  <main id="mainContent">
+    <section class="encabezado">
+      <h1><i class="fas fa-receipt"></i> Detalle de Venta <span id="folio"></span></h1>
+      
+      <div id="mensaje" class="mensaje"></div>
+      
+      <form id="form-venta">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cliente"><i class="fas fa-building"></i> Cliente:</label>
+            <input type="text" id="cliente" name="cliente" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="sucursal"><i class="fas fa-store"></i> Sucursal:</label>
+            <input type="text" id="sucursal" name="sucursal">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="equipo"><i class="fas fa-desktop"></i> Equipo:</label>
+            <input type="text" id="equipo" name="equipo" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="marca"><i class="fas fa-tag"></i> Marca:</label>
+            <input type="text" id="marca" name="marca">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="modelo"><i class="fas fa-cube"></i> Modelo:</label>
+            <input type="text" id="modelo" name="modelo">
+          </div>
+          
+          <div class="form-group">
+            <label for="numero_serie"><i class="fas fa-barcode"></i> Número de Serie:</label>
+            <input type="text" id="numero_serie" name="numero_serie">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="garantia"><i class="fas fa-shield-alt"></i> Garantía (meses):</label>
+            <input type="number" id="garantia" name="garantia" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Servicio técnico:</label>
+            <div style="margin-top: 8px;">
+              <input type="checkbox" id="servicio" name="servicio" style="width: auto;">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="notas"><i class="fas fa-sticky-note"></i> Notas:</label>
+          <textarea id="notas" name="notas" rows="4"></textarea>
+        </div>
+        
+        <button type="button" id="btn-guardar" class="btn">
+          <i class="fas fa-save"></i> Guardar Cambios
+        </button>
+      </form>
+      
+      <div class="file-management-section">
+        <h3><i class="fas fa-paperclip"></i> Documentos Adjuntos</h3>
+        <div class="file-upload-container">
+          <input type="file" id="file-upload" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp">
+          <button id="upload-btn" class="btn">
+            <i class="fas fa-upload"></i> Subir Archivos
+          </button>
+        </div>
+        <div id="files-container" class="files-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=1"></script>
+  <script src="../scripts/actualiza-venta.js?v=4"></script>
+</body>
+</html>
