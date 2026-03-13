@@ -1899,97 +1899,11 @@ main .lista-ventas {
     }
 }
 
-/* ===== CORRECCIÓN ESPECÍFICA PARA VENTAS ===== */
-/* Asegurar que los filtros ocupen todo el espacio */
-.filtros {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-}
+/* ================================================================
+   SISTEMA SIPCONS - MÓDULO DE VENTAS (CSS DEPURADO)
+   ================================================================ */
 
-.filtros-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    width: 100%;
-}
-
-/* Corrección para la tabla */
-.tabla-container {
-    width: 100%;
-    overflow-x: auto;
-}
-
-#tabla-ventas {
-    width: 100%;
-    min-width: auto;
-}
-
-/* ===== GARANTIZAR EXPANSIÓN COMPLETA ===== */
-/* Reset de márgenes para todos los elementos dentro del main */
-main > * {
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
-}
-
-/* Contenedores principales sin restricciones de ancho */
-.encabezado,
-.lista-incidencias,
-.lista-ventas,
-.model-grid {
-    max-width: none !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-
-/* Formularios ocupan todo el espacio disponible */
-#form-venta,
-#report-form,
-.new-incidencia-form {
-    width: 100%;
-    max-width: none;
-}
-
-/* ===== AJUSTES FINOS PARA ELEMENTOS INTERNOS ===== */
-/* Asegurar que los elementos de formulario no tengan márgenes que causen espacios */
-.form-row {
-    gap: 15px;
-    margin-left: 0;
-    margin-right: 0;
-}
-
-.form-row > div {
-    flex: 1;
-    min-width: 200px;
-    margin: 0;
-}
-
-/* Corrección para elementos de búsqueda */
-.search-container {
-    max-width: none;
-    margin-left: 0;
-}
-
-/* Para el contenido de soporte técnico */
-#content-container,
-#marcas-container,
-#modelos-container,
-#documentos-container {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-}
-
-/* ===== MODO OSCURO CONSISTENTE ===== */
-body.modo-oscuro main,
-body.modo-oscuro .encabezado,
-body.modo-oscuro .lista-incidencias,
-body.modo-oscuro .lista-ventas {
-    margin-left: 0;
-    margin-right: 0;
-
-    /* ===== CORRECCIÓN DEL ESPACIO ===== */
+/* 1. ESTRUCTURA Y EXPANSIÓN DEL CONTENIDO PRINCIPAL */
 main {
     margin-left: var(--sidebar-width);
     padding: 20px;
@@ -1997,8 +1911,8 @@ main {
     min-width: 0;
     transition: var(--transition);
     width: calc(100% - var(--sidebar-width));
-    /* Asegurar que no haya espacios adicionales */
     box-sizing: border-box;
+    background-color: #f8f9fa; /* Fondo neutro claro */
 }
 
 main.contraido {
@@ -2006,44 +1920,153 @@ main.contraido {
     width: calc(100% - var(--sidebar-collapsed));
 }
 
-/* Eliminar cualquier margen o padding no deseado */
+/* Reset de márgenes para expansión total */
 .encabezado,
-.lista-incidencias,
 .lista-ventas,
-.model-grid,
-.new-incidencia-form,
-.filtros {
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
+.filtros,
+#form-venta,
+.tabla-container {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: none !important;
+    box-sizing: border-box;
+}
+
+/* 2. FORMULARIO DE REGISTRO DE VENTAS */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+.full-width {
     width: 100%;
 }
 
-/* Contenedor principal sin espacios */
-#admin-content {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-/* Grid containers ajustados */
-.model-grid-content,
-.options-container {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-}}
-
-/*VEBTAS*/
+/* 3. GRID DINÁMICO DE NÚMEROS DE SERIE */
 .series-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 15px;
-    margin-top: 10px;
-    padding: 15px;
-    background: rgba(0,0,0,0.05);
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
+    margin-top: 15px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
 
+.serie-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.serie-item label {
+    font-size: 0.85em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+/* 4. ESTADOS DE ERROR Y VALIDACIÓN (GUARDIA DE INTEGRIDAD) */
+.serie-input.input-error {
+    border: 2px solid #e74c3c !important;
+    background-color: #fdf2f2 !important;
+    outline: none;
+}
+
+.mensaje.error-float {
+    background: #fff5f5;
+    color: #c0392b;
+    border: 1px solid #ebccd1;
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 5px rgba(192, 57, 43, 0.1);
+}
+
+/* 5. FILTROS Y BÚSQUEDA */
+.filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    width: 100%;
+    padding: 15px 0;
+}
+
+.filtro-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 6. TABLA DE VENTAS REGISTRADAS */
+.tabla-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background: #fff;
+}
+
+#tabla-ventas {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px; /* Asegura legibilidad en móviles con scroll */
+}
+
+#tabla-ventas th {
+    background-color: #f1f3f5;
+    color: #333;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+
+#tabla-ventas td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+/* Botones de acción en tabla */
+.acciones-tabla {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit, .btn-delete {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-edit { background: #e3f2fd; color: #1976d2; }
+.btn-delete { background: #fbe9e7; color: #d84315; }
+
+.btn-edit:hover, .btn-delete:hover {
+    transform: scale(1.05);
+}
+
+.input-error {
+    border: 2px solid #e74c3c !important;
+    background-color: #fceae9 !important;
+}
+.mensaje-error-input {
+    background: #e74c3c;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}

@@ -6,7 +6,7 @@
   <title>Registro de ventas</title>
   <link rel="stylesheet" href="../css/styles.css?v=3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/dark-mode.js?v=1"></script>
+    <script src="../scripts/ventas.js?v=4" defere></script>
 </head>
 
 <body>
@@ -161,6 +161,11 @@
           </div>
         </div>
 
+<div class="filtro-item">
+    <label for="facturas"><i class="fas fa-file-invoice"></i> Adjuntar Facturas/Archivos (Opcional):</label>
+    <input type="file" id="facturas" name="facturas[]" accept=".pdf, .jpg, .png, .docx" multiple class="form-control">
+    <small>Puedes seleccionar varios archivos a la vez.</small>
+</div>
         <!-- Botón registrar venta -->
         <div class="form-row">
           <button type="button" id="btn-registrar-venta" class="btn-primary">
@@ -296,7 +301,7 @@ document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
 </script>
 
 <!-- Scripts - ORDEN CORREGIDO -->
-  <script src="../scripts/ventas.js?v=2" defere></script>
+
   <script src="../scripts/sidebar-state.js?v=1"></script>
 
 

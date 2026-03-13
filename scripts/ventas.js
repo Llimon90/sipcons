@@ -1,155 +1,151 @@
 /**
- * scripts/ventas.js
- * Sistema de Control de Incidencias - Módulo de Ventas
+ * scripts/ventas.js - Lumina-ERP
+ * Módulo de Ventas: Gestión de Series, Integridad y Multi-archivos.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- ELEMENTOS DEL DOM ---
     const formVenta = document.getElementById('form-venta');
     const qtyInput = document.getElementById('qty');
     const seriesContainer = document.getElementById('series-container');
     const btnRegistrar = document.getElementById('btn-registrar-venta');
-    const cuerpoTabla = document.getElementById('cuerpo-tabla-ventas');
     const clienteSelect = document.getElementById('cliente');
-    const mensajeDiv = document.getElementById('mensaje');
+    const multiFiles = document.getElementById('facturas'); // <input type="file" multiple>
 
-    // --- 1. GENERACIÓN DINÁMICA DE CAMPOS DE SERIE ---
+    let valorPrevioQty = 0;
+
+    // --- VALIDACIÓN DE SERIES (DUPLICADOS) ---
+    const validarSeries = () => {
+        const inputs = document.querySelectorAll('.serie-input');
+        const valores = Array.from(inputs).map(i => i.value.trim().toUpperCase());
+        let duplicados = new Set();
+        let hayVacios = false;
+
+        valores.forEach((val, idx) => {
+            if (val !== "" && valores.indexOf(val) !== idx) duplicados.add(val);
+            if (val === "") hayVacios = true;
+        });
+
+        let errorMsg = document.getElementById('error-series-msg');
+        if (duplicados.size > 0) {
+            if (!errorMsg) {
+                errorMsg = document.createElement('div');
+                errorMsg.id = 'error-series-msg';
+                errorMsg.className = 'mensaje-error-input';
+                seriesContainer.prepend(errorMsg);
+            }
+            errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Series Duplicadas:</strong> ${Array.from(duplicados).join(', ')}`;
+            errorMsg.style.display = 'block';
+        } else if (errorMsg) {
+            errorMsg.style.display = 'none';
+        }
+
+        inputs.forEach(input => {
+            const esDuo = input.value.trim() !== "" && duplicados.has(input.value.trim().toUpperCase());
+            input.classList.toggle('input-error', esDuo);
+        });
+
+        const estadoError = duplicados.size > 0;
+        btnRegistrar.disabled = estadoError;
+        btnRegistrar.style.opacity = estadoError ? "0.5" : "1";
+
+        return { hayErrores: estadoError, hayVacios };
+    };
+
+    // --- GENERACIÓN DINÁMICA CON GUARDIA ---
     const actualizarCamposSerie = () => {
-        const cantidad = parseInt(qtyInput.value) || 0;
-        seriesContainer.innerHTML = ''; // Limpiar anteriores
+        let cant = parseInt(qtyInput.value) || 0;
+        if (cant < 0) { qtyInput.value = 0; cant = 0; }
 
-        if (cantidad > 0) {
-            const titulo = document.createElement('h3');
-            titulo.innerHTML = `<i class="fas fa-barcode"></i> Números de Serie (${cantidad})`;
-            seriesContainer.appendChild(titulo);
+        const actuales = seriesContainer.querySelectorAll('.serie-input');
+        
+        if (cant < actuales.length) {
+            let riesgo = 0;
+            for (let i = cant; i < actuales.length; i++) {
+                if (actuales[i].value.trim() !== "") riesgo++;
+            }
+            if (riesgo > 0 && !confirm(`¿Estás seguro Limon? Borrarás ${riesgo} serie(s) ya capturada(s).`)) {
+                qtyInput.value = valorPrevioQty;
+                return;
+            }
+        }
 
-            const grid = document.createElement('div');
-            grid.className = 'series-grid'; // Asegúrate de añadir este estilo a tu CSS
+        let grid = document.getElementById('grid-series');
+        if (cant > 0 && !grid) {
+            seriesContainer.innerHTML = `<h3 style="margin-top:20px;"><i class="fas fa-barcode"></i> Series</h3><div id="grid-series" class="series-grid"></div>`;
+            grid = document.getElementById('grid-series');
+        }
 
-            for (let i = 1; i <= cantidad; i++) {
+        if (cant > actuales.length) {
+            for (let i = actuales.length + 1; i <= cant; i++) {
                 const div = document.createElement('div');
-                div.className = 'filtro-item';
-                div.innerHTML = `
-                    <label>Serie ${i}:</label>
-                    <input type="text" name="serie[]" class="serie-input" placeholder="Ingrese serie..." required>
-                `;
+                div.className = 'serie-item';
+                div.innerHTML = `<label>Equipo ${i}:</label><input type="text" class="serie-input" required placeholder="S/N">`;
+                div.querySelector('input').addEventListener('input', validarSeries);
                 grid.appendChild(div);
             }
-            seriesContainer.appendChild(grid);
+        } else {
+            for (let i = actuales.length; i > cant; i--) grid.lastElementChild.remove();
         }
+
+        if (cant === 0) seriesContainer.innerHTML = '';
+        valorPrevioQty = qtyInput.value;
+        validarSeries();
     };
 
-    qtyInput.addEventListener('input', actualizarCamposSerie);
-    // Ejecutar al inicio por si hay un valor por defecto
-    actualizarCamposSerie();
-
-   
-    // --- 3. CARGAR VENTAS (Para la tabla) ---
-    const cargarVentas = async () => {
-        try {
-            const resp = await fetch('../backend/obtener-ventas.php');
-            const data = await resp.json();
-            renderizarTabla(data.ventas);
-        } catch (error) {
-            console.error("Error cargando ventas:", error);
-        }
-    };
-
-    const renderizarTabla = (ventas) => {
-        if (!ventas || ventas.length === 0) {
-            cuerpoTabla.innerHTML = '<tr><td colspan="9" class="no-data">No hay ventas registradas</td></tr>';
+    // --- REGISTRO FINAL ---
+    btnRegistrar.addEventListener('click', async () => {
+        const { hayErrores, hayVacios } = validarSeries();
+        if (parseInt(qtyInput.value) <= 0 || hayVacios) {
+            alert("⚠️ Completa todas las series y revisa la cantidad.");
             return;
         }
 
-        cuerpoTabla.innerHTML = ventas.map(v => `
-            <tr>
-                <td>${v.fecha_registro}</td>
-                <td><strong>${v.cliente}</strong></td>
-                <td>${v.sucursal || '-'}</td>
-                <td>${v.equipo}</td>
-                <td>${v.marca}</td>
-                <td>${v.modelo}</td>
-                <td>${v.numero_serie}</td>
-                <td>${v.garantia} meses</td>
-                <td>
-                    <div class="acciones-tabla">
-                        <button onclick="editarVenta(${v.id})" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button onclick="borrarVenta(${v.id})" class="btn-delete" title="Borrar"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        document.getElementById('total-registros').textContent = ventas.length;
-        document.getElementById('registros-mostrados').textContent = ventas.length;
-    };
-
-    // --- 4. REGISTRAR VENTA (Envío al servidor) ---
-    btnRegistrar.addEventListener('click', async () => {
-        // Validación básica
-        if (!formVenta.checkValidity()) {
+        if (!formVenta.checkValidity() || hayErrores) {
             formVenta.reportValidity();
             return;
         }
 
-        const seriesInputs = document.querySelectorAll('.serie-input');
-        const series = Array.from(seriesInputs).map(input => input.value.trim());
+        const formData = new FormData();
+        formData.append('cliente', clienteSelect.value);
+        formData.append('sucursal', document.getElementById('sucursal').value);
+        formData.append('equipo', document.getElementById('equipo').value);
+        formData.append('marca', document.getElementById('marca').value);
+        formData.append('modelo', document.getElementById('modelo').value);
+        formData.append('garantia', document.getElementById('garantia').value);
+        formData.append('servicio', document.getElementById('servicio').checked ? 1 : 0);
+        formData.append('notas', document.getElementById('notas').value);
 
-        const payload = {
-            folio: "", // Puedes agregar un campo folio en el HTML si lo necesitas
-            cliente: clienteSelect.value,
-            sucursal: document.getElementById('sucursal').value,
-            equipo: document.getElementById('equipo').value,
-            marca: document.getElementById('marca').value,
-            modelo: document.getElementById('modelo').value,
-            garantia: document.getElementById('garantia').value,
-            servicio: document.getElementById('servicio').checked,
-            notas: document.getElementById('notas').value,
-            numero_series: series
-        };
+        // Múltiples archivos
+        if (multiFiles.files.length > 0) {
+            for (let i = 0; i < multiFiles.files.length; i++) {
+                formData.append('facturas[]', multiFiles.files[i]);
+            }
+        }
+
+        const seriesArr = Array.from(document.querySelectorAll('.serie-input')).map(i => i.value.trim().toUpperCase());
+        formData.append('series', JSON.stringify(seriesArr));
 
         try {
             btnRegistrar.disabled = true;
             btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-            const resp = await fetch('../backend/registro_ventas.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const resp = await fetch('../backend/registro_ventas.php', { method: 'POST', body: formData });
+            const res = await resp.json();
 
-            const resultado = await resp.json();
-
-            if (resultado.exito) {
-                mostrarMensaje('¡Venta registrada con éxito!', 'success');
-                formVenta.reset();
-                actualizarCamposSerie();
-                cargarVentas();
+            if (res.exito) {
+                alert(`✅ Éxito. Folio: ${res.folio}`);
+                location.reload();
             } else {
-                mostrarMensaje('Error: ' + resultado.mensaje, 'error');
+                alert('❌ Error: ' + res.mensaje);
             }
-        } catch (error) {
-            mostrarMensaje('Error de conexión con el servidor', 'error');
+        } catch (e) {
+            alert('❌ Error de conexión con el servidor.');
         } finally {
             btnRegistrar.disabled = false;
             btnRegistrar.innerHTML = '<i class="fas fa-save"></i> Registrar Venta';
         }
     });
 
-    const mostrarMensaje = (texto, tipo) => {
-        mensajeDiv.textContent = texto;
-        mensajeDiv.className = `mensaje ${tipo}`;
-        setTimeout(() => { mensajeDiv.className = 'mensaje'; }, 5000);
-    };
-
-    // Inicializar datos
-   
-    cargarVentas();
+    qtyInput.addEventListener('input', actualizarCamposSerie);
 });
-
-// Funciones globales para acciones (Placeholder para tu lógica de edición/borrado)
-window.editarVenta = (id) => console.log("Editando:", id);
-window.borrarVenta = (id) => {
-    if(confirm('¿Seguro que deseas eliminar este registro?')) {
-        console.log("Borrando:", id);
-    }
-};
