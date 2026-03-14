@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     riesgo++;
                 }
             }
-            if (riesgo > 0 && !confirm(`¡Atención Limon! Borrarás ${riesgo} serie(s) ya capturadas o guardadas. ¿Estás seguro?`)) {
+            if (riesgo > 0 && !confirm(`¡Atención! Borrarás ${riesgo} serie(s) ya capturadas o guardadas. ¿Estás seguro?`)) {
                 qtyInput.value = valorPrevioQty;
                 return;
             }

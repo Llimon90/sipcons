@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = cant; i < actuales.length; i++) {
                 if (actuales[i].value.trim() !== "") riesgo++;
             }
-            if (riesgo > 0 && !confirm(`¿Estás seguro Limon? Borrarás ${riesgo} serie(s) ya capturada(s).`)) {
+            if (riesgo > 0 && !confirm(`¿Estás seguro? Borrarás ${riesgo} serie(s) ya capturada(s).`)) {
                 qtyInput.value = valorPrevioQty;
                 return;
             }
