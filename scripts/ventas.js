@@ -124,13 +124,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const formData = new FormData();
+const formData = new FormData();
         formData.append('cliente', clienteSelect.value);
         formData.append('sucursal', document.getElementById('sucursal').value);
         formData.append('equipo', document.getElementById('equipo').value);
         formData.append('marca', document.getElementById('marca').value);
         formData.append('modelo', document.getElementById('modelo').value);
         formData.append('garantia', document.getElementById('garantia').value);
+        
+        // 👇 ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA! 👇
+        formData.append('calibracion', document.getElementById('calibracion').value || 0);
         
         // Agregar los datos del servicio
         const servicioActivado = document.getElementById('servicio').checked;
