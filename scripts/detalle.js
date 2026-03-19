@@ -257,6 +257,9 @@ function createFormHTML(data) {
         <option value="Hoscar Martínez" ${tecnico === "Hoscar Martínez" ? 'selected' : ''}>Hoscar Martínez</option>
         <option value="Jacob Ventura" ${tecnico === "Jacob Ventura" ? 'selected' : ''}>Jacob Ventura</option>
         <option value="Luis Limón" ${tecnico === "Luis Limón" ? 'selected' : ''}>Luis Limón</option>
+      
+        <option value="Manuel Eduardo Saveedra" ${tecnico === "Manuel Eduardo Saveedra" ? 'selected' : ''}>Manuel Eduardo Saveedra</option>
+
         <option value="Ernesto Chávez" ${tecnico === "Ernesto Chávez" ? 'selected' : ''}>Ernesto Chávez</option>
     </select>
     <button type="button" class="eliminar-tecnico" style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 5px;">
@@ -277,6 +280,7 @@ ${tecnicosIniciales.length === 0 ? `
               <option value="Hoscar Martínez">Hoscar Martínez</option>
               <option value="Jacob Ventura">Jacob Ventura</option>
               <option value="Luis Limón">Luis Limón</option>
+              <option value="Manuel Eduardo Saveedra">Manuel Eduardo Saveedra</option>
               <option value="Ernesto Chávez">Ernesto Chávez</option>
         </select>
         <button type="button" class="eliminar-tecnico" style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 5px;">
@@ -377,6 +381,7 @@ ${tecnicosIniciales.length === 0 ? `
               <option value="Hoscar Martínez">Hoscar Martínez</option>
               <option value="Jacob Ventura">Jacob Ventura</option>
               <option value="Luis Limón">Luis Limón</option>
+              <option value="Manuel Eduardo Saveedra">Manuel Eduardo Saveedra</option>
               <option value="Ernesto Chávez">Ernesto Chávez</option>
                     \`;
                     
@@ -471,6 +476,7 @@ function setupTecnicosMultiples() {
               <option value="Hoscar Martínez">Hoscar Martínez</option>
               <option value="Jacob Ventura">Jacob Ventura</option>
               <option value="Luis Limón">Luis Limón</option>
+              <option value="Manuel Eduardo Saveedra">Manuel Eduardo Saveedra</option>
               <option value="Ernesto Chávez">Ernesto Chávez</option>
         `;
         
