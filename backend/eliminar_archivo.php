@@ -72,8 +72,8 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idReferencia, '%' . $nombreArchivo]);
         
-        // Lógica de incidencias: buscar en apptest/uploads
-        $rutaCompleta = $_SERVER['DOCUMENT_ROOT'] . '/apptest/uploads/' . $nombreArchivo;
+        // Lógica de incidencias: buscar en app/uploads
+        $rutaCompleta = $_SERVER['DOCUMENT_ROOT'] . '/app/uploads/' . $nombreArchivo;
     } 
     else if ($modulo === 'ventas') {
         // Lógica de ventas: eliminar directamente por ID único
