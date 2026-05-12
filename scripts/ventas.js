@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRegistrar = document.getElementById('btn-registrar-venta');
     const clienteSelect = document.getElementById('cliente');
     const multiFiles = document.getElementById('facturas'); 
+    
+    // NUEVO: Elemento de la fecha de venta
+    const inputFechaVenta = document.getElementById('fecha_venta');
 
     // Elementos de la Cláusula de Servicio
     const checkServicio = document.getElementById('servicio');
@@ -18,6 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputFrecuencia = document.getElementById('frecuencia_servicio');
 
     let valorPrevioQty = 0;
+
+    // --- ESTABLECER FECHA ACTUAL POR DEFECTO ---
+    if (inputFechaVenta) {
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        inputFechaVenta.value = `${yyyy}-${mm}-${dd}`;
+    }
 
     // --- EVENTO CLÁUSULA DE SERVICIO ---
     checkServicio.addEventListener('change', (e) => {
@@ -82,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = cant; i < actuales.length; i++) {
                 if (actuales[i].value.trim() !== "") riesgo++;
             }
-            if (riesgo > 0 && !confirm(`¿Estás seguro? Borrarás ${riesgo} serie(s) ya capturada(s).`)) {
+            if (riesgo > 0 && !confirm(`¿Estás seguro Limon? Borrarás ${riesgo} serie(s) ya capturada(s).`)) {
                 qtyInput.value = valorPrevioQty;
                 return;
             }
@@ -124,15 +136,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-const formData = new FormData();
+        const formData = new FormData();
+        
+        // NUEVO: Agregar la fecha seleccionada
+        if (inputFechaVenta) {
+            formData.append('fecha_venta', inputFechaVenta.value);
+        }
+        
         formData.append('cliente', clienteSelect.value);
         formData.append('sucursal', document.getElementById('sucursal').value);
         formData.append('equipo', document.getElementById('equipo').value);
         formData.append('marca', document.getElementById('marca').value);
         formData.append('modelo', document.getElementById('modelo').value);
         formData.append('garantia', document.getElementById('garantia').value);
-        
-        // 👇 ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA! 👇
         formData.append('calibracion', document.getElementById('calibracion').value || 0);
         
         // Agregar los datos del servicio
@@ -148,7 +164,7 @@ const formData = new FormData();
                 formData.append('facturas[]', multiFiles.files[i]);
             }
         }
-
+        
         const seriesArr = Array.from(document.querySelectorAll('.serie-input')).map(i => i.value.trim().toUpperCase());
         formData.append('series', JSON.stringify(seriesArr));
 
@@ -169,7 +185,7 @@ const formData = new FormData();
             alert('❌ Error de conexión con el servidor.');
         } finally {
             btnRegistrar.disabled = false;
-            btnRegistrar.innerHTML = '<i class="fas fa-save"></i> Registrar Venta';
+            btnRegistrar.innerHTML = '<i class="fas fa-save"></i> Procesar y Registrar Venta';
         }
     });
 

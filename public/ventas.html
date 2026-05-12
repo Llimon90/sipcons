@@ -6,7 +6,7 @@
   <title>SIPCONS - Registro de Ventas</title>
   <link rel="stylesheet" href="../css/styles.css?v=4">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/ventas.js?v=4" defer></script>
+  <script src="../scripts/ventas.js?v=7" defer></script>
 </head>
 
 <body>
@@ -57,6 +57,10 @@
       
       <form id="form-venta" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div class="form-row">
+          <div>
+            <label for="fecha_venta"><i class="fas fa-calendar-alt"></i> Fecha de Venta:</label>
+            <input type="date" id="fecha_venta" name="fecha_venta" required>
+          </div>
           <div>
             <label for="cliente"><i class="fas fa-building"></i> Cliente:</label>
             <select id="cliente" name="cliente" required>

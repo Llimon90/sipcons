@@ -1,111 +1,67 @@
-// Variables globales para paginación
+// script-busquedas.js
 let paginaActual = 1;
 let registrosPorPagina = 10;
 let incidenciasTotales = [];
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Configuración de Flatpickr para las fechas
-  flatpickr("#fecha-inicio", {
-    dateFormat: "Y-m-d",
-    allowInput: true
-  });
-
-  flatpickr("#fecha-fin", {
-    dateFormat: "Y-m-d",
-    allowInput: true
-  });
-
-  // Inicializar tooltips de Bootstrap
-  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+  flatpickr("#fecha-inicio", { dateFormat: "Y-m-d", allowInput: true });
+  flatpickr("#fecha-fin", { dateFormat: "Y-m-d", allowInput: true });
 
   cargarIncidencias();
   cargarClientes();
 
-  document.getElementById("report-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    paginaActual = 1; // Resetear a primera página al aplicar nuevos filtros
-    cargarIncidencias();
-  });
+  const form = document.getElementById("report-form");
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      paginaActual = 1;
+      cargarIncidencias();
+    });
+  }
 
-  // Event listeners para paginación
-  document.getElementById("btn-prev").addEventListener("click", function(e) {
-    e.preventDefault();
-    if (paginaActual > 1) {
-      paginaActual--;
+  const btnPrev = document.getElementById("btn-prev");
+  if (btnPrev) {
+    btnPrev.addEventListener("click", (e) => { 
+      e.preventDefault(); 
+      if (paginaActual > 1) { paginaActual--; mostrarIncidenciasPagina(); } 
+    });
+  }
+  
+  const btnNext = document.getElementById("btn-next");
+  if (btnNext) {
+    btnNext.addEventListener("click", (e) => { 
+      e.preventDefault(); 
+      if (paginaActual < Math.ceil(incidenciasTotales.length / registrosPorPagina)) { paginaActual++; mostrarIncidenciasPagina(); } 
+    });
+  }
+
+  const selectReg = document.getElementById("select-registros");
+  if (selectReg) {
+    selectReg.addEventListener("change", function(e) {
+      registrosPorPagina = parseInt(e.target.value);
+      paginaActual = 1;
       mostrarIncidenciasPagina();
-    }
-  });
+    });
+  }
 
-  document.getElementById("btn-next").addEventListener("click", function(e) {
-    e.preventDefault();
-    const totalPaginas = Math.ceil(incidenciasTotales.length / registrosPorPagina);
-    if (paginaActual < totalPaginas) {
-      paginaActual++;
-      mostrarIncidenciasPagina();
-    }
-  });
-
-  document.getElementById("select-registros").addEventListener("change", function(e) {
-    registrosPorPagina = parseInt(e.target.value);
-    paginaActual = 1;
-    mostrarIncidenciasPagina();
-  });
-
-  // Botones para filtros rápidos
   document.querySelectorAll('.btn-filtro-rapido').forEach(button => {
     button.addEventListener('click', function() {
       const filtro = this.getAttribute('data-filtro');
-
-      // Remover clase active de todos los botones
-      document.querySelectorAll('.btn-filtro-rapido').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
-      // Agregar clase active al botón clickeado
+      document.querySelectorAll('.btn-filtro-rapido').forEach(btn => btn.classList.remove('active'));
       this.classList.add('active');
+      
+      const reportForm = document.getElementById("report-form");
+      if(reportForm) reportForm.reset();
 
-      // Resetear todos los filtros del formulario
-      document.getElementById("report-form").reset();
-
-      // Referencia al checkbox "solo activas"
-      const soloActivasCheckbox = document.getElementById("solo-activas");
-
-      // Configurar el filtro rápido seleccionado
-      switch(filtro) {
-        case 'Mr. Tienda/Mr. Chef':
-          document.getElementById("tipo-equipo").value = "Mr. Tienda/Mr. Chef";
-          soloActivasCheckbox.checked = true;   // activar el checkbox
-          break;
-
-        
-          case 'Distribuidora el Florido':
-          document.getElementById("tipo-equipo").value = "Distribuidora el Florido";
-          soloActivasCheckbox.checked = true;   // activar el checkbox
-          break;
-
-          case 'Calimax':
-          document.getElementById("tipo-equipo").value = "Calimax";
-          soloActivasCheckbox.checked = true;   // activar el checkbox
-          break;
-
-          case 'Recolección':
-          document.getElementById("tipo-equipo").value = "Recolección";
-          soloActivasCheckbox.checked = true;   // activar el checkbox
-          break;
-
-          case 'Otros':
-          document.getElementById("tipo-equipo").value = "Otros";
-          soloActivasCheckbox.checked = true;   // activar el checkbox
-          break;
-
-        case 'todos':
-          document.getElementById("tipo-equipo").value = "";
-          soloActivasCheckbox.checked = false;  // desactivar el checkbox
-          break;
+      if (filtro === 'programadas') {
+        const checkProg = document.getElementById("solo-programadas");
+        if(checkProg) checkProg.checked = true;
+      } else if (filtro !== 'todos') {
+        const selectEquipo = document.getElementById("tipo-equipo");
+        const checkActivas = document.getElementById("solo-activas");
+        if(selectEquipo) selectEquipo.value = filtro;
+        if(checkActivas) checkActivas.checked = true;
       }
-
-      // Aplicar filtro
       paginaActual = 1;
       cargarIncidencias();
     });
@@ -113,166 +69,182 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function cargarIncidencias() {
-  const cliente = document.getElementById("cliente").value;
-  const fechaInicio = document.getElementById("fecha-inicio").value;
-  const fechaFin = document.getElementById("fecha-fin").value;
-  const estatus = document.getElementById("estatus").value;
-  const sucursal = document.getElementById("sucursal").value;
-  const tecnico = document.getElementById("tecnico").value;
-  const tipoEquipo = document.getElementById("tipo-equipo").value;
-  const soloActivas = document.getElementById("solo-activas").checked;
+  const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+  const isChecked = (id) => document.getElementById(id) && document.getElementById(id).checked ? '1' : '';
 
-  // DEBUG: Ver qué valores se están enviando
-  console.log("Filtros aplicados:", {
-    tipoEquipo: tipoEquipo,
-    cliente: cliente,
-    estatus: estatus,
-    soloActivas: soloActivas
-  });
+  const params = {
+    cliente: getVal("cliente"),
+    fecha_inicio: getVal("fecha-inicio"),
+    fecha_fin: getVal("fecha-fin"),
+    estatus: getVal("estatus"),
+    sucursal: getVal("sucursal"),
+    tecnico: getVal("tecnico"),
+    tipo_equipo: getVal("tipo-equipo"),
+    solo_activas: isChecked("solo-activas"),
+    solo_programadas: isChecked("solo-programadas"),
+    t: Date.now()
+  };
 
-  // Validación de fechas
-  if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
-    alert("❌ La fecha de fin no puede ser menor que la fecha de inicio.");
-    return;
-  }
-
-  // Construir URL con parámetros
-  let url = `../backend/buscar_reportes.php?cliente=${encodeURIComponent(cliente)}&fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_fin=${encodeURIComponent(fechaFin)}&estatus=${encodeURIComponent(estatus)}&sucursal=${encodeURIComponent(sucursal)}&tecnico=${encodeURIComponent(tecnico)}`;
-
-  // Agregar parámetros nuevos si existen
-  if (tipoEquipo) {
-    url += `&tipo_equipo=${encodeURIComponent(tipoEquipo)}`;
-  }
-
-  if (soloActivas) {
-    url += `&solo_activas=1`;
-  }
-
-  // Añadir parámetro de busting para caché
-  url += `&t=${Date.now()}`;
-
-  console.log("URL de búsqueda:", url); // DEBUG
+  const url = `../backend/buscar_reportes.php?${new URLSearchParams(params).toString()}`;
+  const tablaBody = document.getElementById("tabla-body");
+  
+  if (!tablaBody) return;
 
   try {
-    // Mostrar indicador de carga
-    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8" class="text-center">Buscando incidencias...</td></tr>`;
-
+    tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">Consultando datos...</td></tr>`;
+    
     const response = await fetch(url, { cache: 'no-store' });
-    const data = await response.json();
-
-    console.log("Datos recibidos:", data); // DEBUG
-
-    if (data.message) {
-      document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8">${data.message}</td></tr>`;
-      incidenciasTotales = [];
-      actualizarControlesPaginacion();
+    const rawText = await response.text(); 
+    
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseError) {
+      console.error("El servidor devolvió un texto inválido:", rawText);
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger fw-bold">Error de lectura de datos. Revisa la consola (F12).</td></tr>`;
       return;
     }
 
-    incidenciasTotales = data;
+    if (data.error) {
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger fw-bold">Error SQL: ${data.error}</td></tr>`;
+      incidenciasTotales = [];
+      return;
+    }
+
+    if (data.message) {
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">${data.message}</td></tr>`;
+      incidenciasTotales = [];
+    } else {
+      incidenciasTotales = data;
+    }
+    
     mostrarIncidenciasPagina();
+    
   } catch (error) {
-    console.error("❌ Error al cargar las incidencias:", error);
-    document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8">Error al cargar los datos.</td></tr>`;
-    incidenciasTotales = [];
-    actualizarControlesPaginacion();
+    console.error("Error de Fetch:", error);
+    tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Falla de red / Error al conectar con servidor</td></tr>`;
   }
 }
 
 function mostrarIncidenciasPagina() {
   const inicio = (paginaActual - 1) * registrosPorPagina;
-  const fin = inicio + registrosPorPagina;
-  const incidenciasPagina = incidenciasTotales.slice(inicio, fin);
-
+  const items = incidenciasTotales.slice(inicio, inicio + registrosPorPagina);
   const tablaBody = document.getElementById("tabla-body");
+  if (!tablaBody) return;
+  
   tablaBody.innerHTML = "";
 
-  if (incidenciasPagina.length === 0) {
-    tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">No se encontraron incidencias con los filtros aplicados</td></tr>`;
-  } else {
-    incidenciasPagina.forEach(incidencia => {
-      const row = document.createElement("tr");
-
-      // Celda con enlace a detalle.html usando el ID
-      const celdaInterna = document.createElement("td");
-      const enlace = document.createElement("a");
-      enlace.href = `detalle.html?id=${incidencia.id}`;
-      enlace.textContent = incidencia.numero_incidente || "N/A";
-      enlace.className = "text-decoration-none";
-      celdaInterna.appendChild(enlace);
-      row.appendChild(celdaInterna);
-
-      // Celdas restantes (sin la columna de tipo equipo)
-      const columnas = ['numero', 'cliente', 'sucursal', 'falla', 'fecha', 'estatus'];
-      columnas.forEach(campo => {
-        const td = document.createElement("td");
-        td.textContent = incidencia[campo] || "N/A";
-        row.appendChild(td);
-      });
-
-      // Celda para estado activo/inactivo
-      const tdEstado = document.createElement("td");
-      const esActiva = ['Abierto', 'Asignado', 'Pendiente', 'Completado'].includes(incidencia.estatus);
-      const badge = document.createElement("span");
-      badge.className = esActiva ? "badge-activo" : "badge-inactivo";
-      badge.textContent = esActiva ? "Activa" : "Inactiva";
-      tdEstado.appendChild(badge);
-      row.appendChild(tdEstado);
-
-      tablaBody.appendChild(row);
-    });
+  if (items.length === 0 && incidenciasTotales.length > 0) {
+    tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">No hay más páginas</td></tr>`;
+    return;
   }
 
+  items.forEach((inc, indexArray) => {
+    const row = document.createElement("tr");
+    const esProgramado = inc.estatus === 'Programado';
+    const esActiva = ['Abierto', 'Asignado', 'Pendiente', 'Completado', 'Programado'].includes(inc.estatus);
+    const indiceGlobal = inicio + indexArray;
+
+    let enlaceHTML = esProgramado 
+      ? `<a href="#" class="fw-bold text-primary text-decoration-none" onclick="abrirModalProgramada(${indiceGlobal}); return false;"><i class="bi bi-window-stack"></i> ${inc.numero_incidente}</a>`
+      : `<a href="detalle.html?id=${inc.id}" class="text-decoration-none">${inc.numero_incidente || "N/A"}</a>`;
+
+    row.innerHTML = `
+      <td>${enlaceHTML}</td>
+      <td>${inc.numero || "N/A"}</td>
+      <td>${inc.cliente}</td>
+      <td>${inc.sucursal}</td>
+      <td>${inc.falla}</td>
+      <td>${inc.fecha}</td>
+      <td>${inc.estatus}</td>
+      <td><span class="${esActiva ? "badge-activo" : "badge-inactivo"}">${esActiva ? "Activa" : "Inactiva"}</span></td>
+    `;
+    tablaBody.appendChild(row);
+  });
   actualizarControlesPaginacion();
 }
 
+function abrirModalProgramada(indice) {
+  const d = incidenciasTotales[indice];
+  if (!d) return;
+
+  const lista = d.detalles_completos ? d.detalles_completos.split('||') : [];
+  
+  let equiposHTML = '<ul class="list-group list-group-flush border rounded">';
+  lista.forEach(e => { equiposHTML += `<li class="list-group-item"><i class="bi bi-cpu text-primary me-2"></i>${e}</li>`; });
+  equiposHTML += '</ul>';
+
+  const modalLabel = document.getElementById("modalProgramadaLabel");
+  const modalBody = document.getElementById("modalProgramadaBody");
+
+  if(modalLabel) modalLabel.innerHTML = `Programación: ${d.numero_incidente} - ${d.numero}`;
+  
+  if(modalBody) {
+    modalBody.innerHTML = `
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="text-muted small d-block">CLIENTE</label>
+          <p class="fw-bold mb-0">${d.cliente}</p>
+          <label class="text-muted small d-block mt-2">SUCURSAL</label>
+          <p class="mb-0">${d.sucursal}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="text-muted small d-block">FECHA AGENDADA</label>
+          <p class="mb-0"><span class="badge bg-warning text-dark px-3 py-2">${d.fecha}</span></p>
+          <label class="text-muted small d-block mt-2">TIPO</label>
+          <p class="mb-0 fw-bold">${d.numero_incidente === 'PROG-CAL' ? 'CALIBRACIÓN' : 'MANTENIMIENTO'}</p>
+        </div>
+      </div>
+      <div class="bg-light p-3 rounded">
+        <h6 class="fw-bold mb-3"><i class="bi bi-list-check"></i> Equipos vinculados a la visita:</h6>
+        ${equiposHTML}
+      </div>
+    `;
+  }
+
+  const modalEl = document.getElementById('modalProgramada');
+  if (modalEl) {
+    // Solo obtenemos o creamos la instancia, sin mover el elemento HTML de su lugar
+    let modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modalEl);
+    }
+    modalInstance.show();
+  }
+}
+
 function actualizarControlesPaginacion() {
-  const totalPaginas = Math.ceil(incidenciasTotales.length / registrosPorPagina) || 1;
-  const totalRegistros = incidenciasTotales.length;
-  const inicio = Math.min((paginaActual - 1) * registrosPorPagina + 1, totalRegistros);
-  const fin = Math.min(inicio + registrosPorPagina - 1, totalRegistros);
-
-  // Actualizar contador de registros
-  document.getElementById("contador-registros").textContent =
-    `Mostrando ${inicio}-${fin} de ${totalRegistros} registros`;
-
-  // Actualizar estado de botones
+  const total = incidenciasTotales.length;
+  
   const btnPrev = document.getElementById("btn-prev");
+  if (btnPrev) btnPrev.classList.toggle("disabled", paginaActual === 1);
+  
   const btnNext = document.getElementById("btn-next");
-
-  btnPrev.classList.toggle("disabled", paginaActual <= 1);
-  btnNext.classList.toggle("disabled", paginaActual >= totalPaginas);
+  if (btnNext) btnNext.classList.toggle("disabled", paginaActual >= Math.ceil(total / registrosPorPagina) || total === 0);
+  
+  const contador = document.getElementById("contador-registros");
+  if (contador) contador.textContent = `Total: ${total} registros`;
 }
 
 async function cargarClientes() {
   try {
-    const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: 'no-store' });
+    const response = await fetch(`../backend/obtener-clientes.php`);
     const clientes = await response.json();
-
-    const selectClientes = document.getElementById('cliente');
-    selectClientes.innerHTML = '<option value="">Seleccionar Cliente</option><option value="todos">Todos los clientes</option>';
-
-    clientes.forEach(cliente => {
-      const option = document.createElement('option');
-      option.value = cliente.nombre;
-      option.textContent = cliente.nombre;
-      selectClientes.appendChild(option);
-    });
-  } catch (error) {
-    console.error('Error al cargar clientes:', error);
-    alert('Error al cargar clientes en el select');
-  }
+    const select = document.getElementById('cliente');
+    if (select) {
+      clientes.forEach(c => { select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`; });
+    }
+  } catch(e) { console.warn("Error cargando clientes"); }
 }
 
-// Función para limpiar filtros
 function limpiarFiltros() {
-  document.getElementById("report-form").reset();
-
-  // Remover clase active de todos los botones de filtros rápidos
-  document.querySelectorAll('.btn-filtro-rapido').forEach(btn => {
-    btn.classList.remove('active');
-  });
-
+  const form = document.getElementById("report-form");
+  if (form) form.reset();
+  
+  const checkProg = document.getElementById("solo-programadas");
+  if (checkProg) checkProg.checked = false;
+  
+  document.querySelectorAll('.btn-filtro-rapido').forEach(btn => btn.classList.remove('active'));
   paginaActual = 1;
   cargarIncidencias();
 }

@@ -7,193 +7,58 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <!-- Agrega Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css?v=1.18">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    .filtros-avanzados {
-      background-color: #f8f9fa;
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      border-left: 4px solid #0d6efd;
-    }
-    
-    .filtros-avanzados summary {
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    
-    .badge-activo {
-      background-color: #198754;
-      color: white;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.85em;
-    }
-    
-    .badge-inactivo {
-      background-color: #6c757d;
-      color: white;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.85em;
-    }
-    
-    .btn-filtro-rapido {
-      margin-right: 8px;
-      margin-bottom: 8px;
-      border-width: 2px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    
-    .btn-filtro-rapido:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .btn-filtro-rapido i {
-      margin-right: 5px;
-    }
-    
-    .filtros-rapidos {
-      background-color: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .filtros-rapidos h5 {
-      color: #495057;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }
-    
-    .info-filtro {
-      font-size: 0.8rem;
-      color: #6c757d;
-      margin-top: 5px;
-    }
-    
-    .tooltip-inner {
-      max-width: 300px;
-      text-align: left;
-    }
+    .filtros-avanzados { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #0d6efd; }
+    .filtros-avanzados summary { font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+    .badge-activo { background-color: #198754; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; }
+    .badge-inactivo { background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; }
+    .btn-filtro-rapido { margin-right: 8px; margin-bottom: 8px; border-width: 2px; font-weight: 500; transition: all 0.2s ease; }
+    .btn-filtro-rapido:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
 
-  <!-- Botón Inicio Móvil -->
   <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
-    <i class="fas fa-home"></i>
-    <span>Volver al Inicio</span>
+    <i class="fas fa-home"></i> <span>Volver al Inicio</span>
   </button>
 
-  <!-- Panel lateral mejorado -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h2 class="sidebar-title">
-        <i class="fas fa-tools"></i>
-        Panel
-      </h2>
-      <button id="toggleSidebar" class="toggle-sidebar">
-        <i class="fas fa-chevron-left"></i>
-      </button>
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
     </div>
-    
     <ul>
-      <li>
-        <a href="../index.html" title="Inicio">
-          <i class="fas fa-home"></i>
-          <span class="sidebar-link-text">Inicio</span>
-        </a>
-      </li>
-      <li>
-        <a href="incidencias.html" title="Incidencias">
-          <i class="fas fa-tasks"></i>
-          <span class="sidebar-link-text">Incidencias</span>
-        </a>
-      </li>
-      <li>
-        <a href="reportes.html" title="Buscar Incidencias" class="active">
-          <i class="fas fa-search"></i>
-          <span class="sidebar-link-text">Buscar Incidencias</span>
-        </a>
-      </li>
-      <li>
-        <a href="clientes.html" title="Clientes">
-          <i class="fas fa-users"></i>
-          <span class="sidebar-link-text">Clientes</span>
-        </a>
-      </li>
-      <li>
-        <a href="usuarios.html" title="Usuarios">
-          <i class="fas fa-user-friends"></i>
-          <span class="sidebar-link-text">Usuarios</span>
-        </a>
-      </li>
-      <li>
-        <a href="ajustes.html" title="Ajustes">
-          <i class="fas fa-cog"></i>
-          <span class="sidebar-link-text">Ajustes</span>
-        </a>
-      </li>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html" class="active"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="usuarios.html"><i class="fas fa-user-friends"></i> <span class="sidebar-link-text">Usuarios</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
     </ul>
-
     <div class="sidebar-footer">
-      <div class="user-info">
-        <i class="fas fa-user-circle"></i>
-        <span class="user-name">Técnico</span>
-      </div>
+      <div class="user-info"><i class="fas fa-user-circle"></i> <span class="user-name">Técnico</span></div>
     </div>
   </aside>
 
-  <!-- CONTENIDO ORIGINAL EXACTO -->
   <main id="mainContent">
     <section class="encabezado">
       <h2>Filtrar incidencias</h2>
       
-      <!-- Filtros rápidos -->
       <div class="d-flex flex-wrap gap-2 mb-3">
-        <button type="button" class="btn btn-outline-success btn-sm btn-filtro-rapido" data-filtro="Mr. Tienda/Mr. Chef" 
-                data-bs-toggle="tooltip" data-bs-placement="top">
-          <i class="bi bi-cash-register"></i> Mr. Tienda/Mr. Chef
-        </button>
-        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Distribuidora el Florido" 
-                data-bs-toggle="tooltip" data-bs-placement="top">
-          <i class="bi bi-speedometer2"></i> Distribuidora el Florido
-        </button>
-
-        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Calimax" 
-                data-bs-toggle="tooltip" data-bs-placement="top">
-          <i class="bi bi-speedometer2"></i> Calimax
-        </button>
-
-        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Recolección" 
-                data-bs-toggle="tooltip" data-bs-placement="top">
-          <i class="bi bi-speedometer2"></i> Recolección
-        </button>
-
-        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Otros" 
-                data-bs-toggle="tooltip" data-bs-placement="top">
-          <i class="bi bi-speedometer2"></i> Otros
-        </button>
-
-        
-        
-        <button type="button" class="btn btn-outline-secondary btn-sm btn-filtro-rapido" data-filtro="todos">
-          <i class="bi bi-list-ul"></i> Mostrar Todos
-        </button>
+        <button type="button" class="btn btn-outline-success btn-sm btn-filtro-rapido" data-filtro="Mr. Tienda/Mr. Chef">Mr. Tienda/Mr. Chef</button>
+        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Distribuidora el Florido">Distribuidora el Florido</button>
+        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Calimax">Calimax</button>
+        <button type="button" class="btn btn-outline-info btn-sm btn-filtro-rapido" data-filtro="Recolección">Recolección</button>
+        <button type="button" class="btn btn-outline-warning btn-sm btn-filtro-rapido" data-filtro="programadas"><i class="bi bi-calendar-week"></i> Programadas</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm btn-filtro-rapido" data-filtro="todos">Mostrar Todos</button>
       </div>
       
       <form id="report-form">
         <details class="filtros-avanzados" open>
           <summary>Filtros avanzados</summary>
-          
           <div class="form-row mt-3">
             <div class="col-md-6">
               <label for="cliente">Cliente:</label>
@@ -202,7 +67,6 @@
                 <option value="todos">Todos los clientes</option>
               </select>
             </div>
-            
             <div class="col-md-6">
               <label for="tipo-equipo">Categoría:</label>
               <select id="tipo-equipo" name="tipo_equipo" class="form-select">
@@ -212,31 +76,27 @@
                 <option value="Calimax">Calimax</option>
                 <option value="Recolección">Recolección</option>
                 <option value="Otros">Otros</option>
-
               </select>
             </div>
           </div>
 
           <div class="form-row mt-3">
             <div class="col-md-4">
-              <label for="fecha-inicio">Fecha de Inicio:</label>
-              <input type="date" id="fecha-inicio" name="fecha_inicio" class="form-control">
+              <label for="fecha-inicio">Fecha Inicio:</label>
+              <input type="date" id="fecha-inicio" class="form-control">
             </div>
-        
             <div class="col-md-4">
-              <label for="fecha-fin">Fecha de Fin:</label>
-              <input type="date" id="fecha-fin" name="fecha_fin" class="form-control">
+              <label for="fecha-fin">Fecha Fin:</label>
+              <input type="date" id="fecha-fin" class="form-control">
             </div>
-            
             <div class="col-md-4">
               <label for="estatus">Estatus:</label>
-              <select id="estatus" name="estatus" class="form-select">
-                <option value="">Seleccionar Estatus</option>
+              <select id="estatus" class="form-select">
+                <option value="">Todos los estatus</option>
                 <option value="Abierto">Abierto</option>
                 <option value="Asignado">Asignado</option>
                 <option value="Pendiente">Pendiente</option>
                 <option value="Completado">Completado</option>
-                <option value="Cerrado sin factura">Cerrado sin factura</option>
                 <option value="Cerrado con factura">Cerrado con factura</option>
               </select>
             </div>
@@ -244,14 +104,9 @@
         
           <div class="form-row mt-3">
             <div class="col-md-6">
-              <label for="sucursal">Sucursal:</label>
-              <input type="text" id="sucursal" name="sucursal" class="form-control" placeholder="Nombre de sucursal">
-            </div>
-            
-            <div class="col-md-6">
-              <label for="tecnico">Técnico Asignado:</label>
-              <select id="tecnico" name="tecnico" class="form-select">
-                <option value="" selected>Seleccione un técnico</option>
+              <label for="tecnico">Técnico:</label>
+              <select id="tecnico" class="form-select">
+                <option value="">Cualquier técnico</option>
                 <option value="Victor Hugo Cordoba">Victor Hugo Cordoba</option>
                 <option value="Tomás Valdéz">Tomás Valdéz</option>
                 <option value="Francisco Aguiar">Francisco Aguiar</option>
@@ -261,39 +116,37 @@
                 <option value="Hoscar Martínez">Hoscar Martínez</option>
                 <option value="Jacob Ventura">Jacob Ventura</option>
                 <option value="Luis Limón">Luis Limón</option>
-                <option value="Manuel Eduardo Saveedra">Manuel Eduardo Saveedra</option>
                 <option value="Ernesto Chávez">Ernesto Chávez</option>
               </select>
+            </div>
+            <div class="col-md-6">
+              <label for="sucursal">Sucursal:</label>
+              <input type="text" id="sucursal" class="form-control" placeholder="Sucursal">
             </div>
           </div>
           
           <div class="form-row mt-3">
             <div class="col-md-6">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="solo-activas" name="solo_activas">
-                <label class="form-check-label" for="solo-activas">
-                  Mostrar solo incidencias activas
-                </label>
+                <input class="form-check-input" type="checkbox" id="solo-activas">
+                <label class="form-check-label" for="solo-activas">Solo incidencias activas</label>
+              </div>
+              <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" id="solo-programadas">
+                <label class="form-check-label" for="solo-programadas"><strong>Ver solo Programadas (Calibración/Servicio)</strong></label>
               </div>
             </div>
           </div>
         
           <div class="form-row mt-3">
-            <button type="submit" class="btn btn-primary me-2" aria-label="Buscar incidencias">
-              <i class="bi bi-search"></i> Buscar
-            </button>
-            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">
-              <i class="bi bi-x-circle"></i> Limpiar Filtros
-            </button>
+            <button type="submit" class="btn btn-primary me-2"><i class="bi bi-search"></i> Buscar</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">Limpiar Filtros</button>
           </div>
         </details>
       </form>
     </section>
-    
 
-    <!-- Resultados del Reporte -->
     <section class="lista-incidencias">
-      <h2>Historial de incidencias</h2>
       <div id="report-data" style="overflow-x: auto;">
         <table class="table table-striped table-hover">
           <thead class="table-light">
@@ -302,51 +155,51 @@
               <th># Incidencia Cliente</th>
               <th>Cliente</th>
               <th>Sucursal</th>
-              <th>Falla</th>
+              <th>Resumen</th>
               <th>Fecha</th>
               <th>Estatus</th>
               <th>Estado</th>
             </tr>
           </thead>
-          <tbody id="tabla-body">
-            <!-- Los reportes generados dinámicamente aparecerán aquí -->
-          </tbody>
+          <tbody id="tabla-body"></tbody>
         </table>
         
-        <!-- Paginación con Bootstrap -->
         <div class="d-flex justify-content-between align-items-center mt-3">
           <div class="d-flex align-items-center">
             <select class="form-select form-select-sm me-2" id="select-registros" style="width: auto;">
-              <option value="10">10 por página</option>
-              <option value="25">25 por página</option>
-              <option value="50">50 por página</option>
-              <option value="100">100 por página</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
             </select>
             <span id="contador-registros" class="text-muted small"></span>
           </div>
-          
-          <nav aria-label="Page navigation">
+          <nav>
             <ul class="pagination pagination-sm mb-0">
-              <li class="page-item disabled" id="btn-prev">
-                <a class="page-link" href="#" tabindex="-1">Anterior</a>
-              </li>
-              <li class="page-item" id="btn-next">
-                <a class="page-link" href="#">Siguiente</a>
-              </li>
+              <li class="page-item" id="btn-prev"><a class="page-link" href="#">Anterior</a></li>
+              <li class="page-item" id="btn-next"><a class="page-link" href="#">Siguiente</a></li>
             </ul>
           </nav>
         </div>
       </div>
     </section>
-  </main>
 
-  
-  <div id="contenedor-alertas"></div>
+  </main> <div class="modal fade" id="modalProgramada" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalProgramadaLabel"><i class="bi bi-calendar-check"></i> Detalle de Programación</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalProgramadaBody"></div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- Agrega Bootstrap JS al final del body -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/script-busquedas.js?v=15" defer></script>
-  
+  <script src="../scripts/script-busquedas.js?v=2" defer></script>
 </body>
 </html>
