@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Clientes</title>
-    <link rel="stylesheet" href="../css/styles.css?v=2">
+    <link rel="stylesheet" href="../css/styles.css?v=9.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -15,61 +15,20 @@
     <span>Volver al Inicio</span>
   </button>
 
-  <!-- Panel lateral mejorado -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h2 class="sidebar-title">
-        <i class="fas fa-tools"></i>
-        Panel
-      </h2>
-      <button id="toggleSidebar" class="toggle-sidebar">
-        <i class="fas fa-chevron-left"></i>
-      </button>
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
     </div>
     
     <ul>
-      <li>
-        <a href="../index.html" title="Inicio">
-          <i class="fas fa-home"></i>
-          <span class="sidebar-link-text">Inicio</span>
-        </a>
-      </li>
-      <li>
-        <a href="incidencias.html" title="Incidencias">
-          <i class="fas fa-tasks"></i>
-          <span class="sidebar-link-text">Incidencias</span>
-        </a>
-      </li>
-      <li>
-        <a href="reportes.html" title="Buscar Incidencias">
-          <i class="fas fa-search"></i>
-          <span class="sidebar-link-text">Buscar Incidencias</span>
-        </a>
-      </li>
-      <li>
-        <a href="clientes.html" title="Clientes" class="active">
-          <i class="fas fa-users"></i>
-          <span class="sidebar-link-text">Clientes</span>
-        </a>
-      </li>
-      <li>
-        <a href="usuarios.html" title="Usuarios">
-          <i class="fas fa-user-friends"></i>
-          <span class="sidebar-link-text">Usuarios</span>
-        </a>
-      </li>
-      <li>
-        <a href="soporte.html" title="Soporte Técnico">
-          <i class="fas fa-headset"></i>
-          <span class="sidebar-link-text">Soporte Técnico</span>
-        </a>
-      </li>
-      <li>
-        <a href="ajustes.html" title="Ajustes">
-          <i class="fas fa-cog"></i>
-          <span class="sidebar-link-text">Ajustes</span>
-        </a>
-      </li>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html" class="active"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="usuarios.html"><i class="fas fa-user-friends"></i> <span class="sidebar-link-text">Usuarios</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
     </ul>
 
     <div class="sidebar-footer">
@@ -80,16 +39,14 @@
     </div>
   </aside>
 
-  <!-- CONTENIDO ORIGINAL EXACTO -->
   <main id="mainContent">
-    <!-- Sección de registr o de clientes -->
     <section class="encabezado">
       <form id="new-incidencia-form">
-        <h2>Registrar Cliente</h2>
+        <h2>Registrar Nuevo Cliente</h2>
         <div class="form-row">
           <div>  
             <label for="nombre">Nombre del Cliente o razón social:</label>
-            <input type="text" id="nombre" name="nombre">
+            <input type="text" id="nombre" name="nombre" required>
           </div>
           <div>
             <label for="rfc">RFC:</label>
@@ -119,49 +76,39 @@
           </div>
         </div>
         
-        <button type="submit">Guardar Cliente</button>
+        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar Cliente</button>
       </form>
 
-      <section class="lista-incidencias">
-        <h2>Lista de Clientes</h2>     
+      <section class="lista-incidencias" style="margin-top: 40px;">
+        <h2>Directorio de Clientes</h2>     
+        <p style="color: #7f8c8d; font-size: 0.9rem;">Haz clic en el nombre de un cliente para ver su perfil completo y su padrón de equipos.</p>
         
         <div class="form-row">
-            <input type="text" id="campo-busqueda" name="busqueda-cliente" placeholder="Buscar un cliente">
+            <input type="text" id="campo-busqueda" name="busqueda-cliente" placeholder="Buscar por nombre, RFC o teléfono..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
         </div>
         
-        <table border="1">
+        <table class="tabla-ventas" style="width: 100%; margin-top: 15px;">
           <thead>
             <tr>
-              <th>Nombre</th>
+              <th>Nombre del Cliente</th>
               <th>RFC</th>
               <th>Dirección</th>
               <th>Teléfono</th>
               <th>Contactos</th>
               <th>Email</th>
-              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="lista-clientes">
-            <!-- Los datos aparecerán aquí -->
+            <!-- Los datos aparecerán aquí mediante JS -->
           </tbody>
         </table>
       </section>
     </section>
   </main>
   
-  <!-- Modal para edición de cliente (oculto inicialmente) -->
-  <div id="modal-edicion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
-    <div style="background-color: white; margin: 5% auto; padding: 20px; width: 80%; max-width: 600px; border-radius: 5px;">
-      <h2>Editar Cliente</h2>
-      <div id="formulario-edicion">
-        <!-- El formulario de edición se cargará aquí -->
-      </div>
-      <button onclick="document.getElementById('modal-edicion').style.display = 'none'">Cancelar</button>
-    </div>
-  </div>
-
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/carga-clientes.js?v=4"></script>
-  <script src="../scripts/script-clientes.js?v=5"></script>
+  <!-- ACTUALIZA ESTE SCRIPT PARA QUE HAGA REDIRECCIÓN EN LUGAR DE ABRIR MODAL -->
+  <script src="../scripts/carga-clientes.js?v=6"></script> 
+  <script src="../scripts/script-clientes.js?v=7"></script>
 </body>
 </html>
