@@ -48,7 +48,7 @@ try {
         
         foreach ($equipos as $eq) {
             $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';
-            $ref = $eq['origen'] === 'Venta Lumina' ? "(Venta #{$eq['venta_id']})" : "(Equipo Externo)";
+            $ref = $eq['origen'] === 'Venta SIPCONS' ? "(Venta #{$eq['venta_id']})" : "(Equipo Externo)";
             $notas .= "- {$eq['marca']} {$eq['modelo']} (Serie: $serie) $ref | Vence: {$eq['proxima_calibracion']}\n";
         }
         $notas .= "\nTicket generado automáticamente con 10 días de anticipación.";

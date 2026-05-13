@@ -138,7 +138,7 @@ function renderizarTablaEquipos(equipos) {
         let txtPeriodo = periodos.length > 0 ? periodos.join(' | ') : 'Sin programa';
 
         // 2. Badge de Origen
-        let badgeOrigen = eq.origen === 'Venta Lumina' 
+        let badgeOrigen = eq.origen === 'Venta SIPCONS' 
             ? `<span style="background:#e8f4f8; color:#2980b9; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Venta #${eq.venta_id}</span>`
             : `<span style="background:#fef5e7; color:#d35400; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Externo</span>`;
 
@@ -228,7 +228,7 @@ window.eliminarEquipoPadron = async function() {
     const idEquipo = document.getElementById('ext-id').value;
     if (!idEquipo) return;
 
-    if(confirm("¿Estás 100% seguro de que deseas eliminar este equipo del padrón? Perderá su programación automática.")) {
+    if(confirm("¿Estás seguro de que deseas eliminar este equipo del padrón? Perderá su programación automática.")) {
         try {
             const resp = await fetch(`../backend/elimina_equipo_padron.php?id=${idEquipo}`, { method: 'DELETE' });
             const result = await resp.json();
