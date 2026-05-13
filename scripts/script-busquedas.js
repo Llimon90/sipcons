@@ -164,7 +164,10 @@ function mostrarIncidenciasPagina() {
   actualizarControlesPaginacion();
 }
 
-function abrirModalProgramada(indice) {
+// =====================================================================
+// LÓGICA DE MODAL NATIVO (CERO BOOTSTRAP)
+// =====================================================================
+window.abrirModalProgramada = function(indice) {
   const d = incidenciasTotales[indice];
   if (!d) return;
 
@@ -177,7 +180,9 @@ function abrirModalProgramada(indice) {
   const modalLabel = document.getElementById("modalProgramadaLabel");
   const modalBody = document.getElementById("modalProgramadaBody");
 
-  if(modalLabel) modalLabel.innerHTML = `Programación: ${d.numero_incidente} - ${d.numero}`;
+  if(modalLabel) {
+      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${d.numero_incidente} - ${d.numero}`;
+  }
   
   if(modalBody) {
     modalBody.innerHTML = `
@@ -202,16 +207,21 @@ function abrirModalProgramada(indice) {
     `;
   }
 
+  // AQUÍ ESTÁ LA MAGIA: Simplemente cambiamos el display a flex, sin invocar a Bootstrap
   const modalEl = document.getElementById('modalProgramada');
   if (modalEl) {
-    // Solo obtenemos o creamos la instancia, sin mover el elemento HTML de su lugar
-    let modalInstance = bootstrap.Modal.getInstance(modalEl);
-    if (!modalInstance) {
-        modalInstance = new bootstrap.Modal(modalEl);
-    }
-    modalInstance.show();
+      modalEl.style.display = 'flex';
   }
-}
+};
+
+// Función para cerrar el modal nativo
+window.cerrarModalProgramada = function() {
+  const modalEl = document.getElementById('modalProgramada');
+  if (modalEl) {
+      modalEl.style.display = 'none';
+  }
+};
+// =====================================================================
 
 function actualizarControlesPaginacion() {
   const total = incidenciasTotales.length;
