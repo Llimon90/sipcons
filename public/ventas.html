@@ -112,4 +112,86 @@
               <strong><i class="fas fa-concierge-bell"></i> Cláusula de servicio</strong>
             </label>
             
-            <div id="contenedor-frecuencia" style="display: none; margin-top: 10px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db; width: 10
+            <div id="contenedor-frecuencia" style="display: none; margin-top: 10px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db; width: 100%; box-sizing: border-box;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">
+                    <i class="fas fa-calendar-alt"></i> FRECUENCIA (MESES):
+                </label>
+                <input type="number" id="frecuencia_servicio" name="frecuencia_servicio" min="1" placeholder="Ej. 6" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+
+        <div id="series-container" class="series-container"></div>
+
+        <div class="form-row">
+          <div class="full-width">
+            <label for="notas"><i class="fas fa-sticky-note"></i> Notas:</label>
+            <textarea id="notas" name="notas" placeholder="Observaciones adicionales..."></textarea>
+          </div>
+        </div>
+
+        <div class="filtro-item" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <label for="facturas"><i class="fas fa-file-upload"></i> Adjuntar Facturas/Archivos (Opcional):</label>
+            <input type="file" id="facturas" name="facturas[]" accept=".pdf, .jpg, .png, .docx" multiple class="form-control" style="margin-top: 10px;">
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">Puedes seleccionar varios archivos a la vez.</small>
+        </div>
+        
+        <div class="form-row">
+          <button type="button" id="btn-registrar-venta" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+            <i class="fas fa-save"></i> Procesar y Registrar Venta
+          </button>
+        </div>
+      </form>
+
+      <div id="mensaje" class="mensaje"></div>
+    </section>
+  </main>
+
+  <script>
+    async function cargarClientesEnSelect() {
+        try {
+            const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: "no-store" });
+            const clientes = await response.json();
+
+            const selectClientes = document.getElementById('cliente');
+            selectClientes.innerHTML = '<option value="" selected disabled>Seleccione un cliente</option>'; 
+
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.nombre;
+                option.textContent = cliente.nombre;
+                selectClientes.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error al cargar clientes:', error);
+            alert('Error al cargar clientes en el select');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
+
+    // --- ÚNICO CAMBIO ADICIONAL: Control nativo del checkbox de servicio ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkServicio = document.getElementById('servicio');
+        const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
+        const inputFrecuencia = document.getElementById('frecuencia_servicio');
+
+        if (checkServicio && contenedorFrecuencia) {
+            checkServicio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    contenedorFrecuencia.style.display = 'block';
+                    if (inputFrecuencia) inputFrecuencia.required = true;
+                } else {
+                    contenedorFrecuencia.style.display = 'none';
+                    if (inputFrecuencia) {
+                        inputFrecuencia.required = false;
+                        inputFrecuencia.value = '';
+                    }
+                }
+            });
+        }
+    });
+  </script>
+
+  <script src="../scripts/sidebar-state.js?v=1"></script>
+</body>
+</html>
