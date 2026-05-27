@@ -15,6 +15,10 @@ try {
     // ==========================================
     // 1. ACTUALIZAR CABECERA (Tabla: ventas)
     // ==========================================
+    
+    // Verificamos de forma segura si viene la fecha, si no la convertimos a null para evitar error estricto de MySQL
+    $fechaVenta = !empty($_POST['fecha_venta']) ? $_POST['fecha_venta'] : null;
+
     $stmtV = $pdo->prepare("UPDATE ventas SET 
         cliente = ?, 
         sucursal = ?,
@@ -25,9 +29,10 @@ try {
     $stmtV->execute([
         $_POST['cliente'] ?? '',
         $_POST['sucursal'] ?? '',
-        $_POST['fecha_venta'] ?? null, // <-- Nuevo campo capturado
+        $fechaVenta,
         $idVenta
     ]);
+
     // ==========================================
     // 2. ACTUALIZAR, INSERTAR O ELIMINAR SERIES DINÁMICAMENTE
     // ==========================================

@@ -112,7 +112,6 @@ function createFileContainer(archivoObj) {
     fileNameSpan.style.lineHeight = '1.2';
     link.appendChild(fileNameSpan);
 
-    // Botón rojo de eliminar blindado
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'eliminar-archivo';
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>'; 
@@ -217,17 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardar = document.getElementById('btn-guardar-cambios');
     let valorPrevioQty = 0;
 
-    // Elementos de la Frecuencia de Servicio
     const checkServicio = document.getElementById('servicio');
     const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
     const inputFrecuencia = document.getElementById('frecuencia_servicio');
 
-    // Evento para mostrar/ocultar frecuencia de servicio
     checkServicio.addEventListener('change', (e) => {
         if (e.target.checked) {
             contenedorFrecuencia.style.display = 'block';
             inputFrecuencia.required = true;
-            if (!inputFrecuencia.value) inputFrecuencia.value = 6; // Por defecto 6 meses
+            if (!inputFrecuencia.value) inputFrecuencia.value = 6;
         } else {
             contenedorFrecuencia.style.display = 'none';
             inputFrecuencia.required = false;
@@ -235,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Validación Anti-Duplicados
     const validarSeries = () => {
         const inputs = document.querySelectorAll('.serie-edit-input');
         const valores = Array.from(inputs).map(i => i.value.trim().toUpperCase());
@@ -258,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { hayErrores: estadoError, hayVacios };
     };
 
-    // Agregar/Quitar inputs según la cantidad
     const actualizarCamposSerie = () => {
         let cant = parseInt(qtyInput.value) || 0;
         if (cant < 0) { qtyInput.value = 0; cant = 0; }
@@ -301,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     qtyInput.addEventListener('input', actualizarCamposSerie);
 
-    // Carga de Datos
     const cargarDatos = async () => {
         try {
             const resp = await fetch(`../backend/obtener_venta_full.php?id=${ventaId}`);
@@ -311,10 +305,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('txt-folio').textContent = data.venta.folio;
                 document.getElementById('cliente').value = data.venta.cliente;
                 document.getElementById('sucursal').value = data.venta.sucursal;
+                
+                // Carga correcta de la fecha
                 if (data.venta.fecha_venta) {
                     document.getElementById('fecha_venta').value = data.venta.fecha_venta.split(' ')[0]; 
                 }
-
 
                 if(data.series.length > 0) {
                     const d = data.series[0];
@@ -325,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('calibracion').value = d.calibracion || 0;
                     document.getElementById('notas').value = d.notas || '';
                     
-                    // Configurar checkbox y frecuencia
                     document.getElementById('servicio').checked = (d.servicio == 1);
                     if (d.servicio == 1) {
                         contenedorFrecuencia.style.display = 'block';
@@ -354,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     cargarDatos();
 
-    // Guardar los cambios (FormData)
     btnGuardar.addEventListener('click', async () => {
         const form = document.getElementById('form-editar-venta');
         const { hayErrores, hayVacios } = validarSeries();
@@ -395,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification(e.message || "Error al conectar con el servidor", "error");
         } finally {
             btnGuardar.disabled = false;
-            btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios de la Venta';
+            btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
         }
     });
 
