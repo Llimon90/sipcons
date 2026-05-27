@@ -148,9 +148,9 @@ function mostrarIncidenciasPagina() {
     // Traducir códigos de reporte interno para el usuario en la tabla
     let nombreReporteVisual = inc.numero_incidente;
     if (inc.numero_incidente === 'PROG-CAL') {
-        nombreReporteVisual = 'CONTACTAR CLIENTE (RECOMENDAR CALIBRACIÓN)';
+        nombreReporteVisual = 'CONTACTAR CLIENTE';
     } else if (inc.numero_incidente === 'PROG-SERV') {
-        nombreReporteVisual = 'PROG-SERV (MANTENIMIENTO / CALIBRACIÓN)';
+        nombreReporteVisual = 'PROG-SERV ';
     }
 
     let enlaceHTML = esProgramado 
