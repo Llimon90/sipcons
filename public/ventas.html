@@ -107,7 +107,7 @@
           
           <div class="checkbox-container">
             <label for="servicio" class="checkbox-label" style="margin-top: 10px; cursor: pointer;">
-              <input type="checkbox" id="servicio" name="servicio">
+              <input type="checkbox" id="servicio" name="servicio" style="display: inline-block !important; opacity: 1 !important; visibility: visible !important; width: 16px !important; height: 16px !important; margin-right: 8px; vertical-align: middle;">
               <span class="checkmark"></span>
               <strong><i class="fas fa-concierge-bell"></i> Cláusula de servicio</strong>
             </label>
@@ -169,7 +169,7 @@
     }
     document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
 
-    // Escuchador nativo para alternar el contenedor de frecuencia
+    // Control nativo de la visibilidad de la frecuencia
     document.addEventListener('DOMContentLoaded', () => {
         const checkServicio = document.getElementById('servicio');
         const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
