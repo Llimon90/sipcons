@@ -216,7 +216,7 @@ window.abrirModalProgramada = function(indice) {
       // --- TEXTOS DE PERIODICIDAD MEJORADOS Y EXPLICATIVOS ---
       let textoPeriodo = "";
       if (d.numero_incidente === 'PROG-CAL' && calibracion > 0) {
-          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-phone-alt text-danger"></i> <strong>Acción Técnica:</strong> Contactar al cliente para ofrecer Calibración programada cada ${calibracion} meses</div>`;
+          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-phone-alt text-danger"></i> <strong>Acción Técnica:</strong> Contactar al cliente para ofrecer Servicio programada cada ${calibracion} meses</div>`;
       } else if (d.numero_incidente === 'PROG-SERV' && servicio > 0) {
           textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-sync-alt text-primary"></i> <strong>Frecuencia de Servicio:</strong> Mantenimiento Preventivo o Calibración requerida cada ${servicio} meses</div>`;
       }
