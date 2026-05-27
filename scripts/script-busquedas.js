@@ -247,7 +247,7 @@ window.abrirModalProgramada = function(indice) {
   let explicacionTipoVisita = "";
 
   if (d.numero_incidente === 'PROG-CAL') {
-      tituloModalVisual = 'CONTACTAR CLIENTE (RECOMENDAR CALIBRACIÓN)';
+      tituloModalVisual = 'CONTACTAR CLIENTE (RECOMENDAR SERVICIO)';
       explicacionTipoVisita = 'CONTACTAR PARA OFRECER MANTENIMIENTO O CALIBRACIÓN';
   } else if (d.numero_incidente === 'PROG-SERV') {
       tituloModalVisual = 'PROG-SERV (MANTENIMIENTO / CALIBRACIÓN)';
