@@ -105,14 +105,17 @@
             <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0">
           </div>
           
-          <div class="checkbox-container">
-            <label for="servicio" class="checkbox-label" style="margin-top: 10px; cursor: pointer;">
-              <input type="checkbox" id="servicio" name="servicio" style="display: inline-block !important; opacity: 1 !important; visibility: visible !important; width: 16px !important; height: 16px !important; margin-right: 8px; vertical-align: middle;">
-              <span class="checkmark"></span>
-              <strong><i class="fas fa-concierge-bell"></i> Cláusula de servicio</strong>
-            </label>
+          <div style="display: flex; flex-direction: column;">
+            <label style="visibility: hidden; margin-bottom: 5px;">Opciones</label>
             
-            <div id="contenedor-frecuencia" style="display: none; margin-top: 10px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db; width: 100%; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; padding: 8px 0;">
+              <input type="checkbox" id="servicio" name="servicio" style="width: 20px !important; height: 20px !important; margin: 0 10px 0 0 !important; cursor: pointer !important; display: inline-block !important; opacity: 1 !important; visibility: visible !important;">
+              <label for="servicio" style="margin: 0; cursor: pointer; font-weight: bold; color: #2c3e50; font-size: 1rem;">
+                <i class="fas fa-concierge-bell"></i> Cláusula de servicio
+              </label>
+            </div>
+            
+            <div id="contenedor-frecuencia" style="display: none; margin-top: 5px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db; width: 100%; box-sizing: border-box;">
                 <label style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">
                     <i class="fas fa-calendar-alt"></i> FRECUENCIA (MESES):
                 </label>
