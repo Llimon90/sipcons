@@ -311,6 +311,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('txt-folio').textContent = data.venta.folio;
                 document.getElementById('cliente').value = data.venta.cliente;
                 document.getElementById('sucursal').value = data.venta.sucursal;
+                if (data.venta.fecha_venta) {
+                    document.getElementById('fecha_venta').value = data.venta.fecha_venta.split(' ')[0]; 
+                }
+
 
                 if(data.series.length > 0) {
                     const d = data.series[0];

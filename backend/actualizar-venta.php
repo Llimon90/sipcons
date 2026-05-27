@@ -18,15 +18,16 @@ try {
     $stmtV = $pdo->prepare("UPDATE ventas SET 
         cliente = ?, 
         sucursal = ?,
+        fecha_venta = ?, 
         fecha_actualizacion = NOW() 
         WHERE id = ?");
     
     $stmtV->execute([
         $_POST['cliente'] ?? '',
         $_POST['sucursal'] ?? '',
+        $_POST['fecha_venta'] ?? null, // <-- Nuevo campo capturado
         $idVenta
     ]);
-
     // ==========================================
     // 2. ACTUALIZAR, INSERTAR O ELIMINAR SERIES DINÁMICAMENTE
     // ==========================================
