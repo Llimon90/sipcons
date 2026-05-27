@@ -11,19 +11,19 @@ if (!$idVenta) {
 
 try {
     $pdo->beginTransaction();
-
-    // ==========================================
+// ==========================================
     // 1. ACTUALIZAR CABECERA (Tabla: ventas)
     // ==========================================
     
-    // Verificamos de forma segura si viene la fecha, si no la convertimos a null para evitar error estricto de MySQL
+    // Capturamos el valor del input "fecha_venta" del HTML
     $fechaVenta = !empty($_POST['fecha_venta']) ? $_POST['fecha_venta'] : null;
 
+    // Actualizamos la columna fecha_registro con lo que el usuario seleccionó
     $stmtV = $pdo->prepare("UPDATE ventas SET 
         cliente = ?, 
         sucursal = ?,
-        fecha_venta = ?, 
-        fecha_actualizacion = NOW() 
+        fecha_registro = ?, // <-- Cambiado aquí para actualizar la fecha de la venta
+        fecha_actualizacion = NOW() // <-- Se actualiza automáticamente al momento exacto del guardado
         WHERE id = ?");
     
     $stmtV->execute([
@@ -32,7 +32,6 @@ try {
         $fechaVenta,
         $idVenta
     ]);
-
     // ==========================================
     // 2. ACTUALIZAR, INSERTAR O ELIMINAR SERIES DINÁMICAMENTE
     // ==========================================

@@ -306,21 +306,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('cliente').value = data.venta.cliente;
                 document.getElementById('sucursal').value = data.venta.sucursal;
                 
-                // ==========================================================
-                // CONTROL DE FECHA BLINDADO CON LOGS DE DEPURACIÓN
+               // ==========================================================
+                // CONTROL DE FECHA ASIGNADO A FECHA_REGISTRO
                 // ==========================================================
                 console.log("Contenido de data.venta recibido del servidor:", data.venta);
 
-                // Busca tanto 'fecha_venta' como el nombre alternativo 'fecha'
-                const fechaBD = data.venta.fecha_venta || data.venta.fecha;
-
-                if (fechaBD && fechaBD !== "0000-00-00" && fechaBD !== "0000-00-00 00:00:00") {
-                    // Corta las horas (HH:MM:SS) si es que vienen de un tipo DATETIME
-                    const fechaFormateada = fechaBD.split(' ')[0]; 
+                // Mapeamos directamente el campo fecha_registro de tu BD
+                if (data.venta.fecha_registro) {
+                    // Corta las horas (HH:MM:SS) para dejar el formato YYYY-MM-DD
+                    const fechaFormateada = data.venta.fecha_registro.split(' ')[0]; 
                     document.getElementById('fecha_venta').value = fechaFormateada;
-                    console.log("Fecha mapeada exitosamente al input HTML:", fechaFormateada);
+                    console.log("Fecha de registro cargada en el input:", fechaFormateada);
                 } else {
-                    console.warn("La fecha del servidor viene vacía o en un formato inválido.");
+                    console.warn("La venta no tiene una fecha_registro asignada.");
                 }
                 // ==========================================================
 
