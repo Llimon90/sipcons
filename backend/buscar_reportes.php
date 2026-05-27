@@ -34,7 +34,7 @@ try {
                 IF(p.origen = 'Venta Lumina', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
-                CONCAT(COUNT(p.id), ' equipo(s) a Calibrar.') as falla,
+                CONCAT(COUNT(p.id), ' equipo(s) a Mantenimiento/Calibración.') as falla,
                 p.proxima_calibracion as fecha,
                 'Programado' as estatus,
                 MAX(p.equipo) as equipo,
