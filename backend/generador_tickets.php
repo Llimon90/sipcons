@@ -43,8 +43,8 @@ try {
         $primerEq = $equipos[0]; 
         $cantidad = count($equipos);
         
-        $falla = "PREVENTIVO: Calibración Próxima a Vencer ($cantidad equipos)";
-        $notas = "Equipos a calibrar:\n";
+        $falla = "ALERTA DE CONTACTO PARA RECOMENDAR CALIBRACIÓN O SERVICIO: Próxima a Vencer ($cantidad equipos)";
+        $notas = "Equipos en seguimineto:\n";
         
         foreach ($equipos as $eq) {
             $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';
@@ -55,7 +55,7 @@ try {
         $nombreEquipo = $cantidad > 1 ? "Múltiples Equipos" : $primerEq['equipo'];
 
         $stmtInsertIncidencia->execute([
-            "AUTO-CAL", $folioNuevo, $primerEq['cliente'], "Sistema SIPCONS", $primerEq['sucursal'], 
+            "ALERTA-CONTACTO", $folioNuevo, $primerEq['cliente'], "Sistema SIPCONS", $primerEq['sucursal'], 
             "", $falla, $nombreEquipo, "Abierto", "", $notas
         ]);
         
@@ -85,8 +85,8 @@ try {
         $primerEq = $equipos[0];
         $cantidad = count($equipos);
         
-        $falla = "PREVENTIVO: Mantenimiento Próximo a Vencer ($cantidad equipos)";
-        $notas = "Equipos para mantenimiento:\n";
+        $falla = "Mantenimiento o Calibración: Servicio Próximo a Vencer ($cantidad equipos)";
+        $notas = "Equipos para mantenimiento/calibración:\n";
         
         foreach ($equipos as $eq) {
             $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';
