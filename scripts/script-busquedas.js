@@ -251,7 +251,7 @@ window.abrirModalProgramada = function(indice) {
       explicacionTipoVisita = 'CONTACTAR PARA OFRECER MANTENIMIENTO O CALIBRACIÓN';
   } else if (d.numero_incidente === 'PROG-SERV') {
       tituloModalVisual = 'PROG-SERV (MANTENIMIENTO / CALIBRACIÓN)';
-      explicacionTipoVisita = 'SERVICIO PREVENTIVO (MANTENIMIENTO O CALIBRACIÓN)';
+      explicacionTipoVisita = 'SERVICIO (MANTENIMIENTO O CALIBRACIÓN)';
   }
 
   if(modalLabel) {
