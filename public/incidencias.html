@@ -10,13 +10,11 @@
 </head>
 <body>
   
-  <!-- Botón Inicio Móvil -->
   <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
     <i class="fas fa-home"></i>
     <span>Volver al Inicio</span>
   </button>
 
-  <!-- Panel lateral mejorado -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2 class="sidebar-title">
@@ -75,7 +73,6 @@
     </div>
   </aside>
 
-  <!-- CONTENIDO ORIGINAL EXACTO -->
   <main id="mainContent">
     <section class="encabezado">
       <h2>Registrar nueva incidencia</h2>
@@ -84,9 +81,8 @@
         <div class="form-row">
           <div>
             <label for="cliente">Cliente</label>
-            <select id="cliente" name="cliente" required>
-              <option value="" selected disabled>Seleccione una opción</option>
-            </select>
+            <input type="text" id="cliente" name="cliente" list="lista-clientes" placeholder="Escribe para buscar cliente..." autocomplete="off" required>
+            <datalist id="lista-clientes"></datalist>
           </div>    
 
           <div>
@@ -193,23 +189,52 @@
           </tr>
         </thead>
         <tbody id="tabla-body">
-          <!-- Las filas se llenarán aquí mediante JavaScript -->
-        </tbody>
+          </tbody>
       </table>
     </section>
   </main>
 
 <script>
+  // Arreglo global de control para validar consistencia de clientes
+  let clientesValidos = [];
+
+  // Función asíncrona para poblar el datalist con los datos reales del backend
+  async function cargarClientesEnDatalist() {
+      try {
+          const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: "no-store" });
+          const clientes = await response.json();
+
+          const datalist = document.getElementById('lista-clientes');
+          if (datalist) {
+              datalist.innerHTML = ''; 
+              clientesValidos = []; 
+
+              clientes.forEach(cliente => {
+                  const option = document.createElement('option');
+                  option.value = cliente.nombre;
+                  datalist.appendChild(option);
+                  
+                  // Indexamos el nombre en mayúsculas para la validación estricta posterior
+                  clientesValidos.push(cliente.nombre.trim().toUpperCase());
+              });
+          }
+      } catch (error) {
+          console.error('Error al cargar clientes:', error);
+      }
+  }
+
   document.addEventListener("DOMContentLoaded", function() {
     // 1. Establecer fecha por defecto (tu código original)
     document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
 
-    // 2. Lógica de automatización de Categoría
-    const selectCliente = document.getElementById("cliente");
-    const selectCategoria = document.getElementById("equipo"); // ID "equipo" en tu HTML
+    // Cargar la lista asíncrona de clientes en el Datalist
+    cargarClientesEnDatalist();
 
+    const selectCliente = document.getElementById("cliente");
+    const selectCategoria = document.getElementById("equipo");
+
+    // 2. Lógica de automatización de Categoría (Adaptada para el evento input/change del text field)
     selectCliente.addEventListener("change", function() {
-      // Usamos toUpperCase() para que la comparación sea más robusta
       const clienteSeleccionado = this.value.toUpperCase().trim();
 
       if (clienteSeleccionado === "CENTRAL DETALLISTA") {
@@ -218,12 +243,21 @@
       else if (clienteSeleccionado === "DISTRIBUIDORA EL FLORIDO") {
         selectCategoria.value = "Distribuidora el Florido";
       }
-      // Opcional: else { selectCategoria.value = ""; } si quieres resetearlo
+    });
+
+    // 3. BLINDAJE: Validación estricta para impedir clientes inventados o errores tipográficos
+    selectCliente.addEventListener('input', function() {
+        const valorDigitado = this.value.trim().toUpperCase();
+        
+        if (valorDigitado && !clientesValidos.includes(valorDigitado)) {
+            // Detiene el submit nativo del formulario inyectando un estado inválido
+            this.setCustomValidity("El cliente escrito no existe. Selecciona un cliente válido de la lista.");
+        } else {
+            this.setCustomValidity("");
+        }
     });
   });
 </script>
-
-
 
   <script src="../scripts/sidebar-state.js"></script>
   <script src="../scripts/script_cargas.js?v=19"></script>
