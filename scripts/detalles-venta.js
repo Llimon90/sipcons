@@ -306,10 +306,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('cliente').value = data.venta.cliente;
                 document.getElementById('sucursal').value = data.venta.sucursal;
                 
-                // Carga correcta de la fecha
-                if (data.venta.fecha_venta) {
-                    document.getElementById('fecha_venta').value = data.venta.fecha_venta.split(' ')[0]; 
+                // ==========================================================
+                // CONTROL DE FECHA BLINDADO CON LOGS DE DEPURACIÓN
+                // ==========================================================
+                console.log("Contenido de data.venta recibido del servidor:", data.venta);
+
+                // Busca tanto 'fecha_venta' como el nombre alternativo 'fecha'
+                const fechaBD = data.venta.fecha_venta || data.venta.fecha;
+
+                if (fechaBD && fechaBD !== "0000-00-00" && fechaBD !== "0000-00-00 00:00:00") {
+                    // Corta las horas (HH:MM:SS) si es que vienen de un tipo DATETIME
+                    const fechaFormateada = fechaBD.split(' ')[0]; 
+                    document.getElementById('fecha_venta').value = fechaFormateada;
+                    console.log("Fecha mapeada exitosamente al input HTML:", fechaFormateada);
+                } else {
+                    console.warn("La fecha del servidor viene vacía o en un formato inválido.");
                 }
+                // ==========================================================
 
                 if(data.series.length > 0) {
                     const d = data.series[0];
