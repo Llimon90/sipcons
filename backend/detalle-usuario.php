@@ -1,6 +1,9 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
-// Configuración de conexión
+require_once __DIR__ . '/../config/database.php'; // <-- ESTA LÍNEA ES LA QUE FALTA
+
+header('Content-Type: application/json');
+ini_set('display_errors', 0);// Configuración de conexión
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
