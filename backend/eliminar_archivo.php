@@ -1,13 +1,13 @@
 ﻿<?php
+// ==============================================
+// 1. Dependencias Críticas (¡Aquí estaba el Error 500!)
+// ==============================================
 require_once __DIR__ . '/../auth/middleware.php';
-require_once __DIR__ . '/../config/database.php'; // <-- AGREGAR ESTA LÍNEA AQUÍ
+require_once __DIR__ . '/../config/database.php'; // <-- Esta línea conecta $pdo
 
-header('Content-Type: application/json');ini_set('display_errors', 1);
+header('Content-Type: application/json');
+ini_set('display_errors', 0); // 0 en producción por seguridad
 error_reporting(E_ALL);
-
-// ==============================================
-// 1. Conexión a la base de datos
-// ==============================================
 
 // ==============================================
 // 2. Detección Inteligente de Payload (JSON vs POST)
@@ -41,7 +41,7 @@ if (!empty($data['modulo']) && $data['modulo'] === 'ventas') {
         die(json_encode(['success' => false, 'error' => 'Datos incompletos de venta.']));
     }
 } 
-// Lógica para incidencias (compatibilidad con estructura existente)
+// Lógica para incidencias
 else if (!empty($data['id_incidencia']) && !empty($data['url_archivo'])) {
     // MÓDULO DE INCIDENCIAS
     $modulo = 'incidencias';
@@ -73,17 +73,15 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idReferencia, '%' . $nombreArchivo]);
         
-    // Lógica de incidencias: buscar usando ruta relativa al archivo actual
+        // FIX DE RUTAS: Ruta magnética relativa al archivo actual
+        // No importa si la carpeta se llama app o apptest, siempre subirá un nivel y entrará a uploads
         $rutaCompleta = __DIR__ . '/../uploads/' . $nombreArchivo;
-
-        S} 
+    } 
     else if ($modulo === 'ventas') {
-        // Lógica de ventas: eliminar directamente por ID único
         $sql = "DELETE FROM venta_archivos WHERE id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idTabla]);
         
-        // En ventas la ruta ya viene construida (ej: ../uploads/ventas/Cliente/archivo.pdf)
         $rutaCompleta = $rutaArchivo;
     }
 
@@ -102,7 +100,6 @@ try {
     // 6. Eliminar archivo físico
     // ==============================================
     if (!file_exists($rutaCompleta)) {
-        // Para mantener tu lógica estricta, si no hay archivo físico, cancelamos el borrado de la DB
         $pdo->rollBack();
         http_response_code(404);
         die(json_encode([
@@ -129,7 +126,7 @@ try {
 
     echo json_encode([
         'success' => true,
-        'exito' => true, // Doble bandera para compatibilidad
+        'exito' => true, // Doble bandera para compatibilidad con tu JS
         'message' => 'Archivo eliminado completamente del módulo ' . $modulo
     ]);
     
