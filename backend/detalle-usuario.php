@@ -9,8 +9,24 @@ header("Access-Control-Allow-Headers: Content-Type");
 // Incluir el archivo de conexión
 
 try {
+    // Obtener un usuario por ID (usado por el formulario de edición)
+    if (isset($_GET['id']) && !isset($_GET['action'])) {
+        $id = (int)$_GET['id'];
+        $stmt = $pdo->prepare(
+            "SELECT id, nombre, correo, telefono, usuario, rol FROM usuarios WHERE id = ? LIMIT 1"
+        );
+        $stmt->execute([$id]);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($usuario) {
+            echo json_encode($usuario);
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Usuario no encontrado']);
+        }
+
     // Obtener estadísticas de incidencias
-    if ($_GET['action'] == 'estadisticas_incidencias') {
+    } elseif ($_GET['action'] == 'estadisticas_incidencias') {
         
         // Total de incidencias
         $stmt = $pdo->query("SELECT COUNT(*) as total FROM incidencias");
