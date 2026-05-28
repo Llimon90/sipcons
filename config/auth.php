@@ -1,6 +1,9 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 28800); // 8 horas por defecto
+    // 30 días: la sesión persiste hasta que el usuario cierre sesión explícitamente
+    $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 2592000);
+
+    ini_set('session.gc_maxlifetime', $lifetime);
 
     session_set_cookie_params([
         'lifetime' => $lifetime,

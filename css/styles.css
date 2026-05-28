@@ -29,6 +29,8 @@ body {
   z-index: 1000;
   box-sizing: border-box;
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Estado contraído del sidebar - SIN SCROLL HORIZONTAL */
@@ -121,7 +123,7 @@ body {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: calc(100vh - 140px);
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -2069,6 +2071,174 @@ main.contraido {
     padding: 10px;
     border-radius: 5px;
     margin-bottom: 15px;
+}
+
+/* ===== SIDEBAR FOOTER: USUARIO Y CERRAR SESIÓN ===== */
+.sidebar-footer {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.sidebar .user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  color: #bdc3c7;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sidebar .user-info i {
+  color: #3498db;
+  font-size: 1.4em;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar .user-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sidebar.contraida .user-info {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar.contraida .user-name {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+/* Botón cerrar sesión */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 14px;
+  margin-top: 6px;
+  color: #e74c3c !important;
+  text-decoration: none !important;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  position: relative;
+}
+
+.logout-btn i {
+  min-width: 24px;
+  text-align: center;
+  font-size: 1em;
+  color: #e74c3c;
+  flex-shrink: 0;
+}
+
+.logout-btn:hover {
+  background: rgba(231, 76, 60, 0.15);
+  border-color: rgba(231, 76, 60, 0.35);
+  transform: translateX(3px);
+}
+
+.sidebar.contraida .logout-btn {
+  justify-content: center;
+  padding: 11px 0;
+}
+
+.sidebar.contraida .logout-btn .sidebar-link-text {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+/* Tooltip de logout en sidebar contraída */
+.sidebar.contraida .logout-btn::after {
+  content: 'Cerrar sesión';
+  position: absolute;
+  left: calc(100% + 15px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: #e74c3c;
+  padding: 12px 18px;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1001;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(231, 76, 60, 0.5);
+}
+
+.sidebar.contraida .logout-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ===== BARRA DE USUARIO PARA PÁGINAS SIN SIDEBAR (index.html) ===== */
+#user-top-bar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: #ecf0f1;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0 0 0 14px;
+  box-shadow: -2px 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+#user-top-name {
+  color: #ecf0f1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#user-top-name i {
+  color: #3498db;
+  font-size: 1.2em;
+}
+
+.logout-top-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e74c3c !important;
+  text-decoration: none !important;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  transition: all 0.3s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.logout-top-btn:hover {
+  background: rgba(231, 76, 60, 0.15);
+  border-color: #e74c3c;
 }
 
 
