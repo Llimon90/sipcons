@@ -1,0 +1,30 @@
+# Bloquear acceso directo al .env
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Deshabilitar listado de directorios
+Options -Indexes
+
+# Cabeceras de seguridad
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Compresión
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>
+
+<IfModule mod_php.c>
+    # Apaga la impresión de errores HTML que rompen el JSON
+    php_flag display_errors Off
+    php_flag log_errors On
+
+    # Enciende el búfer de salida globalmente
+    # (Hace el ob_start() automáticamente en tus 60 archivos)
+    php_value output_buffering On
+</IfModule>
