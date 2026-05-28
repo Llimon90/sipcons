@@ -1,4 +1,5 @@
-<?php
+﻿<?php
+require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
@@ -6,7 +7,6 @@ error_reporting(E_ALL);
 // ==============================================
 // 1. Conexión a la base de datos
 // ==============================================
-require_once 'conexion.php';
 
 // ==============================================
 // 2. Detección Inteligente de Payload (JSON vs POST)
@@ -72,8 +72,8 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idReferencia, '%' . $nombreArchivo]);
         
-        // Lógica de incidencias: buscar en app/uploads
-        $rutaCompleta = $_SERVER['DOCUMENT_ROOT'] . '/app/uploads/' . $nombreArchivo;
+        // Lógica de incidencias: buscar en apptest/uploads
+        $rutaCompleta = $_SERVER['DOCUMENT_ROOT'] . '/apptest/uploads/' . $nombreArchivo;
     } 
     else if ($modulo === 'ventas') {
         // Lógica de ventas: eliminar directamente por ID único

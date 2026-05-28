@@ -1,25 +1,27 @@
 <?php
-// Asegurar que el contenido devuelto sea JSON
+
+ob_start();
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+
+require_once __DIR__ . '/../auth/middleware.php';
+
+
 header('Content-Type: application/json');
-error_reporting(0);
-ini_set('display_errors', 0);
 
-$host = "localhost";
-$user = "sipcons1_appweb";
-$password = "sip*SYS2025";
-$database = "sipcons1_appweb";
-
-$conn = new mysqli($host, $user, $password, $database);
-
+if (!isset($conn)) {
+    ob_clean(); // Limpiamos cualquier error previo
+    die(json_encode(["error" => "La variable \$conn no existe. Revisa tu config/database.php"]));
+}
 if ($conn->connect_error) {
-    echo json_encode(['error' => 'Error de conexión: ' . $conn->connect_error]);
-    exit;
+    ob_clean();
+    die(json_encode(["error" => "Error de conexión BD: " . $conn->connect_error]));
 }
 
-// Obtener el parámetro de búsqueda si existe
 $busqueda = isset($_GET['busqueda']) ? $conn->real_escape_string($_GET['busqueda']) : '';
 
-// Preparar la consulta SQL
 if ($busqueda) {
     $sql = "SELECT * FROM clientes WHERE 
             nombre LIKE '%$busqueda%' OR 
@@ -33,26 +35,23 @@ if ($busqueda) {
     $sql = "SELECT * FROM clientes ORDER BY nombre";
 }
 
-// Ejecutar la consulta
 $result = $conn->query($sql);
 
-// Verificar si la consulta fue exitosa
 if (!$result) {
-    echo json_encode(['success' => false, 'message' => 'Error en la consulta: ' . $conn->error]);
-    $conn->close();
-    exit;
+    ob_clean();
+    die(json_encode(['error' => 'Error SQL: ' . $conn->error]));
 }
 
-// Obtener los resultados
 $clientes = [];
 while ($row = $result->fetch_assoc()) {
     $clientes[] = $row;
 }
 
-// Devolver los resultados en formato JSON
-echo json_encode($clientes);
+// LIMPIAMOS EL BÚFER POR COMPLETO (Borra cualquier "Warning" o espacio en blanco anterior)
+ob_clean();
 
-// Cerrar la conexión
+// AHORA SÍ, DEVOLVEMOS EL JSON PURO
+echo json_encode($clientes);
 $conn->close();
 exit;
 ?>

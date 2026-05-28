@@ -1,5 +1,5 @@
-<?php
-require_once 'conexion.php';
+﻿<?php
+require_once __DIR__ . '/../auth/middleware.php';
 
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));

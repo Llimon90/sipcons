@@ -1,12 +1,12 @@
-<?php
+﻿<?php
+require_once __DIR__ . '/../auth/middleware.php';
 // buscar_reportes.php
 
 ob_start(); 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
-    require_once 'conexion.php';
-
+    
     header("Access-Control-Allow-Origin: *");
     header("Content-Type: application/json");
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -31,7 +31,7 @@ try {
             SELECT 
                 MIN(p.id) as id,
                 'PROG-CAL' as numero_incidente,
-                IF(p.origen = 'Venta Lumina', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
+                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
                 CONCAT(COUNT(p.id), ' equipo(s) a Mantenimiento/Calibración.') as falla,
@@ -49,7 +49,7 @@ try {
             SELECT 
                 MIN(p.id) as id,
                 'PROG-SERV' as numero_incidente,
-                IF(p.origen = 'Venta Lumina', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
+                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
                 CONCAT(COUNT(p.id), ' equipo(s) a Servicio.') as falla,
