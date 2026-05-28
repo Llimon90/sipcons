@@ -1,6 +1,6 @@
-<?php
+﻿<?php
+require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
-require_once 'conexion.php';
 
 try {
     $cliente = $_POST['cliente'] ?? throw new Exception("Cliente no especificado");

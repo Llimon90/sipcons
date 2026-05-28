@@ -1,6 +1,6 @@
-<?php
+﻿<?php
+require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
-require_once 'conexion.php';
 
 $id = $_GET['id'] ?? null;
 if (!$id) die(json_encode(['exito' => false, 'mensaje' => 'ID no proporcionado']));
