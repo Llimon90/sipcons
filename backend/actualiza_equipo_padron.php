@@ -1,6 +1,6 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 header('Content-Type: application/json');
+require_once 'conexion.php';
 
 try {
     $id = $_POST['id'] ?? throw new Exception("ID de equipo no especificado");

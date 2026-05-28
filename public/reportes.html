@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <script>document.documentElement.style.visibility="hidden";</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buscar Incidencias</title>
@@ -186,7 +185,7 @@
 
   </main>
 
-  <!-- MODAL NATIVO (Estilo SIPCONS-ERP) sin dependencias de Bootstrap JS -->
+  <!-- MODAL NATIVO (Estilo Lumina-ERP) sin dependencias de Bootstrap JS -->
   <div id="modalProgramada" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
       <div style="background:#fff; width:90%; max-width:700px; border-radius:10px; padding:20px; position:relative; max-height:90vh; overflow-y:auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
           <span onclick="cerrarModalProgramada()" style="position:absolute; right:20px; top:15px; cursor:pointer; font-size:1.5rem; font-weight:bold; color:#7f8c8d;">&times;</span>
@@ -204,7 +203,6 @@
   </div>
 
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/script-busquedas.js?v=10" defer></script>
-  <script>(function(){fetch("../auth/session_check.php").then(function(r){if(r.status===401){window.location.replace("../auth/login.html");}else{document.documentElement.style.visibility="";}}).catch(function(){document.documentElement.style.visibility="";});})();</script>
+  <script src="../scripts/script-busquedas.js?v=8" defer></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 // backend/descargar_documento.php - VERSIÓN COMPLETA
 header('Access-Control-Allow-Origin: *');
 
 // Incluir conexión para verificar permisos
+require_once 'conexion.php';
 
 try {
     // Obtener parámetros

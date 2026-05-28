@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../auth/middleware.php';
+require_once 'conexion.php';
 // DISPARADOR AUTOMÁTICO: Revisa si hay mantenimientos antes de cargar la tabla
 require_once 'generador_tickets.php';
 

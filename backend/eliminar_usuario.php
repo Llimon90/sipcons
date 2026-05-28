@@ -1,6 +1,6 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 header('Content-Type: application/json');
+require_once 'conexion.php';
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];

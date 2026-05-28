@@ -1,7 +1,7 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 header('Content-Type: application/json');
 ini_set('display_errors', 0); // Ocultar errores HTML para no romper el JSON
+require_once 'conexion.php';
 
 try {
     // Capturar el ID que envía el Fetch (JSON)

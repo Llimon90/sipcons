@@ -1,6 +1,6 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 header('Content-Type: application/json');
+require_once 'conexion.php';
 
 try {
     $stmt = $conn->prepare("SELECT id, nombre, usuario, rol FROM usuarios ORDER BY nombre");

@@ -1,6 +1,6 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 header('Content-Type: application/json');
+require_once 'conexion.php';
 
 try {
     $pdo->beginTransaction();
@@ -93,7 +93,7 @@ try {
     // B. Insertar directo en el Padrón de Equipos
     $sqlPadron = "INSERT INTO padron_equipos 
                  (cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, proxima_calibracion, proximo_servicio, origen, venta_id, fecha_registro) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta SIPCONS', ?, ?)";
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta Lumina', ?, ?)";
     $stmtPadron = $pdo->prepare($sqlPadron);
     
     foreach ($series as $s) {

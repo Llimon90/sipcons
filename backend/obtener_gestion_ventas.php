@@ -1,6 +1,6 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 header('Content-Type: application/json');
+require_once 'conexion.php';
 
 try {
     // Esta consulta mágica agrupa todas las marcas, modelos y suma los servicios

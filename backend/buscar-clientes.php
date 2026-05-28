@@ -1,5 +1,4 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 // backend/buscar-clientes.php
 header("Access-Control-Allow-Origin: *");
 header('Content-Type: application/json');
@@ -8,6 +7,7 @@ header('Content-Type: application/json');
 error_reporting(0);
 ini_set('display_errors', 0);
 
+require_once 'conexion.php';
 
 // Si tu conexion.php solo declara las variables $host, $user... instanciamos la conexión aquí.
 // Si ya trae $conn instanciado, usamos el existente.

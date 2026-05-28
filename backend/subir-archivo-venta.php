@@ -1,5 +1,4 @@
-﻿<?php
-require_once __DIR__ . '/../auth/middleware.php';
+<?php
 // Configuración
 $uploadDir = __DIR__ . '/../uploads/ventas/';
 $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'];
