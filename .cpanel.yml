@@ -2,5 +2,10 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home3/sipcons1/public_html/
-    - /bin/rsync -av app/ $DEPLOYPATH
-   
+    - /bin/cp -R * $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH/.htaccess
+    - /bin/rm -rf $DEPLOYPATH/auth
+    - /bin/rm -rf $DEPLOYPATH/config
+    - /bin/rm -f $DEPLOYPATH/scripts/auth-guard.js
+    - /bin/rm -f $DEPLOYPATH/limpiador.php
+    - /bin/rm -f $DEPLOYPATH/backend/test_fetch.php
