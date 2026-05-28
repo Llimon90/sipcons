@@ -72,9 +72,10 @@ try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idReferencia, '%' . $nombreArchivo]);
         
-        // Lógica de incidencias: buscar en apptest/uploads
-        $rutaCompleta = $_SERVER['DOCUMENT_ROOT'] . '/apptest/uploads/' . $nombreArchivo;
-    } 
+    // Lógica de incidencias: buscar usando ruta relativa al archivo actual
+        $rutaCompleta = __DIR__ . '/../uploads/' . $nombreArchivo;
+
+        S} 
     else if ($modulo === 'ventas') {
         // Lógica de ventas: eliminar directamente por ID único
         $sql = "DELETE FROM venta_archivos WHERE id = ?";
