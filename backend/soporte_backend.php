@@ -1,9 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
 
 // Manejar preflight requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -11,8 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 // Configuración de errores para desarrollo
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
 // Incluir conexión
@@ -72,8 +69,8 @@ try {
 } catch(Exception $e) {
     error_log("Error en soporte_backend.php: " . $e->getMessage());
     echo json_encode([
-        'success' => false, 
-        'message' => 'Error del servidor: ' . $e->getMessage()
+        'success' => false,
+        'message' => 'Error del servidor'
     ]);
 }
 

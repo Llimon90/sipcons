@@ -1,17 +1,15 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
+requireRole('Administrador');
 header('Content-Type: application/json');
-// Configurar cabeceras para permitir acceso desde el frontend
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 
 // Configuración de la base de datos
 
 try {
     // Verificar la conexión
     if ($conn->connect_error) {
-        echo json_encode(['error' => 'Error de conexión: ' . $conn->connect_error]);
+        error_log("alta-user.php: Error de conexión: " . $conn->connect_error);
+        echo json_encode(['error' => 'Error de conexión con el servidor']);
         exit;
     }
 
@@ -40,13 +38,15 @@ try {
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Error al insertar los datos: ' . $stmt->error]);
+        error_log("alta-user.php: Error al insertar los datos: " . $stmt->error);
+        echo json_encode(['success' => false, 'message' => 'Error al insertar los datos']);
     }
 
     // Cerrar la conexión
     $stmt->close();
     $conn->close();
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Excepción capturada: ' . $e->getMessage()]);
+    error_log("alta-user.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Error al procesar la solicitud']);
 }
 ?>

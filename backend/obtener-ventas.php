@@ -1,8 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET");
 
 
 try {
@@ -13,5 +11,6 @@ try {
     
     echo json_encode(['exito' => true, 'ventas' => $ventas]);
 } catch (PDOException $e) {
-    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener ventas: ' . $e->getMessage()]);
+    error_log("obtener-ventas.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener ventas']);
 }

@@ -36,6 +36,7 @@ try {
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo actualizado con éxito.']);
 
 } catch (Exception $e) {
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    error_log("actualiza_equipo_padron.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al actualizar el equipo']);
 }
 ?>

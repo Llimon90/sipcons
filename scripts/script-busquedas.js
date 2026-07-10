@@ -1,4 +1,14 @@
 // script-busquedas.js
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 let paginaActual = 1;
 let registrosPorPagina = 10;
 let incidenciasTotales = [];
@@ -106,13 +116,13 @@ async function cargarIncidencias() {
     }
 
     if (data.error) {
-      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger fw-bold">Error SQL: ${data.error}</td></tr>`;
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger fw-bold">Error SQL: ${escapeHtml(data.error)}</td></tr>`;
       data = [];
       return;
     }
 
     if (data.message) {
-      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">${data.message}</td></tr>`;
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">${escapeHtml(data.message)}</td></tr>`;
       incidenciasTotales = [];
     } else {
       incidenciasTotales = data;
@@ -153,16 +163,16 @@ function mostrarIncidenciasPagina() {
         nombreReporteVisual = 'PROG-SERV ';
     }
 
-    let enlaceHTML = esProgramado 
+    let enlaceHTML = esProgramado
       ? `<a href="javascript:void(0);" class="fw-bold text-primary text-decoration-none" onclick="abrirModalProgramada(${indiceGlobal})"><i class="bi bi-window-stack"></i> ${nombreReporteVisual}</a>`
       : `<a href="detalle.html?id=${inc.id}" class="text-decoration-none">${nombreReporteVisual || "N/A"}</a>`;
 
     row.innerHTML = `
       <td>${enlaceHTML}</td>
-      <td>${inc.numero || "N/A"}</td>
-      <td>${inc.cliente}</td>
-      <td>${inc.sucursal}</td>
-      <td>${inc.falla}</td>
+      <td>${escapeHtml(inc.numero) || "N/A"}</td>
+      <td>${escapeHtml(inc.cliente)}</td>
+      <td>${escapeHtml(inc.sucursal)}</td>
+      <td>${escapeHtml(inc.falla)}</td>
       <td>${inc.fecha}</td>
       <td>${inc.estatus}</td>
       <td><span class="${esActiva ? "badge-activo" : "badge-inactivo"}">${esActiva ? "Activa" : "Inactiva"}</span></td>
@@ -182,7 +192,7 @@ window.abrirModalProgramada = function(indice) {
   const lista = d.detalles_completos ? d.detalles_completos.split('||') : [];
   let equiposHTML = '<ul class="list-group list-group-flush border rounded" style="padding:0; margin:0;">';
   
-  lista.forEach(e => { 
+  lista.forEach(e => {
       const partes = e.split('~');
       const marca = partes[0] || '';
       const modelo = partes[1] || '';
@@ -196,7 +206,7 @@ window.abrirModalProgramada = function(indice) {
       let badgeGarantia = `<span style="background:#bdc3c7; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; white-space:nowrap;"><i class="fas fa-shield-alt"></i> Sin Garantía</span>`;
       
       if (garantiaMeses > 0 && fechaVenta) {
-          const fVenta = new Date(fechaVenta + 'T12:00:00'); 
+          const fVenta = new Date(fechaVenta + 'T12:00:00'); // Evita desfases de zona horaria
           const fFinGarantia = new Date(fVenta.getTime());
           fFinGarantia.setMonth(fFinGarantia.getMonth() + garantiaMeses);
           const hoy = new Date();
@@ -226,8 +236,8 @@ window.abrirModalProgramada = function(indice) {
         <li class="list-group-item" style="border-bottom: 1px solid #eee; padding: 12px 15px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <div style="font-weight:bold; color:#2c3e50;"><i class="bi bi-cpu text-primary me-2"></i> ${marca} ${modelo}</div>
-                    <div style="font-size:0.85rem; color:#7f8c8d; margin-left: 23px;">Serie: ${serie}</div>
+                    <div style="font-weight:bold; color:#2c3e50;"><i class="bi bi-cpu text-primary me-2"></i> ${escapeHtml(marca)} ${escapeHtml(modelo)}</div>
+                    <div style="font-size:0.85rem; color:#7f8c8d; margin-left: 23px;">Serie: ${escapeHtml(serie)}</div>
                     <div style="margin-left: 23px;">${textoPeriodo}</div>
                 </div>
                 <div style="margin-left: 15px; margin-top:2px;">
@@ -255,17 +265,17 @@ window.abrirModalProgramada = function(indice) {
   }
 
   if(modalLabel) {
-      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${tituloModalVisual} - ${d.numero}`;
+      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${escapeHtml(tituloModalVisual)} - ${escapeHtml(d.numero)}`;
   }
-  
+
   if(modalBody) {
     modalBody.innerHTML = `
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="text-muted small d-block" style="text-transform:uppercase; font-weight:bold;">Cliente</label>
-          <p class="mb-0" style="font-size:1.1rem; color:#2c3e50;"><strong>${d.cliente}</strong></p>
+          <p class="mb-0" style="font-size:1.1rem; color:#2c3e50;"><strong>${escapeHtml(d.cliente)}</strong></p>
           <label class="text-muted small d-block mt-3" style="text-transform:uppercase; font-weight:bold;">Sucursal</label>
-          <p class="mb-0">${d.sucursal}</p>
+          <p class="mb-0">${escapeHtml(d.sucursal)}</p>
         </div>
         <div class="col-md-6">
           <label class="text-muted small d-block" style="text-transform:uppercase; font-weight:bold;">Fecha Agendada</label>
@@ -313,7 +323,7 @@ async function cargarClientes() {
     const clientes = await response.json();
     const select = document.getElementById('cliente');
     if (select) {
-      clientes.forEach(c => { select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`; });
+      clientes.forEach(c => { select.innerHTML += `<option value="${escapeHtml(c.nombre)}">${escapeHtml(c.nombre)}</option>`; });
     }
   } catch(e) { console.warn("Error cargando clientes"); }
 }

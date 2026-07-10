@@ -2,6 +2,16 @@
 let charts = {};
 let currentTab = 'overview';
 
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Cargar estadísticas al iniciar la página
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Iniciando carga de estadísticas...');
@@ -549,7 +559,7 @@ function mostrarError(mensaje) {
             mainContent.insertBefore(errorDiv, filters);
         }
     }
-    errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${mensaje}`;
+    errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${escapeHtml(mensaje)}`;
     errorDiv.style.display = 'block';
     
     setTimeout(() => {

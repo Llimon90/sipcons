@@ -32,6 +32,7 @@ try {
     
     echo json_encode(['exito' => true, 'mensaje' => 'Archivo eliminado correctamente']);
 } catch (PDOException $e) {
-    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . $e->getMessage()]);
+    error_log("eliminar-archivo-venta.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al eliminar el archivo']);
 }
 ?>

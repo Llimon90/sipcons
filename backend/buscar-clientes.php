@@ -1,7 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
 // backend/buscar-clientes.php
-header("Access-Control-Allow-Origin: *");
 header('Content-Type: application/json');
 
 // Desactivar la impresión de errores HTML de PHP para no romper el JSON
@@ -16,7 +15,8 @@ if (!isset($conn) || $conn === null) {
 }
 
 if ($conn->connect_error) {
-    echo json_encode(["error" => "Error de conexión: " . $conn->connect_error]);
+    error_log("buscar-clientes.php: Error de conexión: " . $conn->connect_error);
+    echo json_encode(["error" => "Error de conexión con el servidor"]);
     exit;
 }
 
@@ -55,6 +55,7 @@ try {
     $conn->close();
 
 } catch (Exception $e) {
-    echo json_encode(['error' => 'Excepción atrapada: ' . $e->getMessage()]);
+    error_log("buscar-clientes.php: " . $e->getMessage());
+    echo json_encode(['error' => 'Error al procesar la solicitud']);
 }
 ?>

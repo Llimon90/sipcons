@@ -1,7 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
 // backend/descargar_documento.php - VERSIÓN COMPLETA
-header('Access-Control-Allow-Origin: *');
 
 // Incluir conexión para verificar permisos
 
@@ -15,19 +14,19 @@ try {
         die('Archivo no especificado');
     }
 
-    // Validar que el archivo esté dentro de la carpeta manuales
-    if (strpos($archivo, 'manuales/') !== 0) {
+    // Validar que el archivo esté dentro de la carpeta manuales (sin permitir traversal)
+    if (strpos($archivo, 'manuales/') !== 0 || strpos($archivo, '..') !== false) {
         http_response_code(403);
         die('Acceso denegado');
     }
 
-    // Ruta completa al archivo
-    $ruta_completa = '../' . $archivo;
-    
-    // Verificar que el archivo existe
-    if (!file_exists($ruta_completa)) {
+    $baseDir = realpath(__DIR__ . '/../manuales');
+    $ruta_completa = realpath(__DIR__ . '/../' . $archivo);
+
+    // Verificar que el archivo existe y sigue estando dentro de manuales/
+    if ($ruta_completa === false || $baseDir === false || strpos($ruta_completa, $baseDir . DIRECTORY_SEPARATOR) !== 0) {
         http_response_code(404);
-        die('Archivo no encontrado: ' . $ruta_completa);
+        die('Archivo no encontrado');
     }
 
     // Verificar que es un PDF
@@ -71,7 +70,8 @@ try {
     exit;
 
 } catch (Exception $e) {
+    error_log('descargar_documento: ' . $e->getMessage());
     http_response_code(500);
-    die('Error del servidor: ' . $e->getMessage());
+    die('Error del servidor');
 }
 ?>

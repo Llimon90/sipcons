@@ -1,13 +1,10 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../config/database.php'; // <-- ESTA LÍNEA ES LA QUE FALTA
+requireRole('Administrador');
 
 header('Content-Type: application/json');
 ini_set('display_errors', 0);// Configuración de conexión
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 
 // Incluir el archivo de conexión
 
@@ -230,9 +227,10 @@ try {
     }
     
 } catch (PDOException $e) {
+    error_log("detalle-usuario.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => 'Error de base de datos: ' . $e->getMessage()
+        'error' => 'Error de base de datos'
     ]);
 }
 ?>

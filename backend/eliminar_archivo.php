@@ -137,7 +137,6 @@ try {
     die(json_encode([
         'success' => false,
         'error' => 'Error en base de datos',
-        'debug' => ['message' => $e->getMessage()]
     ]));
 } catch (Exception $e) {
     $pdo->rollBack();
@@ -146,7 +145,6 @@ try {
     die(json_encode([
         'success' => false,
         'error' => 'Error interno',
-        'message' => $e->getMessage()
     ]));
 }
 ?>

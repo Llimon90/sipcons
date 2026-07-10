@@ -7,7 +7,6 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
     
-    header("Access-Control-Allow-Origin: *");
     header("Content-Type: application/json");
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
     header("Pragma: no-cache");
@@ -134,7 +133,8 @@ try {
 
 } catch (Exception $e) {
     if (ob_get_length()) ob_clean();
-    echo json_encode(["error" => "Error atrapado en PHP: " . $e->getMessage()]);
+    error_log("buscar_reportes.php: " . $e->getMessage());
+    echo json_encode(["error" => "Error al procesar la solicitud"]);
     exit;
 }
 ?>

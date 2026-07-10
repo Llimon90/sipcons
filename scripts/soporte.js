@@ -1,4 +1,14 @@
 // Variables globales
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 let currentMarcaId = null;
 let currentModeloId = null;
 let searchTimeout = null;
@@ -74,7 +84,7 @@ async function cargarMarcas() {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error al cargar las marcas</p>
-                <small>${error.message}</small>
+                <small>${escapeHtml(error.message)}</small>
                 <button class="btn-primary" onclick="cargarMarcas()">
                     <i class="fas fa-redo"></i> Reintentar
                 </button>
@@ -101,17 +111,17 @@ function mostrarMarcas(marcas) {
     }
     
     container.innerHTML = marcas.map(marca => `
-        <div class="model-card" onclick="abrirCarpetaMarca(${marca.id}, '${marca.nombre.replace(/'/g, "\\'")}', event)">
+        <div class="model-card" onclick="abrirCarpetaMarca(${marca.id}, '${escapeHtml(marca.nombre.replace(/'/g, "\\'"))}', event)">
             <div class="model-icon">
                 <i class="fas fa-industry"></i>
             </div>
-            <h3>${marca.nombre}</h3>
+            <h3>${escapeHtml(marca.nombre)}</h3>
             <p>Ver modelos</p>
             <div class="model-actions">
-                <button class="btn-small btn-primary" onclick="cargarModelos(${marca.id}, '${marca.nombre.replace(/'/g, "\\'")}')">
+                <button class="btn-small btn-primary" onclick="cargarModelos(${marca.id}, '${escapeHtml(marca.nombre.replace(/'/g, "\\'"))}')">
                     <i class="fas fa-folder-open"></i>
                 </button>
-                <button class="btn-small btn-danger" onclick="eliminarMarca(${marca.id}, '${marca.nombre.replace(/'/g, "\\'")}')">
+                <button class="btn-small btn-danger" onclick="eliminarMarca(${marca.id}, '${escapeHtml(marca.nombre.replace(/'/g, "\\'"))}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -162,7 +172,7 @@ async function cargarModelos(marcaId, marcaNombre) {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error al cargar los modelos</p>
-                <small>${error.message}</small>
+                <small>${escapeHtml(error.message)}</small>
                 <button class="btn-secondary" onclick="volverAMarcas()">
                     <i class="fas fa-arrow-left"></i> Volver a Marcas
                 </button>
@@ -183,7 +193,7 @@ function mostrarModelos(modelos, marcaNombre) {
         modelosContainer.innerHTML = `
             <div class="no-data">
                 <i class="fas fa-tools fa-3x"></i>
-                <p>No hay modelos registrados para ${marcaNombre}</p>
+                <p>No hay modelos registrados para ${escapeHtml(marcaNombre)}</p>
                 <button class="btn-primary" onclick="mostrarModalAgregarModelo()">
                     <i class="fas fa-plus"></i> Agregar Primer Modelo
                 </button>
@@ -200,27 +210,27 @@ function mostrarModelos(modelos, marcaNombre) {
             <button class="back-button" onclick="volverAMarcas()">
                 <i class="fas fa-arrow-left"></i> Volver a Marcas
             </button>
-            <h3>Modelos de ${marcaNombre} (${modelos.length})</h3>
+            <h3>Modelos de ${escapeHtml(marcaNombre)} (${modelos.length})</h3>
             <button class="btn-primary" onclick="mostrarModalAgregarModelo()">
                 <i class="fas fa-plus"></i> Agregar Modelo
             </button>
         </div>
         <div class="model-grid-content">
             ${modelos.map(modelo => `
-                <div class="model-card" onclick="abrirCarpetaModelo(${modelo.id}, '${modelo.nombre.replace(/'/g, "\\'")}', event)">
+                <div class="model-card" onclick="abrirCarpetaModelo(${modelo.id}, '${escapeHtml(modelo.nombre.replace(/'/g, "\\'"))}', event)">
                     <div class="model-icon">
                         <i class="fas fa-laptop"></i>
                     </div>
-                    <h3>${modelo.nombre}</h3>
-                    <p>${modelo.tipo_equipo}</p>
+                    <h3>${escapeHtml(modelo.nombre)}</h3>
+                    <p>${escapeHtml(modelo.tipo_equipo)}</p>
                     <div class="model-actions">
-                        <button class="btn-small btn-primary" onclick="cargarDocumentos(${modelo.id}, '${modelo.nombre.replace(/'/g, "\\'")}')">
+                        <button class="btn-small btn-primary" onclick="cargarDocumentos(${modelo.id}, '${escapeHtml(modelo.nombre.replace(/'/g, "\\'"))}')">
                             <i class="fas fa-folder-open"></i>
                         </button>
                         <button class="btn-small btn-warning" onclick="editarModelo(${modelo.id})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-small btn-danger" onclick="eliminarModelo(${modelo.id}, '${modelo.nombre.replace(/'/g, "\\'")}')">
+                        <button class="btn-small btn-danger" onclick="eliminarModelo(${modelo.id}, '${escapeHtml(modelo.nombre.replace(/'/g, "\\'"))}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -271,7 +281,7 @@ async function cargarDocumentos(modeloId, modeloNombre) {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error al cargar los documentos</p>
-                <small>${error.message}</small>
+                <small>${escapeHtml(error.message)}</small>
             </div>
         `;
     }
@@ -313,19 +323,19 @@ function mostrarDocumentos(documentos, modeloNombre) {
                         ${obtenerIconoTipoDocumento(doc.tipo_documento)}
                     </div>
                     <div class="doc-info">
-                        <h4>${doc.nombre_archivo}</h4>
+                        <h4>${escapeHtml(doc.nombre_archivo)}</h4>
                         <p>Tipo: ${doc.tipo_documento.replace('_', ' ')}</p>
-                        ${doc.descripcion ? `<p>Descripción: ${doc.descripcion}</p>` : ''}
+                        ${doc.descripcion ? `<p>Descripción: ${escapeHtml(doc.descripcion)}</p>` : ''}
                         <small>Subido: ${new Date(doc.fecha_subida).toLocaleDateString()}</small>
                     </div>
                     <div class="doc-actions">
                         <button class="btn-primary" onclick="verDocumento('${doc.ruta_publica || doc.ruta_archivo}')">
                             <i class="fas fa-eye"></i> Ver
                         </button>
-                        <button class="btn-secondary" onclick="descargarDocumento('${doc.ruta_publica || doc.ruta_archivo}', '${doc.nombre_archivo}')">
+                        <button class="btn-secondary" onclick="descargarDocumento('${doc.ruta_publica || doc.ruta_archivo}', '${escapeHtml(doc.nombre_archivo.replace(/'/g, "\\'"))}')">
                             <i class="fas fa-download"></i> Descargar
                         </button>
-                        <button class="btn-danger" onclick="eliminarDocumento(${doc.id}, '${doc.nombre_archivo}')">
+                        <button class="btn-danger" onclick="eliminarDocumento(${doc.id}, '${escapeHtml(doc.nombre_archivo.replace(/'/g, "\\'"))}')">
                             <i class="fas fa-trash"></i> Eliminar
                         </button>
                     </div>
@@ -495,7 +505,7 @@ async function ejecutarBusqueda(termino) {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error en la búsqueda</p>
-                <small>${error.message}</small>
+                <small>${escapeHtml(error.message)}</small>
             </div>
         `;
     }
@@ -511,7 +521,7 @@ function mostrarResultadosBusqueda(resultados, termino) {
         container.innerHTML = `
             <div class="no-data">
                 <i class="fas fa-search fa-3x"></i>
-                <p>No se encontraron resultados para: "${termino}"</p>
+                <p>No se encontraron resultados para: "${escapeHtml(termino)}"</p>
                 <small>Intenta con otros términos de búsqueda</small>
             </div>
         `;
@@ -520,7 +530,7 @@ function mostrarResultadosBusqueda(resultados, termino) {
 
     let html = `
         <div class="search-results-header">
-            <h3>Resultados de búsqueda: "${termino}"</h3>
+            <h3>Resultados de búsqueda: "${escapeHtml(termino)}"</h3>
             <div class="search-stats">
                 ${marcas.length} marcas, ${modelos.length} modelos
             </div>
@@ -536,18 +546,18 @@ function mostrarResultadosBusqueda(resultados, termino) {
                 <h4><i class="fas fa-industry"></i> Marcas (${marcas.length})</h4>
                 <div class="model-grid-content">
                     ${marcas.map(marca => `
-                        <div class="model-card" onclick="abrirCarpetaMarca(${marca.id}, '${(marca.nombre || '').replace(/'/g, "\\'")}', event)">
+                        <div class="model-card" onclick="abrirCarpetaMarca(${marca.id}, '${escapeHtml((marca.nombre || '').replace(/'/g, "\\'"))}', event)">
                             <div class="model-icon">
                                 <i class="fas fa-industry"></i>
                             </div>
-                            <h3>${resaltarTexto(marca.nombre || '', termino)}</h3>
+                            <h3>${resaltarTexto(escapeHtml(marca.nombre || ''), termino)}</h3>
                             <p>Ver modelos de la marca</p>
                             <div class="search-badge">Marca</div>
                             <div class="model-actions">
-                                <button class="btn-small btn-primary" onclick="cargarModelos(${marca.id}, '${(marca.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-primary" onclick="cargarModelos(${marca.id}, '${escapeHtml((marca.nombre || '').replace(/'/g, "\\'"))}')">
                                     <i class="fas fa-folder-open"></i>
                                 </button>
-                                <button class="btn-small btn-danger" onclick="eliminarMarca(${marca.id}, '${(marca.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-danger" onclick="eliminarMarca(${marca.id}, '${escapeHtml((marca.nombre || '').replace(/'/g, "\\'"))}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -564,22 +574,22 @@ function mostrarResultadosBusqueda(resultados, termino) {
                 <h4><i class="fas fa-laptop"></i> Modelos (${modelos.length})</h4>
                 <div class="model-grid-content">
                     ${modelos.map(modelo => `
-                        <div class="model-card" onclick="abrirCarpetaModelo(${modelo.id}, '${(modelo.nombre || '').replace(/'/g, "\\'")}', event)">
+                        <div class="model-card" onclick="abrirCarpetaModelo(${modelo.id}, '${escapeHtml((modelo.nombre || '').replace(/'/g, "\\'"))}', event)">
                             <div class="model-icon">
                                 <i class="fas fa-laptop"></i>
                             </div>
-                            <h3>${resaltarTexto(modelo.nombre || '', termino)}</h3>
-                            <p>${resaltarTexto(modelo.tipo_equipo || '', termino)}</p>
-                            <small>Marca: ${modelo.marca_nombre || 'N/A'}</small>
+                            <h3>${resaltarTexto(escapeHtml(modelo.nombre || ''), termino)}</h3>
+                            <p>${resaltarTexto(escapeHtml(modelo.tipo_equipo || ''), termino)}</p>
+                            <small>Marca: ${escapeHtml(modelo.marca_nombre) || 'N/A'}</small>
                             <div class="search-badge">Modelo</div>
                             <div class="model-actions">
-                                <button class="btn-small btn-primary" onclick="cargarDocumentos(${modelo.id}, '${(modelo.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-primary" onclick="cargarDocumentos(${modelo.id}, '${escapeHtml((modelo.nombre || '').replace(/'/g, "\\'"))}')">
                                     <i class="fas fa-folder-open"></i>
                                 </button>
                                 <button class="btn-small btn-warning" onclick="editarModelo(${modelo.id})">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn-small btn-danger" onclick="eliminarModelo(${modelo.id}, '${(modelo.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-danger" onclick="eliminarModelo(${modelo.id}, '${escapeHtml((modelo.nombre || '').replace(/'/g, "\\'"))}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -695,7 +705,7 @@ async function mostrarModalAgregarModelo() {
         if (data.success) {
             const selectMarca = document.getElementById('marca');
             selectMarca.innerHTML = '<option value="">Seleccionar marca</option>' +
-                data.marcas.map(marca => `<option value="${marca.id}">${marca.nombre}</option>`).join('');
+                data.marcas.map(marca => `<option value="${marca.id}">${escapeHtml(marca.nombre)}</option>`).join('');
             
             // Agregar opción para nueva marca
             const optionNuevaMarca = document.createElement('option');
@@ -845,7 +855,7 @@ async function mostrarModalSubirDocumentos(modeloId) {
                 <div class="modal" id="uploadDocsModal" style="display: block;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h3>Subir Documentos - ${modelo.nombre}</h3>
+                            <h3>Subir Documentos - ${escapeHtml(modelo.nombre)}</h3>
                             <span class="close-modal">&times;</span>
                         </div>
                         <div class="modal-body">
@@ -1016,7 +1026,7 @@ function cerrarModalSubirDocumentos() {
 function actualizarBreadcrumb(marcaNombre = '') {
     const breadcrumb = document.getElementById('breadcrumb');
     if (marcaNombre) {
-        breadcrumb.innerHTML = `<a href="javascript:volverAMarcas()">Inicio</a> > <span>${marcaNombre}</span>`;
+        breadcrumb.innerHTML = `<a href="javascript:volverAMarcas()">Inicio</a> > <span>${escapeHtml(marcaNombre)}</span>`;
     } else {
         breadcrumb.innerHTML = `<a href="soporte.html">Inicio</a> > <span>Marcas</span>`;
     }
@@ -1027,7 +1037,7 @@ function actualizarBreadcrumbDocumentos(modeloNombre) {
     breadcrumb.innerHTML = `
         <a href="javascript:volverAMarcas()">Inicio</a> > 
         <a href="javascript:volverAModelos()">Marcas</a> > 
-        <span>${modeloNombre}</span>
+        <span>${escapeHtml(modeloNombre)}</span>
     `;
 }
 

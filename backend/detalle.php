@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../auth/middleware.php';
 
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    error_log("detalle.php: Error de conexión: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 $id = isset($_GET["id"]) ? intval($_GET["id"]) : 0;

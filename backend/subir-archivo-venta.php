@@ -6,7 +6,7 @@ $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'];
 
 // Crear directorio si no existe
 if (!file_exists($uploadDir)) {
-    mkdir($uploadDir, 0777, true);
+    mkdir($uploadDir, 0755, true);
 }
 
 // Procesar archivos

@@ -22,6 +22,7 @@ try {
     
     echo json_encode(['exito' => true, 'venta' => $venta]);
 } catch (PDOException $e) {
-    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . $e->getMessage()]);
+    error_log("obtener-venta.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener la venta']);
 }
 ?>

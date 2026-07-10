@@ -17,7 +17,8 @@ if (!isset($conn)) {
 }
 if ($conn->connect_error) {
     ob_clean();
-    die(json_encode(["error" => "Error de conexión BD: " . $conn->connect_error]));
+    error_log("obtener-clientes.php: Error de conexión BD: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 $busqueda = isset($_GET['busqueda']) ? $conn->real_escape_string($_GET['busqueda']) : '';
@@ -39,7 +40,8 @@ $result = $conn->query($sql);
 
 if (!$result) {
     ob_clean();
-    die(json_encode(['error' => 'Error SQL: ' . $conn->error]));
+    error_log("obtener-clientes.php: Error SQL: " . $conn->error);
+    die(json_encode(['error' => 'Error al obtener los clientes']));
 }
 
 $clientes = [];

@@ -1,5 +1,15 @@
 // scripts/perfil-cliente.js
-let equiposPadron = []; 
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+let equiposPadron = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
@@ -174,9 +184,9 @@ function renderizarTablaEquipos(equipos) {
         tr.onclick = () => abrirModalEdicionEquipo(eq);
 
         tr.innerHTML = `
-            <td><strong>${eq.marca || ''} ${eq.modelo || ''}</strong><br><small style="color:#7f8c8d;">${eq.equipo}</small></td>
-            <td>${eq.numero_serie || 'S/N'}</td>
-            <td>${eq.sucursal || '-'}</td>
+            <td><strong>${escapeHtml(eq.marca) || ''} ${escapeHtml(eq.modelo) || ''}</strong><br><small style="color:#7f8c8d;">${escapeHtml(eq.equipo)}</small></td>
+            <td>${escapeHtml(eq.numero_serie) || 'S/N'}</td>
+            <td>${escapeHtml(eq.sucursal) || '-'}</td>
             <td>${badgeOrigen}</td>
             <td style="font-size:0.85rem; font-weight:bold; color:#2c3e50;">${txtPeriodo}</td>
             <td>${badgeGarantia}</td>
@@ -214,7 +224,7 @@ window.abrirModalEdicionEquipo = function(eq) {
     document.getElementById('ext-frecuencia').value = eq.frecuencia_servicio || '';
     document.getElementById('ext-garantia').value = eq.garantia || '';
 
-    document.getElementById('titulo-modal-equipo').innerHTML = `<i class="fas fa-edit"></i> Editar Equipo: ${eq.equipo}`;
+    document.getElementById('titulo-modal-equipo').innerHTML = `<i class="fas fa-edit"></i> Editar Equipo: ${escapeHtml(eq.equipo)}`;
     document.getElementById('btn-eliminar-equipo').style.display = 'inline-block';
     
     document.getElementById('modalEquipoExterno').style.display = 'flex';

@@ -1,3 +1,13 @@
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Función para obtener y mostrar clientes
 async function cargarClientes(busqueda = '') {
   try {
@@ -34,12 +44,12 @@ async function cargarClientes(busqueda = '') {
 
       // Inyectamos solo las 6 columnas de datos (Eliminamos la columna de acciones)
       row.innerHTML = `
-        <td style="font-weight:bold; color:#2980b9;">${cliente.nombre}</td>
-        <td>${cliente.rfc || '-'}</td>
-        <td>${cliente.direccion || '-'}</td>
-        <td>${cliente.telefono || '-'}</td>
-        <td>${cliente.contactos || '-'}</td>
-        <td>${cliente.email || '-'}</td>
+        <td style="font-weight:bold; color:#2980b9;">${escapeHtml(cliente.nombre)}</td>
+        <td>${escapeHtml(cliente.rfc) || '-'}</td>
+        <td>${escapeHtml(cliente.direccion) || '-'}</td>
+        <td>${escapeHtml(cliente.telefono) || '-'}</td>
+        <td>${escapeHtml(cliente.contactos) || '-'}</td>
+        <td>${escapeHtml(cliente.email) || '-'}</td>
       `;
 
       listaClientes.appendChild(row);

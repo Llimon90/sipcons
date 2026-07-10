@@ -4,7 +4,8 @@ header('Content-Type: application/json');
 
 
 if ($conn->connect_error) {
-    echo json_encode(['error' => 'Error de conexión: ' . $conn->connect_error]);
+    error_log("eliminar-cliente.php: Error de conexión: " . $conn->connect_error);
+    echo json_encode(['error' => 'Error de conexión con el servidor']);
     exit;
 }
 

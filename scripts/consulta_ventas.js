@@ -1,3 +1,13 @@
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 async function buscarVentas() {
     const params = new URLSearchParams();
     if (filtroCliente.value) params.append('cliente_id', filtroCliente.value);
@@ -44,12 +54,12 @@ function mostrarVentas(ventas) {
         
         fila.innerHTML = `
             <td>${venta.vid}</td>
-            <td>${venta.cliente || 'N/A'}</td>
-            <td>${venta.sucursal || 'N/A'}</td>
-            <td>${venta.equipo || 'N/A'}</td>
-            <td>${venta.marca || 'N/A'}</td>
-            <td>${venta.modelo || 'N/A'}</td>
-            <td>${venta.numero_series ? venta.numero_series.join(', ') : 'N/A'}</td>
+            <td>${escapeHtml(venta.cliente) || 'N/A'}</td>
+            <td>${escapeHtml(venta.sucursal) || 'N/A'}</td>
+            <td>${escapeHtml(venta.equipo) || 'N/A'}</td>
+            <td>${escapeHtml(venta.marca) || 'N/A'}</td>
+            <td>${escapeHtml(venta.modelo) || 'N/A'}</td>
+            <td>${venta.numero_series ? venta.numero_series.map(escapeHtml).join(', ') : 'N/A'}</td>
             <td>${venta.garantia || '0'} meses</td>
             <td>${venta.servicio ? 'Sí' : 'No'}</td>
             <td>${venta.fecha_registro ? new Date(venta.fecha_registro).toLocaleDateString() : 'N/A'}</td>

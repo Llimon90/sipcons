@@ -1,3 +1,13 @@
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Elementos del formulario de registro
   const form = document.getElementById('form-venta');
@@ -164,13 +174,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${new Date(venta.fecha_registro).toLocaleDateString()}</td>
-          <td>${venta.cliente}</td>
-          <td>${venta.sucursal || '-'}</td>
-          <td>${venta.equipo}</td>
-          <td>${venta.marca || ''} ${venta.modelo || ''}</td>
-          <td>${venta.numero_serie || venta.numero_serie || '-'}</td>
+          <td>${escapeHtml(venta.cliente)}</td>
+          <td>${escapeHtml(venta.sucursal) || '-'}</td>
+          <td>${escapeHtml(venta.equipo)}</td>
+          <td>${escapeHtml(venta.marca) || ''} ${escapeHtml(venta.modelo) || ''}</td>
+          <td>${escapeHtml(venta.numero_serie) || escapeHtml(venta.numero_serie) || '-'}</td>
           <td>${venta.garantia} meses</td>
-          <td>${venta.notas || '-'}</td>
+          <td>${escapeHtml(venta.notas) || '-'}</td>
         `;
         tbody.appendChild(tr);
       });

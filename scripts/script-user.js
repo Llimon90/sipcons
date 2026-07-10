@@ -1,4 +1,14 @@
 //alta usuarios
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('alta-usuarios-form');
 
@@ -63,8 +73,8 @@ async function cargarUsuarios() {
                 const fila = document.createElement('tr');
 
                 fila.innerHTML = `
-                    <td>${usuario.nombre}</td>
-                    <td>${usuario.usuario}</td>
+                    <td>${escapeHtml(usuario.nombre)}</td>
+                    <td>${escapeHtml(usuario.usuario)}</td>
                     <td>${usuario.rol}</td>
                     <td>
                         <div class="acciones-usuario">
@@ -122,21 +132,21 @@ async function editarUsuario(id) {
                 <div class="form-row">
                     <div>
                         <label for="nombre-editar">Nombre completo:</label>
-                        <input type="text" id="nombre-editar" value="${usuario.nombre}" required>
+                        <input type="text" id="nombre-editar" value="${escapeHtml(usuario.nombre)}" required>
                     </div>
                     <div>
                         <label for="correo-editar">Correo electrónico:</label>
-                        <input type="email" id="correo-editar" value="${usuario.correo}" >
+                        <input type="email" id="correo-editar" value="${escapeHtml(usuario.correo)}" >
                     </div>
                 </div>
                 <div class="form-row">
                     <div>
                         <label for="telefono-editar">Teléfono:</label>
-                        <input type="text" id="telefono-editar" value="${usuario.telefono}">
+                        <input type="text" id="telefono-editar" value="${escapeHtml(usuario.telefono)}">
                     </div>
                     <div>
                         <label for="usuario-editar">Usuario:</label>
-                        <input type="text" id="usuario-editar" value="${usuario.usuario}" >
+                        <input type="text" id="usuario-editar" value="${escapeHtml(usuario.usuario)}" >
                     </div>
                 </div>
                 <div class="form-row">
@@ -214,7 +224,7 @@ async function actualizarUsuario() {
 async function eliminarUsuario(id) {
     if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
         try {
-            const respuesta = await fetch(`../backend/eliminar_usuario.php?id=${id}`);
+            const respuesta = await fetch(`../backend/eliminar_usuario.php?id=${id}`, { method: 'DELETE' });
             const resultado = await respuesta.json();
 
             if (resultado.success) {

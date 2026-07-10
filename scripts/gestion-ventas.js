@@ -1,3 +1,13 @@
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     let todasLasVentas = []; // Aquí guardaremos la "base de datos" local en memoria
 
@@ -66,9 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td><span style="background:#e8f4f8; color:#2980b9; padding:4px 8px; border-radius:4px; font-weight:bold; font-size: 0.9em;">${v.folio}</span></td>
-                <td>${v.fecha_registro.split(' ')[0]}</td> 
-                <td><strong>${v.cliente}</strong></td>
-                <td><small>${v.equipos || '-'}</small><br><small style="color:#7f8c8d;">${v.marcas || ''}</small></td>
+                <td>${v.fecha_registro.split(' ')[0]}</td>
+                <td><strong>${escapeHtml(v.cliente)}</strong></td>
+                <td><small>${escapeHtml(v.equipos) || '-'}</small><br><small style="color:#7f8c8d;">${escapeHtml(v.marcas) || ''}</small></td>
                 <td style="text-align: center; font-weight: bold;">${v.cantidad_equipos}</td>
                 <td style="text-align: center;">
                     ${v.equipos_con_servicio > 0 ? `<span style="color:#27ae60;" title="${v.equipos_con_servicio} equipos con cláusula"><i class="fas fa-check-circle"></i> Sí</span>` : '<span style="color:#e74c3c;"><i class="fas fa-times-circle"></i> No</span>'}

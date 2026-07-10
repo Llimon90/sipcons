@@ -4,7 +4,8 @@ require_once __DIR__ . '/../auth/middleware.php';
 
 // Verificar la conexión
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    error_log("obtener-archivos.php: Error de conexión: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 // Obtener el número de incidente desde la URL

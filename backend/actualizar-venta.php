@@ -126,9 +126,10 @@ try {
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log("Error BD al actualizar venta: " . $e->getMessage());
-    echo json_encode(['exito' => false, 'mensaje' => 'Error de BD: ' . $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al actualizar la venta']);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . $e->getMessage()]);
+    error_log("actualizar-venta.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al actualizar la venta']);
 }
 ?>

@@ -1,5 +1,15 @@
 
 
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Función para cargar los nombres de los clientes en el select
 async function cargarClientesEnSelect() {
     try {
@@ -55,12 +65,12 @@ document.addEventListener("DOMContentLoaded", function () {
       tbody.innerHTML = "";
 
       if (data.error) {
-        tbody.innerHTML = `<tr><td colspan="10">${data.error}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">${escapeHtml(data.error)}</td></tr>`;
         return;
       }
 
       if (data.message) {
-        tbody.innerHTML = `<tr><td colspan="10">${data.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">${escapeHtml(data.message)}</td></tr>`;
         return;
       }
 
@@ -89,10 +99,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         fila.innerHTML = `
           <td></td>
-          <td>${incidencia.numero}</td>
-          <td>${incidencia.cliente}</td>
-          <td>${incidencia.sucursal}</td>
-          <td>${incidencia.falla}</td>
+          <td>${escapeHtml(incidencia.numero)}</td>
+          <td>${escapeHtml(incidencia.cliente)}</td>
+          <td>${escapeHtml(incidencia.sucursal)}</td>
+          <td>${escapeHtml(incidencia.falla)}</td>
           <td>${incidencia.fecha}</td>
           <td>${incidencia.estatus}</td>
         `;

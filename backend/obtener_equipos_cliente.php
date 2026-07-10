@@ -17,6 +17,7 @@ try {
     
     echo json_encode($equipos);
 } catch (Exception $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+    error_log("obtener_equipos_cliente.php: " . $e->getMessage());
+    echo json_encode(['error' => 'Error al obtener los equipos del cliente']);
 }
 ?>

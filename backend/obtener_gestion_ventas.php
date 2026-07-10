@@ -40,6 +40,7 @@ try {
     ]);
 
 } catch (Exception $e) {
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    error_log("obtener_gestion_ventas.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener la gestión de ventas']);
 }
 ?>

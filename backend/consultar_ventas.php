@@ -52,9 +52,10 @@ try {
     ]);
     
 } catch(PDOException $e) {
+    error_log("consultar_ventas.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
+        'error' => 'Error al consultar las ventas',
         'data' => []
     ]);
 }

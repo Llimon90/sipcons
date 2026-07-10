@@ -5,6 +5,16 @@
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function getShortFileName(fileName, maxLength = 18) {
     return fileName.length > maxLength ? fileName.substring(0, maxLength) + '...' : fileName;
 }
@@ -112,6 +122,7 @@ function createFileContainer(archivoObj) {
     fileNameSpan.style.lineHeight = '1.2';
     link.appendChild(fileNameSpan);
 
+    // Botón rojo de eliminar blindado
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'eliminar-archivo';
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>'; 
@@ -216,15 +227,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardar = document.getElementById('btn-guardar-cambios');
     let valorPrevioQty = 0;
 
+    // Elementos de la Frecuencia de Servicio
     const checkServicio = document.getElementById('servicio');
     const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
     const inputFrecuencia = document.getElementById('frecuencia_servicio');
 
+    // Evento para mostrar/ocultar frecuencia de servicio
     checkServicio.addEventListener('change', (e) => {
         if (e.target.checked) {
             contenedorFrecuencia.style.display = 'block';
             inputFrecuencia.required = true;
-            if (!inputFrecuencia.value) inputFrecuencia.value = 6;
+            if (!inputFrecuencia.value) inputFrecuencia.value = 6; // Por defecto 6 meses
         } else {
             contenedorFrecuencia.style.display = 'none';
             inputFrecuencia.required = false;
@@ -232,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Validación Anti-Duplicados
     const validarSeries = () => {
         const inputs = document.querySelectorAll('.serie-edit-input');
         const valores = Array.from(inputs).map(i => i.value.trim().toUpperCase());
@@ -254,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return { hayErrores: estadoError, hayVacios };
     };
 
+    // Agregar/Quitar inputs según la cantidad
     const actualizarCamposSerie = () => {
         let cant = parseInt(qtyInput.value) || 0;
         if (cant < 0) { qtyInput.value = 0; cant = 0; }
@@ -305,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('txt-folio').textContent = data.venta.folio;
                 document.getElementById('cliente').value = data.venta.cliente;
                 document.getElementById('sucursal').value = data.venta.sucursal;
-                
+
                // ==========================================================
                 // CONTROL DE FECHA ASIGNADO A FECHA_REGISTRO
                 // ==========================================================
@@ -314,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Mapeamos directamente el campo fecha_registro de tu BD
                 if (data.venta.fecha_registro) {
                     // Corta las horas (HH:MM:SS) para dejar el formato YYYY-MM-DD
-                    const fechaFormateada = data.venta.fecha_registro.split(' ')[0]; 
+                    const fechaFormateada = data.venta.fecha_registro.split(' ')[0];
                     document.getElementById('fecha_venta').value = fechaFormateada;
                     console.log("Fecha de registro cargada en el input:", fechaFormateada);
                 } else {
@@ -345,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 seriesContainer.innerHTML = data.series.map((s, index) => `
                     <div class="serie-item-wrapper" style="background: white; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                         <label style="font-size: 0.8rem; color: #7f8c8d; font-weight: bold;">SERIE EQUIPO ${index + 1}</label>
-                        <input type="text" class="serie-edit-input" data-id="${s.id}" value="${s.numero_serie}" required style="width: 100%; padding: 5px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;">
+                        <input type="text" class="serie-edit-input" data-id="${s.id}" value="${escapeHtml(s.numero_serie)}" required style="width: 100%; padding: 5px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;">
                     </div>
                 `).join('');
 

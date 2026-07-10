@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../auth/middleware.php';
 
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    error_log("alertas_incidentes.php: Error de conexión: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 // Criterio: incidencia cuya fecha es menor a NOW()-INTERVAL 7 DAY, y estatus ≠ 'Cerrado con factura'

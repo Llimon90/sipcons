@@ -15,6 +15,7 @@ try {
 
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo eliminado correctamente.']);
 } catch (Exception $e) {
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    error_log("elimina_equipo_padron.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al eliminar el equipo']);
 }
 ?>

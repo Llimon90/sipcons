@@ -1,3 +1,13 @@
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     // Seleccionar la tabla donde se listan las incidencias
     const tablaBody = document.getElementById("tabla-body");
@@ -13,11 +23,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
 
                     fila.innerHTML = `
-                        <td>${incidencia.numero}</td>
+                        <td>${escapeHtml(incidencia.numero)}</td>
                         <td>${incidencia.numero_incidente}</td>
-                        <td>${incidencia.cliente}</td>
-                        <td>${incidencia.sucursal}</td>
-                        <td>${incidencia.falla}</td>
+                        <td>${escapeHtml(incidencia.cliente)}</td>
+                        <td>${escapeHtml(incidencia.sucursal)}</td>
+                        <td>${escapeHtml(incidencia.falla)}</td>
                         <td>${incidencia.fecha}</td>
                         <td>
                             <select class="estatus-select" data-id="${incidencia.id}">

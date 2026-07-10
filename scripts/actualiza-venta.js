@@ -1,3 +1,13 @@
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Configuración de PDF.js
 const pdfjsLib = window['pdfjs-dist/build/pdf'];
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -187,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
             thumbnailContent = `
-                <img src="${fileUrl}" alt="${archivo.nombre_original}" 
+                <img src="${fileUrl}" alt="${escapeHtml(archivo.nombre_original)}"
                      onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'file-icon\\'>IMG</div>'">`;
         } else if (ext === 'pdf') {
             thumbnailContent = `
@@ -199,9 +209,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         fileElement.innerHTML = `
             ${thumbnailContent}
-            <div class="file-name">${acortarNombre(archivo.nombre_original, 15)}</div>
+            <div class="file-name">${escapeHtml(acortarNombre(archivo.nombre_original, 15))}</div>
             <div class="file-actions">
-                <a href="${fileUrl}" download="${archivo.nombre_original}" 
+                <a href="${fileUrl}" download="${escapeHtml(archivo.nombre_original)}"
                    class="btn-download" title="Descargar">↓</a>
                 <button class="delete-file" title="Eliminar archivo">×</button>
             </div>

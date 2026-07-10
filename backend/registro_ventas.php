@@ -119,6 +119,7 @@ try {
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    error_log("registro_ventas.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al registrar la venta']);
 }
 ?>

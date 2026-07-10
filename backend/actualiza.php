@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../auth/middleware.php';
 
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    error_log("actualiza.php: Error de conexión: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 // Leer los datos enviados desde el frontend
@@ -77,7 +78,8 @@ if ($stmt->execute()) {
 
     echo json_encode(["success" => true]);
 } else {
-    echo json_encode(["error" => "Error al actualizar la incidencia: " . $stmt->error]);
+    error_log("actualiza.php: Error al actualizar la incidencia: " . $stmt->error);
+    echo json_encode(["error" => "Error al actualizar la incidencia"]);
 }
 
 $stmt->close();

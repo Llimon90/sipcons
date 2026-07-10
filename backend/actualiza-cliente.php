@@ -6,7 +6,8 @@ header('Content-Type: application/json');
 $conn = new mysqli($host, $user, $password, $database);
 
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    error_log("actualiza-cliente.php: Error de conexión: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 $id = $_POST['id'];

@@ -17,6 +17,7 @@ try {
     
     echo json_encode(['exito' => true, 'archivos' => $archivos]);
 } catch (PDOException $e) {
-    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . $e->getMessage()]);
+    error_log("obtener-archivos-venta.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener los archivos']);
 }
 ?>

@@ -51,9 +51,10 @@ try {
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log("Error SQL al eliminar venta: " . $e->getMessage());
-    echo json_encode(['exito' => false, 'mensaje' => 'Error de Base de Datos: ' . $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al eliminar la venta']);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    error_log("eliminar_venta.php: " . $e->getMessage());
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al eliminar la venta']);
 }
 ?>

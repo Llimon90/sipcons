@@ -27,9 +27,10 @@ try {
         'folio' => $nuevoFolio
     ]);
 } catch (PDOException $e) {
+    error_log("obtener-proximo-folio.php: " . $e->getMessage());
     echo json_encode([
         'exito' => false,
-        'mensaje' => 'Error al generar folio: ' . $e->getMessage()
+        'mensaje' => 'Error al generar folio'
     ]);
 }
 ?>

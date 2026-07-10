@@ -3,6 +3,16 @@
  * Módulo de Ventas: Gestión de Series, Integridad, Multi-archivos y Frecuencia de Servicio.
  */
 
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DEL DOM ---
     const formVenta = document.getElementById('form-venta');
@@ -64,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorMsg.className = 'mensaje-error-input';
                 seriesContainer.prepend(errorMsg);
             }
-            errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Series Duplicadas:</strong> ${Array.from(duplicados).join(', ')}`;
+            errorMsg.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Series Duplicadas:</strong> ${Array.from(duplicados).map(escapeHtml).join(', ')}`;
             errorMsg.style.display = 'block';
         } else if (errorMsg) {
             errorMsg.style.display = 'none';

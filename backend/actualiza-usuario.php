@@ -4,6 +4,7 @@
 // ==============================================
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../config/database.php'; // <-- Agregada la conexión a la BD
+requireRole('Administrador');
 
 header('Content-Type: application/json');
 ini_set('display_errors', 0);
@@ -56,7 +57,8 @@ try {
     }
     
 } catch (Exception $e) {
+    error_log("actualiza-usuario.php: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error del servidor']);
 }
 ?>

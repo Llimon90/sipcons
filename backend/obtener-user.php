@@ -1,5 +1,6 @@
 ﻿<?php
 require_once __DIR__ . '/../auth/middleware.php';
+requireRole('Administrador');
 header('Content-Type: application/json');
 
 try {
@@ -14,6 +15,7 @@ try {
 
     echo json_encode(['success' => true, 'data' => $usuarios]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error al obtener los usuarios: ' . $e->getMessage()]);
+    error_log("obtener-user.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Error al obtener los usuarios']);
 }
 ?>

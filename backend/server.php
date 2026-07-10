@@ -3,11 +3,7 @@ require_once __DIR__ . '/../auth/middleware.php';
 // DISPARADOR AUTOMÁTICO: Revisa si hay mantenimientos antes de cargar la tabla
 require_once 'generador_tickets.php';
 
-// Encabezados generales
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 
 // 🔒 Evitar caché del lado del cliente y del servidor
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -16,7 +12,8 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+    error_log("server.php: Error de conexión: " . $conn->connect_error);
+    die(json_encode(["error" => "Error de conexión con el servidor"]));
 }
 
 $method = $_SERVER["REQUEST_METHOD"];

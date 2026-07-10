@@ -1,5 +1,15 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) return '';
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Funciones de utilidad
 function getShortFileName(url, maxLength = 20) {
     const fileName = url.split('/').pop();
@@ -198,22 +208,22 @@ function createFormHTML(data) {
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                 <div style="flex: 1;">
                     <label># INCIDENCIA CLIENTE:</label>&nbsp;
-                    <input type="text" id="numero" value="${data.numero || ''}" style="width: 100%;">
+                    <input type="text" id="numero" value="${escapeHtml(data.numero || '')}" style="width: 100%;">
                 </div>&nbsp; &nbsp;
                 <div style="flex: 1;">
                     <label>CLIENTE:</label>&nbsp;
-                    <input type="text" id="cliente" value="${data.cliente || ''}" required style="width: 100%;">
+                    <input type="text" id="cliente" value="${escapeHtml(data.cliente || '')}" required style="width: 100%;">
                 </div>&nbsp;&nbsp;
             </div>
 
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                 <div style="flex: 1;">
                     <label>CONTACTO:</label>
-                    <input type="text" id="contacto" value="${data.contacto || ''}" required style="width: 100%;">
+                    <input type="text" id="contacto" value="${escapeHtml(data.contacto || '')}" required style="width: 100%;">
                 </div>
                 <div style="flex: 1;">
                     <label>SUCURSAL:</label>
-                    <input type="text" id="sucursal" value="${data.sucursal || ''}" style="width: 100%;">
+                    <input type="text" id="sucursal" value="${escapeHtml(data.sucursal || '')}" style="width: 100%;">
                 </div>
             </div>
 
@@ -310,18 +320,18 @@ ${tecnicosIniciales.length === 0 ? `
             <div style="display: flex; gap: 15px; margin-bottom: 15px;">
     <div style="flex: 1;">
         <label>FALLA:</label>
-        <textarea id="falla" required style="width: 100%; height: 100px;">${data.falla || ''}</textarea>
+        <textarea id="falla" required style="width: 100%; height: 100px;">${escapeHtml(data.falla || '')}</textarea>
     </div>
 
     <div style="flex: 1;">
         <label>TRABAJO REALIZADO:</label>
-        <textarea id="accion" style="width: 100%; height: 100px;">${data.accion || ''}</textarea>
+        <textarea id="accion" style="width: 100%; height: 100px;">${escapeHtml(data.accion || '')}</textarea>
     </div>
 </div>
 
             <div style="margin-bottom: 15px;">
                 <label>NOTAS ADICIONALES</label>
-                <textarea id="notas" style="width: 100%;">${data.notas || ''}</textarea>
+                <textarea id="notas" style="width: 100%;">${escapeHtml(data.notas || '')}</textarea>
             </div>
 
             <div style="margin-bottom: 15px;">
@@ -600,7 +610,7 @@ async function cargarDetalleIncidencia(id) {
     } catch (error) {
         console.error("Error al cargar detalles:", error);
         document.getElementById("detalle-incidencia").innerHTML =
-            `<p>Error al cargar los detalles: ${error.message}</p>`;
+            `<p>Error al cargar los detalles: ${escapeHtml(error.message)}</p>`;
     }
 }
 
