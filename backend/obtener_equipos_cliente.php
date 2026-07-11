@@ -1,6 +1,6 @@
 <?php
+require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
-require_once 'conexion.php';
 
 $cliente = $_GET['cliente'] ?? '';
 

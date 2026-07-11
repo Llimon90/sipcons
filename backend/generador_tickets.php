@@ -1,6 +1,6 @@
 <?php
+require_once __DIR__ . '/../auth/middleware.php';
 // backend/generador_tickets.php
-require_once 'conexion.php';
 
 try {
     $pdo->beginTransaction();
@@ -55,7 +55,7 @@ try {
         $nombreEquipo = $cantidad > 1 ? "Múltiples Equipos" : $primerEq['equipo'];
 
         $stmtInsertIncidencia->execute([
-            "ALERTA-CONTACTO", $folioNuevo, $primerEq['cliente'], "Sistema SIPCONS", $primerEq['sucursal'], 
+            "ALERTA-CONTACTO", $folioNuevo, $primerEq['cliente'], "Sistema SIPCONS", $primerEq['sucursal'],
             "", $falla, $nombreEquipo, "Abierto", "", $notas
         ]);
         
@@ -90,7 +90,7 @@ try {
         
         foreach ($equipos as $eq) {
             $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';
-            $ref = $eq['origen'] === 'Venta Lumina' ? "(Venta #{$eq['venta_id']})" : "(Equipo Externo)";
+            $ref = $eq['origen'] === 'Venta SIPCONS' ? "(Venta #{$eq['venta_id']})" : "(Equipo Externo)";
             $notas .= "- {$eq['marca']} {$eq['modelo']} (Serie: $serie) $ref | Vence: {$eq['proximo_servicio']}\n";
         }
         $notas .= "\nTicket generado automáticamente con 10 días de anticipación.";

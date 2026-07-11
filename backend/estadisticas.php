@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../auth/middleware.php';
 
 // --- DEBUG (COMENTAR EN PRODUCCIÓN PARA NO ROMPER EL JSON) ---
 // ini_set('display_errors', 1);

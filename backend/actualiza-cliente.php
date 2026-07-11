@@ -1,10 +1,7 @@
 <?php
+require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
 
-$host = "localhost";
-$user = "sipcons1_appweb";
-$password = "sip*SYS2025";
-$database = "sipcons1_appweb";
 
 $conn = new mysqli($host, $user, $password, $database);
 

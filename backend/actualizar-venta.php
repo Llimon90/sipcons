@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../auth/middleware.php';
 header('Content-Type: application/json');
 require 'conexion.php';
 
@@ -15,18 +16,18 @@ try {
     // ==========================================
     // 1. ACTUALIZAR CABECERA (Tabla: ventas)
     // ==========================================
-    
+
     // Capturamos el valor del input "fecha_venta" del HTML
     $fechaVenta = !empty($_POST['fecha_venta']) ? $_POST['fecha_venta'] : null;
 
     // Consulta SQL completamente limpia de comentarios internos para evitar errores de sintaxis
-    $stmtV = $pdo->prepare("UPDATE ventas SET 
-        cliente = ?, 
+    $stmtV = $pdo->prepare("UPDATE ventas SET
+        cliente = ?,
         sucursal = ?,
-        fecha_registro = ?, 
-        fecha_actualizacion = NOW() 
+        fecha_registro = ?,
+        fecha_actualizacion = NOW()
         WHERE id = ?");
-    
+
     $stmtV->execute([
         $_POST['cliente'] ?? '',
         $_POST['sucursal'] ?? '',
@@ -51,7 +52,7 @@ try {
         $tieneServicio = !empty($_POST['servicio']) ? 1 : 0;
         $frecuencia = $tieneServicio ? ($_POST['frecuencia_servicio'] ?? 0) : 0;
 
-        // Preparar sentencias SQL para los detalles
+        // Preparar sentencias SQL
         $stmtUpdate = $pdo->prepare("UPDATE venta_detalles SET equipo=?, marca=?, modelo=?, numero_serie=?, garantia=?, calibracion=?, servicio=?, frecuencia_servicio=?, notas=? WHERE id=?");
         $stmtInsert = $pdo->prepare("INSERT INTO venta_detalles (venta_id, equipo, marca, modelo, numero_serie, garantia, calibracion, servicio, frecuencia_servicio, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
@@ -61,30 +62,20 @@ try {
                     // ACTUALIZAR serie existente
                     $idsQueSeQuedan[] = $s['id_detalle'];
                     $stmtUpdate->execute([
-                        $_POST['equipo'], 
-                        $_POST['marca'], 
-                        $_POST['modelo'],
+                        $_POST['equipo'], $_POST['marca'], $_POST['modelo'],
                         $s['serie'],
-                        $_POST['garantia'] ?? 0, 
-                        $_POST['calibracion'] ?? 0,
-                        $tieneServicio, 
-                        $frecuencia, 
-                        $_POST['notas'] ?? '',
+                        $_POST['garantia'] ?? 0, $_POST['calibracion'] ?? 0,
+                        $tieneServicio, $frecuencia, $_POST['notas'] ?? '',
                         $s['id_detalle']
                     ]);
                 } else {
                     // INSERTAR serie nueva (si la cantidad de equipos aumentó)
                     $stmtInsert->execute([
                         $idVenta,
-                        $_POST['equipo'], 
-                        $_POST['marca'], 
-                        $_POST['modelo'],
+                        $_POST['equipo'], $_POST['marca'], $_POST['modelo'],
                         $s['serie'],
-                        $_POST['garantia'] ?? 0, 
-                        $_POST['calibracion'] ?? 0,
-                        $tieneServicio, 
-                        $frecuencia, 
-                        $_POST['notas'] ?? ''
+                        $_POST['garantia'] ?? 0, $_POST['calibracion'] ?? 0,
+                        $tieneServicio, $frecuencia, $_POST['notas'] ?? ''
                     ]);
                 }
             }
