@@ -1,6 +1,6 @@
 <?php
-function loadEnv(string $path): void {
-    if (!file_exists($path)) return;
+function loadEnv(string $path): bool {
+    if (!file_exists($path)) return false;
     foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         $line = trim($line);
         if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) continue;
@@ -8,13 +8,20 @@ function loadEnv(string $path): void {
         $key = trim($key);
         $value = trim($value);
         if ($key !== '') {
+            // Solo $_ENV (memoria por-petición). NUNCA putenv(): en PHP-FPM
+            // putenv() persiste en el proceso worker entre peticiones, y si
+            // este mismo worker atiende despues una peticion de OTRO entorno
+            // (ej. produccion) que no tenga su propio .env, heredaria estas
+            // credenciales por error.
             $_ENV[$key] = $value;
-            putenv("$key=$value");
         }
     }
+    return true;
 }
 
-loadEnv(__DIR__ . '/../.env');
+if (!loadEnv(__DIR__ . '/../.env')) {
+    die(json_encode(["error" => "Falta el archivo .env de este entorno. No se puede continuar sin configuracion explicita de base de datos."]));
+}
 
 $host     = $_ENV['DB_HOST'] ?? 'localhost';
 $user     = $_ENV['DB_USER'] ?? '';
