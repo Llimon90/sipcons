@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 
@@ -17,11 +18,26 @@ $telefono = $_POST['telefono'];
 $contactos = $_POST['contactos'];
 $email = $_POST['email'];
 
+// Estado anterior para el historial
+$stmtAnterior = $conn->prepare("SELECT nombre, rfc, direccion, telefono, contactos, email FROM clientes WHERE id = ?");
+$stmtAnterior->bind_param("i", $id);
+$stmtAnterior->execute();
+$anterior = $stmtAnterior->get_result()->fetch_assoc();
+$stmtAnterior->close();
+
 $sql = "UPDATE clientes SET nombre = ?, rfc = ?, direccion = ?, telefono = ?, contactos = ?, email = ? WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ssssssi", $nombre, $rfc, $direccion, $telefono, $contactos, $email, $id);
 
 if ($stmt->execute()) {
+    registrarAuditoria('clientes', $id, 'UPDATE', $anterior ?: null, [
+        'nombre'    => $nombre,
+        'rfc'       => $rfc,
+        'direccion' => $direccion,
+        'telefono'  => $telefono,
+        'contactos' => $contactos,
+        'email'     => $email,
+    ]);
     echo json_encode(["success" => true]);
 } else {
     echo json_encode(["error" => "Error al actualizar el cliente"]);

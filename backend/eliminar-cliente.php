@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 
@@ -21,14 +22,14 @@ if (!$id) {
     exit;
 }
 
-// Verificar si el cliente existe primero
-$checkSql = "SELECT id FROM clientes WHERE id = ?";
+// Verificar si el cliente existe primero (y capturar su estado para el historial)
+$checkSql = "SELECT nombre, rfc, direccion, telefono, contactos, email FROM clientes WHERE id = ?";
 $checkStmt = $conn->prepare($checkSql);
 $checkStmt->bind_param("i", $id);
 $checkStmt->execute();
-$checkResult = $checkStmt->get_result();
+$anterior = $checkStmt->get_result()->fetch_assoc();
 
-if ($checkResult->num_rows === 0) {
+if (!$anterior) {
     echo json_encode(['error' => 'Cliente no encontrado']);
     exit;
 }
@@ -39,6 +40,7 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id);
 
 if ($stmt->execute()) {
+    registrarAuditoria('clientes', $id, 'DELETE', $anterior, null);
     echo json_encode(['success' => true]);
 } else {
     echo json_encode(['error' => 'Error al eliminar el cliente']);

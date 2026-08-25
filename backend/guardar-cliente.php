@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 // Conexión a la base de datos
 
 if ($conn->connect_error) {
@@ -49,6 +50,14 @@ $sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email
         VALUES ('$nombre', '$rfc', '$direccion', '$telefono', '$contactos', '$email')";
 
 if ($conn->query($sql) === TRUE) {
+    registrarAuditoria('clientes', $conn->insert_id, 'CREATE', null, [
+        'nombre'    => $nombre,
+        'rfc'       => $rfc,
+        'direccion' => $direccion,
+        'telefono'  => $telefono,
+        'contactos' => $contactos,
+        'email'     => $email,
+    ]);
     echo json_encode(['success' => true]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
