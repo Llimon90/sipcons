@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 try {
@@ -40,9 +41,23 @@ try {
             
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        $cliente, $sucursal, $equipo, $marca, $modelo, $numero_serie, 
-        $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia, 
+        $cliente, $sucursal, $equipo, $marca, $modelo, $numero_serie,
+        $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia,
         $fechaProximaCalibracion, $fechaProximoServicio, $fecha_registro
+    ]);
+
+    registrarAuditoria('padron_equipos', $pdo->lastInsertId(), 'CREATE', null, [
+        'cliente'             => $cliente,
+        'sucursal'            => $sucursal,
+        'equipo'              => $equipo,
+        'marca'               => $marca,
+        'modelo'              => $modelo,
+        'numero_serie'        => $numero_serie,
+        'calibracion'         => $mesesCalibracion,
+        'servicio'            => $tieneServicio,
+        'frecuencia_servicio' => $mesesServicio,
+        'garantia'            => $mesesGarantia,
+        'origen'              => 'Externo',
     ]);
 
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo externo registrado en el Padrón con éxito.']);

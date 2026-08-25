@@ -1,9 +1,18 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 try {
     $id = $_POST['id'] ?? throw new Exception("ID de equipo no especificado");
+
+    // Estado anterior para el historial
+    $stmtAnterior = $pdo->prepare(
+        "SELECT cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, origen
+         FROM padron_equipos WHERE id = ?"
+    );
+    $stmtAnterior->execute([$id]);
+    $anterior = $stmtAnterior->fetch(PDO::FETCH_ASSOC) ?: null;
     $sucursal = $_POST['sucursal'] ?? '';
     $equipo = $_POST['equipo'] ?? '';
     $marca = $_POST['marca'] ?? '';
@@ -28,9 +37,21 @@ try {
             
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        $sucursal, $equipo, $marca, $modelo, $numero_serie, 
-        $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia, 
+        $sucursal, $equipo, $marca, $modelo, $numero_serie,
+        $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia,
         $fechaProximaCalibracion, $fechaProximoServicio, $fecha_registro, $id
+    ]);
+
+    registrarAuditoria('padron_equipos', $id, 'UPDATE', $anterior, [
+        'sucursal'            => $sucursal,
+        'equipo'              => $equipo,
+        'marca'               => $marca,
+        'modelo'              => $modelo,
+        'numero_serie'        => $numero_serie,
+        'calibracion'         => $mesesCalibracion,
+        'servicio'            => $tieneServicio,
+        'frecuencia_servicio' => $mesesServicio,
+        'garantia'            => $mesesGarantia,
     ]);
 
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo actualizado con éxito.']);

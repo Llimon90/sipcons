@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 try {
@@ -11,7 +12,10 @@ try {
 
     $pdo->beginTransaction();
 
-    $stmtEquipo = $pdo->prepare("SELECT venta_id, venta_detalle_id, numero_serie, origen FROM padron_equipos WHERE id = ?");
+    $stmtEquipo = $pdo->prepare(
+        "SELECT cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, origen, venta_id, venta_detalle_id
+         FROM padron_equipos WHERE id = ?"
+    );
     $stmtEquipo->execute([$id]);
     $equipo = $stmtEquipo->fetch(PDO::FETCH_ASSOC);
 
@@ -47,6 +51,8 @@ try {
     $stmt->execute([$id]);
 
     $pdo->commit();
+
+    registrarAuditoria('padron_equipos', $id, 'DELETE', $equipo, null);
 
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo eliminado correctamente.']);
 } catch (Exception $e) {
