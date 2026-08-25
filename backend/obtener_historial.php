@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
-requireRole('Administrador');
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermiso('historial');
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json');

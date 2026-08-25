@@ -13,11 +13,27 @@
     var authPath = inPublic ? '../auth/' : 'auth/';
     var indexPath = inPublic ? '../index.html' : 'index.html';
 
-    // Páginas cuyo acceso queda reservado al rol Administrador.
-    // El control real vive en el backend (requireRole); esto solo evita
-    // que un usuario sin permiso vea una pantalla que de todos modos
-    // fallará al llamar a la API.
-    var PAGINAS_SOLO_ADMIN = ['usuarios.html', 'historial.html'];
+    // Qué módulo (de la tabla permisos_rol) protege cada página. Una página
+    // que no aparece aquí (ajustes.html, index.html) es accesible para
+    // cualquier usuario con sesión iniciada.
+    var PAGINA_A_MODULO = {
+        'incidencias.html': 'incidencias',
+        'detalle.html': 'incidencias',
+        'incidencias_general.html': 'incidencias',
+        'reportes.html': 'reportes',
+        'clientes.html': 'clientes',
+        'perfil-cliente.html': 'clientes',
+        'usuarios.html': 'usuarios',
+        'ventas.html': 'ventas',
+        'admin-ventas.html': 'ventas',
+        'consulta_ventas.html': 'ventas',
+        'detalle-venta.html': 'ventas',
+        'detalles-venta.html': 'ventas',
+        'soporte.html': 'soporte',
+        'informes.html': 'informes',
+        'dashboard-tecnico.html': 'informes',
+        'historial.html': 'historial',
+    };
 
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado
     document.documentElement.style.visibility = 'hidden';
@@ -35,13 +51,22 @@
 
             var user = data.user || {};
             var displayName = user.nombre || user.usuario || 'Usuario';
-            var esAdmin = user.rol === 'Administrador';
+            var modulosPermitidos = data.modulos || [];
 
-            // Si un usuario sin permiso llega directo a una página de admin
-            // (URL directa, marcador, etc.), lo mandamos al inicio antes de
-            // mostrar nada.
+            function puedeAcceder(pagina) {
+                var modulo = PAGINA_A_MODULO[pagina];
+                // Si la página no está mapeada a ningún módulo, es de acceso libre.
+                if (!modulo) return true;
+                return modulosPermitidos.indexOf(modulo) !== -1;
+            }
+
+            // Si el usuario llega directo a una página que su rol no tiene
+            // habilitada (URL directa, marcador, etc.), lo mandamos al inicio
+            // antes de mostrar nada. El control real vive en el backend
+            // (requirePermiso); esto solo evita una pantalla que de todos
+            // modos fallará al llamar a la API.
             var paginaActual = window.location.pathname.split('/').pop();
-            if (!esAdmin && PAGINAS_SOLO_ADMIN.indexOf(paginaActual) !== -1) {
+            if (!puedeAcceder(paginaActual)) {
                 window.location.replace(indexPath);
                 return;
             }
@@ -55,8 +80,9 @@
                 var nameEl = sidebar.querySelector('.user-name');
                 if (nameEl) nameEl.textContent = displayName;
 
-                // Agregar enlace a Historial (solo Administrador) si el sidebar no lo tiene ya
-                if (esAdmin) {
+                // Agregar enlace a Historial si el rol tiene ese módulo y el
+                // sidebar de esta página no lo trae ya
+                if (puedeAcceder('historial.html')) {
                     var lista = sidebar.querySelector('ul');
                     if (lista && !lista.querySelector('a[href$="historial.html"]')) {
                         var histItem = document.createElement('li');
@@ -102,18 +128,14 @@
                 document.body.insertBefore(bar, document.body.firstChild);
             }
 
-            // Ocultar enlaces a secciones de solo-Administrador para el resto de roles
-            if (!esAdmin) {
-                var enlaces = document.querySelectorAll('a[href]');
-                for (var i = 0; i < enlaces.length; i++) {
-                    var href = enlaces[i].getAttribute('href') || '';
-                    var esEnlaceAdmin = PAGINAS_SOLO_ADMIN.some(function (pagina) {
-                        return href.indexOf(pagina) !== -1;
-                    });
-                    if (esEnlaceAdmin) {
-                        var item = enlaces[i].closest('li') || enlaces[i];
-                        item.style.display = 'none';
-                    }
+            // Ocultar enlaces a secciones que el rol de este usuario no tiene habilitadas
+            var enlaces = document.querySelectorAll('a[href]');
+            for (var i = 0; i < enlaces.length; i++) {
+                var href = enlaces[i].getAttribute('href') || '';
+                var paginaEnlace = href.split('/').pop().split('?')[0];
+                if (PAGINA_A_MODULO[paginaEnlace] && !puedeAcceder(paginaEnlace)) {
+                    var item = enlaces[i].closest('li') || enlaces[i];
+                    item.style.display = 'none';
                 }
             }
         })

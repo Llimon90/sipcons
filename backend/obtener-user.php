@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
-requireRole('Administrador');
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermiso('usuarios');
 header('Content-Type: application/json');
 
 try {

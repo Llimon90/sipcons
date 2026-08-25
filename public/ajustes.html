@@ -1,11 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Administrativo</title>
+    <title>Ajustes</title>
     <link rel="stylesheet" href="../css/styles.css?v=2">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="../scripts/auth-guard.js"></script>
 </head>
@@ -16,7 +15,7 @@
     <i class="fas fa-home"></i>
     <span>Volver al Inicio</span>
   </button>
-    
+
   <!-- Panel lateral (solo visible en escritorio) -->
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -28,7 +27,7 @@
         <i class="fas fa-chevron-left"></i>
       </button>
     </div>
-    
+
     <ul>
       <li>
         <a href="../index.html" title="Inicio">
@@ -43,7 +42,7 @@
         </a>
       </li>
       <li>
-        <a href="buscar-incidencias.html" title="Buscar Incidencias">
+        <a href="reportes.html" title="Buscar Incidencias">
           <i class="fas fa-search"></i>
           <span class="sidebar-link-text">Buscar Incidencias</span>
         </a>
@@ -79,7 +78,7 @@
         </a>
       </li>
       <li>
-        <a href="ajustes.html" title="Ajustes">
+        <a href="ajustes.html" title="Ajustes" class="active">
           <i class="fas fa-cog"></i>
           <span class="sidebar-link-text">Ajustes</span>
         </a>
@@ -88,20 +87,75 @@
     <div class="sidebar-footer">
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
-        <span class="user-name">Técnico</span>
+        <span class="user-name">Usuario</span>
       </div>
     </div>
   </aside>
 
   <main id="mainContent">
     <section class="encabezado">
-      <h1>EN DESARROLLO</h1>
+      <h2>Ajustes</h2>
+      <p>Preferencias de tu cuenta y, si tu rol lo permite, configuración del sistema.</p>
     </section>
-    
-    <!-- Tu contenido específico de cada página aquí -->
+
+    <!-- ============================================================ -->
+    <!-- BÁSICO: cuenta propia -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias">
+      <h2>Mi cuenta</h2>
+      <form id="form-cambiar-password" class="form-row" style="align-items:flex-end;">
+        <div>
+          <label for="password-actual">Contraseña actual</label>
+          <input type="password" id="password-actual" required autocomplete="current-password">
+        </div>
+        <div>
+          <label for="password-nueva">Contraseña nueva</label>
+          <input type="password" id="password-nueva" required autocomplete="new-password" minlength="6">
+        </div>
+        <div>
+          <label for="password-nueva-confirmar">Confirmar contraseña nueva</label>
+          <input type="password" id="password-nueva-confirmar" required autocomplete="new-password" minlength="6">
+        </div>
+        <div>
+          <button type="submit">Cambiar contraseña</button>
+        </div>
+      </form>
+      <div id="mensaje-password" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- AVANZADO: solo Administrador / Programador -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias" id="seccion-privilegios" style="display:none;">
+      <h2>Privilegios por rol</h2>
+      <p style="color:#7f8c8d; margin-top:-10px;">
+        Marca a qué secciones del sistema tiene acceso cada rol. Los cambios se aplican de inmediato
+        y quedan registrados en el <a href="historial.html">historial de cambios</a>.
+        El rol <strong>Programador</strong> no aparece aquí: siempre tiene acceso total.
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table id="tabla-privilegios">
+          <thead>
+            <tr id="fila-encabezado-privilegios">
+              <th>Módulo</th>
+              <!-- columnas de rol se generan dinámicamente -->
+            </tr>
+          </thead>
+          <tbody id="cuerpo-privilegios">
+            <tr><td>Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px;">
+        <button type="button" id="btn-guardar-privilegios">Guardar privilegios</button>
+        <span id="mensaje-privilegios" style="margin-left:10px;"></span>
+      </div>
+    </section>
   </main>
 
   <script src="../scripts/sidebar-state.js"></script>
-
+  <script src="../scripts/ajustes.js" defer></script>
 </body>
 </html>

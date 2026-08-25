@@ -4,7 +4,8 @@
 // ==============================================
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
-requireRole('Administrador');
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermiso('usuarios');
 require_once __DIR__ . '/../config/database.php'; // <-- Agregada la conexión a la BD
 
 header('Content-Type: application/json');
