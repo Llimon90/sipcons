@@ -138,8 +138,8 @@ function renderizarTablaEquipos(equipos) {
         let txtPeriodo = periodos.length > 0 ? periodos.join(' | ') : 'Sin programa';
 
         // 2. Badge de Origen
-        let badgeOrigen = eq.origen === 'Venta SIPCONS' 
-            ? `<span style="background:#e8f4f8; color:#2980b9; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Venta #${eq.venta_id}</span>`
+        let badgeOrigen = eq.origen === 'Venta SIPCONS'
+            ? `<span style="background:#e8f4f8; color:#2980b9; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Venta #${eq.venta_folio || eq.venta_id}</span>`
             : `<span style="background:#fef5e7; color:#d35400; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Externo</span>`;
 
         // 3. CALCULADORA DE GARANTÍA

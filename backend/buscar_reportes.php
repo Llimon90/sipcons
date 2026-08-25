@@ -27,11 +27,13 @@ try {
 
     if (!empty($solo_programadas) && $solo_programadas === '1') {
         // CORRECCIÓN: COALESCE(p.garantia, 0) añadido en el GROUP_CONCAT
+        // LEFT JOIN a ventas para mostrar el folio real (VT-00001) y no el id
+        // interno de la venta, así coincide con la nomenclatura de la tabla Ventas.
         $sql = "SELECT * FROM (
-            SELECT 
+            SELECT
                 MIN(p.id) as id,
                 'PROG-CAL' as numero_incidente,
-                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
+                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as numero,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
                 CONCAT(COUNT(p.id), ' equipo(s) a Mantenimiento/Calibración.') as falla,
@@ -41,15 +43,16 @@ try {
                 'Por asignar' as tecnico,
                 GROUP_CONCAT(CONCAT_WS('~', p.marca, p.modelo, COALESCE(p.numero_serie, 'S/N'), COALESCE(p.calibracion, 0), COALESCE(p.frecuencia_servicio, 0), COALESCE(p.garantia, 0), COALESCE(DATE(p.fecha_registro), '')) SEPARATOR '||') as detalles_completos
             FROM padron_equipos p
+            LEFT JOIN ventas v ON p.venta_id = v.id
             WHERE p.calibracion > 0 AND p.proxima_calibracion IS NOT NULL
             GROUP BY p.venta_id, p.origen, p.cliente, p.sucursal, p.proxima_calibracion
-            
+
             UNION ALL
-            
-            SELECT 
+
+            SELECT
                 MIN(p.id) as id,
                 'PROG-SERV' as numero_incidente,
-                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', p.venta_id), 'Equipo Externo') as numero,
+                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as numero,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
                 CONCAT(COUNT(p.id), ' equipo(s) a Servicio.') as falla,
@@ -59,6 +62,7 @@ try {
                 'Por asignar' as tecnico,
                 GROUP_CONCAT(CONCAT_WS('~', p.marca, p.modelo, COALESCE(p.numero_serie, 'S/N'), COALESCE(p.calibracion, 0), COALESCE(p.frecuencia_servicio, 0), COALESCE(p.garantia, 0), COALESCE(DATE(p.fecha_registro), '')) SEPARATOR '||') as detalles_completos
             FROM padron_equipos p
+            LEFT JOIN ventas v ON p.venta_id = v.id
             WHERE p.servicio = 1 AND p.frecuencia_servicio > 0 AND p.proximo_servicio IS NOT NULL
             GROUP BY p.venta_id, p.origen, p.cliente, p.sucursal, p.proximo_servicio
         ) AS programadas WHERE 1=1";
