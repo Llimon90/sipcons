@@ -3,6 +3,7 @@
 // 1. Dependencias Críticas
 // ==============================================
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 requireRole('Administrador');
 require_once __DIR__ . '/../config/database.php'; // <-- Agregada la conexión a la BD
 
@@ -24,7 +25,14 @@ try {
     $telefono = $data['telefono'];
     $usuario = $data['usuario'];
     $rol = $data['rol'];
-    
+
+    // Estado anterior para el historial (nunca se incluye la contraseña)
+    $stmtAnterior = $conn->prepare("SELECT nombre, correo, telefono, usuario, rol FROM usuarios WHERE id = ?");
+    $stmtAnterior->bind_param("i", $id);
+    $stmtAnterior->execute();
+    $anterior = $stmtAnterior->get_result()->fetch_assoc();
+    $stmtAnterior->close();
+
     // Preparar la consulta base (usando tu objeto $conn de mysqli que viene en database.php)
     $sql = "UPDATE usuarios SET nombre = ?, correo = ?, telefono = ?, usuario = ?, rol = ?";
     $params = [$nombre, $correo, $telefono, $usuario, $rol];
@@ -51,6 +59,14 @@ try {
     $stmt->bind_param($types, ...$params);
     
     if ($stmt->execute()) {
+        registrarAuditoria('usuarios', $id, 'UPDATE', $anterior ?: null, [
+            'nombre'            => $nombre,
+            'correo'            => $correo,
+            'telefono'          => $telefono,
+            'usuario'           => $usuario,
+            'rol'               => $rol,
+            'password_cambiada' => !empty($data['password']),
+        ]);
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al ejecutar la actualización']);

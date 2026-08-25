@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 requireRole('Administrador');
 header('Content-Type: application/json');
 // Configurar cabeceras para permitir acceso desde el frontend
@@ -39,6 +40,14 @@ try {
 
     // Ejecutar la consulta
     if ($stmt->execute()) {
+        // Nunca se guarda la contraseña (ni en texto plano ni el hash) en el historial
+        registrarAuditoria('usuarios', $stmt->insert_id, 'CREATE', null, [
+            'nombre'   => $nombre,
+            'correo'   => $correo,
+            'telefono' => $telefono,
+            'usuario'  => $usuario,
+            'rol'      => $rol,
+        ]);
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error al insertar los datos: ' . $stmt->error]);
