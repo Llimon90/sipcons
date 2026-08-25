@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 $idVenta = $_POST['venta_id'] ?? null;
@@ -7,6 +8,22 @@ $idVenta = $_POST['venta_id'] ?? null;
 if (!$idVenta) {
     echo json_encode(['exito' => false, 'mensaje' => 'ID de venta inválido o no recibido']);
     exit;
+}
+
+// Captura una foto completa de la venta (cabecera + equipos) para el historial.
+function fotografiarVenta(PDO $pdo, int $ventaId): array {
+    $stmtCab = $pdo->prepare("SELECT folio, cliente, sucursal, fecha_registro FROM ventas WHERE id = ?");
+    $stmtCab->execute([$ventaId]);
+    $cabecera = $stmtCab->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    $stmtDet = $pdo->prepare(
+        "SELECT id, equipo, marca, modelo, numero_serie, garantia, calibracion, servicio, frecuencia_servicio, notas
+         FROM venta_detalles WHERE venta_id = ? ORDER BY id"
+    );
+    $stmtDet->execute([$ventaId]);
+    $cabecera['equipos'] = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
+
+    return $cabecera;
 }
 
 // Mantiene sincronizado el Padron de Equipos (fuente real de "Programadas" y de los
@@ -75,6 +92,8 @@ function sincronizarPadronEquipo(
 }
 
 try {
+    $ventaAntes = fotografiarVenta($pdo, (int)$idVenta);
+
     $pdo->beginTransaction();
 
     // ==========================================
@@ -255,6 +274,9 @@ try {
     }
 
     $pdo->commit();
+
+    registrarAuditoria('ventas', (int)$idVenta, 'UPDATE', $ventaAntes, fotografiarVenta($pdo, (int)$idVenta));
+
     echo json_encode(['exito' => true, 'mensaje' => 'Venta actualizada correctamente con todos sus detalles.']);
 
 } catch (PDOException $e) {

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 ini_set('display_errors', 0); // Ocultar errores HTML para no romper el JSON
 
@@ -15,6 +16,18 @@ try {
     }
 
     $pdo->beginTransaction();
+
+    // Estado anterior para el historial (cabecera + equipos), antes de borrar nada
+    $stmtCabAnterior = $pdo->prepare("SELECT folio, cliente, sucursal, fecha_registro FROM ventas WHERE id = ?");
+    $stmtCabAnterior->execute([$idVenta]);
+    $ventaAnterior = $stmtCabAnterior->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    $stmtDetAnterior = $pdo->prepare(
+        "SELECT equipo, marca, modelo, numero_serie, garantia, calibracion, servicio, frecuencia_servicio
+         FROM venta_detalles WHERE venta_id = ?"
+    );
+    $stmtDetAnterior->execute([$idVenta]);
+    $ventaAnterior['equipos'] = $stmtDetAnterior->fetchAll(PDO::FETCH_ASSOC);
 
     // ==========================================
     // 1. Borrar los archivos físicos del disco duro
@@ -46,6 +59,9 @@ try {
 
     // Si todo salió bien, confirmamos la transacción
     $pdo->commit();
+
+    registrarAuditoria('ventas', (int)$idVenta, 'DELETE', $ventaAnterior, null);
+
     echo json_encode(['exito' => true, 'mensaje' => 'Venta eliminada por completo.']);
 
 } catch (PDOException $e) {

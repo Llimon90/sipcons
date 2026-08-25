@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 header('Content-Type: application/json');
 
 try {
@@ -99,6 +100,8 @@ try {
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta SIPCONS', ?, ?, ?)";
     $stmtPadron = $pdo->prepare($sqlPadron);
 
+    $equiposAuditoria = [];
+
     foreach ($series as $s) {
         $serieLimpia = trim($s);
 
@@ -116,9 +119,30 @@ try {
             $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia,
             $fechaProximaCalibracion, $fechaProximoServicio, $venta_id, $detalle_id, $fecha_venta
         ]);
+
+        $equiposAuditoria[] = [
+            'venta_detalle_id' => $detalle_id,
+            'numero_serie'     => $serieLimpia,
+        ];
     }
 
     $pdo->commit();
+
+    registrarAuditoria('ventas', $venta_id, 'CREATE', null, [
+        'folio'               => $nFolio,
+        'cliente'             => $cliente,
+        'sucursal'            => $_POST['sucursal'],
+        'fecha_venta'         => $fecha_venta,
+        'equipo'              => $_POST['equipo'],
+        'marca'               => $_POST['marca'],
+        'modelo'              => $_POST['modelo'],
+        'garantia'            => $mesesGarantia,
+        'calibracion'         => $mesesCalibracion,
+        'servicio'            => $tieneServicio,
+        'frecuencia_servicio' => $mesesServicio,
+        'equipos'             => $equiposAuditoria,
+    ]);
+
     echo json_encode(['exito' => true, 'folio' => $nFolio]);
 
 } catch (Exception $e) {
