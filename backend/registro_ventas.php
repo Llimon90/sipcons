@@ -91,26 +91,30 @@ try {
     $stmtD = $pdo->prepare($sqlD);
 
     // B. Insertar directo en el Padrón de Equipos
-    $sqlPadron = "INSERT INTO padron_equipos 
-                 (cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, proxima_calibracion, proximo_servicio, origen, venta_id, fecha_registro) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta SIPCONS', ?, ?)";
+    // venta_detalle_id enlaza el equipo con su fila exacta en venta_detalles, para
+    // poder ubicarlo sin ambigüedad al editar la venta (dos equipos sin serie real
+    // pueden compartir numero_serie = 'S/N' dentro de la misma venta).
+    $sqlPadron = "INSERT INTO padron_equipos
+                 (cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, proxima_calibracion, proximo_servicio, origen, venta_id, venta_detalle_id, fecha_registro)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta SIPCONS', ?, ?, ?)";
     $stmtPadron = $pdo->prepare($sqlPadron);
-    
+
     foreach ($series as $s) {
         $serieLimpia = trim($s);
-        
+
         // Guardar detalle de venta
         $stmtD->execute([
-            $venta_id, $_POST['equipo'], $_POST['marca'], $_POST['modelo'], $serieLimpia, 
-            $mesesGarantia, $mesesCalibracion, $tieneServicio, $mesesServicio, 
+            $venta_id, $_POST['equipo'], $_POST['marca'], $_POST['modelo'], $serieLimpia,
+            $mesesGarantia, $mesesCalibracion, $tieneServicio, $mesesServicio,
             $_POST['notas'], $fechaProximaCalibracion, $fechaProximoServicio
         ]);
+        $detalle_id = $pdo->lastInsertId();
 
         // Guardar en Padrón
         $stmtPadron->execute([
-            $cliente, $_POST['sucursal'], $_POST['equipo'], $_POST['marca'], $_POST['modelo'], $serieLimpia, 
-            $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia, 
-            $fechaProximaCalibracion, $fechaProximoServicio, $venta_id, $fecha_venta
+            $cliente, $_POST['sucursal'], $_POST['equipo'], $_POST['marca'], $_POST['modelo'], $serieLimpia,
+            $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia,
+            $fechaProximaCalibracion, $fechaProximoServicio, $venta_id, $detalle_id, $fecha_venta
         ]);
     }
 

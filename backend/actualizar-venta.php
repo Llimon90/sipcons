@@ -9,6 +9,71 @@ if (!$idVenta) {
     exit;
 }
 
+// Mantiene sincronizado el Padron de Equipos (fuente real de "Programadas" y de los
+// tickets automaticos) con lo que se edita en la venta. La venta es el origen: el
+// padron solo refleja lo que aqui se decide, nunca al reves.
+function sincronizarPadronEquipo(
+    PDO $pdo,
+    int $ventaId,
+    int $ventaDetalleId,
+    ?string $numeroSerieAnterior,
+    string $numeroSerieNueva,
+    string $cliente,
+    string $sucursal,
+    string $equipo,
+    string $marca,
+    string $modelo,
+    int $garantia,
+    int $calibracion,
+    int $tieneServicio,
+    int $frecuenciaServicio,
+    string $fechaBase
+): void {
+    $proximaCalibracion = $calibracion > 0 ? date('Y-m-d', strtotime("$fechaBase +$calibracion months")) : null;
+    $proximoServicio = ($tieneServicio && $frecuenciaServicio > 0) ? date('Y-m-d', strtotime("$fechaBase +$frecuenciaServicio months")) : null;
+
+    // Emparejamos primero por venta_detalle_id (exacto, sin ambigüedad). Si el registro
+    // del padrón es anterior a este enlace (todavía no tiene venta_detalle_id), caemos
+    // a buscar por numero_serie como respaldo.
+    $stmtBuscarPorDetalle = $pdo->prepare("SELECT id FROM padron_equipos WHERE venta_detalle_id = ? LIMIT 1");
+    $stmtBuscarPorDetalle->execute([$ventaDetalleId]);
+    $idPadron = $stmtBuscarPorDetalle->fetchColumn();
+
+    if (!$idPadron) {
+        $claveBusqueda = $numeroSerieAnterior ?: $numeroSerieNueva;
+        $stmtBuscarPorSerie = $pdo->prepare("SELECT id FROM padron_equipos WHERE venta_id = ? AND numero_serie = ? AND venta_detalle_id IS NULL LIMIT 1");
+        $stmtBuscarPorSerie->execute([$ventaId, $claveBusqueda]);
+        $idPadron = $stmtBuscarPorSerie->fetchColumn();
+    }
+
+    if ($idPadron) {
+        $stmtActualizar = $pdo->prepare(
+            "UPDATE padron_equipos SET
+                venta_detalle_id = ?, cliente = ?, sucursal = ?, equipo = ?, marca = ?, modelo = ?, numero_serie = ?,
+                calibracion = ?, servicio = ?, frecuencia_servicio = ?, garantia = ?,
+                proxima_calibracion = ?, proximo_servicio = ?
+             WHERE id = ?"
+        );
+        $stmtActualizar->execute([
+            $ventaDetalleId, $cliente, $sucursal, $equipo, $marca, $modelo, $numeroSerieNueva,
+            $calibracion, $tieneServicio, $frecuenciaServicio, $garantia,
+            $proximaCalibracion, $proximoServicio, $idPadron
+        ]);
+    } else {
+        // No existia en el padron (caso raro/defensivo): lo creamos para no perder trazabilidad
+        $stmtCrear = $pdo->prepare(
+            "INSERT INTO padron_equipos
+                (cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, proxima_calibracion, proximo_servicio, origen, venta_id, venta_detalle_id, fecha_registro)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta SIPCONS', ?, ?, ?)"
+        );
+        $stmtCrear->execute([
+            $cliente, $sucursal, $equipo, $marca, $modelo, $numeroSerieNueva,
+            $calibracion, $tieneServicio, $frecuenciaServicio, $garantia,
+            $proximaCalibracion, $proximoServicio, $ventaId, $ventaDetalleId, $fechaBase
+        ]);
+    }
+}
+
 try {
     $pdo->beginTransaction();
 
@@ -19,11 +84,13 @@ try {
     // Capturamos el valor del input "fecha_venta" del HTML
     $fechaVenta = !empty($_POST['fecha_venta']) ? $_POST['fecha_venta'] : null;
 
-    // Consulta SQL completamente limpia de comentarios internos para evitar errores de sintaxis
+    // COALESCE: si el formulario llega sin fecha, conservamos la que ya tenia la venta
+    // en vez de dejarla en NULL (y de paso mantenemos una base de fecha valida para
+    // recalcular las proximas calibraciones/servicios del padron).
     $stmtV = $pdo->prepare("UPDATE ventas SET
         cliente = ?,
         sucursal = ?,
-        fecha_registro = ?,
+        fecha_registro = COALESCE(?, fecha_registro),
         fecha_actualizacion = NOW()
         WHERE id = ?");
 
@@ -33,6 +100,14 @@ try {
         $fechaVenta,
         $idVenta
     ]);
+
+    // Valores finales ya confirmados en BD, para usar como base en la sincronizacion del padron
+    $stmtVentaActual = $pdo->prepare("SELECT cliente, sucursal, fecha_registro FROM ventas WHERE id = ?");
+    $stmtVentaActual->execute([$idVenta]);
+    $ventaActual = $stmtVentaActual->fetch(PDO::FETCH_ASSOC);
+    $clienteFinal = $ventaActual['cliente'];
+    $sucursalFinal = $ventaActual['sucursal'];
+    $fechaBaseFinal = $ventaActual['fecha_registro'];
 
     // ==========================================
     // 2. ACTUALIZAR, INSERTAR O ELIMINAR SERIES DINÁMICAMENTE
@@ -56,26 +131,52 @@ try {
         $stmtInsert = $pdo->prepare("INSERT INTO venta_detalles (venta_id, equipo, marca, modelo, numero_serie, garantia, calibracion, servicio, frecuencia_servicio, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
         if (!empty($seriesRecibidas)) {
+            $garantiaInt = (int)($_POST['garantia'] ?? 0);
+            $calibracionInt = (int)($_POST['calibracion'] ?? 0);
+            $frecuenciaInt = (int)$frecuencia;
+            $serieNueva = null;
+
             foreach ($seriesRecibidas as $s) {
+                $serieNueva = trim($s['serie']);
+
                 if (!empty($s['id_detalle']) && $s['id_detalle'] !== 'nuevo') {
+                    // Capturamos la serie ANTERIOR (antes de sobreescribirla) para poder
+                    // ubicar el equipo correspondiente en el Padrón de Equipos.
+                    $stmtSerieAnterior = $pdo->prepare("SELECT numero_serie FROM venta_detalles WHERE id = ?");
+                    $stmtSerieAnterior->execute([$s['id_detalle']]);
+                    $serieAnterior = $stmtSerieAnterior->fetchColumn() ?: null;
+
                     // ACTUALIZAR serie existente
                     $idsQueSeQuedan[] = $s['id_detalle'];
                     $stmtUpdate->execute([
                         $_POST['equipo'], $_POST['marca'], $_POST['modelo'],
-                        $s['serie'],
-                        $_POST['garantia'] ?? 0, $_POST['calibracion'] ?? 0,
-                        $tieneServicio, $frecuencia, $_POST['notas'] ?? '',
+                        $serieNueva,
+                        $garantiaInt, $calibracionInt,
+                        $tieneServicio, $frecuenciaInt, $_POST['notas'] ?? '',
                         $s['id_detalle']
                     ]);
+
+                    sincronizarPadronEquipo(
+                        $pdo, (int)$idVenta, (int)$s['id_detalle'], $serieAnterior, $serieNueva,
+                        $clienteFinal, $sucursalFinal, $_POST['equipo'], $_POST['marca'], $_POST['modelo'],
+                        $garantiaInt, $calibracionInt, $tieneServicio, $frecuenciaInt, $fechaBaseFinal
+                    );
                 } else {
                     // INSERTAR serie nueva (si la cantidad de equipos aumentó)
                     $stmtInsert->execute([
                         $idVenta,
                         $_POST['equipo'], $_POST['marca'], $_POST['modelo'],
-                        $s['serie'],
-                        $_POST['garantia'] ?? 0, $_POST['calibracion'] ?? 0,
-                        $tieneServicio, $frecuencia, $_POST['notas'] ?? ''
+                        $serieNueva,
+                        $garantiaInt, $calibracionInt,
+                        $tieneServicio, $frecuenciaInt, $_POST['notas'] ?? ''
                     ]);
+                    $nuevoDetalleId = (int)$pdo->lastInsertId();
+
+                    sincronizarPadronEquipo(
+                        $pdo, (int)$idVenta, $nuevoDetalleId, null, $serieNueva,
+                        $clienteFinal, $sucursalFinal, $_POST['equipo'], $_POST['marca'], $_POST['modelo'],
+                        $garantiaInt, $calibracionInt, $tieneServicio, $frecuenciaInt, $fechaBaseFinal
+                    );
                 }
             }
         }
@@ -84,6 +185,24 @@ try {
         $idsAEliminar = array_diff($idsActuales, $idsQueSeQuedan);
         if (!empty($idsAEliminar)) {
             $placeholders = implode(',', array_fill(0, count($idsAEliminar), '?'));
+
+            // Antes de borrar el detalle, quitamos del Padrón el equipo correspondiente:
+            // si ya no forma parte de la venta, tampoco debe seguir programado.
+            // 1) Emparejamiento exacto por venta_detalle_id.
+            $stmtDeletePadronPorDetalle = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_detalle_id IN ($placeholders)");
+            $stmtDeletePadronPorDetalle->execute($idsAEliminar);
+
+            // 2) Respaldo por numero_serie, solo para filas antiguas sin el enlace.
+            $stmtSeriesAEliminar = $pdo->prepare("SELECT numero_serie FROM venta_detalles WHERE id IN ($placeholders)");
+            $stmtSeriesAEliminar->execute($idsAEliminar);
+            $seriesAEliminar = array_filter($stmtSeriesAEliminar->fetchAll(PDO::FETCH_COLUMN));
+
+            if (!empty($seriesAEliminar)) {
+                $placeholdersSeries = implode(',', array_fill(0, count($seriesAEliminar), '?'));
+                $stmtDeletePadron = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_id = ? AND venta_detalle_id IS NULL AND numero_serie IN ($placeholdersSeries)");
+                $stmtDeletePadron->execute(array_merge([$idVenta], array_values($seriesAEliminar)));
+            }
+
             $stmtDelete = $pdo->prepare("DELETE FROM venta_detalles WHERE id IN ($placeholders)");
             $stmtDelete->execute($idsAEliminar);
         }
