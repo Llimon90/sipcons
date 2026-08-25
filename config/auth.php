@@ -5,6 +5,21 @@ if (session_status() === PHP_SESSION_NONE) {
 
     ini_set('session.gc_maxlifetime', $lifetime);
 
+    // En hosting compartido (cPanel), la carpeta de sesiones suele ser
+    // común a todas las cuentas del servidor: si otra app tiene un
+    // gc_maxlifetime más corto, su limpieza puede borrar sesiones de
+    // esta app antes de tiempo. Usamos una carpeta propia (protegida por
+    // .htaccess) para que nuestra configuración de 30 días se respete
+    // siempre. Si no se puede crear/escribir, seguimos con la ruta
+    // por defecto del servidor en vez de romper el login.
+    $sessionPath = __DIR__ . '/../storage/sessions';
+    if (!is_dir($sessionPath)) {
+        @mkdir($sessionPath, 0700, true);
+    }
+    if (is_dir($sessionPath) && is_writable($sessionPath)) {
+        session_save_path($sessionPath);
+    }
+
     session_set_cookie_params([
         'lifetime' => $lifetime,
         'path'     => '/',

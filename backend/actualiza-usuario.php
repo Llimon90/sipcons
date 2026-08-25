@@ -3,6 +3,7 @@
 // 1. Dependencias Críticas
 // ==============================================
 require_once __DIR__ . '/../auth/middleware.php';
+requireRole('Administrador');
 require_once __DIR__ . '/../config/database.php'; // <-- Agregada la conexión a la BD
 
 header('Content-Type: application/json');

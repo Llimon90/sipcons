@@ -13,7 +13,7 @@ header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // --- 1. CONEXIÓN DE BASE DE DATOS ---
-require_once 'conexion.php'; 
+// $conn ya lo provee auth/middleware.php (config/database.php)
 
 // Verifica la conexión
 if (!isset($conn) || $conn->connect_error) {

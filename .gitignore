@@ -1,3 +1,5 @@
 .env
 uploads/
 error_log
+storage/sessions/*
+!storage/sessions/.htaccess

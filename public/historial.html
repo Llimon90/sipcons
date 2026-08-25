@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Cambios</title>
+    <link rel="stylesheet" href="../css/styles.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="../scripts/auth-guard.js"></script>
+</head>
+<body>
+
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">
+        <i class="fas fa-tools"></i>
+        Panel
+      </h2>
+      <button id="toggleSidebar" class="toggle-sidebar">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+
+    <ul>
+      <li>
+        <a href="../index.html" title="Inicio">
+          <i class="fas fa-home"></i>
+          <span class="sidebar-link-text">Inicio</span>
+        </a>
+      </li>
+      <li>
+        <a href="incidencias.html" title="Incidencias">
+          <i class="fas fa-tasks"></i>
+          <span class="sidebar-link-text">Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="reportes.html" title="Buscar Incidencias">
+          <i class="fas fa-search"></i>
+          <span class="sidebar-link-text">Buscar Incidencias</span>
+        </a>
+      </li>
+      <li>
+        <a href="clientes.html" title="Clientes">
+          <i class="fas fa-users"></i>
+          <span class="sidebar-link-text">Clientes</span>
+        </a>
+      </li>
+      <li>
+        <a href="usuarios.html" title="Usuarios">
+          <i class="fas fa-user-friends"></i>
+          <span class="sidebar-link-text">Usuarios</span>
+        </a>
+      </li>
+      <li>
+        <a href="historial.html" title="Historial de cambios" class="active">
+          <i class="fas fa-history"></i>
+          <span class="sidebar-link-text">Historial</span>
+        </a>
+      </li>
+      <li>
+        <a href="soporte.html" title="Soporte Técnico">
+          <i class="fas fa-headset"></i>
+          <span class="sidebar-link-text">Soporte Técnico</span>
+        </a>
+      </li>
+      <li>
+        <a href="ajustes.html" title="Ajustes">
+          <i class="fas fa-cog"></i>
+          <span class="sidebar-link-text">Ajustes</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Historial de cambios</h2>
+      <form id="filtros-historial" class="form-row" style="align-items:flex-end;">
+        <div>
+          <label for="f-tabla">Tabla</label>
+          <select id="f-tabla" name="tabla">
+            <option value="">Todas</option>
+            <option value="incidencias">Incidencias</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-accion">Acción</label>
+          <select id="f-accion" name="accion">
+            <option value="">Todas</option>
+            <option value="CREATE">Creación</option>
+            <option value="UPDATE">Edición</option>
+            <option value="DELETE">Eliminación</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-registro">ID de registro</label>
+          <input type="text" id="f-registro" name="registro_id" placeholder="Ej. 128">
+        </div>
+        <div>
+          <label for="f-desde">Desde</label>
+          <input type="date" id="f-desde" name="desde">
+        </div>
+        <div>
+          <label for="f-hasta">Hasta</label>
+          <input type="date" id="f-hasta" name="hasta">
+        </div>
+        <div>
+          <button type="submit">Filtrar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Movimientos registrados</h2>
+      <table id="tabla-historial">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Acción</th>
+            <th>Tabla</th>
+            <th>Registro</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody id="historial-body">
+          <tr><td colspan="7">Cargando...</td></tr>
+        </tbody>
+      </table>
+
+      <div id="historial-paginacion" style="margin-top:12px; display:flex; gap:8px; align-items:center;"></div>
+    </section>
+  </main>
+
+  <div id="modal-detalle-historial" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background-color:white; margin:5% auto; padding:20px; width:90%; max-width:700px; border-radius:5px; max-height:80vh; overflow-y:auto;">
+      <h2>Detalle del cambio</h2>
+      <div id="detalle-historial-contenido"></div>
+      <button onclick="document.getElementById('modal-detalle-historial').style.display='none'">Cerrar</button>
+    </div>
+  </div>
+
+  <script src="../scripts/sidebar-state.js"></script>
+  <script src="../scripts/historial.js" defer></script>
+</body>
+</html>

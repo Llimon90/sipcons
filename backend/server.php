@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 // DISPARADOR AUTOMÁTICO: Revisa si hay mantenimientos antes de cargar la tabla
 require_once 'generador_tickets.php';
 
@@ -73,7 +74,24 @@ if ($method === "GET") {
     $stmt->bind_param("sssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
 
     if ($stmt->execute()) {
-        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $stmt->insert_id]);
+        $nuevoId = $stmt->insert_id;
+
+        registrarAuditoria('incidencias', $nuevoId, 'CREATE', null, [
+            'id'               => $nuevoId,
+            'numero'           => $data['numero'],
+            'numero_incidente' => $nuevoNumeroIncidente,
+            'cliente'          => $data['cliente'],
+            'contacto'         => $data['contacto'],
+            'sucursal'         => $data['sucursal'],
+            'equipo'           => $data['equipo'] ?? null,
+            'fecha'            => $data['fecha'],
+            'tecnico'          => $data['tecnico'],
+            'estatus'          => $data['status'],
+            'falla'            => $data['falla'],
+            'notas'            => $data['notas'],
+        ]);
+
+        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $nuevoId]);
     } else {
         echo json_encode(["error" => "Error al insertar incidencia"]);
     }

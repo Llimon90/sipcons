@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/audit.php';
 
 if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
@@ -21,6 +22,13 @@ $notas = $_POST['notas'];
 
 // Debug: Verificar el valor de equipo
 error_log("Valor de equipo recibido: " . $equipo);
+
+// Capturar el estado anterior para el historial de auditoría
+$estadoAnteriorStmt = $conn->prepare("SELECT * FROM incidencias WHERE id = ?");
+$estadoAnteriorStmt->bind_param("i", $id);
+$estadoAnteriorStmt->execute();
+$estadoAnterior = $estadoAnteriorStmt->get_result()->fetch_assoc();
+$estadoAnteriorStmt->close();
 
 // Actualizar la incidencia en la base de datos
 $sql = "UPDATE incidencias SET 
@@ -54,6 +62,21 @@ $stmt->bind_param("sssssssssssi",
 );
 
 if ($stmt->execute()) {
+    registrarAuditoria('incidencias', $id, 'UPDATE', $estadoAnterior ?: null, [
+        'id'        => $id,
+        'numero'    => $numero,
+        'cliente'   => $cliente,
+        'contacto'  => $contacto,
+        'sucursal'  => $sucursal,
+        'equipo'    => $equipo,
+        'fecha'     => $fecha,
+        'tecnico'   => $tecnico,
+        'estatus'   => $estatus,
+        'falla'     => $falla,
+        'accion'    => $accion,
+        'notas'     => $notas,
+    ]);
+
     // Manejar la subida de archivos
     if (!empty($_FILES['archivos'])) {
         $uploadDir = '../uploads/';

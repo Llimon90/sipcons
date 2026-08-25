@@ -9,8 +9,8 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 
-// Si tu conexion.php solo declara las variables $host, $user... instanciamos la conexión aquí.
-// Si ya trae $conn instanciado, usamos el existente.
+// $conn ya lo provee auth/middleware.php (config/database.php); este fallback
+// solo cubre el caso de que, por algún motivo, no se haya instanciado.
 if (!isset($conn) || $conn === null) {
     $conn = new mysqli($host, $user, $password, $database);
 }
