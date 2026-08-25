@@ -89,7 +89,7 @@ if ($method === "GET") {
             'estatus'          => $data['status'],
             'falla'            => $data['falla'],
             'notas'            => $data['notas'],
-        ]);
+        ], $nuevoNumeroIncidente);
 
         echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $nuevoId]);
     } else {

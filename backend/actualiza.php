@@ -75,7 +75,7 @@ if ($stmt->execute()) {
         'falla'     => $falla,
         'accion'    => $accion,
         'notas'     => $notas,
-    ]);
+    ], $estadoAnterior['numero_incidente'] ?? null);
 
     // Manejar la subida de archivos
     if (!empty($_FILES['archivos'])) {

@@ -36,7 +36,9 @@ try {
         $params[] = $accion;
     }
     if ($registroId !== '') {
-        $condiciones[] = 'registro_id = ?';
+        // Acepta tanto el id numérico interno como el folio/número visible (VT-00005, SIP-0001)
+        $condiciones[] = '(registro_id = ? OR registro_folio = ?)';
+        $params[] = $registroId;
         $params[] = $registroId;
     }
     if ($desde !== '') {
@@ -56,7 +58,7 @@ try {
 
     // $porPagina/$offset son enteros fijados por el propio servidor (no vienen del usuario sin castear), seguros de interpolar
     $stmt = $pdo->prepare(
-        "SELECT id, usuario_id, usuario_nombre, usuario_rol, accion, tabla, registro_id, datos_anteriores, datos_nuevos, ip_address, creado_en
+        "SELECT id, usuario_id, usuario_nombre, usuario_rol, accion, tabla, registro_id, registro_folio, datos_anteriores, datos_nuevos, ip_address, creado_en
          FROM auditoria $where
          ORDER BY creado_en DESC, id DESC
          LIMIT $porPagina OFFSET $offset"

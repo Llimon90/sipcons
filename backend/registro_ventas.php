@@ -141,7 +141,7 @@ try {
         'servicio'            => $tieneServicio,
         'frecuencia_servicio' => $mesesServicio,
         'equipos'             => $equiposAuditoria,
-    ]);
+    ], $nFolio);
 
     echo json_encode(['exito' => true, 'folio' => $nFolio]);
 

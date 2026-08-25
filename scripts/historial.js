@@ -42,6 +42,10 @@
         return params.toString();
     }
 
+    function identificadorRegistro(registro) {
+        return registro.registro_folio || registro.registro_id;
+    }
+
     function mostrarDetalle(registro) {
         var contenedor = document.getElementById('detalle-historial-contenido');
         var antes = registro.datos_anteriores ? JSON.stringify(registro.datos_anteriores, null, 2) : '(sin datos previos)';
@@ -49,7 +53,7 @@
 
         contenedor.innerHTML =
             '<p><strong>Usuario:</strong> ' + escapeHtml(registro.usuario_nombre || '—') + ' (' + escapeHtml(registro.usuario_rol || '—') + ')</p>' +
-            '<p><strong>Acción:</strong> ' + escapeHtml(etiquetaAccion(registro.accion)) + ' sobre ' + escapeHtml(registro.tabla) + ' #' + escapeHtml(registro.registro_id) + '</p>' +
+            '<p><strong>Acción:</strong> ' + escapeHtml(etiquetaAccion(registro.accion)) + ' sobre ' + escapeHtml(registro.tabla) + ' #' + escapeHtml(identificadorRegistro(registro)) + '</p>' +
             '<p><strong>Fecha:</strong> ' + escapeHtml(formatearFecha(registro.creado_en)) + '</p>' +
             '<p><strong>IP:</strong> ' + escapeHtml(registro.ip_address || '—') + '</p>' +
             '<div class="form-row">' +
@@ -112,7 +116,7 @@
                         '<td>' + escapeHtml(registro.usuario_rol || '—') + '</td>' +
                         '<td>' + escapeHtml(etiquetaAccion(registro.accion)) + '</td>' +
                         '<td>' + escapeHtml(registro.tabla) + '</td>' +
-                        '<td>' + escapeHtml(registro.registro_id) + '</td>' +
+                        '<td>' + escapeHtml(identificadorRegistro(registro)) + '</td>' +
                         '<td><button type="button" class="ver-detalle" data-id="' + escapeHtml(registro.id) + '">Ver</button></td>' +
                         '</tr>';
                 }).join('');

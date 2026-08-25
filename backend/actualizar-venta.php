@@ -275,7 +275,7 @@ try {
 
     $pdo->commit();
 
-    registrarAuditoria('ventas', (int)$idVenta, 'UPDATE', $ventaAntes, fotografiarVenta($pdo, (int)$idVenta));
+    registrarAuditoria('ventas', (int)$idVenta, 'UPDATE', $ventaAntes, fotografiarVenta($pdo, (int)$idVenta), $ventaAntes['folio'] ?? null);
 
     echo json_encode(['exito' => true, 'mensaje' => 'Venta actualizada correctamente con todos sus detalles.']);
 

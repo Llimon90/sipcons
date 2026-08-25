@@ -9,7 +9,8 @@ function registrarAuditoria(
     $registroId,
     string $accion,
     ?array $datosAnteriores,
-    ?array $datosNuevos
+    ?array $datosNuevos,
+    ?string $registroFolio = null
 ): void {
     global $pdo;
 
@@ -21,9 +22,9 @@ function registrarAuditoria(
     try {
         $stmt = $pdo->prepare(
             "INSERT INTO auditoria
-                (usuario_id, usuario_nombre, usuario_rol, accion, tabla, registro_id, datos_anteriores, datos_nuevos, ip_address)
+                (usuario_id, usuario_nombre, usuario_rol, accion, tabla, registro_id, registro_folio, datos_anteriores, datos_nuevos, ip_address)
              VALUES
-                (:usuario_id, :usuario_nombre, :usuario_rol, :accion, :tabla, :registro_id, :datos_anteriores, :datos_nuevos, :ip_address)"
+                (:usuario_id, :usuario_nombre, :usuario_rol, :accion, :tabla, :registro_id, :registro_folio, :datos_anteriores, :datos_nuevos, :ip_address)"
         );
 
         $stmt->execute([
@@ -33,6 +34,7 @@ function registrarAuditoria(
             ':accion'           => $accion,
             ':tabla'            => $tabla,
             ':registro_id'      => $registroId !== null ? (string)$registroId : null,
+            ':registro_folio'   => $registroFolio,
             ':datos_anteriores' => $datosAnteriores !== null ? json_encode($datosAnteriores, JSON_UNESCAPED_UNICODE) : null,
             ':datos_nuevos'     => $datosNuevos !== null ? json_encode($datosNuevos, JSON_UNESCAPED_UNICODE) : null,
             ':ip_address'       => $_SERVER['REMOTE_ADDR'] ?? null,

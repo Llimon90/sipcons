@@ -60,7 +60,7 @@ try {
     // Si todo salió bien, confirmamos la transacción
     $pdo->commit();
 
-    registrarAuditoria('ventas', (int)$idVenta, 'DELETE', $ventaAnterior, null);
+    registrarAuditoria('ventas', (int)$idVenta, 'DELETE', $ventaAnterior, null, $ventaAnterior['folio'] ?? null);
 
     echo json_encode(['exito' => true, 'mensaje' => 'Venta eliminada por completo.']);
 
