@@ -18,5 +18,9 @@ if (ini_get('session.use_cookies')) {
 
 session_destroy();
 
-header('Location: /auth/login.html');
+// Ruta relativa (sin "/" inicial): se resuelve contra la carpeta actual
+// (auth/), donde vive login.html. Usar una ruta absoluta desde la raíz del
+// dominio rompía el redirect cuando el sitio está desplegado en una
+// subcarpeta (p. ej. /apptest), como ocurre en el entorno de pruebas.
+header('Location: login.html');
 exit;
