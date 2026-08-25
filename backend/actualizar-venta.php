@@ -182,29 +182,45 @@ try {
         }
 
         // Eliminar las series que se quitaron en pantalla al reducir la cantidad
-        $idsAEliminar = array_diff($idsActuales, $idsQueSeQuedan);
+        $idsAEliminar = array_values(array_diff($idsActuales, $idsQueSeQuedan));
         if (!empty($idsAEliminar)) {
-            $placeholders = implode(',', array_fill(0, count($idsAEliminar), '?'));
+            // Parámetros nombrados (más robustos que "?" posicionales para listas
+            // IN(...) de tamaño variable): cada id recibe su propia clave :id_del_N.
+            $paramsIds = [];
+            $placeholdersNombrados = [];
+            foreach ($idsAEliminar as $i => $idDetalle) {
+                $clave = ":id_del_$i";
+                $placeholdersNombrados[] = $clave;
+                $paramsIds[$clave] = $idDetalle;
+            }
+            $listaPlaceholders = implode(',', $placeholdersNombrados);
 
             // Antes de borrar el detalle, quitamos del Padrón el equipo correspondiente:
             // si ya no forma parte de la venta, tampoco debe seguir programado.
             // 1) Emparejamiento exacto por venta_detalle_id.
-            $stmtDeletePadronPorDetalle = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_detalle_id IN ($placeholders)");
-            $stmtDeletePadronPorDetalle->execute($idsAEliminar);
+            $stmtDeletePadronPorDetalle = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_detalle_id IN ($listaPlaceholders)");
+            $stmtDeletePadronPorDetalle->execute($paramsIds);
 
             // 2) Respaldo por numero_serie, solo para filas antiguas sin el enlace.
-            $stmtSeriesAEliminar = $pdo->prepare("SELECT numero_serie FROM venta_detalles WHERE id IN ($placeholders)");
-            $stmtSeriesAEliminar->execute($idsAEliminar);
-            $seriesAEliminar = array_filter($stmtSeriesAEliminar->fetchAll(PDO::FETCH_COLUMN));
+            $stmtSeriesAEliminar = $pdo->prepare("SELECT numero_serie FROM venta_detalles WHERE id IN ($listaPlaceholders)");
+            $stmtSeriesAEliminar->execute($paramsIds);
+            $seriesAEliminar = array_values(array_unique(array_filter($stmtSeriesAEliminar->fetchAll(PDO::FETCH_COLUMN))));
 
             if (!empty($seriesAEliminar)) {
-                $placeholdersSeries = implode(',', array_fill(0, count($seriesAEliminar), '?'));
-                $stmtDeletePadron = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_id = ? AND venta_detalle_id IS NULL AND numero_serie IN ($placeholdersSeries)");
-                $stmtDeletePadron->execute(array_merge([$idVenta], array_values($seriesAEliminar)));
+                $paramsSeries = [':venta_id_del' => $idVenta];
+                $placeholdersSeriesNombrados = [];
+                foreach ($seriesAEliminar as $i => $serie) {
+                    $clave = ":serie_del_$i";
+                    $placeholdersSeriesNombrados[] = $clave;
+                    $paramsSeries[$clave] = $serie;
+                }
+                $listaPlaceholdersSeries = implode(',', $placeholdersSeriesNombrados);
+                $stmtDeletePadron = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_id = :venta_id_del AND venta_detalle_id IS NULL AND numero_serie IN ($listaPlaceholdersSeries)");
+                $stmtDeletePadron->execute($paramsSeries);
             }
 
-            $stmtDelete = $pdo->prepare("DELETE FROM venta_detalles WHERE id IN ($placeholders)");
-            $stmtDelete->execute($idsAEliminar);
+            $stmtDelete = $pdo->prepare("DELETE FROM venta_detalles WHERE id IN ($listaPlaceholders)");
+            $stmtDelete->execute($paramsIds);
         }
     }
 
