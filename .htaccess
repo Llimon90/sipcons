@@ -3,3 +3,15 @@
   Header set Pragma "no-cache"
   Header set Expires "0"
 </IfModule>
+
+# Bloquea el acceso web directo a archivos ocultos (.env, .git, etc.).
+# Compatible con Apache 2.2 y 2.4.
+<FilesMatch "^\.">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
