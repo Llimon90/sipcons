@@ -231,6 +231,9 @@
     // Cargar la lista asíncrona de clientes en el Datalist
     cargarClientesEnDatalist();
 
+    // El rol Técnico no puede cerrar incidencias con/sin factura
+    window.sipconsAplicarRestriccionEstatus(document.getElementById("estatus"));
+
     const selectCliente = document.getElementById("cliente");
     const selectCategoria = document.getElementById("equipo");
 

@@ -587,9 +587,12 @@ async function cargarDetalleIncidencia(id) {
         }
 
         document.getElementById("detalle-incidencia").innerHTML = createFormHTML(data);
-        
+
         // Configurar la funcionalidad de múltiples técnicos
         setupTecnicosMultiples();
+
+        // El rol Técnico no puede cerrar incidencias con/sin factura
+        window.sipconsAplicarRestriccionEstatus(document.getElementById("estatus"));
 
         if (data.archivos) {
             cargarArchivosAdjuntos(data.archivos, id);

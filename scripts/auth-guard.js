@@ -13,6 +13,43 @@
     var authPath = inPublic ? '../auth/' : 'auth/';
     var indexPath = inPublic ? '../index.html' : 'index.html';
 
+    // Permite a los scripts de cada página reaccionar al usuario/rol de la
+    // sesión sin repetir el fetch a session_check.php. Si ya está listo,
+    // invoca el callback de inmediato; si no, lo encola.
+    var authState = { ready: false, user: null, modulos: [] };
+    var authReadyCallbacks = [];
+    window.sipconsOnAuthReady = function (callback) {
+        if (authState.ready) {
+            callback(authState);
+        } else {
+            authReadyCallbacks.push(callback);
+        }
+    };
+    function marcarAuthListo(user, modulos) {
+        authState.ready = true;
+        authState.user = user;
+        authState.modulos = modulos;
+        authReadyCallbacks.forEach(function (cb) { cb(authState); });
+        authReadyCallbacks = [];
+    }
+
+    // Deshabilita, en un <select> de estatus de incidencia, las opciones de
+    // cierre (con/sin factura) cuando el rol en sesión es "Técnico". Se deja
+    // la opción visible (por si ya era el valor guardado) pero no elegible.
+    window.sipconsAplicarRestriccionEstatus = function (selectEl) {
+        if (!selectEl) return;
+        window.sipconsOnAuthReady(function (auth) {
+            var rol = auth.user && auth.user.rol;
+            if (rol !== 'Técnico') return;
+            var restringidos = ['Cerrado con factura', 'Cerrado sin factura'];
+            Array.prototype.forEach.call(selectEl.options, function (opt) {
+                if (restringidos.indexOf(opt.value) !== -1) {
+                    opt.disabled = true;
+                }
+            });
+        });
+    };
+
     // Qué módulo (de la tabla permisos_rol) protege cada página. Una página
     // que no aparece aquí (ajustes.html, index.html) es accesible para
     // cualquier usuario con sesión iniciada.
@@ -52,6 +89,8 @@
             var user = data.user || {};
             var displayName = user.nombre || user.usuario || 'Usuario';
             var modulosPermitidos = data.modulos || [];
+
+            marcarAuthListo(user, modulosPermitidos);
 
             function puedeAcceder(pagina) {
                 var modulo = PAGINA_A_MODULO[pagina];
@@ -141,6 +180,7 @@
         })
         .catch(function () {
             // En caso de error de red, mostrar la página igualmente
+            marcarAuthListo(null, []);
             document.documentElement.style.visibility = '';
         });
 })();

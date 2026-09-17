@@ -20,6 +20,13 @@ $falla = $_POST['falla'];
 $accion = $_POST['accion'];
 $notas = $_POST['notas'];
 
+// El rol Técnico no puede cerrar incidencias con/sin factura
+$estatusRestringidosTecnico = ['Cerrado con factura', 'Cerrado sin factura'];
+if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($estatus, $estatusRestringidosTecnico, true)) {
+    http_response_code(403);
+    die(json_encode(["error" => "Tu rol no tiene permiso para cerrar incidencias con/sin factura."]));
+}
+
 // Debug: Verificar el valor de equipo
 error_log("Valor de equipo recibido: " . $equipo);
 

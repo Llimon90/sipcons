@@ -55,6 +55,14 @@ if ($method === "GET") {
         exit();
     }
 
+    // El rol Técnico no puede cerrar incidencias con/sin factura
+    $estatusRestringidosTecnico = ['Cerrado con factura', 'Cerrado sin factura'];
+    if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($data["status"], $estatusRestringidosTecnico, true)) {
+        http_response_code(403);
+        echo json_encode(["error" => "Tu rol no tiene permiso para cerrar incidencias con/sin factura."]);
+        exit();
+    }
+
     // Obtener el último número de incidencia
     $sqlUltimoNumero = "SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1";
     $result = $conn->query($sqlUltimoNumero);
