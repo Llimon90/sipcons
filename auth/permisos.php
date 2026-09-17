@@ -14,10 +14,10 @@ const MODULOS_PERMISOS = ['incidencias', 'reportes', 'clientes', 'ventas', 'usua
 // (es un rol asignable, para quien da mantenimiento al sistema) pero NO
 // aparece en el checklist de privilegios: su acceso total es fijo en el
 // código (ver tienePermiso), no depende de la tabla permisos_rol.
-const ROLES_ASIGNABLES = ['Técnico', 'Administrativo', 'Técnico/Administrativo', 'Técnico/Administrador', 'Administrador', ROL_ACCESO_TOTAL];
+const ROLES_ASIGNABLES = ['Técnico', 'Administrativo', 'Supervisor', 'Técnico/Administrador', 'Administrador', ROL_ACCESO_TOTAL];
 
 // Roles que sí se configuran desde el checklist de Ajustes → Privilegios.
-const ROLES_CONFIGURABLES = ['Técnico', 'Administrativo', 'Técnico/Administrativo', 'Técnico/Administrador', 'Administrador'];
+const ROLES_CONFIGURABLES = ['Técnico', 'Administrativo', 'Supervisor', 'Técnico/Administrador', 'Administrador'];
 
 function tienePermiso(string $modulo): bool {
     global $pdo;
