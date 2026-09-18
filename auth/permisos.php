@@ -76,14 +76,14 @@ function requirePermiso(string $modulo): void {
     }
 }
 
-// Solo Administrador o Programador pueden editar el checklist de privilegios.
+// Solo Administrador, Técnico/Administrador o Programador pueden editar el checklist de privilegios.
 // A propósito NO usa requirePermiso() (que consulta la misma tabla que se
 // va a editar): mantenerlo como chequeo de rol fijo evita que un rol mal
 // configurado pueda auto-otorgarse permisos.
 function requireGestionPrivilegios(): void {
     requireAuth();
     $rol = $_SESSION['rol'] ?? '';
-    if ($rol !== 'Administrador' && $rol !== ROL_ACCESO_TOTAL) {
+    if ($rol !== 'Administrador' && $rol !== 'Técnico/Administrador' && $rol !== ROL_ACCESO_TOTAL) {
         http_response_code(403);
         header('Content-Type: application/json');
         die(json_encode(['error' => 'Acceso denegado']));
