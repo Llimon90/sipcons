@@ -4,132 +4,229 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iniciar sesión — SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
+    :root {
+      --navy-900: #0f1b26;
+      --navy-800: #1a2b3c;
+      --navy-700: #24384c;
+      --blue-600: #2477b8;
+      --blue-500: #2f8fd6;
+      --blue-400: #5aaae3;
+      --ink: #1c2733;
+      --muted: #6b7885;
+      --line: #d8dee5;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1a252f 0%, #2c3e50 50%, #34495e 100%);
+      padding: 24px 16px;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(47,143,214,0.18), transparent 60%),
+        linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 55%, var(--navy-700) 100%);
+      color: var(--ink);
     }
 
-    .login-card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    .login-shell {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
       width: 100%;
-      max-width: 400px;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    }
+
+    /* ---- Panel de marca ---- */
+    .brand-panel {
+      position: relative;
+      padding: 48px 40px;
+      background: linear-gradient(160deg, var(--navy-800) 0%, var(--navy-900) 100%);
+      color: #e8eef3;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 32px;
       overflow: hidden;
     }
 
-    .login-header {
-      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-      padding: 36px 32px 28px;
-      text-align: center;
+    .brand-panel::before {
+      content: "";
+      position: absolute;
+      right: -80px;
+      bottom: -80px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 1px solid rgba(90,170,227,0.25);
+      box-shadow: 0 0 0 40px rgba(90,170,227,0.05), 0 0 0 80px rgba(90,170,227,0.03);
+      pointer-events: none;
     }
 
-    .login-header .logo-icon {
-      width: 60px;
-      height: 60px;
-      background: rgba(52,152,219,0.2);
-      border: 2px solid rgba(52,152,219,0.5);
-      border-radius: 50%;
+    .brand-mark {
       display: flex;
       align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark .cube {
+      width: 64px;
+      height: 64px;
+      padding: 8px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 10px 24px -10px rgba(0,0,0,0.6);
+      flex: none;
+    }
+
+    .brand-mark .cube img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+    .brand-mark .name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      line-height: 1.1;
+    }
+
+    .brand-mark .name small {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      color: rgba(232,238,243,0.6);
+    }
+
+    .form-logo {
+      display: block;
+      width: 200px;
+      max-width: 70%;
+      height: auto;
+      margin-bottom: 28px;
+    }
+
+    .brand-copy h2 {
+      font-size: 1.55rem;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.2px;
+      margin-bottom: 12px;
+      text-wrap: balance;
+    }
+
+    .brand-copy p {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: rgba(232,238,243,0.68);
+    }
+
+    .brand-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: rgba(232,238,243,0.8);
+      position: relative;
+    }
+
+    .brand-points li { display: flex; align-items: center; gap: 10px; }
+    .brand-points i { color: var(--blue-400); width: 16px; text-align: center; }
+
+    /* ---- Panel de formulario ---- */
+    .form-panel {
+      padding: 48px 44px 32px;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
-      margin: 0 auto 16px;
     }
 
-    .login-header .logo-icon i {
+    .form-panel h1 {
       font-size: 1.6rem;
-      color: #3498db;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--ink);
     }
 
-    .login-header h1 {
-      color: #ecf0f1;
-      font-size: 1.6rem;
-      font-weight: 300;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+    .form-panel .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 6px 0 28px;
     }
 
-    .login-header p {
-      color: rgba(236,240,241,0.6);
-      font-size: 0.82rem;
-      margin-top: 6px;
-      letter-spacing: 0.5px;
-    }
-
-    .login-body {
-      padding:32px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
+    .form-group { margin-bottom: 18px; }
 
     .form-group label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      color: #44515e;
+      letter-spacing: 0.3px;
+      margin-bottom: 7px;
     }
 
-    .input-wrapper {
-      position: relative;
-    }
+    .input-wrapper { position: relative; }
 
     .input-wrapper i {
       position: absolute;
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: #aaa;
+      color: #9aa6b2;
       font-size: 0.9rem;
+      transition: color 0.2s;
     }
+
+    .input-wrapper:focus-within > i:not(.toggle-password) { color: var(--blue-500); }
 
     .input-wrapper input {
       width: 100%;
       padding: 12px 14px 12px 40px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      font: inherit;
       font-size: 0.95rem;
-      color: #333;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--ink);
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
       outline: none;
     }
 
+    .input-wrapper input::placeholder { color: #a3adb8; }
+
     .input-wrapper input:focus {
-      border-color: #3498db;
-      box-shadow: 0 0 0 3px rgba(52,152,219,0.12);
+      border-color: var(--blue-500);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(47,143,214,0.14);
     }
 
     .input-wrapper .toggle-password {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
       left: auto;
+      right: 14px;
       cursor: pointer;
-      color: #aaa;
-      transition: color 0.2s;
     }
 
-    .input-wrapper .toggle-password:hover { color: #3498db; }
+    .input-wrapper .toggle-password:hover { color: var(--blue-500); }
 
     .error-msg {
       display: none;
       background: #fdf2f2;
       border: 1px solid #f5c6cb;
-      color: #c0392b;
-      border-radius: 8px;
+      color: #b8322a;
+      border-radius: 10px;
       padding: 10px 14px;
       font-size: 0.85rem;
       margin-bottom: 18px;
@@ -141,24 +238,28 @@
 
     .btn-login {
       width: 100%;
+      margin-top: 6px;
       padding: 13px;
-      background: linear-gradient(135deg, #2980b9, #3498db);
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
       color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 1rem;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 0.98rem;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 8px 20px -8px rgba(36,119,184,0.7);
+      transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
 
-    .btn-login:hover:not(:disabled) { opacity: 0.92; }
+    .btn-login:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgba(36,119,184,0.85); }
     .btn-login:active:not(:disabled) { transform: scale(0.99); }
+    .btn-login:focus-visible { outline: 3px solid rgba(47,143,214,0.4); outline-offset: 2px; }
     .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
 
     .spinner {
@@ -174,26 +275,52 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .login-footer {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid #eaeef2;
       text-align: center;
-      padding: 0 32px 24px;
-      font-size: 0.78rem;
-      color: #aaa;
+      font-size: 0.76rem;
+      color: #9aa6b2;
+    }
+
+    @media (max-width: 760px) {
+      .login-shell { grid-template-columns: 1fr; max-width: 440px; }
+      .brand-panel { display: none; }
+      .form-panel { padding: 32px 28px 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body>
 
-<div class="login-card">
-  <div class="login-header">
-    <div class="logo-icon">
-      <i class="fas fa-shield-halved"></i>
+<div class="login-shell">
+  <aside class="brand-panel">
+    <div class="brand-mark">
+      <div class="cube"><img src="../img/favicon.png" alt="" /></div>
+      <div class="name">SIPCONS<small>Soluciones Integrales de Pesaje y Control</small></div>
     </div>
-    <h1>SIPCONS</h1>
-    <p>Sistema de gestión de servicios</p>
-  </div>
 
-  <div class="login-body">
-    <div class="error-msg" id="errorMsg">
+    <div class="brand-copy">
+      <h2>Gestión integral de servicios e incidencias</h2>
+      <p>Seguimiento de incidencias, clientes, ventas y soporte técnico en una sola plataforma.</p>
+    </div>
+
+    <ul class="brand-points">
+      <li><i class="fas fa-clipboard-check"></i> Control de incidencias en tiempo real</li>
+      <li><i class="fas fa-user-shield"></i> Accesos por rol y trazabilidad</li>
+      <li><i class="fas fa-chart-line"></i> Estadísticas para la toma de decisiones</li>
+    </ul>
+  </aside>
+
+  <main class="form-panel">
+    <img class="form-logo" src="../img/logo-sipcons.png" alt="SIPCONS — Soluciones Integrales de Pesaje y Control, S.A. de C.V." />
+    <h1>Bienvenido</h1>
+    <p class="subtitle">Ingresa tus credenciales para acceder al sistema.</p>
+
+    <div class="error-msg" id="errorMsg" role="alert">
       <i class="fas fa-circle-exclamation"></i>
       <span id="errorText">Usuario o contraseña incorrectos</span>
     </div>
@@ -236,11 +363,11 @@
         <span id="btnText">Iniciar sesión</span>
       </button>
     </form>
-  </div>
 
-  <div class="login-footer">
-    &copy; <span id="year"></span> SIPCONS &mdash; Acceso restringido
-  </div>
+    <div class="login-footer">
+      &copy; <span id="year"></span> SIPCONS &mdash; Acceso restringido a personal autorizado
+    </div>
+  </main>
 </div>
 
 <script>
