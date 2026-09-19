@@ -22,7 +22,6 @@
       --muted: #7f98b2;
       --blue: #4a9fe0;
       --blue-deep: #1f6fb5;
-      --plate: #dfe8f2;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,19 +49,13 @@
       box-shadow: 0 28px 70px -20px rgba(0,0,0,0.6);
     }
 
-    .logo-plate {
-      background: var(--plate);
-      border-radius: 12px;
-      padding: 18px 20px;
-      margin-bottom: 28px;
-    }
-
     .logo {
       display: block;
       width: 240px;
       max-width: 100%;
       height: auto;
-      margin: 0 auto;
+      margin: 4px auto 32px;
+      filter: brightness(2.2) drop-shadow(0 2px 10px rgba(74,159,224,0.25));
     }
 
     .form-group { margin-bottom: 16px; }
@@ -181,9 +174,7 @@
 <body>
 
 <main class="login-card">
-  <div class="logo-plate">
-    <img class="logo" src="../img/logo-sipcons.png" alt="SIPCONS — Soluciones Integrales de Pesaje y Control, S.A. de C.V." />
-  </div>
+  <img class="logo" src="../img/logo-sipcons.png" alt="SIPCONS — Soluciones Integrales de Pesaje y Control, S.A. de C.V." />
 
   <div class="error-msg" id="errorMsg" role="alert">
     <i class="fas fa-circle-exclamation"></i>
