@@ -13,11 +13,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
     :root {
-      --navy: #0f4c81;
-      --navy-dark: #0b3a63;
-      --blue: #2f8fd6;
-      --ink: #1c2733;
-      --line: #d8dee5;
+      --bg: #0c1826;
+      --card: #14273d;
+      --field: #1b3350;
+      --field-focus: #203d5e;
+      --line: #2b4766;
+      --text: #dbe6f2;
+      --muted: #7f98b2;
+      --blue: #4a9fe0;
+      --blue-deep: #1f6fb5;
+      --plate: #dfe8f2;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,26 +35,34 @@
       justify-content: center;
       padding: 24px 16px;
       background:
-        radial-gradient(900px 500px at 50% -10%, rgba(47,143,214,0.10), transparent 65%),
-        #eef2f6;
-      color: var(--ink);
+        radial-gradient(900px 500px at 50% -10%, rgba(74,159,224,0.16), transparent 65%),
+        linear-gradient(160deg, #0a1522 0%, var(--bg) 55%, #10233a 100%);
+      color: var(--text);
     }
 
     .login-card {
       width: 100%;
       max-width: 400px;
-      background: #fff;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 16px;
-      padding: 44px 36px 36px;
-      box-shadow: 0 1px 2px rgba(15,40,70,0.06), 0 24px 60px -20px rgba(15,40,70,0.25);
+      padding: 32px 32px 32px;
+      box-shadow: 0 28px 70px -20px rgba(0,0,0,0.6);
+    }
+
+    .logo-plate {
+      background: var(--plate);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
     }
 
     .logo {
       display: block;
-      width: 260px;
+      width: 240px;
       max-width: 100%;
       height: auto;
-      margin: 0 auto 36px;
+      margin: 0 auto;
     }
 
     .form-group { margin-bottom: 16px; }
@@ -61,7 +74,7 @@
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: #9aa6b2;
+      color: var(--muted);
       font-size: 0.9rem;
       transition: color 0.2s;
     }
@@ -75,18 +88,24 @@
       border-radius: 10px;
       font: inherit;
       font-size: 0.95rem;
-      color: var(--ink);
-      background: #f8fafc;
+      color: var(--text);
+      background: var(--field);
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
       outline: none;
     }
 
-    .input-wrapper input::placeholder { color: #a3adb8; }
+    .input-wrapper input::placeholder { color: var(--muted); }
 
     .input-wrapper input:focus {
       border-color: var(--blue);
-      background: #fff;
-      box-shadow: 0 0 0 4px rgba(47,143,214,0.14);
+      background: var(--field-focus);
+      box-shadow: 0 0 0 4px rgba(74,159,224,0.18);
+    }
+
+    .input-wrapper input:-webkit-autofill {
+      -webkit-text-fill-color: var(--text);
+      -webkit-box-shadow: 0 0 0 100px var(--field) inset;
+      caret-color: var(--text);
     }
 
     .input-wrapper .toggle-password {
@@ -99,9 +118,9 @@
 
     .error-msg {
       display: none;
-      background: #fdf2f2;
-      border: 1px solid #f5c6cb;
-      color: #b8322a;
+      background: rgba(217,83,79,0.12);
+      border: 1px solid rgba(217,83,79,0.4);
+      color: #f0a5a2;
       border-radius: 10px;
       padding: 10px 14px;
       font-size: 0.85rem;
@@ -116,7 +135,7 @@
       width: 100%;
       margin-top: 8px;
       padding: 13px;
-      background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+      background: linear-gradient(135deg, var(--blue-deep), var(--blue));
       color: #fff;
       border: none;
       border-radius: 10px;
@@ -125,7 +144,7 @@
       font-weight: 600;
       letter-spacing: 0.3px;
       cursor: pointer;
-      box-shadow: 0 8px 20px -8px rgba(15,76,129,0.7);
+      box-shadow: 0 8px 20px -8px rgba(74,159,224,0.55);
       transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
       display: flex;
       align-items: center;
@@ -133,9 +152,9 @@
       gap: 8px;
     }
 
-    .btn-login:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgba(15,76,129,0.85); }
+    .btn-login:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgba(74,159,224,0.8); }
     .btn-login:active:not(:disabled) { transform: scale(0.99); }
-    .btn-login:focus-visible { outline: 3px solid rgba(47,143,214,0.4); outline-offset: 2px; }
+    .btn-login:focus-visible { outline: 3px solid rgba(74,159,224,0.5); outline-offset: 2px; }
     .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
 
     .spinner {
@@ -151,7 +170,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 440px) {
-      .login-card { padding: 36px 24px 28px; }
+      .login-card { padding: 24px 22px 26px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -162,7 +181,9 @@
 <body>
 
 <main class="login-card">
-  <img class="logo" src="../img/logo-sipcons.png" alt="SIPCONS — Soluciones Integrales de Pesaje y Control, S.A. de C.V." />
+  <div class="logo-plate">
+    <img class="logo" src="../img/logo-sipcons.png" alt="SIPCONS — Soluciones Integrales de Pesaje y Control, S.A. de C.V." />
+  </div>
 
   <div class="error-msg" id="errorMsg" role="alert">
     <i class="fas fa-circle-exclamation"></i>
