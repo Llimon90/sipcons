@@ -75,9 +75,9 @@
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado
     document.documentElement.style.visibility = 'hidden';
 
-    fetch(authPath + 'session_check.php')
+    fetch(authPath + 'session_check.php', { cache: 'no-store', credentials: 'same-origin' })
         .then(function (r) {
-            if (r.status === 401) {
+            if (!r.ok) {
                 window.location.replace(authPath + 'login.html');
                 return null;
             }
@@ -179,8 +179,7 @@
             }
         })
         .catch(function () {
-            // En caso de error de red, mostrar la página igualmente
-            marcarAuthListo(null, []);
-            document.documentElement.style.visibility = '';
+            // Falla cerrado: sin poder verificar la sesión no se muestra nada
+            window.location.replace(authPath + 'login.html');
         });
 })();
