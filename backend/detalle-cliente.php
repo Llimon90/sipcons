@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../config/contactos_cliente.php';
 header('Content-Type: application/json');
 
 
@@ -23,6 +24,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $cliente = $result->fetch_assoc();
+    $cliente['contactos_detalle'] = obtenerContactosCliente((int)$cliente['id']);
     echo json_encode($cliente);
 } else {
     echo json_encode(['error' => 'Cliente no encontrado']);

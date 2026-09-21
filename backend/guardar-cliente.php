@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/../config/contactos_cliente.php';
 // Conexión a la base de datos
 
 if ($conn->connect_error) {
@@ -29,8 +30,14 @@ $nombre = $_POST['nombre'] ?? '';
 $rfc = $_POST['rfc'] ?? '';
 $direccion = $_POST['direccion'] ?? '';
 $telefono = $_POST['telefono'] ?? '';
-$contactos = $_POST['contactos'] ?? '';
 $email = $_POST['email'] ?? '';
+
+// Contactos: lista JSON [{nombre, telefono, email}] (o, por compatibilidad,
+// el texto "Juan; Pedro"). clientes.contactos guarda solo los nombres.
+$listaContactos = isset($_POST['contactos_json'])
+    ? normalizarContactos($_POST['contactos_json'])
+    : normalizarContactos(array_map(fn($n) => ['nombre' => $n], array_filter(array_map('trim', explode(';', $_POST['contactos'] ?? '')))));
+$contactos = contactosComoTexto($listaContactos);
 
 if (empty($nombre) || empty($contactos) ) {
     echo json_encode(['success' => false, 'message' => 'Nombre y contacto son obligatorios']);
@@ -50,12 +57,15 @@ $sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email
         VALUES ('$nombre', '$rfc', '$direccion', '$telefono', '$contactos', '$email')";
 
 if ($conn->query($sql) === TRUE) {
-    registrarAuditoria('clientes', $conn->insert_id, 'CREATE', null, [
+    $nuevoId = $conn->insert_id;
+    sincronizarContactosCliente($nuevoId, $listaContactos);
+    registrarAuditoria('clientes', $nuevoId, 'CREATE', null, [
         'nombre'    => $nombre,
         'rfc'       => $rfc,
         'direccion' => $direccion,
         'telefono'  => $telefono,
         'contactos' => $contactos,
+        'contactos_detalle' => $listaContactos,
         'email'     => $email,
     ]);
     echo json_encode(['success' => true]);

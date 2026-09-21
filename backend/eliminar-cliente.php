@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/../config/contactos_cliente.php';
 header('Content-Type: application/json');
 
 
@@ -40,6 +41,8 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $id);
 
 if ($stmt->execute()) {
+    $anterior['contactos_detalle'] = obtenerContactosCliente((int)$id);
+    sincronizarContactosCliente((int)$id, []);
     registrarAuditoria('clientes', $id, 'DELETE', $anterior, null);
     echo json_encode(['success' => true]);
 } else {

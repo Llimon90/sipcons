@@ -34,7 +34,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('edit-rfc').value = cliente.rfc || '';
         document.getElementById('edit-direccion').value = cliente.direccion || '';
         document.getElementById('edit-telefono').value = cliente.telefono || '';
-        editorContactos.set(cliente.contactos);
+        // Si el cliente aún no tiene filas en cliente_contactos, se muestran
+        // los nombres del texto viejo y al guardar se crean las filas.
+        editorContactos.set(
+            (cliente.contactos_detalle && cliente.contactos_detalle.length)
+                ? cliente.contactos_detalle
+                : cliente.contactos
+        );
         document.getElementById('edit-email').value = cliente.email || '';
 
         cargarEquipos(cliente.nombre);
