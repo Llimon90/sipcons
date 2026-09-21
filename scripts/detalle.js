@@ -228,7 +228,23 @@ async function configurarClienteYContacto(clienteOriginal) {
     }
 
     inputCliente.addEventListener('input', () => { validarCliente(); actualizarContactos(); });
-    inputCliente.addEventListener('change', actualizarContactos);
+    // Al cambiar de cliente, un contacto que no pertenece al nuevo cliente se
+    // limpia para que no se guarde uno ajeno (el campo es obligatorio).
+    let clienteAnterior = String(clienteOriginal || '').trim().toUpperCase();
+    inputCliente.addEventListener('change', () => {
+        actualizarContactos();
+        const actual = inputCliente.value.trim().toUpperCase();
+        if (actual === clienteAnterior) return;
+        clienteAnterior = actual;
+
+        const lista = contactosPorCliente[actual];
+        const contacto = inputContacto.value.trim().toLowerCase();
+        if (lista && contacto && !lista.some(n => n.toLowerCase() === contacto)) {
+            inputContacto.value = '';
+            showNotification('El contacto no pertenece al nuevo cliente; selecciona quién reporta.', 'error');
+            inputContacto.focus();
+        }
+    });
 
     try {
         const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: 'no-store' });

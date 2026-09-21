@@ -271,7 +271,21 @@
     });
 
     selectCliente.addEventListener('input', actualizarContactos);
-    selectCliente.addEventListener('change', actualizarContactos);
+    // Al cambiar de cliente, un contacto que no pertenece al nuevo cliente se limpia
+    let clienteAnterior = '';
+    selectCliente.addEventListener('change', function() {
+      actualizarContactos();
+      const actual = this.value.trim().toUpperCase();
+      if (actual === clienteAnterior) return;
+      clienteAnterior = actual;
+
+      const inputContacto = document.getElementById('contacto');
+      const lista = contactosPorCliente[actual];
+      const contacto = inputContacto.value.trim().toLowerCase();
+      if (lista && contacto && !lista.some(n => n.toLowerCase() === contacto)) {
+        inputContacto.value = '';
+      }
+    });
 
     // 3. BLINDAJE: Validación estricta para impedir clientes inventados o errores tipográficos
     selectCliente.addEventListener('input', function() {
