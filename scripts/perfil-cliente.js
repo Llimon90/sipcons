@@ -2,6 +2,10 @@
 let equiposPadron = []; 
 
 document.addEventListener("DOMContentLoaded", async () => {
+    const editorContactos = SipconsContactos.init(
+        document.getElementById('edit-contactos-editor'),
+        document.getElementById('edit-contactos')
+    );
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get('id');
 
@@ -30,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById('edit-rfc').value = cliente.rfc || '';
         document.getElementById('edit-direccion').value = cliente.direccion || '';
         document.getElementById('edit-telefono').value = cliente.telefono || '';
-        document.getElementById('edit-contactos').value = cliente.contactos || '';
+        editorContactos.set(cliente.contactos);
         document.getElementById('edit-email').value = cliente.email || '';
 
         cargarEquipos(cliente.nombre);

@@ -71,8 +71,9 @@
 
         <div class="form-row">
           <div>
-            <label for="contactos">Contactos:</label>
-            <input type="text" id="contactos" name="contactos" placeholder="Ejemplo: Juan Pérez; Pedro López; etc">
+            <label>Contactos:</label>
+            <div id="contactos-editor"></div>
+            <input type="hidden" id="contactos" name="contactos">
           </div>
           <div>
             <label for="email">E-mail:</label>
@@ -112,6 +113,8 @@
   
   <script src="../scripts/sidebar-state.js"></script>
   <!-- ACTUALIZA ESTE SCRIPT PARA QUE HAGA REDIRECCIÓN EN LUGAR DE ABRIR MODAL -->
+  <script src="../scripts/contactos-widget.js?v=1"></script>
+  <script>SipconsContactos.init(document.getElementById('contactos-editor'), document.getElementById('contactos'));</script>
   <script src="../scripts/carga-clientes.js?v=6"></script> 
   <script src="../scripts/script-clientes.js?v=7"></script>
 </body>

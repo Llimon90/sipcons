@@ -9,6 +9,7 @@
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css?v=1.15">
+  <script src="../scripts/contactos-widget.js?v=1"></script>
   <script src="../scripts/script.js?v=7" defer></script>
   <script src="../scripts/auth-guard.js?v=2"></script>
 </head>
@@ -103,7 +104,8 @@
       
           <div>
             <label for="contacto">Reporta</label>
-            <input type="text" id="contacto" name="contacto" required placeholder="Persona que reporta incidencia">
+            <input type="text" id="contacto" name="contacto" list="lista-contactos" required autocomplete="off" placeholder="Selecciona o escribe quién reporta">
+            <datalist id="lista-contactos"></datalist>
           </div>
         </div>
 
@@ -201,6 +203,20 @@
 <script>
   // Arreglo global de control para validar consistencia de clientes
   let clientesValidos = [];
+  // nombre de cliente (mayúsculas) -> lista de contactos
+  let contactosPorCliente = {};
+
+  // Llena el desplegable "Reporta" con los contactos del cliente elegido
+  function actualizarContactos() {
+      const datalist = document.getElementById('lista-contactos');
+      const clave = document.getElementById('cliente').value.trim().toUpperCase();
+      datalist.innerHTML = '';
+      (contactosPorCliente[clave] || []).forEach(nombre => {
+          const option = document.createElement('option');
+          option.value = nombre;
+          datalist.appendChild(option);
+      });
+  }
 
   // Función asíncrona para poblar el datalist con los datos reales del backend
   async function cargarClientesEnDatalist() {
@@ -211,7 +227,8 @@
           const datalist = document.getElementById('lista-clientes');
           if (datalist) {
               datalist.innerHTML = ''; 
-              clientesValidos = []; 
+              clientesValidos = [];
+              contactosPorCliente = {};
 
               clientes.forEach(cliente => {
                   const option = document.createElement('option');
@@ -220,6 +237,7 @@
                   
                   // Indexamos el nombre en mayúsculas para la validación estricta posterior
                   clientesValidos.push(cliente.nombre.trim().toUpperCase());
+                  contactosPorCliente[cliente.nombre.trim().toUpperCase()] = SipconsContactos.parsear(cliente.contactos);
               });
           }
       } catch (error) {
@@ -251,6 +269,9 @@
         selectCategoria.value = "Distribuidora el Florido";
       }
     });
+
+    selectCliente.addEventListener('input', actualizarContactos);
+    selectCliente.addEventListener('change', actualizarContactos);
 
     // 3. BLINDAJE: Validación estricta para impedir clientes inventados o errores tipográficos
     selectCliente.addEventListener('input', function() {
