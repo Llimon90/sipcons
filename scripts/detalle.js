@@ -186,6 +186,97 @@ async function cargarArchivosAdjuntos(archivos, id) {
     }
 }
 
+function escapeAttr(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+// Roles que pueden eliminar incidencias (el backend vuelve a validarlo)
+const ROLES_ELIMINAR_INCIDENCIA = ['Administrador', 'Técnico/Administrador', 'Programador'];
+
+// Cliente (mayúsculas) -> contactos, para los desplegables de cliente y "reporta"
+let contactosPorCliente = {};
+let clientesValidos = [];
+
+async function configurarClienteYContacto(clienteOriginal) {
+    const inputCliente = document.getElementById('cliente');
+    const inputContacto = document.getElementById('contacto');
+    const datalistClientes = document.getElementById('lista-clientes');
+    const datalistContactos = document.getElementById('lista-contactos');
+
+    function actualizarContactos() {
+        const clave = inputCliente.value.trim().toUpperCase();
+        datalistContactos.innerHTML = '';
+        (contactosPorCliente[clave] || []).forEach(nombre => {
+            const option = document.createElement('option');
+            option.value = nombre;
+            datalistContactos.appendChild(option);
+        });
+    }
+
+    // Un cliente distinto al original debe existir en el catálogo. El original
+    // se respeta aunque ya no exista (incidencias antiguas), para no bloquear el guardado.
+    function validarCliente() {
+        const valor = inputCliente.value.trim().toUpperCase();
+        const permitido = !valor
+            || valor === String(clienteOriginal || '').trim().toUpperCase()
+            || clientesValidos.includes(valor);
+        inputCliente.setCustomValidity(permitido ? '' : 'El cliente escrito no existe. Selecciona un cliente válido de la lista.');
+    }
+
+    inputCliente.addEventListener('input', () => { validarCliente(); actualizarContactos(); });
+    inputCliente.addEventListener('change', actualizarContactos);
+
+    try {
+        const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: 'no-store' });
+        const clientes = await response.json();
+        if (!Array.isArray(clientes)) return;
+
+        clientes.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente.nombre;
+            datalistClientes.appendChild(option);
+
+            const clave = cliente.nombre.trim().toUpperCase();
+            clientesValidos.push(clave);
+            contactosPorCliente[clave] = SipconsContactos.parsear(cliente.contactos);
+        });
+
+        validarCliente();
+        actualizarContactos();
+    } catch (error) {
+        console.error('Error al cargar clientes:', error);
+    }
+}
+
+async function eliminarIncidencia(id, folio) {
+    if (!confirm(`¿Eliminar definitivamente la incidencia ${folio || id}?\n\nSe borrará de la base de datos. El movimiento quedará registrado en el historial.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('../backend/eliminar-incidencia.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'No se pudo eliminar la incidencia');
+        }
+
+        showNotification('Incidencia eliminada correctamente');
+        setTimeout(() => { window.location.href = 'incidencias.html'; }, 1200);
+    } catch (error) {
+        console.error('Error al eliminar incidencia:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
 // Funciones relacionadas con el formulario
 function createFormHTML(data) {
     // Convertir técnico existente en array si no lo es
@@ -202,14 +293,16 @@ function createFormHTML(data) {
                 </div>&nbsp; &nbsp;
                 <div style="flex: 1;">
                     <label>CLIENTE:</label>&nbsp;
-                    <input type="text" id="cliente" value="${data.cliente || ''}" required style="width: 100%;">
+                    <input type="text" id="cliente" list="lista-clientes" autocomplete="off" placeholder="Escribe para buscar cliente..." value="${escapeAttr(data.cliente)}" required style="width: 100%;">
+                    <datalist id="lista-clientes"></datalist>
                 </div>&nbsp;&nbsp;
             </div>
 
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                 <div style="flex: 1;">
                     <label>CONTACTO:</label>
-                    <input type="text" id="contacto" value="${data.contacto || ''}" required style="width: 100%;">
+                    <input type="text" id="contacto" list="lista-contactos" autocomplete="off" placeholder="Selecciona o escribe quién reporta" value="${escapeAttr(data.contacto)}" required style="width: 100%;">
+                    <datalist id="lista-contactos"></datalist>
                 </div>
                 <div style="flex: 1;">
                     <label>SUCURSAL:</label>
@@ -333,6 +426,9 @@ ${tecnicosIniciales.length === 0 ? `
 
             <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Guardar cambios
+            </button>
+            <button type="button" id="btn-eliminar-incidencia" style="display: none; margin-left: 10px; padding: 10px 20px; background-color: #c0392b; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                <i class="fas fa-trash-alt"></i> Eliminar incidencia
             </button>
         </form>
 
@@ -590,6 +686,19 @@ async function cargarDetalleIncidencia(id) {
 
         // Configurar la funcionalidad de múltiples técnicos
         setupTecnicosMultiples();
+
+        // Desplegables escribibles de cliente y de quien reporta
+        configurarClienteYContacto(data.cliente);
+
+        // Botón de eliminar: solo visible para administradores
+        const btnEliminar = document.getElementById('btn-eliminar-incidencia');
+        window.sipconsOnAuthReady(function (auth) {
+            const rol = auth.user && auth.user.rol;
+            if (ROLES_ELIMINAR_INCIDENCIA.includes(rol)) {
+                btnEliminar.style.display = 'inline-block';
+                btnEliminar.addEventListener('click', () => eliminarIncidencia(id, data.numero_incidente));
+            }
+        });
 
         // El rol Técnico no puede cerrar incidencias con/sin factura
         window.sipconsAplicarRestriccionEstatus(document.getElementById("estatus"));
