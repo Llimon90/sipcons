@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/login_log.php';
 
 header('Content-Type: application/json');
 
@@ -13,6 +14,7 @@ $usuario  = trim($_POST['usuario'] ?? '');
 $password = $_POST['password'] ?? '';
 
 if (empty($usuario) || empty($password)) {
+    logLoginEvent('FALLO', $usuario, 'campos vacios');
     http_response_code(400);
     die(json_encode(['success' => false, 'message' => 'Usuario y contraseña son requeridos']));
 }
@@ -27,6 +29,7 @@ $user   = $result->fetch_assoc();
 $stmt->close();
 
 if (!$user || !password_verify($password, $user['password'])) {
+    logLoginEvent('FALLO', $usuario, $user ? 'password incorrecto' : 'usuario inexistente');
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Usuario o contraseña incorrectos']));
 }
@@ -37,6 +40,8 @@ $_SESSION['user_id'] = $user['id'];
 $_SESSION['nombre']  = $user['nombre'];
 $_SESSION['usuario'] = $user['usuario'];
 $_SESSION['rol']     = $user['rol'];
+
+logLoginEvent('OK', $user['usuario'], 'rol=' . $user['rol']);
 
 echo json_encode([
     'success'  => true,

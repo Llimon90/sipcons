@@ -3,3 +3,5 @@ uploads/
 error_log
 storage/sessions/*
 !storage/sessions/.htaccess
+storage/logs/*
+!storage/logs/.htaccess

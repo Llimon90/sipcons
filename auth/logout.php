@@ -1,5 +1,10 @@
 <?php
 require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/login_log.php';
+
+if (!empty($_SESSION['usuario'])) {
+    logLoginEvent('LOGOUT', $_SESSION['usuario']);
+}
 
 $_SESSION = [];
 
