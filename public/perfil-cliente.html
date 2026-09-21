@@ -97,14 +97,15 @@
                         <input type="text" id="edit-direccion" name="direccion" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                     </div>
                     <div>
-                        <label>Contactos</label>
-                        <div id="edit-contactos-editor"></div>
-                        <input type="hidden" id="edit-contactos" name="contactos_json">
-                    </div>
-                    <div>
                         <label>Email</label>
                         <input type="email" id="edit-email" name="email" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                     </div>
+                </div>
+
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #f1f5f9;">
+                    <h4 style="margin: 0 0 15px 0; color:#34495e; text-align:left;"><i class="fas fa-address-book"></i> Contactos</h4>
+                    <div id="edit-contactos-editor"></div>
+                    <input type="hidden" id="edit-contactos" name="contactos_json">
                 </div>
             </form>
         </div>
@@ -227,7 +228,7 @@
   </div>
 
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/contactos-widget.js?v=2"></script>
+  <script src="../scripts/contactos-widget.js?v=3"></script>
   <script src="../scripts/perfil-cliente.js?v=6"></script>
 </body>
 </html>

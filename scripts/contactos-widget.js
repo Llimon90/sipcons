@@ -15,7 +15,23 @@
       .filter(Boolean);
   }
 
-  const ESTILO_INPUT = 'width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;';
+  // Estilos propios: la hoja global da formato a table/thead/tr/button y
+  // descuadraría el editor, por eso se usa una cuadrícula de divs.
+  function inyectarEstilos() {
+    if (document.getElementById('ctc-estilos')) return;
+    const st = document.createElement('style');
+    st.id = 'ctc-estilos';
+    st.textContent =
+      '.ctc-fila{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.6fr) 40px;gap:12px;align-items:center;margin-bottom:10px;}' +
+      '.ctc-cab{font-size:0.85rem;font-weight:600;color:#7f8c8d;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;}' +
+      '.ctc-fila input{margin:0;}' +
+      '.ctc-quitar{background:none !important;box-shadow:none !important;transform:none !important;color:#c0392b;font-size:1.5rem;line-height:1;padding:0 !important;width:40px;height:40px;border-radius:50% !important;}' +
+      '.ctc-quitar:hover{background:#fdecea !important;}' +
+      '.ctc-add{background:#eaf2f8 !important;color:#2980b9 !important;border:1px dashed #2980b9 !important;box-shadow:none !important;transform:none !important;padding:10px 18px !important;font-size:0.95rem !important;}' +
+      '.ctc-add:hover{background:#d6eaf8 !important;}' +
+      '@media (max-width:700px){.ctc-cab{display:none;}.ctc-fila{grid-template-columns:1fr 40px;padding-bottom:10px;border-bottom:1px solid #e5e8eb;}.ctc-fila>*:nth-child(1),.ctc-fila>*:nth-child(2),.ctc-fila>*:nth-child(3){grid-column:1;}.ctc-fila>.ctc-quitar{grid-column:2;grid-row:1;}}';
+    document.head.appendChild(st);
+  }
 
   window.SipconsContactos = {
     parsear,
@@ -23,16 +39,11 @@
     init(contenedor, oculto) {
       let filas = [];
 
+      inyectarEstilos();
       contenedor.innerHTML =
-        '<div style="overflow-x:auto;">' +
-          '<table style="width:100%;border-collapse:collapse;">' +
-            '<thead><tr style="text-align:left;font-size:0.85rem;color:#555;">' +
-              '<th style="padding:2px 4px;">Nombre</th><th style="padding:2px 4px;">Teléfono</th><th style="padding:2px 4px;">Email</th><th></th>' +
-            '</tr></thead>' +
-            '<tbody class="ctc-filas"></tbody>' +
-          '</table>' +
-        '</div>' +
-        '<button type="button" class="ctc-add" style="margin-top:6px;background:#2980b9;color:#fff;border:none;border-radius:5px;padding:6px 14px;cursor:pointer;">+ Agregar contacto</button>';
+        '<div class="ctc-fila ctc-cab"><span>Nombre</span><span>Teléfono</span><span>Email</span><span></span></div>' +
+        '<div class="ctc-filas"></div>' +
+        '<button type="button" class="ctc-add">+ Agregar contacto</button>';
 
       const tbody = contenedor.querySelector('.ctc-filas');
       const btnAdd = contenedor.querySelector('.ctc-add');
@@ -45,44 +56,39 @@
       }
 
       function celda(fila, campo, tipo, placeholder) {
-        const td = document.createElement('td');
-        td.style.padding = '2px 4px';
         const input = document.createElement('input');
         input.type = tipo;
+        if (campo === 'telefono') input.setAttribute('inputmode', 'tel');
         input.placeholder = placeholder;
         input.value = fila[campo];
-        input.style.cssText = ESTILO_INPUT;
         input.addEventListener('input', () => { fila[campo] = input.value; sincronizar(); });
         // Enter no debe enviar el formulario: agrega una fila nueva
         input.addEventListener('keydown', e => {
           if (e.key === 'Enter') { e.preventDefault(); agregar(true); }
         });
-        td.appendChild(input);
-        return td;
+        return input;
       }
 
       function pintar(enfocarUltima) {
         tbody.innerHTML = '';
         filas.forEach((fila, i) => {
-          const tr = document.createElement('tr');
+          const tr = document.createElement('div');
+          tr.className = 'ctc-fila';
           tr.appendChild(celda(fila, 'nombre', 'text', 'Nombre del contacto'));
-          tr.appendChild(celda(fila, 'telefono', 'tel', 'Con clave lada'));
+          tr.appendChild(celda(fila, 'telefono', 'text', 'Teléfono con clave lada'));
           tr.appendChild(celda(fila, 'email', 'email', 'correo@dominio.com'));
 
-          const td = document.createElement('td');
-          td.style.padding = '2px 4px';
           const x = document.createElement('button');
           x.type = 'button';
+          x.className = 'ctc-quitar';
           x.textContent = '×';
           x.title = 'Quitar contacto';
-          x.style.cssText = 'border:none;background:none;cursor:pointer;color:#c0392b;font-size:1.2rem;line-height:1;';
           x.addEventListener('click', () => { filas.splice(i, 1); pintar(); });
-          td.appendChild(x);
-          tr.appendChild(td);
+          tr.appendChild(x);
           tbody.appendChild(tr);
         });
         if (enfocarUltima && filas.length) {
-          const inputs = tbody.querySelectorAll('tr:last-child input');
+          const inputs = tbody.querySelectorAll('.ctc-fila:last-child input');
           if (inputs[0]) inputs[0].focus();
         }
         sincronizar();

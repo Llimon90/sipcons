@@ -71,14 +71,15 @@
 
         <div class="form-row">
           <div>
-            <label>Contactos:</label>
-            <div id="contactos-editor"></div>
-            <input type="hidden" id="contactos" name="contactos_json">
-          </div>
-          <div>
             <label for="email">E-mail:</label>
             <input type="text" id="email" name="email" placeholder="Ejemplo: cliente@dominio.com">
           </div>
+        </div>
+
+        <div style="margin: 10px 0 20px;">
+          <label>Contactos:</label>
+          <div id="contactos-editor"></div>
+          <input type="hidden" id="contactos" name="contactos_json">
         </div>
         
         <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar Cliente</button>
@@ -113,7 +114,7 @@
   
   <script src="../scripts/sidebar-state.js"></script>
   <!-- ACTUALIZA ESTE SCRIPT PARA QUE HAGA REDIRECCIÓN EN LUGAR DE ABRIR MODAL -->
-  <script src="../scripts/contactos-widget.js?v=2"></script>
+  <script src="../scripts/contactos-widget.js?v=3"></script>
   <script>SipconsContactos.init(document.getElementById('contactos-editor'), document.getElementById('contactos'));</script>
   <script src="../scripts/carga-clientes.js?v=6"></script> 
   <script src="../scripts/script-clientes.js?v=7"></script>
