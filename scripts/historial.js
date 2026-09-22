@@ -29,6 +29,15 @@
         return String(valor);
     }
 
+    // El id interno de la base de datos no aporta nada al leer el historial:
+    // no se muestra en ninguno de los dos paneles.
+    var CLAVES_OCULTAS = ['id'];
+
+    // Identificadores que el propio sistema genera (SIP-0001, VT-00005) y que
+    // nadie puede editar a mano: sí se muestran (para saber de qué registro se
+    // trata), pero nunca se sombrean como "modificado".
+    var CLAVES_SIN_RESALTAR = ['numero_incidente', 'folio'];
+
     function formatearFecha(valor) {
         if (!valor) return '';
         var fecha = new Date(valor.replace(' ', 'T'));
@@ -92,12 +101,13 @@
         var claves = [];
         Object.keys(despues || {}).forEach(function (k) { if (claves.indexOf(k) === -1) claves.push(k); });
         Object.keys(antes || {}).forEach(function (k) { if (claves.indexOf(k) === -1) claves.push(k); });
+        claves = claves.filter(function (k) { return CLAVES_OCULTAS.indexOf(k) === -1; });
 
         // Si es una creación o una eliminación completa, no hay "otro lado" con
         // el que comparar: no tiene sentido sombrear todo el panel como
         // "modificado", así que solo se resalta cuando existen los dos lados.
         var cambiados = (antes && despues) ? claves.filter(function (k) {
-            return JSON.stringify(antes[k]) !== JSON.stringify(despues[k]);
+            return CLAVES_SIN_RESALTAR.indexOf(k) === -1 && JSON.stringify(antes[k]) !== JSON.stringify(despues[k]);
         }) : [];
 
         contenedor.innerHTML =
