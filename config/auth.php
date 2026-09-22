@@ -1,4 +1,12 @@
 <?php
+// La operación es en Tijuana (Baja California), no en el huso horario por
+// defecto del hosting (normalmente CDMX). Se fija aquí porque este archivo
+// se carga en prácticamente todas las páginas y endpoints (incluido
+// auth/logout.php, que no pasa por config/database.php), así que date()/time()
+// en PHP siempre usan la hora local. date_default_timezone_set() es seguro de
+// llamar más de una vez si config/database.php también lo hace.
+date_default_timezone_set('America/Tijuana');
+
 if (session_status() === PHP_SESSION_NONE) {
     // 30 días: la sesión persiste hasta que el usuario cierre sesión explícitamente
     $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 2592000);

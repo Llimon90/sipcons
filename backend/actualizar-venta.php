@@ -246,12 +246,13 @@ try {
     // ==========================================
     // 3. SUBIR ARCHIVOS NUEVOS
     // ==========================================
+    $archivosAgregadosVenta = [];
     if (isset($_FILES['nuevos_facturas']) && !empty($_FILES['nuevos_facturas']['name'][0])) {
-        
+
         $infoVenta = $pdo->query("SELECT folio, cliente FROM ventas WHERE id = $idVenta")->fetch(PDO::FETCH_ASSOC);
         $carpetaLimpia = preg_replace('/[^A-Za-z0-9_\-]/', '_', $infoVenta['cliente']);
         $uploadDir = "../uploads/ventas/{$carpetaLimpia}/";
-        
+
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -268,6 +269,7 @@ try {
 
                 if (move_uploaded_file($_FILES['nuevos_facturas']['tmp_name'][$k], $rutaCompleta)) {
                     $stmtArch->execute([$idVenta, $nomOriginal, $rutaCompleta, $tipo]);
+                    $archivosAgregadosVenta[] = $nomOriginal;
                 }
             }
         }
@@ -275,7 +277,13 @@ try {
 
     $pdo->commit();
 
-    registrarAuditoria('ventas', (int)$idVenta, 'UPDATE', $ventaAntes, fotografiarVenta($pdo, (int)$idVenta), $ventaAntes['folio'] ?? null);
+    // Nombres de los archivos agregados en este mismo cambio, para que se vean
+    // en el panel "Después" del historial (fotografiarVenta no los incluye).
+    $datosNuevosVenta = fotografiarVenta($pdo, (int)$idVenta);
+    if ($archivosAgregadosVenta) {
+        $datosNuevosVenta['archivos_agregados'] = $archivosAgregadosVenta;
+    }
+    registrarAuditoria('ventas', (int)$idVenta, 'UPDATE', $ventaAntes, $datosNuevosVenta, $ventaAntes['folio'] ?? null);
 
     echo json_encode(['exito' => true, 'mensaje' => 'Venta actualizada correctamente con todos sus detalles.']);
 

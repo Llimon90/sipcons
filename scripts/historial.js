@@ -12,8 +12,21 @@
     }
 
     function etiquetaAccion(accion) {
-        var mapa = { CREATE: 'Creación', UPDATE: 'Edición', DELETE: 'Eliminación' };
+        var mapa = { CREATE: 'Creación', UPDATE: 'Edición', DELETE: 'Eliminación', ARCHIVO_ELIMINADO: 'Archivo eliminado' };
         return mapa[accion] || accion;
+    }
+
+    // "numero_incidente" -> "Numero incidente" (los nombres de columna no
+    // tienen una traducción centralizada; esto alcanza para que se lean bien).
+    function humanizarClave(clave) {
+        var texto = String(clave).replace(/_/g, ' ');
+        return texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
+    function formatearValor(valor) {
+        if (valor === null || valor === undefined || valor === '') return '—';
+        if (typeof valor === 'object') return JSON.stringify(valor, null, 2);
+        return String(valor);
     }
 
     function formatearFecha(valor) {
@@ -46,10 +59,46 @@
         return registro.registro_folio || registro.registro_id;
     }
 
+    // Construye un panel (Antes o Después) con una fila por campo. "cambiados"
+    // es el conjunto de llaves que difieren entre antes y después: esas filas
+    // se sombrean para que salten a la vista sin tener que comparar a mano.
+    function panelCampos(datos, claves, cambiados, vacioTexto) {
+        if (!datos) {
+            return '<p style="color:#7f8c8d; font-style:italic;">' + escapeHtml(vacioTexto) + '</p>';
+        }
+        return '<div style="border:1px solid #e0e0e0; border-radius:4px; overflow:hidden;">' +
+            claves.map(function (clave) {
+                var tieneValor = Object.prototype.hasOwnProperty.call(datos, clave);
+                if (!tieneValor) return '';
+                var cambio = cambiados.indexOf(clave) !== -1;
+                var estilo = 'padding:6px 10px; border-bottom:1px solid #eee;' +
+                    (cambio ? ' background:#fff6da; border-left:3px solid #e6a817;' : ' border-left:3px solid transparent;');
+                return '<div style="' + estilo + '">' +
+                    '<div style="font-size:0.78rem; color:#7f8c8d; text-transform:uppercase; letter-spacing:.02em;">' + escapeHtml(humanizarClave(clave)) + (cambio ? ' · modificado' : '') + '</div>' +
+                    '<pre style="margin:2px 0 0; white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:0.92rem;">' + escapeHtml(formatearValor(datos[clave])) + '</pre>' +
+                    '</div>';
+            }).join('') +
+            '</div>';
+    }
+
     function mostrarDetalle(registro) {
         var contenedor = document.getElementById('detalle-historial-contenido');
-        var antes = registro.datos_anteriores ? JSON.stringify(registro.datos_anteriores, null, 2) : '(sin datos previos)';
-        var despues = registro.datos_nuevos ? JSON.stringify(registro.datos_nuevos, null, 2) : '(sin datos nuevos)';
+        var antes = registro.datos_anteriores || null;
+        var despues = registro.datos_nuevos || null;
+
+        // Únion de llaves de ambos lados, en un orden estable (primero las de
+        // "después", que suele ser el objeto más completo; luego las que solo
+        // estaban "antes", como un campo eliminado del registro).
+        var claves = [];
+        Object.keys(despues || {}).forEach(function (k) { if (claves.indexOf(k) === -1) claves.push(k); });
+        Object.keys(antes || {}).forEach(function (k) { if (claves.indexOf(k) === -1) claves.push(k); });
+
+        // Si es una creación o una eliminación completa, no hay "otro lado" con
+        // el que comparar: no tiene sentido sombrear todo el panel como
+        // "modificado", así que solo se resalta cuando existen los dos lados.
+        var cambiados = (antes && despues) ? claves.filter(function (k) {
+            return JSON.stringify(antes[k]) !== JSON.stringify(despues[k]);
+        }) : [];
 
         contenedor.innerHTML =
             '<p><strong>Usuario:</strong> ' + escapeHtml(registro.usuario_nombre || '—') + ' (' + escapeHtml(registro.usuario_rol || '—') + ')</p>' +
@@ -57,8 +106,8 @@
             '<p><strong>Fecha:</strong> ' + escapeHtml(formatearFecha(registro.creado_en)) + '</p>' +
             '<p><strong>IP:</strong> ' + escapeHtml(registro.ip_address || '—') + '</p>' +
             '<div class="form-row">' +
-            '<div><label>Antes</label><pre style="background:#f4f4f4; padding:10px; border-radius:4px; overflow:auto; max-height:300px;">' + escapeHtml(antes) + '</pre></div>' +
-            '<div><label>Después</label><pre style="background:#f4f4f4; padding:10px; border-radius:4px; overflow:auto; max-height:300px;">' + escapeHtml(despues) + '</pre></div>' +
+            '<div><label>Antes</label>' + panelCampos(antes, claves, cambiados, '(registro nuevo, no existía antes)') + '</div>' +
+            '<div><label>Después</label>' + panelCampos(despues, claves, cambiados, '(registro eliminado)') + '</div>' +
             '</div>';
 
         document.getElementById('modal-detalle-historial').style.display = 'block';

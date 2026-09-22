@@ -16,6 +16,16 @@ function loadEnv(string $path): void {
 
 loadEnv(__DIR__ . '/../.env');
 
+// La operación es en Tijuana (Baja California), no en el huso horario por
+// defecto del hosting (normalmente CDMX). Se fija aquí, en el punto central
+// por el que pasa casi toda la app, para que date()/time() en PHP y
+// NOW()/CURRENT_TIMESTAMP() en MySQL (incluida la columna auditoria.creado_en)
+// coincidan con la hora local. Se usa el offset numérico (-08:00/-07:00 según
+// horario de verano) en vez del nombre de la zona porque no todo hosting
+// compartido tiene cargadas las tablas de huso horario con nombre de MySQL.
+date_default_timezone_set('America/Tijuana');
+$offsetTijuana = (new DateTime('now', new DateTimeZone('America/Tijuana')))->format('P');
+
 $host     = $_ENV['DB_HOST'] ?? 'localhost';
 $user     = $_ENV['DB_USER'] ?? '';
 $password = $_ENV['DB_PASS'] ?? '';
@@ -27,12 +37,14 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
 }
 $conn->set_charset('utf8mb4');
+@$conn->query("SET time_zone = '$offsetTijuana'");
 
 // Conexión PDO (compatibilidad con archivos existentes)
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8mb4", $user, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    try { $pdo->exec("SET time_zone = '$offsetTijuana'"); } catch (PDOException $e) { error_log('No se pudo fijar time_zone en PDO: ' . $e->getMessage()); }
 } catch (PDOException $e) {
     die(json_encode(['error' => 'Error de conexión PDO: ' . $e->getMessage()]));
 }
@@ -59,6 +71,8 @@ class Database {
                     PDO::ATTR_EMULATE_PREPARES   => false,
                 ]
             );
+            $offset = (new DateTime('now', new DateTimeZone('America/Tijuana')))->format('P');
+            $this->conn->exec("SET time_zone = '$offset'");
         } catch (PDOException $e) {
             error_log("Error de conexión: " . $e->getMessage());
             throw new Exception("Error de conexión a la base de datos");

@@ -4,6 +4,7 @@
 // ==============================================
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../config/database.php'; // <-- Esta línea conecta $pdo
+require_once __DIR__ . '/../auth/audit.php';
 
 header('Content-Type: application/json');
 ini_set('display_errors', 0); // 0 en producción por seguridad
@@ -68,20 +69,43 @@ try {
     // ==============================================
     // 5. Eliminar registro de la BD según el módulo
     // ==============================================
+    // Para el historial: a quién (folio) e identificar el archivo se captura
+    // antes de borrar, aquí ya no hay de dónde sacarlo.
+    $folioAuditoria = null;
+    $registroIdAuditoria = null;
+
     if ($modulo === 'incidencias') {
+        $registroIdAuditoria = $idReferencia;
+        $stmtFolio = $pdo->prepare("SELECT numero_incidente FROM incidencias WHERE id = ?");
+        $stmtFolio->execute([$idReferencia]);
+        $folioAuditoria = $stmtFolio->fetchColumn() ?: null;
+
         $sql = "DELETE FROM archivos_incidencias WHERE incidencia_id = ? AND ruta_archivo LIKE ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idReferencia, '%' . $nombreArchivo]);
-        
+
         // FIX DE RUTAS: Ruta magnética relativa al archivo actual
         // No importa si la carpeta se llama app o apptest, siempre subirá un nivel y entrará a uploads
         $rutaCompleta = __DIR__ . '/../uploads/' . $nombreArchivo;
-    } 
+    }
     else if ($modulo === 'ventas') {
+        // $idTabla es el id propio de venta_archivos, no el de la venta.
+        $stmtInfo = $pdo->prepare("SELECT venta_id, nombre_archivo FROM venta_archivos WHERE id = ?");
+        $stmtInfo->execute([$idTabla]);
+        $infoArchivoVenta = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+        $nombreArchivo = $infoArchivoVenta['nombre_archivo'] ?? basename($rutaArchivo);
+
+        if ($infoArchivoVenta) {
+            $registroIdAuditoria = (int)$infoArchivoVenta['venta_id'];
+            $stmtFolio = $pdo->prepare("SELECT folio FROM ventas WHERE id = ?");
+            $stmtFolio->execute([$infoArchivoVenta['venta_id']]);
+            $folioAuditoria = $stmtFolio->fetchColumn() ?: null;
+        }
+
         $sql = "DELETE FROM venta_archivos WHERE id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$idTabla]);
-        
+
         $rutaCompleta = $rutaArchivo;
     }
 
@@ -123,6 +147,10 @@ try {
     // 7. Confirmar transacción
     // ==============================================
     $pdo->commit();
+
+    if ($registroIdAuditoria !== null) {
+        registrarAuditoria($modulo, $registroIdAuditoria, 'ARCHIVO_ELIMINADO', ['archivo' => $nombreArchivo], null, $folioAuditoria);
+    }
 
     echo json_encode([
         'success' => true,

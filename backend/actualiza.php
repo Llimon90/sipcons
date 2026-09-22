@@ -69,22 +69,9 @@ $stmt->bind_param("sssssssssssi",
 );
 
 if ($stmt->execute()) {
-    registrarAuditoria('incidencias', $id, 'UPDATE', $estadoAnterior ?: null, [
-        'id'        => $id,
-        'numero'    => $numero,
-        'cliente'   => $cliente,
-        'contacto'  => $contacto,
-        'sucursal'  => $sucursal,
-        'equipo'    => $equipo,
-        'fecha'     => $fecha,
-        'tecnico'   => $tecnico,
-        'estatus'   => $estatus,
-        'falla'     => $falla,
-        'accion'    => $accion,
-        'notas'     => $notas,
-    ], $estadoAnterior['numero_incidente'] ?? null);
-
-    // Manejar la subida de archivos
+    // Manejar la subida de archivos antes de auditar, para poder incluir sus
+    // nombres en el mismo registro de historial (se ven en el panel "Después").
+    $archivosAgregados = [];
     if (!empty($_FILES['archivos'])) {
         $uploadDir = '../uploads/';
         if (!is_dir($uploadDir)) {
@@ -101,9 +88,29 @@ if ($stmt->execute()) {
                 $stmt2->bind_param("is", $id, $uploadFilePath);
                 $stmt2->execute();
                 $stmt2->close();
+                $archivosAgregados[] = $fileName;
             }
         }
     }
+
+    $datosNuevos = [
+        'id'        => $id,
+        'numero'    => $numero,
+        'cliente'   => $cliente,
+        'contacto'  => $contacto,
+        'sucursal'  => $sucursal,
+        'equipo'    => $equipo,
+        'fecha'     => $fecha,
+        'tecnico'   => $tecnico,
+        'estatus'   => $estatus,
+        'falla'     => $falla,
+        'accion'    => $accion,
+        'notas'     => $notas,
+    ];
+    if ($archivosAgregados) {
+        $datosNuevos['archivos_agregados'] = $archivosAgregados;
+    }
+    registrarAuditoria('incidencias', $id, 'UPDATE', $estadoAnterior ?: null, $datosNuevos, $estadoAnterior['numero_incidente'] ?? null);
 
     echo json_encode(["success" => true]);
 } else {

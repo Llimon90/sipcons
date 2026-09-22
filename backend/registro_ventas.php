@@ -54,6 +54,7 @@ try {
     $venta_id = $pdo->lastInsertId();
 
     // 3. Procesar Archivos (Facturas)
+    $archivosAgregados = [];
     if (isset($_FILES['facturas']) && !empty($_FILES['facturas']['name'][0])) {
         $carpetaLimpia = preg_replace('/[^A-Za-z0-9_\-]/', '_', $cliente);
         $uploadDir = "../uploads/ventas/{$carpetaLimpia}/";
@@ -71,6 +72,7 @@ try {
 
                 if (move_uploaded_file($_FILES['facturas']['tmp_name'][$k], $rutaCompleta)) {
                     $stmtArch->execute([$venta_id, $nomOriginal, $rutaCompleta, $tipo]);
+                    $archivosAgregados[] = $nomOriginal;
                 }
             }
         }
@@ -128,7 +130,7 @@ try {
 
     $pdo->commit();
 
-    registrarAuditoria('ventas', $venta_id, 'CREATE', null, [
+    $datosVentaNueva = [
         'folio'               => $nFolio,
         'cliente'             => $cliente,
         'sucursal'            => $_POST['sucursal'],
@@ -141,7 +143,11 @@ try {
         'servicio'            => $tieneServicio,
         'frecuencia_servicio' => $mesesServicio,
         'equipos'             => $equiposAuditoria,
-    ], $nFolio);
+    ];
+    if ($archivosAgregados) {
+        $datosVentaNueva['archivos_agregados'] = $archivosAgregados;
+    }
+    registrarAuditoria('ventas', $venta_id, 'CREATE', null, $datosVentaNueva, $nFolio);
 
     echo json_encode(['exito' => true, 'folio' => $nFolio]);
 
