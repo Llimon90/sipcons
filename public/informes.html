@@ -480,6 +480,39 @@
 
         .drilldown-table tbody tr:hover { background: var(--surface-alt); }
 
+        .insights-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .insights-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--surface-alt);
+            border-radius: var(--border-radius-sm);
+            font-size: 14px;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .insights-list li i {
+            color: var(--accent-color);
+            font-size: 8px;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .insights-list li.insights-empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
         .drilldown-link {
             color: var(--accent-color);
             font-weight: 700;
@@ -580,7 +613,8 @@
 
     <!-- Pestañas para diferentes vistas -->
     <div class="tabs">
-      <button class="tab active" data-tab="overview">Resumen General</button>
+      <button class="tab active" data-tab="direccion">Dirección</button>
+      <button class="tab" data-tab="overview">Resumen General</button>
       <button class="tab" data-tab="incidencias">Análisis de Incidencias</button>
       <button class="tab" data-tab="tecnicos">Rendimiento de Técnicos</button>
     </div>
@@ -645,8 +679,67 @@
       </div>
     </div>
 
+    <!-- Contenido de pestaña: Dirección (vista ejecutiva) -->
+    <div class="tab-content active" id="direccion-tab">
+      <div class="stats-grid" id="statsDireccion">
+        <div class="stat-card">
+          <h3><i class="fas fa-layer-group"></i> Total Incidencias</h3>
+          <div class="stat-value">
+            <span id="direccionTotal">0</span>
+            <i class="fas fa-clipboard-list stat-icon"></i>
+          </div>
+          <div class="stat-change">
+            <i class="fas fa-chart-line"></i>
+            <span id="direccionTendencia">+0% vs periodo anterior</span>
+          </div>
+        </div>
+        <div class="stat-card stat-card--warning">
+          <h3><i class="fas fa-shield-alt"></i> SLA de Cierre</h3>
+          <div class="stat-value">
+            <span id="direccionSla">N/D</span>
+            <i class="fas fa-shield-alt stat-icon"></i>
+          </div>
+          <div class="stat-subtext">Meta: cierre en 7 días o menos</div>
+        </div>
+        <div class="stat-card stat-card--info">
+          <h3><i class="fas fa-clock"></i> Tiempo de Cierre</h3>
+          <div class="stat-value">
+            <span id="direccionCierre">N/D</span>
+            <i class="fas fa-flag-checkered stat-icon"></i>
+          </div>
+          <div class="stat-subtext">Mediana del periodo</div>
+        </div>
+        <div class="stat-card stat-card--success">
+          <h3><i class="fas fa-file-invoice-dollar"></i> Cerradas con Factura</h3>
+          <div class="stat-value">
+            <span id="direccionFacturadas">0</span>
+            <i class="fas fa-file-invoice stat-icon"></i>
+          </div>
+          <div class="stat-subtext">Incidencias facturadas en el periodo</div>
+        </div>
+        <div class="stat-card stat-card--warning">
+          <h3><i class="fas fa-rotate-left"></i> Reincidencias</h3>
+          <div class="stat-value">
+            <span id="direccionReabiertas">0</span>
+            <i class="fas fa-rotate-left stat-icon"></i>
+          </div>
+          <div class="stat-subtext">Reabiertas tras haberse cerrado</div>
+        </div>
+      </div>
+
+      <div class="chart-container full-width">
+        <div class="chart-title"><span><i class="fas fa-lightbulb"></i> Lecturas del periodo</span></div>
+        <ul class="insights-list" id="direccionInsights"></ul>
+      </div>
+
+      <div class="chart-container full-width">
+        <div class="chart-title"><span>Cumplimiento de SLA por Sucursal</span></div>
+        <canvas id="chartSlaSucursal" height="260"></canvas>
+      </div>
+    </div>
+
     <!-- Contenido de pestaña: Resumen General -->
-    <div class="tab-content active" id="overview-tab">
+    <div class="tab-content" id="overview-tab">
       <!-- Estadísticas Generales -->
       <div class="stats-grid" id="statsGeneral">
         <div class="stat-card">
@@ -967,6 +1060,6 @@
   </div>
 
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/estadisticas.js?v=12"></script>
+  <script src="../scripts/estadisticas.js?v=13"></script>
 </body>
 </html>

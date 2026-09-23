@@ -177,6 +177,7 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             ],
         ],
         'por_tecnico' => [],
+        'por_sucursal' => [],
     ];
 
     if (empty($filas)) {
@@ -205,6 +206,7 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
     $reabiertas = 0;
     $porIncidencia = [];
     $cierrePorTecnico = []; // tecnico => [horas, ...]
+    $cierrePorSucursal = []; // sucursal => [horas, ...]
 
     foreach ($filas as $fila) {
         $id = (string)$fila['id'];
@@ -247,6 +249,10 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             foreach (separarTecnicos($fila['tecnico'] ?? '') as $tecnico) {
                 $cierrePorTecnico[$tecnico][] = $cierreHoras;
             }
+            $sucursal = trim($fila['sucursal'] ?? '');
+            if ($sucursal !== '') {
+                $cierrePorSucursal[$sucursal][] = $cierreHoras;
+            }
         }
         if ($seReabrio) $reabiertas++;
 
@@ -283,6 +289,17 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
         ];
     }
 
+    $porSucursal = [];
+    foreach ($cierrePorSucursal as $sucursal => $horas) {
+        $dentroSla = array_filter($horas, fn($h) => $h <= SLA_CIERRE_HORAS);
+        $porSucursal[$sucursal] = [
+            'muestras' => count($horas),
+            'cierre_mediana_horas' => mediana($horas),
+            'cierre_promedio_horas' => promedio($horas),
+            'sla_pct' => round((count($dentroSla) / count($horas)) * 100, 1),
+        ];
+    }
+
     return [
         'por_incidencia' => $porIncidencia,
         'agregado' => [
@@ -299,6 +316,7 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             'cierre_buckets' => $buckets,
         ],
         'por_tecnico' => $porTecnico,
+        'por_sucursal' => $porSucursal,
     ];
 }
 
@@ -427,7 +445,7 @@ switch ($action) {
         $modo = $_GET['modo'] ?? 'estatus';
 
         if ($modo === 'reabiertas') {
-            $sql_dataset = "SELECT id, fecha, estatus, tecnico FROM {$tabla_incidencias} i {$filtros_where}";
+            $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
             $dataset = ejecutarConsulta($conn, $sql_dataset);
             $porIncidencia = analizarTiemposIncidencias($pdo, $dataset)['por_incidencia'];
             $idsReabiertas = array_keys(array_filter($porIncidencia, fn($x) => $x['reabierta']));
@@ -527,7 +545,7 @@ switch ($action) {
         $top_fallas = ejecutarConsulta($conn, $sql_fallas);
 
         // 8. Tiempos reales de respuesta y cierre, calculados desde auditoria
-        $sql_dataset = "SELECT id, fecha, estatus, tecnico FROM {$tabla_incidencias} i {$filtros_where}";
+        $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
         $dataset = ejecutarConsulta($conn, $sql_dataset);
         $analisis_tiempos = analizarTiemposIncidencias($pdo, $dataset)['agregado'];
 
@@ -598,7 +616,7 @@ switch ($action) {
         $data_incidencias['por_equipo'] = ejecutarConsulta($conn, $sql_equipos);
 
         // Gráfico 7: Distribución real de tiempos de cierre (reemplaza el chart de "prioridad" que no existía en BD)
-        $sql_dataset = "SELECT id, fecha, estatus, tecnico FROM {$tabla_incidencias} i {$filtros_where}";
+        $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
         $dataset = ejecutarConsulta($conn, $sql_dataset);
         $data_incidencias['cierre_buckets'] = analizarTiemposIncidencias($pdo, $dataset)['agregado']['cierre_buckets'];
 
@@ -609,7 +627,7 @@ switch ($action) {
     case 'estadisticas_tecnicos':
         $estadisticas_tecnicos = calcularEstadisticasTecnicos($conn, $filtros_where);
 
-        $sql_dataset = "SELECT id, fecha, estatus, tecnico FROM {$tabla_incidencias} i {$filtros_where}";
+        $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
         $dataset = ejecutarConsulta($conn, $sql_dataset);
         $tiempos_por_tecnico = analizarTiemposIncidencias($pdo, $dataset)['por_tecnico'];
 
@@ -692,6 +710,115 @@ switch ($action) {
                     'datos_dias' => $datos_tiempos_dias,
                 ],
             ],
+        ];
+        break;
+
+    case 'estadisticas_direccion':
+        // Vista ejecutiva: un resumen condensado + insights en texto plano,
+        // generados a partir de los mismos datos que ya calculan las demás
+        // acciones (nada de números inventados: si no hay muestras
+        // suficientes, el insight correspondiente simplemente no aparece).
+        $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
+        $dataset = ejecutarConsulta($conn, $sql_dataset);
+        $analisis = analizarTiemposIncidencias($pdo, $dataset);
+        $agregado = $analisis['agregado'];
+        $total_incidencias = count($dataset);
+        $conector = empty($filtros_where) ? "WHERE" : "AND";
+
+        // Tendencia vs periodo anterior equivalente (mismo cálculo que estadisticas_generales)
+        $dtIni = new DateTime($rango_actual['fecha_inicio']);
+        $dtFin = new DateTime($rango_actual['fecha_fin']);
+        $dias_periodo = (int)$dtIni->diff($dtFin)->format('%a') + 1;
+        $prevFin = (clone $dtIni)->modify('-1 day')->format('Y-m-d');
+        $prevIni = (clone $dtIni)->modify('-' . $dias_periodo . ' days')->format('Y-m-d');
+        $rango_anterior = construirFiltros($conn, 'i', 'fecha', $prevIni, $prevFin);
+        $total_anterior = ejecutarConsulta($conn, "SELECT COUNT(id) AS total FROM {$tabla_incidencias} i {$rango_anterior['where']}")[0]['total'] ?? 0;
+        $tendencia = $total_anterior > 0
+            ? round((($total_incidencias - $total_anterior) / $total_anterior) * 100, 1)
+            : ($total_incidencias > 0 ? 100 : 0);
+
+        $facturadas = ejecutarConsulta($conn, "SELECT COUNT(id) AS c FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'cerrado con factura'")[0]['c'] ?? 0;
+
+        $top_sucursal = ejecutarConsulta($conn, "SELECT sucursal, COUNT(*) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} sucursal IS NOT NULL AND sucursal <> '' GROUP BY sucursal ORDER BY cantidad DESC LIMIT 1");
+        $top_falla = ejecutarConsulta($conn, "SELECT falla, COUNT(*) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} falla IS NOT NULL AND falla <> '' GROUP BY falla ORDER BY cantidad DESC LIMIT 1");
+
+        // SLA por sucursal (solo con al menos 3 incidencias cerradas en el periodo, para no sacar conclusiones de una sola muestra)
+        $slaPorSucursal = [];
+        foreach ($analisis['por_sucursal'] as $sucursal => $stats) {
+            if ($stats['muestras'] >= 3) {
+                $slaPorSucursal[] = [
+                    'sucursal' => $sucursal,
+                    'sla_pct' => $stats['sla_pct'],
+                    'muestras' => $stats['muestras'],
+                    'cierre_mediana_dias' => round($stats['cierre_mediana_horas'] / 24, 1),
+                ];
+            }
+        }
+        usort($slaPorSucursal, fn($a, $b) => $a['sla_pct'] <=> $b['sla_pct']);
+
+        $tecnico_mas_rapido = '';
+        $menor_mediana = null;
+        foreach ($analisis['por_tecnico'] as $tecnico => $t) {
+            if ($t['muestras'] >= 3 && ($menor_mediana === null || $t['cierre_mediana_horas'] < $menor_mediana)) {
+                $menor_mediana = $t['cierre_mediana_horas'];
+                $tecnico_mas_rapido = $tecnico;
+            }
+        }
+
+        $slaCierreDias = SLA_CIERRE_HORAS / 24;
+        $insights = [];
+
+        if ($total_anterior > 0) {
+            $direccionTexto = $tendencia > 0 ? 'aumentaron' : ($tendencia < 0 ? 'disminuyeron' : 'se mantuvieron');
+            $insights[] = "Las incidencias {$direccionTexto} " . abs($tendencia) . "% respecto al periodo anterior ({$total_incidencias} vs {$total_anterior}).";
+        } else {
+            $insights[] = "No hay datos del periodo anterior para comparar la tendencia.";
+        }
+
+        if ($agregado['sla_cierre_pct'] !== null) {
+            $calificacion = $agregado['sla_cierre_pct'] >= 80 ? 'saludable' : ($agregado['sla_cierre_pct'] >= 50 ? 'requiere atención' : 'crítico');
+            $insights[] = "El {$agregado['sla_cierre_pct']}% de las incidencias cerradas cumplieron el SLA de {$slaCierreDias} días ({$calificacion}), con base en {$agregado['muestras_cierre']} de {$total_incidencias} incidencias con historial.";
+        } else {
+            $insights[] = "Aún no hay suficientes incidencias cerradas con historial para calcular el cumplimiento de SLA en este periodo.";
+        }
+
+        if (!empty($top_sucursal)) {
+            $pctSucursal = $total_incidencias > 0 ? round(($top_sucursal[0]['cantidad'] / $total_incidencias) * 100, 1) : 0;
+            $insights[] = "La sucursal con mayor volumen es {$top_sucursal[0]['sucursal']}, con {$top_sucursal[0]['cantidad']} incidencias ({$pctSucursal}% del total).";
+        }
+
+        if (!empty($slaPorSucursal) && $slaPorSucursal[0]['sla_pct'] < 80) {
+            $peor = $slaPorSucursal[0];
+            $insights[] = "La sucursal con el cumplimiento de SLA más bajo es {$peor['sucursal']} ({$peor['sla_pct']}%, sobre {$peor['muestras']} incidencias cerradas).";
+        }
+
+        if (!empty($top_falla)) {
+            $insights[] = "El tipo de falla más frecuente es \"{$top_falla[0]['falla']}\" con {$top_falla[0]['cantidad']} casos.";
+        }
+
+        if ($tecnico_mas_rapido !== '') {
+            $insights[] = "El técnico con el cierre más rápido es {$tecnico_mas_rapido} (mediana de " . round($menor_mediana / 24, 1) . " días).";
+        }
+
+        if ($agregado['reabiertas'] > 0 && $agregado['muestras_cierre'] > 0) {
+            $pctReabiertas = round(($agregado['reabiertas'] / $agregado['muestras_cierre']) * 100, 1);
+            $insights[] = "{$agregado['reabiertas']} incidencias se reabrieron tras haberse cerrado ({$pctReabiertas}% de las cerradas). Vale la pena revisarlas.";
+        }
+
+        $response['success'] = true;
+        $response['data'] = [
+            'resumen' => [
+                'total_incidencias' => (int)$total_incidencias,
+                'tendencia_incidencias' => $tendencia,
+                'sla_cierre_pct' => $agregado['sla_cierre_pct'],
+                'cierre_mediana_dias' => $agregado['cierre_mediana_horas'] !== null ? round($agregado['cierre_mediana_horas'] / 24, 1) : null,
+                'respuesta_mediana_horas' => $agregado['respuesta_mediana_horas'],
+                'reabiertas' => $agregado['reabiertas'],
+                'muestras_cierre' => $agregado['muestras_cierre'],
+                'incidencias_cerradas_factura' => (int)$facturadas,
+            ],
+            'sla_por_sucursal' => $slaPorSucursal,
+            'insights' => $insights,
         ];
         break;
 

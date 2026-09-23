@@ -1,6 +1,6 @@
 // Variables globales para los charts
 let charts = {};
-let currentTab = 'overview';
+let currentTab = 'direccion';
 let filtrosPoblados = false;
 
 // Paleta de gráficos alineada con la identidad visual del panel (css informes.html)
@@ -171,6 +171,15 @@ async function cargarEstadisticas() {
                 if (dataTecnicos.success) actualizarEstadisticasTecnicos(dataTecnicos.data);
             }
         }
+
+        if (currentTab === 'direccion') {
+            const urlDireccion = `../backend/estadisticas.php?action=estadisticas_direccion&${params.toString()}`;
+            const responseDireccion = await fetch(urlDireccion);
+            if (responseDireccion.ok) {
+                const dataDireccion = await responseDireccion.json();
+                if (dataDireccion.success) actualizarVistaDireccion(dataDireccion.data);
+            }
+        }
     } catch (error) {
         console.error('Error cargando estadísticas:', error);
         mostrarError('Error al cargar las estadísticas: ' + error.message);
@@ -246,6 +255,97 @@ function actualizarEstadisticasTecnicos(data) {
     actualizarElementoSiExiste('totalTecnicos', data.total_tecnicos ?? 0);
 
     crearGraficosTecnicos(data);
+}
+
+function colorSla(pct) {
+    if (pct >= 80) return '#16a34a';
+    if (pct >= 50) return '#d97706';
+    return '#dc2626';
+}
+
+function renderInsights(insights) {
+    const ul = document.getElementById('direccionInsights');
+    if (!ul) return;
+    ul.innerHTML = '';
+
+    if (!insights || insights.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'insights-empty';
+        li.textContent = 'No hay suficientes datos en este periodo para generar lecturas automáticas.';
+        ul.appendChild(li);
+        return;
+    }
+
+    insights.forEach(texto => {
+        const li = document.createElement('li');
+        const icono = document.createElement('i');
+        icono.className = 'fas fa-circle';
+        const span = document.createElement('span');
+        span.textContent = texto;
+        li.appendChild(icono);
+        li.appendChild(span);
+        ul.appendChild(li);
+    });
+}
+
+function crearGraficoSlaSucursal(items) {
+    destruirChart('slaSucursal');
+    mostrarVacio('chartSlaSucursal', !items || items.length === 0);
+    if (!items || items.length === 0) return;
+
+    charts.slaSucursal = new Chart(document.getElementById('chartSlaSucursal'), {
+        type: 'bar',
+        data: {
+            labels: items.map(s => s.sucursal),
+            datasets: [{
+                label: '% dentro de SLA',
+                data: items.map(s => s.sla_pct),
+                backgroundColor: items.map(s => colorSla(s.sla_pct)),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const item = items[ctx.dataIndex];
+                            return `${item.sla_pct}% dentro de SLA · ${item.muestras} incidencias cerradas · mediana ${item.cierre_mediana_dias} días`;
+                        }
+                    }
+                }
+            },
+            scales: { x: { beginAtZero: true, max: 100 } }
+        }
+    });
+}
+
+function actualizarVistaDireccion(data) {
+    const resumen = data.resumen || {};
+
+    actualizarElementoSiExiste('direccionTotal', resumen.total_incidencias ?? 0);
+
+    const tendencia = resumen.tendencia_incidencias ?? 0;
+    const elTendencia = document.getElementById('direccionTendencia');
+    if (elTendencia) {
+        elTendencia.textContent = `${tendencia >= 0 ? '+' : ''}${tendencia}% vs periodo anterior`;
+        elTendencia.className = `stat-change ${tendencia >= 0 ? '' : 'negative'}`;
+    }
+
+    const slaPct = resumen.sla_cierre_pct;
+    actualizarElementoSiExiste('direccionSla', slaPct !== null && slaPct !== undefined ? `${slaPct}%` : 'N/D');
+
+    const cierreDias = resumen.cierre_mediana_dias;
+    actualizarElementoSiExiste('direccionCierre', cierreDias !== null && cierreDias !== undefined ? `${cierreDias} d` : 'N/D');
+
+    actualizarElementoSiExiste('direccionFacturadas', resumen.incidencias_cerradas_factura ?? 0);
+    actualizarElementoSiExiste('direccionReabiertas', resumen.reabiertas ?? 0);
+
+    renderInsights(data.insights);
+    crearGraficoSlaSucursal(data.sla_por_sucursal);
 }
 
 function destruirChart(id) {
