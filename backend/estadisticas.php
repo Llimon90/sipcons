@@ -777,9 +777,9 @@ switch ($action) {
 
         if ($agregado['sla_cierre_pct'] !== null) {
             $calificacion = $agregado['sla_cierre_pct'] >= 80 ? 'saludable' : ($agregado['sla_cierre_pct'] >= 50 ? 'requiere atención' : 'crítico');
-            $insights[] = "El {$agregado['sla_cierre_pct']}% de las incidencias cerradas cumplieron el SLA de {$slaCierreDias} días ({$calificacion}), con base en {$agregado['muestras_cierre']} de {$total_incidencias} incidencias con historial.";
+            $insights[] = "El {$agregado['sla_cierre_pct']}% de las incidencias cerradas se atendieron dentro de los {$slaCierreDias} días esperados ({$calificacion}), con base en {$agregado['muestras_cierre']} de {$total_incidencias} incidencias con historial.";
         } else {
-            $insights[] = "Aún no hay suficientes incidencias cerradas con historial para calcular el cumplimiento de SLA en este periodo.";
+            $insights[] = "Aún no hay suficientes incidencias cerradas con historial para calcular el cumplimiento de atención en este periodo.";
         }
 
         if (!empty($top_sucursal)) {
@@ -789,7 +789,7 @@ switch ($action) {
 
         if (!empty($slaPorSucursal) && $slaPorSucursal[0]['sla_pct'] < 80) {
             $peor = $slaPorSucursal[0];
-            $insights[] = "La sucursal con el cumplimiento de SLA más bajo es {$peor['sucursal']} ({$peor['sla_pct']}%, sobre {$peor['muestras']} incidencias cerradas).";
+            $insights[] = "La sucursal con el cumplimiento de atención más bajo es {$peor['sucursal']} ({$peor['sla_pct']}%, sobre {$peor['muestras']} incidencias cerradas).";
         }
 
         if (!empty($top_falla)) {

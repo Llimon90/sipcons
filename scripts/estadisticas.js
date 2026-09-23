@@ -192,9 +192,9 @@ function badgeSla(porcentaje) {
     if (porcentaje === null || porcentaje === undefined) {
         return { texto: 'Sin datos suficientes', clase: 'badge-sla--neutral' };
     }
-    if (porcentaje >= 80) return { texto: `${porcentaje}% dentro de SLA`, clase: 'badge-sla--good' };
-    if (porcentaje >= 50) return { texto: `${porcentaje}% dentro de SLA`, clase: 'badge-sla--warn' };
-    return { texto: `${porcentaje}% dentro de SLA`, clase: 'badge-sla--bad' };
+    if (porcentaje >= 80) return { texto: `${porcentaje}% atendidas a tiempo`, clase: 'badge-sla--good' };
+    if (porcentaje >= 50) return { texto: `${porcentaje}% atendidas a tiempo`, clase: 'badge-sla--warn' };
+    return { texto: `${porcentaje}% atendidas a tiempo`, clase: 'badge-sla--bad' };
 }
 
 function aplicarBadge(elementoId, badge) {
@@ -298,7 +298,7 @@ function crearGraficoSlaSucursal(items) {
         data: {
             labels: items.map(s => s.sucursal),
             datasets: [{
-                label: '% dentro de SLA',
+                label: '% atendidas a tiempo',
                 data: items.map(s => s.sla_pct),
                 backgroundColor: items.map(s => colorSla(s.sla_pct)),
                 borderWidth: 0
@@ -313,7 +313,7 @@ function crearGraficoSlaSucursal(items) {
                     callbacks: {
                         label: (ctx) => {
                             const item = items[ctx.dataIndex];
-                            return `${item.sla_pct}% dentro de SLA · ${item.muestras} incidencias cerradas · mediana ${item.cierre_mediana_dias} días`;
+                            return `${item.sla_pct}% atendidas a tiempo · ${item.muestras} incidencias cerradas · mediana ${item.cierre_mediana_dias} días`;
                         }
                     }
                 }
