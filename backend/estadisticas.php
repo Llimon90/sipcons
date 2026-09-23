@@ -489,8 +489,11 @@ switch ($action) {
         $total_incidencias = ejecutarConsulta($conn, $sql_total)[0]['total_incidencias'] ?? 0;
 
         // 2. Incidencias por estatus (CON filtros, comparación case-insensitive)
-        $sql_abiertas = "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) IN ('abierto', 'pendiente')";
+        $sql_abiertas = "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'abierto'";
         $abiertas = ejecutarConsulta($conn, $sql_abiertas)[0]['count'] ?? 0;
+
+        $sql_pendientes = "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'pendiente'";
+        $pendientes = ejecutarConsulta($conn, $sql_pendientes)[0]['count'] ?? 0;
 
         $sql_asignadas = "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'asignado'";
         $asignadas = ejecutarConsulta($conn, $sql_asignadas)[0]['count'] ?? 0;
@@ -545,6 +548,7 @@ switch ($action) {
         $response['data'] = [
             'total_incidencias' => (int)$total_incidencias,
             'incidencias_abiertas' => (int)$abiertas,
+            'incidencias_pendientes' => (int)$pendientes,
             'incidencias_asignadas' => (int)$asignadas,
             'incidencias_completadas' => (int)$completadas,
             'incidencias_cerradas_factura' => (int)$cerradas_factura,

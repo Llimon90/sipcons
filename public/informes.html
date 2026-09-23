@@ -480,18 +480,15 @@
 
         .drilldown-table tbody tr:hover { background: var(--surface-alt); }
 
-        .drilldown-select {
-            padding: 6px 8px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            font-size: 13px;
-            background: var(--surface);
-            color: var(--text-color);
+        .drilldown-link {
+            color: var(--accent-color);
+            font-weight: 700;
+            text-decoration: none;
         }
 
-        .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+        .drilldown-link:hover { text-decoration: underline; }
 
-        .btn-guardado { background: var(--success-color) !important; }
+        .btn-sm { padding: 6px 12px; font-size: 12.5px; }
     </style>
   <script src="../scripts/auth-guard.js?v=2"></script>
 </head>
@@ -780,14 +777,23 @@
     <!-- Contenido de pestaña: Análisis de Incidencias -->
     <div class="tab-content" id="incidencias-tab">
       <div class="stats-grid">
-        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Abierto,Pendiente')">
+        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Abierto')">
           <h3><i class="fas fa-exclamation-circle"></i> Incidencias Abiertas</h3>
           <div class="stat-value">
             <span id="incidenciasAbiertas">0</span>
             <i class="fas fa-door-open stat-icon"></i>
           </div>
-          <div class="stat-change"><span>Actualmente pendientes</span></div>
-          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
+          <div class="stat-change"><span>Sin asignar todavía</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
+        </div>
+        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Pendiente')">
+          <h3><i class="fas fa-hourglass-half"></i> Pendientes</h3>
+          <div class="stat-value">
+            <span id="incidenciasPendientes">0</span>
+            <i class="fas fa-hourglass-half stat-icon"></i>
+          </div>
+          <div class="stat-change"><span>En espera de continuar</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
         <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Asignado')">
           <h3><i class="fas fa-user-clock"></i> Asignadas</h3>
@@ -796,7 +802,7 @@
             <i class="fas fa-user-check stat-icon"></i>
           </div>
           <div class="stat-change"><span>En proceso</span></div>
-          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
         <div class="stat-card stat-card--success stat-card--clickable" onclick="abrirModalPorEstatus('Completado')">
           <h3><i class="fas fa-flag-checkered"></i> Completadas</h3>
@@ -805,7 +811,7 @@
             <i class="fas fa-flag stat-icon"></i>
           </div>
           <div class="stat-change"><span>Finalizadas en el periodo</span></div>
-          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
         <div class="stat-card stat-card--success stat-card--clickable" onclick="abrirModalPorEstatus('Cerrado con factura')">
           <h3><i class="fas fa-file-invoice-dollar"></i> Cerradas con Factura</h3>
@@ -814,7 +820,7 @@
             <i class="fas fa-file-invoice stat-icon"></i>
           </div>
           <div class="stat-change"><span>Incidencias facturadas</span></div>
-          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
         <div class="stat-card stat-card--warning stat-card--clickable" onclick="abrirModalReabiertas()">
           <h3><i class="fas fa-rotate-left"></i> Reincidencias</h3>
@@ -947,7 +953,7 @@
               <th>Técnico</th>
               <th>Fecha</th>
               <th>Estatus</th>
-              <th></th>
+              <th>Detalle</th>
             </tr>
           </thead>
           <tbody id="modalDrilldownBody"></tbody>
@@ -961,6 +967,6 @@
   </div>
 
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/estadisticas.js?v=11"></script>
+  <script src="../scripts/estadisticas.js?v=12"></script>
 </body>
 </html>

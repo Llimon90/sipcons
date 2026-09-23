@@ -2,9 +2,6 @@
 let charts = {};
 let currentTab = 'overview';
 let filtrosPoblados = false;
-let puedeEditarIncidencias = false;
-
-const ESTATUS_OPCIONES = ['Abierto', 'Asignado', 'Pendiente', 'Completado', 'Cerrado con factura', 'Cerrado sin factura'];
 
 // Paleta de gráficos alineada con la identidad visual del panel (css informes.html)
 const COLOR_ACCENT = '#3498db';
@@ -24,12 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarModalDrilldown();
     poblarFiltros();
     cargarEstadisticas();
-
-    if (window.sipconsOnAuthReady) {
-        window.sipconsOnAuthReady(function(auth) {
-            puedeEditarIncidencias = (auth.modulos || []).indexOf('incidencias') !== -1;
-        });
-    }
 });
 
 function inicializarInterfaz() {
@@ -211,6 +202,7 @@ function actualizarEstadisticasGenerales(data) {
     actualizarElementoSiExiste('eficienciaMensual', `${data.eficiencia_total ?? 0}% de eficiencia en el periodo`);
 
     actualizarElementoSiExiste('incidenciasAbiertas', data.incidencias_abiertas ?? 0);
+    actualizarElementoSiExiste('incidenciasPendientes', data.incidencias_pendientes ?? 0);
     actualizarElementoSiExiste('incidenciasAsignadas', data.incidencias_asignadas ?? 0);
     actualizarElementoSiExiste('incidenciasCompletadas', data.incidencias_completadas ?? 0);
     actualizarElementoSiExiste('incidenciasFacturadas', data.incidencias_cerradas_factura ?? 0);
@@ -686,90 +678,35 @@ function construirFilaDrilldown(inc) {
         return td;
     };
 
-    tr.appendChild(celda(inc.numero_incidente));
+    const urlDetalle = `detalle.html?id=${encodeURIComponent(inc.id)}`;
+
+    const tdFolio = document.createElement('td');
+    const enlaceFolio = document.createElement('a');
+    enlaceFolio.href = urlDetalle;
+    enlaceFolio.target = '_blank';
+    enlaceFolio.rel = 'noopener';
+    enlaceFolio.className = 'drilldown-link';
+    enlaceFolio.textContent = inc.numero_incidente || '-';
+    tdFolio.appendChild(enlaceFolio);
+
+    tr.appendChild(tdFolio);
     tr.appendChild(celda(inc.cliente));
     tr.appendChild(celda(inc.sucursal));
     tr.appendChild(celda(inc.tecnico));
     tr.appendChild(celda(inc.fecha ? String(inc.fecha).substring(0, 10) : ''));
+    tr.appendChild(celda(inc.estatus));
 
-    const tdEstatus = document.createElement('td');
     const tdAccion = document.createElement('td');
-
-    if (puedeEditarIncidencias) {
-        const select = document.createElement('select');
-        select.className = 'drilldown-select';
-
-        let opciones = ESTATUS_OPCIONES;
-        if (!opciones.includes(inc.estatus)) {
-            opciones = [inc.estatus, ...ESTATUS_OPCIONES];
-        }
-        opciones.forEach(op => {
-            const opt = document.createElement('option');
-            opt.value = op;
-            opt.textContent = op;
-            if (op === inc.estatus) opt.selected = true;
-            select.appendChild(opt);
-        });
-
-        if (window.sipconsAplicarRestriccionEstatus) window.sipconsAplicarRestriccionEstatus(select);
-
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn btn-primary btn-sm';
-        btn.innerHTML = '<i class="fas fa-save"></i> Guardar';
-        btn.disabled = true;
-
-        select.addEventListener('change', () => {
-            btn.disabled = (select.value === inc.estatus);
-        });
-
-        btn.addEventListener('click', () => guardarEstatusRapido(inc.id, inc, select, btn));
-
-        tdEstatus.appendChild(select);
-        tdAccion.appendChild(btn);
-    } else {
-        tdEstatus.textContent = inc.estatus || '-';
-    }
-
-    tr.appendChild(tdEstatus);
+    const btnAbrir = document.createElement('a');
+    btnAbrir.href = urlDetalle;
+    btnAbrir.target = '_blank';
+    btnAbrir.rel = 'noopener';
+    btnAbrir.className = 'btn btn-outline btn-sm';
+    btnAbrir.innerHTML = '<i class="fas fa-up-right-from-square"></i> Abrir';
+    tdAccion.appendChild(btnAbrir);
     tr.appendChild(tdAccion);
+
     return tr;
-}
-
-async function guardarEstatusRapido(id, inc, select, btn) {
-    const nuevoEstatus = select.value;
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    select.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-    try {
-        const resp = await fetch('../backend/actualizar_estatus_rapido.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, estatus: nuevoEstatus })
-        });
-        const resultado = await resp.json();
-        if (!resultado.success) throw new Error(resultado.error || 'No se pudo guardar');
-
-        inc.estatus = nuevoEstatus;
-        btn.innerHTML = '<i class="fas fa-check"></i> Guardado';
-        btn.classList.add('btn-guardado');
-        select.disabled = false;
-
-        // Refresca los KPIs y gráficos detrás del modal para reflejar la corrección
-        cargarEstadisticas();
-    } catch (error) {
-        const aviso = document.getElementById('modalDrilldownAviso');
-        if (aviso) {
-            aviso.textContent = 'No se pudo guardar el estatus: ' + error.message;
-            aviso.className = 'modal-aviso modal-aviso--error';
-            aviso.style.display = 'block';
-        }
-        btn.innerHTML = original;
-        btn.disabled = false;
-        select.disabled = false;
-    }
 }
 
 window.cargarEstadisticas = cargarEstadisticas;
