@@ -2,6 +2,9 @@
 let charts = {};
 let currentTab = 'overview';
 let filtrosPoblados = false;
+let puedeEditarIncidencias = false;
+
+const ESTATUS_OPCIONES = ['Abierto', 'Asignado', 'Pendiente', 'Completado', 'Cerrado con factura', 'Cerrado sin factura'];
 
 // Paleta de gráficos alineada con la identidad visual del panel (css informes.html)
 const COLOR_ACCENT = '#3498db';
@@ -18,8 +21,15 @@ const SLA_CIERRE_DIAS = 7;
 
 document.addEventListener('DOMContentLoaded', function() {
     inicializarInterfaz();
+    inicializarModalDrilldown();
     poblarFiltros();
     cargarEstadisticas();
+
+    if (window.sipconsOnAuthReady) {
+        window.sipconsOnAuthReady(function(auth) {
+            puedeEditarIncidencias = (auth.modulos || []).indexOf('incidencias') !== -1;
+        });
+    }
 });
 
 function inicializarInterfaz() {
@@ -292,6 +302,15 @@ function crearGraficos(data) {
             },
             options: {
                 responsive: true,
+                onClick: (evt, elements) => {
+                    if (!elements.length) return;
+                    const item = data.por_estatus[elements[0].index];
+                    if (!item || !item.estatus) return;
+                    abrirModalPorEstatus(item.estatus);
+                },
+                onHover: (evt, elements) => {
+                    evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+                },
                 plugins: {
                     legend: { position: 'bottom' },
                     tooltip: {
@@ -568,11 +587,199 @@ function exportarDatos() {
     window.location.href = `../backend/estadisticas.php?action=exportar_csv&${params.toString()}`;
 }
 
+// ===== Drill-down: revisar y corregir el estatus de las incidencias detrás
+// de una porción del gráfico o de una tarjeta de KPI =====
+
+function inicializarModalDrilldown() {
+    const overlay = document.getElementById('modalDrilldown');
+    if (!overlay) return;
+
+    overlay.addEventListener('click', function(evt) {
+        if (evt.target === overlay) cerrarModalDrilldown();
+    });
+
+    const btnCerrar = document.getElementById('modalDrilldownCerrar');
+    if (btnCerrar) btnCerrar.addEventListener('click', cerrarModalDrilldown);
+
+    document.addEventListener('keydown', function(evt) {
+        if (evt.key === 'Escape' && overlay.classList.contains('is-open')) cerrarModalDrilldown();
+    });
+}
+
+function mostrarModalDrilldown(abrir) {
+    const overlay = document.getElementById('modalDrilldown');
+    if (!overlay) return;
+    overlay.classList.toggle('is-open', abrir);
+    document.body.style.overflow = abrir ? 'hidden' : '';
+}
+
+function cerrarModalDrilldown() {
+    mostrarModalDrilldown(false);
+}
+
+function abrirModalPorEstatus(estatusClic) {
+    const titulos = {
+        'Abierto,Pendiente': 'Incidencias abiertas o pendientes',
+    };
+    const titulo = titulos[estatusClic] || `Incidencias: ${estatusClic}`;
+    mostrarModalDrilldown(true);
+    cargarModalDrilldown({ estatusClic }, titulo);
+}
+
+function abrirModalReabiertas() {
+    mostrarModalDrilldown(true);
+    cargarModalDrilldown({ modo: 'reabiertas' }, 'Incidencias reabiertas (reincidencias)');
+}
+
+async function cargarModalDrilldown(extra, titulo) {
+    const tituloEl = document.getElementById('modalDrilldownTitulo');
+    const cuerpo = document.getElementById('modalDrilldownBody');
+    const vacio = document.getElementById('modalDrilldownVacio');
+    const aviso = document.getElementById('modalDrilldownAviso');
+    const tabla = document.getElementById('modalDrilldownTabla');
+
+    if (tituloEl) tituloEl.textContent = titulo || 'Incidencias';
+    if (cuerpo) cuerpo.innerHTML = '';
+    if (vacio) vacio.style.display = 'none';
+    if (aviso) aviso.style.display = 'none';
+    if (tabla) tabla.style.display = 'none';
+
+    const params = construirParametros();
+    params.delete('estatus'); // el filtro global de estatus no debe interferir con el detalle
+    Object.entries(extra).forEach(([clave, valor]) => params.set(clave, valor));
+
+    try {
+        const resp = await fetch(`../backend/estadisticas.php?action=incidencias_por_estatus&${params.toString()}`);
+        const resultado = await resp.json();
+        if (!resultado.success) throw new Error(resultado.error || 'No se pudo cargar el detalle');
+
+        const incidencias = resultado.data.incidencias || [];
+        if (incidencias.length === 0) {
+            if (vacio) vacio.style.display = 'flex';
+            return;
+        }
+
+        if (tabla) tabla.style.display = '';
+        incidencias.forEach(inc => cuerpo.appendChild(construirFilaDrilldown(inc)));
+
+        if (resultado.data.limitado && aviso) {
+            aviso.textContent = `Mostrando los primeros ${incidencias.length} resultados. Ajusta los filtros para acotar la búsqueda.`;
+            aviso.className = 'modal-aviso';
+            aviso.style.display = 'block';
+        }
+    } catch (error) {
+        if (aviso) {
+            aviso.textContent = 'Error al cargar el detalle: ' + error.message;
+            aviso.className = 'modal-aviso modal-aviso--error';
+            aviso.style.display = 'block';
+        }
+    }
+}
+
+function construirFilaDrilldown(inc) {
+    const tr = document.createElement('tr');
+    tr.dataset.id = inc.id;
+
+    const celda = (texto) => {
+        const td = document.createElement('td');
+        td.textContent = texto || '-';
+        return td;
+    };
+
+    tr.appendChild(celda(inc.numero_incidente));
+    tr.appendChild(celda(inc.cliente));
+    tr.appendChild(celda(inc.sucursal));
+    tr.appendChild(celda(inc.tecnico));
+    tr.appendChild(celda(inc.fecha ? String(inc.fecha).substring(0, 10) : ''));
+
+    const tdEstatus = document.createElement('td');
+    const tdAccion = document.createElement('td');
+
+    if (puedeEditarIncidencias) {
+        const select = document.createElement('select');
+        select.className = 'drilldown-select';
+
+        let opciones = ESTATUS_OPCIONES;
+        if (!opciones.includes(inc.estatus)) {
+            opciones = [inc.estatus, ...ESTATUS_OPCIONES];
+        }
+        opciones.forEach(op => {
+            const opt = document.createElement('option');
+            opt.value = op;
+            opt.textContent = op;
+            if (op === inc.estatus) opt.selected = true;
+            select.appendChild(opt);
+        });
+
+        if (window.sipconsAplicarRestriccionEstatus) window.sipconsAplicarRestriccionEstatus(select);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm';
+        btn.innerHTML = '<i class="fas fa-save"></i> Guardar';
+        btn.disabled = true;
+
+        select.addEventListener('change', () => {
+            btn.disabled = (select.value === inc.estatus);
+        });
+
+        btn.addEventListener('click', () => guardarEstatusRapido(inc.id, inc, select, btn));
+
+        tdEstatus.appendChild(select);
+        tdAccion.appendChild(btn);
+    } else {
+        tdEstatus.textContent = inc.estatus || '-';
+    }
+
+    tr.appendChild(tdEstatus);
+    tr.appendChild(tdAccion);
+    return tr;
+}
+
+async function guardarEstatusRapido(id, inc, select, btn) {
+    const nuevoEstatus = select.value;
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    select.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+        const resp = await fetch('../backend/actualizar_estatus_rapido.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, estatus: nuevoEstatus })
+        });
+        const resultado = await resp.json();
+        if (!resultado.success) throw new Error(resultado.error || 'No se pudo guardar');
+
+        inc.estatus = nuevoEstatus;
+        btn.innerHTML = '<i class="fas fa-check"></i> Guardado';
+        btn.classList.add('btn-guardado');
+        select.disabled = false;
+
+        // Refresca los KPIs y gráficos detrás del modal para reflejar la corrección
+        cargarEstadisticas();
+    } catch (error) {
+        const aviso = document.getElementById('modalDrilldownAviso');
+        if (aviso) {
+            aviso.textContent = 'No se pudo guardar el estatus: ' + error.message;
+            aviso.className = 'modal-aviso modal-aviso--error';
+            aviso.style.display = 'block';
+        }
+        btn.innerHTML = original;
+        btn.disabled = false;
+        select.disabled = false;
+    }
+}
+
 window.cargarEstadisticas = cargarEstadisticas;
 window.aplicarFiltros = aplicarFiltros;
 window.toggleChartType = toggleChartType;
 window.downloadChart = downloadChart;
 window.exportarDatos = exportarDatos;
+window.abrirModalPorEstatus = abrirModalPorEstatus;
+window.abrirModalReabiertas = abrirModalReabiertas;
+window.cerrarModalDrilldown = cerrarModalDrilldown;
 
 // Actualizar cada 5 minutos
 setInterval(cargarEstadisticas, 300000);

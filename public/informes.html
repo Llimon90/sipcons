@@ -352,6 +352,146 @@
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
         }
+
+        .chart-hint {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .stat-card--clickable {
+            cursor: pointer;
+        }
+
+        .stat-card--clickable:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--box-shadow-hover);
+            border-top-color: var(--accent-color);
+        }
+
+        .stat-card--clickable .stat-card-hint {
+            font-size: 11px;
+            color: var(--accent-color);
+            font-weight: 700;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ===== Modal de drill-down (revisar/corregir estatus) ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.is-open { display: flex; }
+
+        .modal-panel {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 960px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--box-shadow-hover);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 17px;
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            background: var(--surface-alt);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover { background: rgba(220, 38, 38, 0.1); color: var(--danger-color); border-color: var(--danger-color); }
+
+        .modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+        }
+
+        .modal-aviso {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--accent-dark);
+            padding: 10px 14px;
+            border-radius: var(--border-radius-sm);
+            font-size: 13px;
+            margin-bottom: 14px;
+        }
+
+        .modal-aviso--error {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger-color);
+        }
+
+        .drilldown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+        }
+
+        .drilldown-table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .drilldown-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            vertical-align: middle;
+        }
+
+        .drilldown-table tbody tr:hover { background: var(--surface-alt); }
+
+        .drilldown-select {
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-size: 13px;
+            background: var(--surface);
+            color: var(--text-color);
+        }
+
+        .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+        .btn-guardado { background: var(--success-color) !important; }
     </style>
   <script src="../scripts/auth-guard.js?v=2"></script>
 </head>
@@ -577,7 +717,7 @@
       <div class="stats-row">
         <div class="chart-container">
           <div class="chart-title">
-            <span>Incidencias por Estatus</span>
+            <span>Incidencias por Estatus <span class="chart-hint">(clic en una porción para revisar y corregir)</span></span>
             <div class="chart-actions">
               <button class="chart-btn" onclick="toggleChartType('estatus')">
                 <i class="fas fa-exchange-alt"></i> Vista
@@ -640,45 +780,50 @@
     <!-- Contenido de pestaña: Análisis de Incidencias -->
     <div class="tab-content" id="incidencias-tab">
       <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Abierto,Pendiente')">
           <h3><i class="fas fa-exclamation-circle"></i> Incidencias Abiertas</h3>
           <div class="stat-value">
             <span id="incidenciasAbiertas">0</span>
             <i class="fas fa-door-open stat-icon"></i>
           </div>
           <div class="stat-change"><span>Actualmente pendientes</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Asignado')">
           <h3><i class="fas fa-user-clock"></i> Asignadas</h3>
           <div class="stat-value">
             <span id="incidenciasAsignadas">0</span>
             <i class="fas fa-user-check stat-icon"></i>
           </div>
           <div class="stat-change"><span>En proceso</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
         </div>
-        <div class="stat-card stat-card--success">
+        <div class="stat-card stat-card--success stat-card--clickable" onclick="abrirModalPorEstatus('Completado')">
           <h3><i class="fas fa-flag-checkered"></i> Completadas</h3>
           <div class="stat-value">
             <span id="incidenciasCompletadas">0</span>
             <i class="fas fa-flag stat-icon"></i>
           </div>
           <div class="stat-change"><span>Finalizadas en el periodo</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
         </div>
-        <div class="stat-card stat-card--success">
+        <div class="stat-card stat-card--success stat-card--clickable" onclick="abrirModalPorEstatus('Cerrado con factura')">
           <h3><i class="fas fa-file-invoice-dollar"></i> Cerradas con Factura</h3>
           <div class="stat-value">
             <span id="incidenciasFacturadas">0</span>
             <i class="fas fa-file-invoice stat-icon"></i>
           </div>
           <div class="stat-change"><span>Incidencias facturadas</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver y corregir</div>
         </div>
-        <div class="stat-card stat-card--warning">
+        <div class="stat-card stat-card--warning stat-card--clickable" onclick="abrirModalReabiertas()">
           <h3><i class="fas fa-rotate-left"></i> Reincidencias</h3>
           <div class="stat-value">
             <span id="incidenciasReabiertas">0</span>
             <i class="fas fa-rotate-left stat-icon"></i>
           </div>
           <div class="stat-change"><span>Reabiertas tras haberse cerrado</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
       </div>
 
@@ -782,7 +927,40 @@
 
   </main>
 
+  <!-- Modal de drill-down: incidencias detrás de un estatus, con corrección rápida -->
+  <div class="modal-overlay" id="modalDrilldown">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 id="modalDrilldownTitulo">Incidencias</h2>
+        <button type="button" class="modal-close" id="modalDrilldownCerrar" title="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="modalDrilldownAviso" class="modal-aviso" style="display: none;"></div>
+        <table class="drilldown-table" id="modalDrilldownTabla" style="display: none;">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Cliente</th>
+              <th>Sucursal</th>
+              <th>Técnico</th>
+              <th>Fecha</th>
+              <th>Estatus</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="modalDrilldownBody"></tbody>
+        </table>
+        <div class="chart-empty-state" id="modalDrilldownVacio" style="display: none;">
+          <i class="fas fa-inbox"></i>
+          <span>No hay incidencias para este filtro</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/estadisticas.js?v=10"></script>
+  <script src="../scripts/estadisticas.js?v=11"></script>
 </body>
 </html>

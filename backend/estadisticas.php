@@ -417,6 +417,71 @@ switch ($action) {
         $response['data'] = ['tecnicos' => $tecnicos, 'sucursales' => $sucursales];
         break;
 
+    case 'incidencias_por_estatus':
+        // Detalle ("drill-down") para poder revisar y corregir de inmediato
+        // las incidencias detrás de una porción del gráfico de estatus o de
+        // una tarjeta de KPI (p.ej. si un folio quedó con el estatus mal
+        // capturado). Respeta el rango de fechas/técnico/sucursal activos,
+        // pero ignora el filtro global de estatus: el estatus a mostrar lo
+        // define el elemento en el que se hizo clic.
+        $modo = $_GET['modo'] ?? 'estatus';
+
+        if ($modo === 'reabiertas') {
+            $sql_dataset = "SELECT id, fecha, estatus, tecnico FROM {$tabla_incidencias} i {$filtros_where}";
+            $dataset = ejecutarConsulta($conn, $sql_dataset);
+            $porIncidencia = analizarTiemposIncidencias($pdo, $dataset)['por_incidencia'];
+            $idsReabiertas = array_keys(array_filter($porIncidencia, fn($x) => $x['reabierta']));
+
+            if (empty($idsReabiertas)) {
+                $response['success'] = true;
+                $response['data'] = ['incidencias' => [], 'total' => 0, 'limitado' => false];
+                break;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($idsReabiertas), '?'));
+            $stmt = $pdo->prepare("
+                SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha
+                FROM {$tabla_incidencias}
+                WHERE id IN ($placeholders)
+                ORDER BY fecha DESC
+            ");
+            $stmt->execute($idsReabiertas);
+            $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $response['success'] = true;
+            $response['data'] = ['incidencias' => $filas, 'total' => count($filas), 'limitado' => false];
+            break;
+        }
+
+        $estatusClic = trim($_GET['estatusClic'] ?? '');
+        if ($estatusClic === '') {
+            $response['error'] = 'Falta indicar el estatus a consultar.';
+            break;
+        }
+
+        $estados = array_values(array_filter(array_map('trim', explode(',', $estatusClic)), fn($e) => $e !== ''));
+        if (empty($estados)) {
+            $response['error'] = 'Estatus no válido.';
+            break;
+        }
+
+        $condicionesEstatus = array_map(
+            fn($e) => "LOWER(estatus) = LOWER('" . $conn->real_escape_string($e) . "')",
+            $estados
+        );
+        $conector = empty($filtros_where) ? "WHERE" : "AND";
+        $sqlWhereEstatus = "(" . implode(" OR ", $condicionesEstatus) . ")";
+
+        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha
+                FROM {$tabla_incidencias} i {$filtros_where} {$conector} {$sqlWhereEstatus}
+                ORDER BY fecha DESC
+                LIMIT 300";
+        $filas = ejecutarConsulta($conn, $sql);
+
+        $response['success'] = true;
+        $response['data'] = ['incidencias' => $filas, 'total' => count($filas), 'limitado' => count($filas) >= 300];
+        break;
+
     case 'estadisticas_generales':
 
         // 1. Total de incidencias (CON filtros)
