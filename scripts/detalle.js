@@ -451,7 +451,7 @@ ${tecnicosIniciales.length === 0 ? `
             <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Guardar cambios
             </button>
-            <button type="button" id="btn-eliminar-incidencia" style="display: none; margin-left: 10px; padding: 10px 20px; background-color: #c0392b; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <button type="button" id="btn-eliminar-incidencia" style="display: none; margin-left: 10px; padding: 10px 20px; background-color: #e00000; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 <i class="fas fa-trash-alt"></i> Eliminar incidencia
             </button>
         </form>
