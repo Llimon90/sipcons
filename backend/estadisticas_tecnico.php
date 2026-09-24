@@ -72,6 +72,12 @@ $misIncidenciasPeriodo = array_values(array_filter(
 $analisis = analizarTiemposIncidencias($pdo, $misIncidenciasPeriodo);
 $agregado = $analisis['agregado'];
 
+$idsMios = array_flip(array_map(fn($f) => (string)$f['id'], $misIncidenciasPeriodo));
+$reincidenciasMias = count(array_filter(
+    calcularReincidencias($conn, $filtros_where)['ids'],
+    fn($id) => isset($idsMios[$id])
+));
+
 $asignadas = count($misIncidenciasPeriodo);
 $completadas = 0;
 foreach ($misIncidenciasPeriodo as $f) {
@@ -158,9 +164,9 @@ if ($agregado['sla_cierre_pct'] !== null) {
     $insights[] = "El {$agregado['sla_cierre_pct']}% de tus incidencias cerradas se atendieron dentro de los 7 días esperados, con base en {$agregado['muestras_cierre']} de {$asignadas} incidencias con historial.";
 }
 
-if ($agregado['reabiertas'] > 0 && $agregado['muestras_cierre'] > 0) {
-    $pctReabiertas = round(($agregado['reabiertas'] / $agregado['muestras_cierre']) * 100, 1);
-    $insights[] = "{$agregado['reabiertas']} de tus incidencias se reabrieron después de cerrarlas ({$pctReabiertas}%). Vale la pena revisar si falta documentar la causa raíz antes de cerrar.";
+if ($reincidenciasMias > 0 && $asignadas > 0) {
+    $pctReincidencias = round(($reincidenciasMias / $asignadas) * 100, 1);
+    $insights[] = "{$reincidenciasMias} de tus incidencias fueron reincidencias (el mismo equipo volvió a fallar de algo parecido en menos de " . REINCIDENCIA_VENTANA_DIAS . " días; {$pctReincidencias}%). Vale la pena revisar si falta documentar la causa raíz antes de cerrar.";
 }
 
 if ($vencidas > 0) {
@@ -186,7 +192,7 @@ echo json_encode([
             'cierre_mediana_horas' => $agregado['cierre_mediana_horas'],
             'muestras_cierre' => $agregado['muestras_cierre'],
             'sla_cierre_pct' => $agregado['sla_cierre_pct'],
-            'reabiertas' => $agregado['reabiertas'],
+            'reincidencias' => $reincidenciasMias,
         ],
         'evolucion_mensual' => $evolucionMensual,
         'insights' => $insights,

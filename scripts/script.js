@@ -17,6 +17,7 @@ form.addEventListener('submit', function(event) {
     contacto: document.getElementById('contacto').value,
     sucursal: document.getElementById('sucursal').value,
     equipo: document.getElementById('equipo').value, // Nuevo campo
+    numero_serie: (document.getElementById('numero_serie')?.value || '').trim(),
     falla: document.getElementById('falla').value,
     fecha: document.getElementById('fecha').value,
     tecnico: document.getElementById('tecnico').value,

@@ -69,6 +69,18 @@ $stmt->bind_param("sssssssssssi",
 );
 
 if ($stmt->execute()) {
+    // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
+    $numeroSerie = trim($_POST['numero_serie'] ?? '');
+    $colSerie = $conn->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'");
+    $tieneSerie = $colSerie && $colSerie->num_rows > 0;
+    if ($tieneSerie) {
+        $serieDb = $numeroSerie !== '' ? $numeroSerie : null;
+        $stmtSerie = $conn->prepare("UPDATE incidencias SET numero_serie = ? WHERE id = ?");
+        $stmtSerie->bind_param("si", $serieDb, $id);
+        $stmtSerie->execute();
+        $stmtSerie->close();
+    }
+
     // Manejar la subida de archivos antes de auditar, para poder incluir sus
     // nombres en el mismo registro de historial (se ven en el panel "Después").
     $archivosAgregados = [];
@@ -100,6 +112,7 @@ if ($stmt->execute()) {
         'contacto'  => $contacto,
         'sucursal'  => $sucursal,
         'equipo'    => $equipo,
+        'numero_serie' => $tieneSerie ? ($numeroSerie !== '' ? $numeroSerie : null) : null,
         'fecha'     => $fecha,
         'tecnico'   => $tecnico,
         'estatus'   => $estatus,

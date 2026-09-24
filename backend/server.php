@@ -77,9 +77,21 @@ if ($method === "GET") {
     }
 
     // Insertar la nueva incidencia con el campo equipo
-    $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, equipo, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
+    // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
+    $numeroSerie = trim($data["numero_serie"] ?? '');
+    $colSerie = $conn->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'");
+    $tieneSerie = $colSerie && $colSerie->num_rows > 0;
+
+    if ($tieneSerie) {
+        $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, equipo, numero_serie, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $serieDb = $numeroSerie !== '' ? $numeroSerie : null;
+        $stmt->bind_param("ssssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $serieDb, $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
+    } else {
+        $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, equipo, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
+    }
 
     if ($stmt->execute()) {
         $nuevoId = $stmt->insert_id;
@@ -92,6 +104,7 @@ if ($method === "GET") {
             'contacto'         => $data['contacto'],
             'sucursal'         => $data['sucursal'],
             'equipo'           => $data['equipo'] ?? null,
+            'numero_serie'     => $tieneSerie && $numeroSerie !== '' ? $numeroSerie : null,
             'fecha'            => $data['fecha'],
             'tecnico'          => $data['tecnico'],
             'estatus'          => $data['status'],

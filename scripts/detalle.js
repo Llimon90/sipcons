@@ -246,6 +246,8 @@ async function configurarClienteYContacto(clienteOriginal) {
         }
     });
 
+    SipconsSerie.vincular(inputCliente, document.getElementById('lista-series'));
+
     try {
         const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: 'no-store' });
         const clientes = await response.json();
@@ -348,6 +350,12 @@ function createFormHTML(data) {
                     <label>FECHA:</label>
                     <input type="date" id="fecha" value="${data.fecha || ''}" required style="width: 100%;">
                 </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>NÚMERO DE SERIE DEL EQUIPO (opcional):</label>
+                <input type="text" id="numero_serie" list="lista-series" autocomplete="off" maxlength="100" placeholder="Selecciona del padrón o escribe la serie" value="${escapeAttr(data.numero_serie)}" style="width: 100%;">
+                <datalist id="lista-series"></datalist>
             </div>
 
             <div style="flex: 1;">
@@ -643,6 +651,7 @@ async function handleFormSubmit(e, id) {
     formData.append("contacto", document.getElementById("contacto").value);
     formData.append("sucursal", document.getElementById("sucursal").value);
     formData.append("equipo", document.getElementById("equipo").value); // NUEVO CAMPO AGREGADO
+    formData.append("numero_serie", document.getElementById("numero_serie").value.trim());
     formData.append("fecha", document.getElementById("fecha").value);
     
     // Obtener todos los técnicos seleccionados y unirlos con "/"

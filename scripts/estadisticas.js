@@ -1,6 +1,6 @@
 // Variables globales para los charts
 let charts = {};
-let currentTab = 'direccion';
+let currentTab = 'direccion'; // pestaña "Global"
 let filtrosPoblados = false;
 
 // Paleta de gráficos alineada con la identidad visual del panel (css informes.html)
@@ -98,6 +98,17 @@ async function poblarFiltros() {
                 opt.value = nombre;
                 opt.textContent = nombre;
                 selectSucursal.appendChild(opt);
+            });
+        }
+
+        const selectRango = document.getElementById('rangoFecha');
+        if (selectRango && Array.isArray(resultado.data.anios)) {
+            const opcionCustom = selectRango.querySelector('option[value="custom"]');
+            resultado.data.anios.forEach(anio => {
+                const opt = document.createElement('option');
+                opt.value = `anio_${anio}`;
+                opt.textContent = `Año ${anio}`;
+                selectRango.insertBefore(opt, opcionCustom);
             });
         }
 
@@ -236,7 +247,10 @@ function actualizarEstadisticasGenerales(data) {
     actualizarElementoSiExiste('slaCierre', slaPct !== null && slaPct !== undefined ? `${slaPct}%` : 'N/D');
     actualizarElementoSiExiste('slaCierreDetalle', `Meta: cierre en ${SLA_CIERRE_DIAS} días o menos`);
 
-    actualizarElementoSiExiste('incidenciasReabiertas', tiempos.reabiertas ?? 0);
+    actualizarElementoSiExiste('incidenciasReabiertas', data.reincidencias ?? 0);
+    actualizarElementoSiExiste('incidenciasReincidenciasNota', data.reincidencias_serie_disponible === false
+        ? 'Aún no hay columna de número de serie en incidencias'
+        : 'Mismo equipo (n° de serie) que volvió a fallar de lo mismo');
 
     const tendencia = data.tendencia_incidencias ?? 0;
     const elemento = document.getElementById('tendenciaIncidencias');
@@ -342,7 +356,7 @@ function actualizarVistaDireccion(data) {
     actualizarElementoSiExiste('direccionCierre', cierreDias !== null && cierreDias !== undefined ? `${cierreDias} d` : 'N/D');
 
     actualizarElementoSiExiste('direccionFacturadas', resumen.incidencias_cerradas_factura ?? 0);
-    actualizarElementoSiExiste('direccionReabiertas', resumen.reabiertas ?? 0);
+    actualizarElementoSiExiste('direccionReabiertas', resumen.reincidencias ?? 0);
 
     renderInsights(data.insights);
     crearGraficoSlaSucursal(data.sla_por_sucursal);
@@ -386,7 +400,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.por_estatus.map(item => item.estatus || 'Sin estatus'),
                 datasets: [{
-                    data: data.por_estatus.map(item => item.cantidad),
+                    data: data.por_estatus.map(item => Number(item.cantidad)),
                     backgroundColor: PALETA_GRAFICOS,
                     borderWidth: 2,
                     borderColor: '#fff'
@@ -409,8 +423,8 @@ function crearGraficos(data) {
                         callbacks: {
                             label: function(context) {
                                 const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = Number(context.raw) || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + Number(b), 0);
                                 const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
                                 return `${label}: ${value} (${percentage}%)`;
                             }
@@ -448,7 +462,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.por_sucursal.map(item => item.sucursal || 'Sin sucursal'),
                 datasets: [{
-                    data: data.por_sucursal.map(item => item.cantidad),
+                    data: data.por_sucursal.map(item => Number(item.cantidad)),
                     backgroundColor: PALETA_GRAFICOS,
                     borderWidth: 2,
                     borderColor: '#fff'
@@ -537,7 +551,7 @@ function crearGraficos(data) {
 
     // Distribución real de tiempos de cierre (reemplaza el chart de "prioridad", que no existía en BD)
     const buckets = data.cierre_buckets || [];
-    const totalBuckets = buckets.reduce((a, b) => a + (b.cantidad || 0), 0);
+    const totalBuckets = buckets.reduce((a, b) => a + (Number(b.cantidad) || 0), 0);
     mostrarVacio('chartCierreBuckets', totalBuckets === 0);
     if (totalBuckets > 0) {
         charts.cierreBuckets = new Chart(document.getElementById('chartCierreBuckets'), {
@@ -720,7 +734,7 @@ function abrirModalPorEstatus(estatusClic) {
 
 function abrirModalReabiertas() {
     mostrarModalDrilldown(true);
-    cargarModalDrilldown({ modo: 'reabiertas' }, 'Incidencias reabiertas (reincidencias)');
+    cargarModalDrilldown({ modo: 'reincidencias' }, 'Reincidencias: mismo equipo (n° de serie) que volvió a fallar de lo mismo');
 }
 
 async function cargarModalDrilldown(extra, titulo) {

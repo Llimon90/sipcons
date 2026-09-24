@@ -45,16 +45,17 @@ function exportarCsv($conn, $pdo, $filtros_where) {
 
     $analisis = analizarTiemposIncidencias($pdo, $filas);
     $porIncidencia = $analisis['por_incidencia'];
+    $idsReincidentes = array_flip(calcularReincidencias($conn, $filtros_where)['ids']);
 
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="estadisticas_incidencias_' . date('Y-m-d_His') . '.csv"');
 
     $salida = fopen('php://output', 'w');
     fwrite($salida, "\xEF\xBB\xBF"); // BOM para que Excel abra los acentos bien
-    fputcsv($salida, ['Folio', 'Cliente', 'Sucursal', 'Técnico', 'Equipo', 'Falla', 'Estatus', 'Fecha', 'Tiempo de respuesta (h)', 'Tiempo de cierre (días)', 'Reabierta']);
+    fputcsv($salida, ['Folio', 'Cliente', 'Sucursal', 'Técnico', 'Equipo', 'Falla', 'Estatus', 'Fecha', 'Tiempo de respuesta (h)', 'Tiempo de cierre (días)', 'Reincidencia']);
 
     foreach ($filas as $fila) {
-        $tiempos = $porIncidencia[(string)$fila['id']] ?? ['respuesta_horas' => null, 'cierre_horas' => null, 'reabierta' => false];
+        $tiempos = $porIncidencia[(string)$fila['id']] ?? ['respuesta_horas' => null, 'cierre_horas' => null];
         fputcsv($salida, [
             $fila['numero_incidente'],
             $fila['cliente'],
@@ -66,7 +67,7 @@ function exportarCsv($conn, $pdo, $filtros_where) {
             $fila['fecha'],
             $tiempos['respuesta_horas'] !== null ? round($tiempos['respuesta_horas'], 1) : '',
             $tiempos['cierre_horas'] !== null ? round($tiempos['cierre_horas'] / 24, 1) : '',
-            $tiempos['reabierta'] ? 'Sí' : 'No',
+            isset($idsReincidentes[(string)$fila['id']]) ? 'Sí' : 'No',
         ]);
     }
 
@@ -89,7 +90,7 @@ if ($action === 'exportar_csv') {
 switch ($action) {
 
     case 'filtros_opciones':
-        $sql_sucursales = "SELECT DISTINCT sucursal FROM {$tabla_incidencias} WHERE sucursal IS NOT NULL AND sucursal <> '' ORDER BY sucursal";
+        $sql_sucursales = "SELECT DISTINCT TRIM(sucursal) AS sucursal FROM {$tabla_incidencias} i WHERE " . condicionSucursalReal('i') . " ORDER BY sucursal";
         $sucursales = array_column(ejecutarConsulta($conn, $sql_sucursales), 'sucursal');
 
         $sql_tecnicos_raw = "SELECT DISTINCT tecnico FROM {$tabla_incidencias} WHERE tecnico IS NOT NULL AND tecnico <> ''";
@@ -102,8 +103,16 @@ switch ($action) {
         }
         sort($tecnicos, SORT_STRING | SORT_FLAG_CASE);
 
+        // Años anteriores al actual con incidencias, para comparativas rápidas
+        $anioActual = (int)date('Y');
+        $anios = [];
+        foreach (ejecutarConsulta($conn, "SELECT DISTINCT YEAR(fecha) AS anio FROM {$tabla_incidencias} WHERE fecha IS NOT NULL ORDER BY anio DESC") as $fila) {
+            $anio = (int)$fila['anio'];
+            if ($anio > 0 && $anio < $anioActual) $anios[] = $anio;
+        }
+
         $response['success'] = true;
-        $response['data'] = ['tecnicos' => $tecnicos, 'sucursales' => $sucursales];
+        $response['data'] = ['tecnicos' => $tecnicos, 'sucursales' => $sucursales, 'anios' => $anios];
         break;
 
     case 'incidencias_por_estatus':
@@ -115,30 +124,28 @@ switch ($action) {
         // define el elemento en el que se hizo clic.
         $modo = $_GET['modo'] ?? 'estatus';
 
-        if ($modo === 'reabiertas') {
-            $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
-            $dataset = ejecutarConsulta($conn, $sql_dataset);
-            $porIncidencia = analizarTiemposIncidencias($pdo, $dataset)['por_incidencia'];
-            $idsReabiertas = array_keys(array_filter($porIncidencia, fn($x) => $x['reabierta']));
+        if ($modo === 'reincidencias') {
+            $reincidencias = calcularReincidencias($conn, $filtros_where);
+            $idsReincidentes = $reincidencias['ids'];
 
-            if (empty($idsReabiertas)) {
+            if (empty($idsReincidentes)) {
                 $response['success'] = true;
-                $response['data'] = ['incidencias' => [], 'total' => 0, 'limitado' => false];
+                $response['data'] = ['incidencias' => [], 'total' => 0, 'limitado' => false, 'serie_disponible' => $reincidencias['serie_disponible']];
                 break;
             }
 
-            $placeholders = implode(',', array_fill(0, count($idsReabiertas), '?'));
+            $placeholders = implode(',', array_fill(0, count($idsReincidentes), '?'));
             $stmt = $pdo->prepare("
-                SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha
+                SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha, numero_serie
                 FROM {$tabla_incidencias}
                 WHERE id IN ($placeholders)
-                ORDER BY fecha DESC
+                ORDER BY numero_serie ASC, fecha DESC
             ");
-            $stmt->execute($idsReabiertas);
+            $stmt->execute($idsReincidentes);
             $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $response['success'] = true;
-            $response['data'] = ['incidencias' => $filas, 'total' => count($filas), 'limitado' => false];
+            $response['data'] = ['incidencias' => $filas, 'total' => count($filas), 'limitado' => false, 'serie_disponible' => true];
             break;
         }
 
@@ -219,6 +226,7 @@ switch ($action) {
         $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";
         $dataset = ejecutarConsulta($conn, $sql_dataset);
         $analisis_tiempos = analizarTiemposIncidencias($pdo, $dataset)['agregado'];
+        $reincidencias_periodo = calcularReincidencias($conn, $filtros_where);
 
         // 9. Tendencia real vs el período anterior equivalente (misma duración, inmediatamente antes)
         $dtIni = new DateTime($rango_actual['fecha_inicio']);
@@ -249,6 +257,8 @@ switch ($action) {
             'top_fallas' => $top_fallas,
             'tendencia_incidencias' => $tendencia_incidencias,
             'tiempos' => $analisis_tiempos,
+            'reincidencias' => $reincidencias_periodo['total'],
+            'reincidencias_serie_disponible' => $reincidencias_periodo['serie_disponible'],
             'last_updated' => date('H:i:s'),
         ];
         break;
@@ -261,7 +271,9 @@ switch ($action) {
         $data_incidencias['por_estatus'] = ejecutarConsulta($conn, $sql_estatus);
 
         // Gráfico 2: Por Sucursal
-        $sql_sucursal = "SELECT sucursal, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} GROUP BY sucursal ORDER BY cantidad DESC";
+        // Solo sucursales reales: las incidencias sin sucursal (clientes de una sola sede) no son una "sucursal"
+        $conector_suc = empty($filtros_where) ? "WHERE" : "AND";
+        $sql_sucursal = "SELECT TRIM(sucursal) AS sucursal, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector_suc} " . condicionSucursalReal('i') . " GROUP BY TRIM(sucursal) ORDER BY cantidad DESC";
         $data_incidencias['por_sucursal'] = ejecutarConsulta($conn, $sql_sucursal);
 
         // Gráfico 3: Histórico mensual
@@ -393,6 +405,7 @@ switch ($action) {
         $dataset = ejecutarConsulta($conn, $sql_dataset);
         $analisis = analizarTiemposIncidencias($pdo, $dataset);
         $agregado = $analisis['agregado'];
+        $reincidencias_periodo = calcularReincidencias($conn, $filtros_where);
         $total_incidencias = count($dataset);
         $conector = empty($filtros_where) ? "WHERE" : "AND";
 
@@ -410,7 +423,7 @@ switch ($action) {
 
         $facturadas = ejecutarConsulta($conn, "SELECT COUNT(id) AS c FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'cerrado con factura'")[0]['c'] ?? 0;
 
-        $top_sucursal = ejecutarConsulta($conn, "SELECT sucursal, COUNT(*) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} sucursal IS NOT NULL AND sucursal <> '' GROUP BY sucursal ORDER BY cantidad DESC LIMIT 1");
+        $top_sucursal = ejecutarConsulta($conn, "SELECT TRIM(sucursal) AS sucursal, COUNT(*) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} " . condicionSucursalReal('i') . " GROUP BY TRIM(sucursal) ORDER BY cantidad DESC LIMIT 1");
         $top_falla = ejecutarConsulta($conn, "SELECT falla, COUNT(*) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} falla IS NOT NULL AND falla <> '' GROUP BY falla ORDER BY cantidad DESC LIMIT 1");
 
         // SLA por sucursal (solo con al menos 3 incidencias cerradas en el periodo, para no sacar conclusiones de una sola muestra)
@@ -471,9 +484,9 @@ switch ($action) {
             $insights[] = "El técnico con el cierre más rápido es {$tecnico_mas_rapido} (mediana de " . round($menor_mediana / 24, 1) . " días).";
         }
 
-        if ($agregado['reabiertas'] > 0 && $agregado['muestras_cierre'] > 0) {
-            $pctReabiertas = round(($agregado['reabiertas'] / $agregado['muestras_cierre']) * 100, 1);
-            $insights[] = "{$agregado['reabiertas']} incidencias se reabrieron tras haberse cerrado ({$pctReabiertas}% de las cerradas). Vale la pena revisarlas.";
+        if ($reincidencias_periodo['total'] > 0 && $total_incidencias > 0) {
+            $pctReincidencias = round(($reincidencias_periodo['total'] / $total_incidencias) * 100, 1);
+            $insights[] = "{$reincidencias_periodo['total']} incidencias fueron reincidencias: el mismo equipo (número de serie) volvió a fallar de algo parecido en menos de " . REINCIDENCIA_VENTANA_DIAS . " días ({$pctReincidencias}% del total). Vale la pena revisarlas.";
         }
 
         $response['success'] = true;
@@ -484,7 +497,8 @@ switch ($action) {
                 'sla_cierre_pct' => $agregado['sla_cierre_pct'],
                 'cierre_mediana_dias' => $agregado['cierre_mediana_horas'] !== null ? round($agregado['cierre_mediana_horas'] / 24, 1) : null,
                 'respuesta_mediana_horas' => $agregado['respuesta_mediana_horas'],
-                'reabiertas' => $agregado['reabiertas'],
+                'reincidencias' => $reincidencias_periodo['total'],
+                'reincidencias_serie_disponible' => $reincidencias_periodo['serie_disponible'],
                 'muestras_cierre' => $agregado['muestras_cierre'],
                 'incidencias_cerradas_factura' => (int)$facturadas,
             ],

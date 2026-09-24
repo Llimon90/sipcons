@@ -42,7 +42,10 @@ function construirFiltros($conn, $tabla_alias = 'i', $campo_fecha = 'fecha', $fe
         $fecha_actual = new DateTime();
         $fecha_fin = $fecha_actual->format('Y-m-d');
 
-        if ($rango === 'custom' && !empty($_GET['fechaInicio']) && !empty($_GET['fechaFin'])) {
+        if (preg_match('/^anio_(\d{4})$/', $rango, $mAnio)) {
+            $fecha_inicio = $mAnio[1] . '-01-01';
+            $fecha_fin = $mAnio[1] . '-12-31';
+        } elseif ($rango === 'custom' && !empty($_GET['fechaInicio']) && !empty($_GET['fechaFin'])) {
             $fecha_inicio = $_GET['fechaInicio'];
             $fecha_fin = $_GET['fechaFin'];
         } else {
@@ -77,6 +80,22 @@ function construirFiltros($conn, $tabla_alias = 'i', $campo_fecha = 'fecha', $fe
         'fecha_inicio' => $fecha_inicio,
         'fecha_fin' => $fecha_fin,
     ];
+}
+
+/**
+ * Condición SQL para excluir incidencias sin sucursal real. Muchos clientes
+ * tienen una sola sucursal y el usuario deja el campo vacío (NULL o ''), o
+ * escribe un relleno como "N/A": eso NO es una sucursal y no debe agruparse
+ * como si lo fuera.
+ */
+function condicionSucursalReal($alias = 'i') {
+    $col = "TRIM(COALESCE({$alias}.sucursal, ''))";
+    return "{$col} <> '' AND LOWER({$col}) NOT IN ('n/a', 'na', 'no aplica', 'ninguna', 'sin sucursal', '-', '--')";
+}
+
+function sucursalEsReal($sucursal) {
+    $s = mb_strtolower(trim((string)$sucursal));
+    return $s !== '' && !in_array($s, ['n/a', 'na', 'no aplica', 'ninguna', 'sin sucursal', '-', '--'], true);
 }
 
 /**
@@ -167,7 +186,6 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             'muestras_cierre' => 0,
             'sla_respuesta_pct' => null,
             'sla_cierre_pct' => null,
-            'reabiertas' => 0,
             'total_incidencias' => count($filas),
             'cierre_buckets' => [
                 ['label' => '< 1 día', 'cantidad' => 0],
@@ -188,7 +206,7 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
     $stmt = $pdo->prepare("
-        SELECT registro_id, datos_nuevos, creado_en
+        SELECT registro_id, accion, datos_anteriores, datos_nuevos, creado_en
         FROM auditoria
         WHERE tabla = 'incidencias' AND registro_id IN ($placeholders)
         ORDER BY registro_id, creado_en ASC, id ASC
@@ -203,10 +221,8 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
 
     $tiemposRespuesta = [];
     $tiemposCierre = [];
-    $reabiertas = 0;
     $porIncidencia = [];
     $cierrePorTecnico = []; // tecnico => [horas, ...]
-    $reabiertasPorTecnico = []; // tecnico => cantidad
     $cierrePorSucursal = []; // sucursal => [horas, ...]
 
     foreach ($filas as $fila) {
@@ -218,27 +234,65 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
 
         $tsRespuesta = null;
         $tsCierre = null;
-        $huboCierre = false;
-        $seReabrio = false;
+        $tsAltaAuditada = null;
+        $primerEvento = true;
+        $respuestaMedible = true;
 
         foreach (($eventosPorId[$id] ?? []) as $ev) {
+            if (($ev['accion'] ?? '') === 'DELETE') continue;
+
             $datos = json_decode($ev['datos_nuevos'] ?? '', true);
             if (!is_array($datos) || !array_key_exists('estatus', $datos)) continue;
 
-            $estatusLower = strtolower(trim((string)$datos['estatus']));
             $tsEvento = strtotime($ev['creado_en']);
             if ($tsEvento === false) continue;
 
-            if ($tsRespuesta === null && !in_array($estatusLower, ESTADOS_SIN_RESPUESTA, true)) {
+            $estatusNuevo = strtolower(trim((string)$datos['estatus']));
+            $esAlta = ($ev['accion'] ?? '') === 'CREATE';
+
+            $estatusPrevio = null;
+            if (!$esAlta) {
+                $anteriores = json_decode($ev['datos_anteriores'] ?? '', true);
+                if (is_array($anteriores) && array_key_exists('estatus', $anteriores)) {
+                    $estatusPrevio = strtolower(trim((string)$anteriores['estatus']));
+                }
+            }
+
+            if ($esAlta && $tsAltaAuditada === null) {
+                $tsAltaAuditada = $tsEvento;
+            }
+
+            // Incidencias anteriores a la auditoría: si el primer evento
+            // registrado ya parte de un estatus "atendido", la primera
+            // respuesta ocurrió antes de que existiera historial y no se
+            // puede medir (antes se tomaba la primera edición posterior).
+            if ($primerEvento && !$esAlta && $estatusPrevio !== null && !in_array($estatusPrevio, ESTADOS_SIN_RESPUESTA, true)) {
+                $respuestaMedible = false;
+            }
+            $primerEvento = false;
+
+            // Solo cuenta un cambio REAL de estatus. Editar notas/técnico de
+            // una incidencia ya cerrada vuelve a guardar el mismo estatus y
+            // antes se tomaba como si fuera el momento de cierre, inflando
+            // los tiempos (p.ej. 3 días de "cierre" en algo cerrado meses atrás).
+            if (!$esAlta && $estatusPrevio !== null && $estatusPrevio === $estatusNuevo) {
+                continue;
+            }
+
+            if ($respuestaMedible && $tsRespuesta === null && !in_array($estatusNuevo, ESTADOS_SIN_RESPUESTA, true)) {
                 $tsRespuesta = $tsEvento;
             }
 
-            if (in_array($estatusLower, ESTADOS_CERRADOS, true)) {
-                if ($tsCierre === null) $tsCierre = $tsEvento;
-                $huboCierre = true;
-            } elseif ($huboCierre && in_array($estatusLower, ESTADOS_SIN_RESPUESTA, true)) {
-                $seReabrio = true;
+            if ($tsCierre === null && in_array($estatusNuevo, ESTADOS_CERRADOS, true)) {
+                $tsCierre = $tsEvento;
             }
+        }
+
+        // La "Fecha de Reporte" es solo una fecha (00:00). Si la incidencia se
+        // dio de alta el mismo día, se usa la hora real del alta para no
+        // sumar horas ficticias al tiempo medido.
+        if ($tsAltaAuditada !== null && date('Y-m-d', $tsAltaAuditada) === date('Y-m-d', $tsCreacion) && $tsAltaAuditada > $tsCreacion) {
+            $tsCreacion = $tsAltaAuditada;
         }
 
         $respuestaHoras = ($tsRespuesta !== null && $tsRespuesta >= $tsCreacion) ? ($tsRespuesta - $tsCreacion) / 3600 : null;
@@ -249,21 +303,15 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             $tiemposCierre[] = $cierreHoras;
             foreach (separarTecnicos($fila['tecnico'] ?? '') as $tecnico) {
                 $cierrePorTecnico[$tecnico][] = $cierreHoras;
-                if ($seReabrio) {
-                    $reabiertasPorTecnico[$tecnico] = ($reabiertasPorTecnico[$tecnico] ?? 0) + 1;
-                }
             }
-            $sucursal = trim($fila['sucursal'] ?? '');
-            if ($sucursal !== '') {
-                $cierrePorSucursal[$sucursal][] = $cierreHoras;
+            if (sucursalEsReal($fila['sucursal'] ?? '')) {
+                $cierrePorSucursal[trim($fila['sucursal'])][] = $cierreHoras;
             }
         }
-        if ($seReabrio) $reabiertas++;
 
         $porIncidencia[$id] = [
             'respuesta_horas' => $respuestaHoras,
             'cierre_horas' => $cierreHoras,
-            'reabierta' => $seReabrio,
         ];
     }
 
@@ -292,7 +340,6 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             'cierre_mediana_horas' => mediana($horas),
             'cierre_promedio_horas' => promedio($horas),
             'sla_pct' => round((count($dentroSla) / count($horas)) * 100, 1),
-            'reabiertas' => $reabiertasPorTecnico[$tecnico] ?? 0,
         ];
     }
 
@@ -318,7 +365,6 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             'muestras_cierre' => count($tiemposCierre),
             'sla_respuesta_pct' => count($tiemposRespuesta) > 0 ? round((count($dentroSlaRespuesta) / count($tiemposRespuesta)) * 100, 1) : null,
             'sla_cierre_pct' => count($tiemposCierre) > 0 ? round((count($dentroSlaCierre) / count($tiemposCierre)) * 100, 1) : null,
-            'reabiertas' => $reabiertas,
             'total_incidencias' => count($filas),
             'cierre_buckets' => $buckets,
         ],
@@ -366,4 +412,89 @@ function calcularEstadisticasTecnicos($conn, $filtros_where) {
     uasort($resultado, fn($a, $b) => $b['asignadas'] - $a['asignadas']);
 
     return $resultado;
+}
+
+// Una incidencia es reincidencia si el mismo equipo (número de serie) ya
+// había fallado por algo parecido en este número de días previos. Por
+// facturación no se reabren tickets: el cliente abre uno nuevo.
+const REINCIDENCIA_VENTANA_DIAS = 90;
+
+function incidenciasTieneNumeroSerie($conn) {
+    static $existe = null;
+    if ($existe === null) {
+        $r = $conn->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'");
+        $existe = ($r !== false && $r->num_rows > 0);
+    }
+    return $existe;
+}
+
+function normalizarTextoFalla($texto) {
+    $t = mb_strtolower(trim((string)$texto));
+    $t = strtr($t, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+    $t = preg_replace('/[^a-z0-9]+/', ' ', $t);
+    return trim($t);
+}
+
+function fallasSimilares($a, $b) {
+    $na = normalizarTextoFalla($a);
+    $nb = normalizarTextoFalla($b);
+    if ($na === '' || $nb === '') return false;
+    if ($na === $nb) return true;
+    if (strlen($na) >= 5 && strlen($nb) >= 5 && (strpos($na, $nb) !== false || strpos($nb, $na) !== false)) return true;
+
+    $tokens = fn($t) => array_values(array_unique(array_filter(explode(' ', $t), fn($w) => strlen($w) > 3)));
+    $ta = $tokens($na);
+    $tb = $tokens($nb);
+    if (empty($ta) || empty($tb)) return false;
+    $comunes = count(array_intersect($ta, $tb));
+    $union = count(array_unique(array_merge($ta, $tb)));
+    return $union > 0 && ($comunes / $union) >= 0.5;
+}
+
+/**
+ * Reincidencias dentro del conjunto filtrado: incidencias cuyo equipo
+ * (número de serie) ya había fallado de algo parecido en los
+ * REINCIDENCIA_VENTANA_DIAS previos (se busca en todo el historial, no solo
+ * en el periodo filtrado). Devuelve los ids reincidentes.
+ */
+function calcularReincidencias($conn, $filtros_where) {
+    $vacio = ['ids' => [], 'total' => 0, 'serie_disponible' => incidenciasTieneNumeroSerie($conn)];
+    if (!$vacio['serie_disponible']) return $vacio;
+
+    $conector = empty($filtros_where) ? "WHERE" : "AND";
+    $enPeriodo = ejecutarConsulta($conn, "SELECT id, fecha, numero_serie, falla FROM incidencias i {$filtros_where} {$conector} TRIM(COALESCE(i.numero_serie, '')) <> ''");
+    if (empty($enPeriodo)) return $vacio;
+
+    $series = [];
+    foreach ($enPeriodo as $f) {
+        $series[strtoupper(trim($f['numero_serie']))] = true;
+    }
+    $lista = implode(',', array_map(fn($x) => "'" . $conn->real_escape_string($x) . "'", array_keys($series)));
+    $historial = ejecutarConsulta($conn, "SELECT id, fecha, numero_serie, falla FROM incidencias WHERE UPPER(TRIM(numero_serie)) IN ({$lista}) ORDER BY fecha ASC, id ASC");
+
+    $porSerie = [];
+    foreach ($historial as $h) {
+        $porSerie[strtoupper(trim($h['numero_serie']))][] = $h;
+    }
+
+    $idsPeriodo = array_flip(array_map(fn($f) => (string)$f['id'], $enPeriodo));
+    $reincidentes = [];
+    foreach ($porSerie as $eventos) {
+        foreach ($eventos as $i => $actual) {
+            if (!isset($idsPeriodo[(string)$actual['id']])) continue;
+            $tsActual = strtotime($actual['fecha']);
+            for ($j = $i - 1; $j >= 0; $j--) {
+                $previa = $eventos[$j];
+                $tsPrevia = strtotime($previa['fecha']);
+                if ($tsActual === false || $tsPrevia === false) continue;
+                if (($tsActual - $tsPrevia) / 86400 > REINCIDENCIA_VENTANA_DIAS) break;
+                if (fallasSimilares($actual['falla'], $previa['falla'])) {
+                    $reincidentes[] = (string)$actual['id'];
+                    break;
+                }
+            }
+        }
+    }
+
+    return ['ids' => $reincidentes, 'total' => count($reincidentes), 'serie_disponible' => true];
 }
