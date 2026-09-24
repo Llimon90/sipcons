@@ -24,9 +24,14 @@ $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $sqlTecnico = $conn->query("SELECT tecnico FROM incidencias WHERE tecnico IS NOT NULL AND tecnico <> ''");
 $valoresTecnico = [];
+$nombresIndividuales = [];
 while ($fila = $sqlTecnico->fetch_assoc()) {
     $valoresTecnico[] = $fila['tecnico'];
+    foreach (separarTecnicos($fila['tecnico']) as $t) {
+        $nombresIndividuales[$t] = ($nombresIndividuales[$t] ?? 0) + 1;
+    }
 }
+arsort($nombresIndividuales);
 
 $resultado = [];
 foreach ($usuarios as $u) {
@@ -49,6 +54,10 @@ foreach ($usuarios as $u) {
     ];
 }
 
-echo json_encode(['success' => true, 'data' => $resultado], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+echo json_encode([
+    'success' => true,
+    'data' => $resultado,
+    'valores_en_incidencias' => $nombresIndividuales,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 $conn->close();
