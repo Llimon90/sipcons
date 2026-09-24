@@ -68,7 +68,6 @@
         'detalles-venta.html': 'ventas',
         'soporte.html': 'soporte',
         'informes.html': 'informes',
-        'dashboard-tecnico.html': 'informes',
         'historial.html': 'historial',
     };
 
