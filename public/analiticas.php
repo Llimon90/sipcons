@@ -29,26 +29,35 @@ header('Content-Type: text/html; charset=utf-8');
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
+<script>
+try {
+  var t = localStorage.getItem('an_tema') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
+} catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+</script>
 <title>Analíticas de uso - SIPCONS</title>
 <link rel="icon" href="../img/favicon.ico" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--ink:#1f2d3a;--ink2:#5b6b7a;--line:#dde3ea;--bg:#f3f5f8;--panel:#fff;--accent:#2563eb;--accent2:#0f766e;--good:#16a34a;--warn:#d97706;--bad:#dc2626;--info:#64748b}
+:root{--ink:#1f2d3a;--ink2:#5b6b7a;--line:#dde3ea;--bg:#f3f5f8;--panel:#fff;--accent:#2563eb;--accent2:#0f766e;--good:#16a34a;--warn:#d97706;--bad:#dc2626;--info:#64748b;
+--top:#1f2d3a;--th:#f8fafc;--hover:#f1f6ff;--sec:#e8edf3;--errbg:#fde8e8;--errink:#991b1b;--heat0:#eef2f6;--heatink:#0b2540;--muted:#cbd5e1;--scrim:rgba(15,23,42,.55);color-scheme:light}
+:root[data-theme="dark"]{--ink:#e3eaf1;--ink2:#9fb0c1;--line:#293645;--bg:#0e141b;--panel:#161f2a;--accent:#5b9bff;--accent2:#2dd4bf;--good:#4ade80;--warn:#fbbf24;--bad:#f87171;--info:#94a3b8;
+--top:#0a1017;--th:#1a2531;--hover:#1c2a3a;--sec:#243244;--errbg:#3b1a1c;--errink:#fecaca;--heat0:#1d2733;--heatink:#e6f0ff;--muted:#475569;--scrim:rgba(0,0,0,.7);color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
 a{color:var(--accent)}
-.top{background:#1f2d3a;color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.top{background:var(--top);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
 .top h1{margin:0;font-size:20px;font-weight:600}
 .top small{color:#b6c3d0}
 .top a{color:#cfe0ff;text-decoration:none;font-size:13px}
 .wrap{max-width:1300px;margin:0 auto;padding:16px 20px 60px}
 .filters{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:14px}
 .filters label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
-.filters select,.filters input[type=date]{padding:7px 8px;border:1px solid var(--line);border-radius:6px;font-size:14px;background:#fff;color:var(--ink)}
+.filters select,.filters input[type=date]{padding:7px 8px;border:1px solid var(--line);border-radius:6px;font-size:14px;background:var(--panel);color:var(--ink)}
 .filters .chk{flex-direction:row;align-items:center;gap:6px;text-transform:none;font-weight:500;font-size:13px}
 button.btn{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:14px;cursor:pointer}
-button.btn.sec{background:#e8edf3;color:var(--ink)}
+button.btn.sec{background:var(--sec);color:var(--ink)}
 .tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;border-bottom:2px solid var(--line)}
 .tab{background:none;border:0;padding:10px 14px;font-size:14px;cursor:pointer;color:var(--ink2);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:600}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
@@ -67,10 +76,10 @@ button.btn.sec{background:#e8edf3;color:var(--ink)}
 .tablewrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink2);background:#f8fafc;white-space:nowrap;cursor:default}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink2);background:var(--th);white-space:nowrap;cursor:default}
 th.sortable{cursor:pointer}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-tr.click{cursor:pointer}tr.click:hover{background:#f1f6ff}
+tr.click{cursor:pointer}tr.click:hover{background:var(--hover)}
 .bar{display:inline-block;height:8px;background:var(--accent);border-radius:4px;vertical-align:middle;margin-left:6px;min-width:2px}
 .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;color:#fff}
 .pill.alto{background:var(--bad)}.pill.medio{background:var(--warn)}.pill.bajo{background:var(--info)}.pill.info{background:var(--accent2)}
@@ -80,14 +89,14 @@ tr.click{cursor:pointer}tr.click:hover{background:#f1f6ff}
 .hall .sug{margin-top:4px;color:var(--ink2)}
 .hall .sug b{color:var(--ink)}
 .empty{color:var(--ink2);padding:20px;text-align:center}
-.err{background:#fde8e8;color:#991b1b;border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.err{background:var(--errbg);color:var(--errink);border-radius:8px;padding:12px 14px;margin-bottom:12px}
 .loading{opacity:.5;pointer-events:none}
 .heat{border-collapse:separate;border-spacing:2px;font-size:11px;width:auto}
 .heat td,.heat th{padding:0;text-align:center;border:0;background:none}
-.heat td.c{width:26px;height:22px;border-radius:3px;font-size:10px;color:#0b2540}
+.heat td.c{width:26px;height:22px;border-radius:3px;font-size:10px;color:var(--heatink);background:var(--heat0)}
 .heat th{font-size:10px;color:var(--ink2);text-transform:none;background:none;padding:0 4px}
 .path{color:var(--ink2);font-size:12.5px}
-.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;z-index:50;overflow-y:auto}
+.overlay{position:fixed;inset:0;background:var(--scrim);display:none;z-index:50;overflow-y:auto}
 .overlay.on{display:block}
 .drawer{background:var(--bg);max-width:1100px;margin:30px auto;border-radius:10px;padding:18px 20px 30px;min-height:200px}
 .drawer .hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
@@ -96,8 +105,8 @@ tr.click{cursor:pointer}tr.click:hover{background:#f1f6ff}
 .tl .ev{position:relative;padding:3px 0;font-size:13px}
 .tl .ev:before{content:"";position:absolute;left:-20px;top:9px;width:9px;height:9px;border-radius:50%;background:var(--accent)}
 .tl .ev.error:before{background:var(--bad)}.tl .ev.pageview:before{background:var(--accent2);width:11px;height:11px;left:-21px}
-.tl .ev.perm:before{background:#cbd5e1}
-.tl .t{color:var(--ink2);font-variant-numeric:tabular-nums;display:inline-block;min-width:64px}
+.tl .ev.perm:before{background:var(--muted)}
+.tl .t{color:var(--ink2);font-variant-numeric:tabular-nums;display:inline-block;min-width:96px;margin-right:6px}
 @media (max-width:640px){.wrap{padding:12px 10px 50px}.kpi .v{font-size:22px}}
 </style>
 </head>
@@ -107,6 +116,7 @@ tr.click{cursor:pointer}tr.click:hover{background:#f1f6ff}
     <h1><i class="fas fa-binoculars"></i> Analíticas de uso</h1>
     <small id="estado">Cargando…</small>
   </div>
+  <button class="btn sec" id="btnTema" type="button" title="Cambiar entre modo claro y oscuro"><i class="fas fa-moon"></i> <span>Modo oscuro</span></button>
 </div>
 
 <div class="wrap">
@@ -158,6 +168,6 @@ tr.click{cursor:pointer}tr.click:hover{background:#f1f6ff}
 
 <div class="overlay" id="overlay"><div class="drawer" id="drawer"></div></div>
 
-<script src="../scripts/analiticas-panel.js?v=1"></script>
+<script src="../scripts/analiticas-panel.js?v=3"></script>
 </body>
 </html>

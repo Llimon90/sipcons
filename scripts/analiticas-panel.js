@@ -10,6 +10,29 @@
     var tabActual = 'hallazgos';
     var cargando = false;
 
+    // ------------------------------------------------------------ tema
+    function esOscuro() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+    function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+    function aplicarTemaCharts() {
+        if (!window.Chart) return;
+        Chart.defaults.color = esOscuro() ? '#9fb0c1' : '#5b6b7a';
+        Chart.defaults.borderColor = esOscuro() ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.1)';
+    }
+    function pintarBotonTema() {
+        var b = document.getElementById('btnTema');
+        if (!b) return;
+        b.querySelector('i').className = esOscuro() ? 'fas fa-sun' : 'fas fa-moon';
+        b.querySelector('span').textContent = esOscuro() ? 'Modo claro' : 'Modo oscuro';
+    }
+    function alternarTema() {
+        var nuevo = esOscuro() ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', nuevo);
+        try { localStorage.setItem('an_tema', nuevo); } catch (e) { /* sin storage */ }
+        aplicarTemaCharts();
+        pintarBotonTema();
+        cargarTab(tabActual);
+    }
+
     // ------------------------------------------------------------ helpers DOM
     function el(tag, cls, txt) {
         var e = document.createElement(tag);
@@ -223,9 +246,9 @@
             data: {
                 labels: d.serie.map(function (s) { return s.fecha.slice(5); }),
                 datasets: [
-                    { label: 'Visitas', data: d.serie.map(function (s) { return s.visitas; }), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.1)', fill: true, tension: .3 },
-                    { label: 'Sesiones', data: d.serie.map(function (s) { return s.sesiones; }), borderColor: '#0f766e', tension: .3 },
-                    { label: 'Usuarios', data: d.serie.map(function (s) { return s.usuarios; }), borderColor: '#d97706', tension: .3 }
+                    { label: 'Visitas', data: d.serie.map(function (s) { return s.visitas; }), borderColor: cssVar('--accent'), backgroundColor: esOscuro() ? 'rgba(91,155,255,.12)' : 'rgba(37,99,235,.1)', fill: true, tension: .3 },
+                    { label: 'Sesiones', data: d.serie.map(function (s) { return s.sesiones; }), borderColor: cssVar('--accent2'), tension: .3 },
+                    { label: 'Usuarios', data: d.serie.map(function (s) { return s.usuarios; }), borderColor: cssVar('--warn'), tension: .3 }
                 ]
             },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
@@ -246,7 +269,7 @@
             fila.forEach(function (n, hh) {
                 var td = el('td', 'c', n || '');
                 var a = max > 0 ? n / max : 0;
-                td.style.background = n ? 'rgba(37,99,235,' + (0.12 + a * 0.88).toFixed(2) + ')' : '#eef2f6';
+                if (n) td.style.background = esOscuro() ? 'rgba(91,155,255,' + (0.18 + a * 0.82).toFixed(2) + ')' : 'rgba(37,99,235,' + (0.12 + a * 0.88).toFixed(2) + ')';
                 td.title = dias[i] + ' ' + hh + ':00 — ' + n + ' visitas';
                 r.appendChild(td);
             });
@@ -262,7 +285,7 @@
             if (!datos.length) b.appendChild(vacio());
             else b.appendChild(grafica(par[0], {
                 type: 'doughnut',
-                data: { labels: datos.map(function (x) { return x.nombre; }), datasets: [{ data: datos.map(function (x) { return x.sesiones; }), backgroundColor: ['#2563eb', '#0f766e', '#d97706', '#8e44ad', '#dc2626', '#64748b', '#0891b2'] }] },
+                data: { labels: datos.map(function (x) { return x.nombre; }), datasets: [{ data: datos.map(function (x) { return x.sesiones; }), backgroundColor: ['#2563eb', '#0f766e', '#d97706', '#8e44ad', '#dc2626', '#64748b', '#0891b2'], borderColor: cssVar('--panel'), borderWidth: 2 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             }, 230));
             cols.appendChild(b);
@@ -680,6 +703,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        aplicarTemaCharts();
+        pintarBotonTema();
+        document.getElementById('btnTema').addEventListener('click', alternarTema);
         var hoy = new Date();
         var hace = new Date(); hace.setDate(hoy.getDate() - 29);
         document.getElementById('fHasta').value = hoy.toISOString().slice(0, 10);
