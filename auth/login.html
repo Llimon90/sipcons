@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iniciar sesión — SIPCONS</title>
+  <script>
+    // Recuerda el tema elegido en este dispositivo (la cuenta lo confirma al entrar)
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('sipcons_tema') === 'oscuro' ? 'dark' : 'light'); } catch (e) {}
+  </script>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
@@ -22,6 +26,22 @@
       --primary-hover: #0b3d68;
       --focus: rgba(15,76,129,0.18);
     }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0e1620;
+      --card: #16212d;
+      --border: #2c3d50;
+      --text: #e6edf3;
+      --muted: #9fb0c1;
+      --primary: #2f7fc1;
+      --primary-hover: #4aa8ee;
+      --focus: rgba(74, 168, 238, 0.28);
+    }
+    html[data-theme="dark"] .logo { background: #fff; border-radius: 8px; padding: 10px 14px; }
+    html[data-theme="dark"] input { background: #1b2836; color: #e6edf3; border-color: #3a4d63; }
+    html[data-theme="dark"] input::placeholder { color: #7a8ea1; }
+    html[data-theme="dark"] .error-msg { background: #3b1a1c; border-color: #6b2b2f; color: #ffb3b3; }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

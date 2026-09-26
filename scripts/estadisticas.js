@@ -16,7 +16,22 @@ const PALETA_GRAFICOS = [
 const SLA_RESPUESTA_HORAS = 4;
 const SLA_CIERRE_DIAS = 7;
 
+// Colores de ejes, leyendas y cuadrícula de Chart.js según el tema (claro/oscuro)
+function aplicarTemaGraficos() {
+    if (typeof Chart === 'undefined') return;
+    const oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+    Chart.defaults.color = oscuro ? '#9fb0c1' : '#666';
+    Chart.defaults.borderColor = oscuro ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.1)';
+}
+
+// El tema de la cuenta puede llegar después de cargar la página: se repinta todo
+window.addEventListener('sipcons-tema', function() {
+    aplicarTemaGraficos();
+    cargarEstadisticas();
+});
+
 document.addEventListener('DOMContentLoaded', function() {
+    aplicarTemaGraficos();
     inicializarInterfaz();
     inicializarModalDrilldown();
     poblarFiltros();
@@ -403,7 +418,7 @@ function crearGraficos(data) {
                     data: data.por_estatus.map(item => Number(item.cantidad)),
                     backgroundColor: PALETA_GRAFICOS,
                     borderWidth: 2,
-                    borderColor: '#fff'
+                    borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#16212d' : '#fff'
                 }]
             },
             options: {
@@ -465,7 +480,7 @@ function crearGraficos(data) {
                     data: data.por_sucursal.map(item => Number(item.cantidad)),
                     backgroundColor: PALETA_GRAFICOS,
                     borderWidth: 2,
-                    borderColor: '#fff'
+                    borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#16212d' : '#fff'
                 }]
             },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }

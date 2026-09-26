@@ -13,6 +13,43 @@
     var authPath = inPublic ? '../auth/' : 'auth/';
     var indexPath = inPublic ? '../index.html' : 'index.html';
 
+    // ---------- Tema claro / oscuro ----------
+    // El tema vive en la cuenta del usuario (usuarios.tema) y se recuerda en
+    // cualquier dispositivo. localStorage solo sirve para pintar sin parpadeo
+    // antes de que responda el servidor; la fuente de verdad es session_check.php.
+    var TEMA_KEY = 'sipcons_tema';
+    var temaActual = 'claro';
+
+    function aplicarTema(tema, notificar) {
+        tema = tema === 'oscuro' ? 'oscuro' : 'claro';
+        var cambio = tema !== temaActual;
+        temaActual = tema;
+        document.documentElement.setAttribute('data-theme', tema === 'oscuro' ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', tema === 'oscuro' ? 'dark' : 'light'); // Bootstrap 5.3 (reportes.html)
+        try { localStorage.setItem(TEMA_KEY, tema); } catch (e) { /* sin storage */ }
+        if (notificar && cambio) {
+            try { window.dispatchEvent(new CustomEvent('sipcons-tema', { detail: { tema: tema } })); } catch (e) { /* nada */ }
+        }
+    }
+
+    try { aplicarTema(localStorage.getItem(TEMA_KEY), false); } catch (e) { aplicarTema('claro', false); }
+
+    window.sipconsTema = {
+        obtener: function () { return temaActual; },
+        // Aplica el tema al instante y lo guarda en la cuenta del usuario.
+        establecer: function (tema) {
+            aplicarTema(tema, true);
+            return fetch((inPublic ? '../' : '') + 'backend/guardar_tema.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tema: temaActual })
+            }).then(function (r) { return r.json().catch(function () { return {}; }); })
+              .then(function (j) { return { guardado: !!j.success, mensaje: j.message || '' }; })
+              .catch(function () { return { guardado: false, mensaje: 'Sin conexión: el tema se aplicó solo en este dispositivo.' }; });
+        }
+    };
+
     // Analíticas de uso (solo registra; el panel es exclusivo del Programador)
     try {
         var trackerScript = document.createElement('script');
@@ -105,6 +142,7 @@
             if (!data) return;
 
             var user = data.user || {};
+            aplicarTema(data.tema, true); // el tema de la cuenta manda sobre el recordado en este navegador
             var displayName = user.nombre || user.usuario || 'Usuario';
             var modulosPermitidos = data.modulos || [];
 

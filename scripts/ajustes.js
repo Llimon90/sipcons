@@ -51,6 +51,34 @@
         });
     }
 
+    // --- Apariencia: tema claro/oscuro (cualquier rol) ---
+    function initTema() {
+        var radios = document.querySelectorAll('input[name="tema"]');
+        if (!radios.length || !window.sipconsTema) return;
+
+        function marcar() {
+            var actual = window.sipconsTema.obtener();
+            Array.prototype.forEach.call(radios, function (r) { r.checked = r.value === actual; });
+        }
+        marcar();
+        // Si el tema de la cuenta llega del servidor después de cargar la página
+        window.addEventListener('sipcons-tema', marcar);
+
+        Array.prototype.forEach.call(radios, function (r) {
+            r.addEventListener('change', function () {
+                if (!r.checked) return;
+                mostrarMensaje('mensaje-tema', 'Guardando…', 'ok');
+                window.sipconsTema.establecer(r.value).then(function (res) {
+                    if (res.guardado) {
+                        mostrarMensaje('mensaje-tema', 'Tema guardado en tu cuenta.', 'ok');
+                    } else {
+                        mostrarMensaje('mensaje-tema', res.mensaje || 'No se pudo guardar el tema en tu cuenta.', 'error');
+                    }
+                });
+            });
+        });
+    }
+
     // --- Checklist de privilegios por rol (solo Administrador/Programador) ---
     function renderTablaPrivilegios(roles, modulos, matriz) {
         var filaEncabezado = document.getElementById('fila-encabezado-privilegios');
@@ -136,6 +164,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initCambioPassword();
+        initTema();
         initPrivilegios();
     });
 })();

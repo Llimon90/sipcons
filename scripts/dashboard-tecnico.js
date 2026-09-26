@@ -254,3 +254,17 @@ async function cargarMiDesempeno() {
 }
 
 window.cargarMiDesempeno = cargarMiDesempeno;
+
+
+// Colores de Chart.js según el tema (claro/oscuro) y repintado si cambia
+function aplicarTemaGraficos() {
+    if (typeof Chart === 'undefined') return;
+    const oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+    Chart.defaults.color = oscuro ? '#9fb0c1' : '#666';
+    Chart.defaults.borderColor = oscuro ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.1)';
+}
+aplicarTemaGraficos();
+window.addEventListener('sipcons-tema', function() {
+    aplicarTemaGraficos();
+    if (typeof cargarMiDesempeno === 'function') cargarMiDesempeno();
+});
