@@ -178,7 +178,7 @@ function renderizarTablaEquipos(equipos) {
         const tr = document.createElement('tr');
         tr.style.cursor = 'pointer';
         tr.style.borderBottom = '1px solid #eee';
-        tr.addEventListener('mouseenter', () => tr.style.backgroundColor = '#f1f5f9');
+        tr.addEventListener('mouseenter', () => tr.style.backgroundColor = (window.sipconsTema && window.sipconsTema.obtener() === 'oscuro' ? '#22374f' : '#f1f5f9'));
         tr.addEventListener('mouseleave', () => tr.style.backgroundColor = 'transparent');
         
         tr.onclick = () => abrirModalEdicionEquipo(eq);

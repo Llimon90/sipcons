@@ -24,7 +24,7 @@ async function cargarClientes(busqueda = '') {
       row.style.transition = 'background-color 0.2s ease';
       
       // Efecto hover (cambia de color al pasar el ratón)
-      row.addEventListener('mouseenter', () => row.style.backgroundColor = '#f1f5f9');
+      row.addEventListener('mouseenter', () => row.style.backgroundColor = (window.sipconsTema && window.sipconsTema.obtener() === 'oscuro' ? '#22374f' : '#f1f5f9'));
       row.addEventListener('mouseleave', () => row.style.backgroundColor = 'transparent');
       
       // Redirección a la nueva página de perfil enviando el ID por la URL

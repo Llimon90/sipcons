@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // LA MAGIA DE LA FILA CLICKEABLE
             tr.style.cursor = 'pointer';
             tr.style.transition = 'background-color 0.2s ease';
-            tr.addEventListener('mouseenter', () => tr.style.backgroundColor = '#f1f5f9');
+            tr.addEventListener('mouseenter', () => tr.style.backgroundColor = (window.sipconsTema && window.sipconsTema.obtener() === 'oscuro' ? '#22374f' : '#f1f5f9'));
             tr.addEventListener('mouseleave', () => tr.style.backgroundColor = 'transparent');
             
             // Redirección directa al detalle de la venta (Asegúrate de que este archivo exista)
