@@ -13,6 +13,25 @@
     var authPath = inPublic ? '../auth/' : 'auth/';
     var indexPath = inPublic ? '../index.html' : 'index.html';
 
+    // Analíticas de uso (solo registra; el panel es exclusivo del Programador)
+    try {
+        var trackerScript = document.createElement('script');
+        trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=1';
+        trackerScript.async = true;
+        document.head.appendChild(trackerScript);
+    } catch (e) { /* las analíticas nunca deben romper la página */ }
+
+    function rastrear(tipo, elemento) {
+        try {
+            if (window.sipconsTrack) {
+                window.sipconsTrack(tipo, elemento);
+                if (window.sipconsFlush) window.sipconsFlush();
+            } else {
+                (window.__sipconsTrackQ = window.__sipconsTrackQ || []).push([tipo, elemento]);
+            }
+        } catch (e) { /* nada */ }
+    }
+
     // Permite a los scripts de cada página reaccionar al usuario/rol de la
     // sesión sin repetir el fetch a session_check.php. Si ya está listo,
     // invoca el callback de inmediato; si no, lo encola.
@@ -86,6 +105,7 @@
             if (!data) return;
 
             var user = data.user || {};
+            user.analiticas = !!data.analiticas;
             var displayName = user.nombre || user.usuario || 'Usuario';
             var modulosPermitidos = data.modulos || [];
 
@@ -105,7 +125,8 @@
             // modos fallará al llamar a la API.
             var paginaActual = window.location.pathname.split('/').pop();
             if (!puedeAcceder(paginaActual)) {
-                window.location.replace(indexPath);
+                rastrear('acceso_denegado', paginaActual);
+                setTimeout(function () { window.location.replace(indexPath); }, 300);
                 return;
             }
 

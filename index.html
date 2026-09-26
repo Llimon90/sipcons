@@ -76,6 +76,12 @@
       
       </a>
       
+      <a href="public/analiticas.php" class="option-box" id="card-analiticas" style="display:none;">
+        <i class="fas fa-binoculars"></i>
+        <h3>Analíticas de uso</h3>
+        <p>Cómo se usa el sistema: módulos, usuarios, fricción y tendencias</p>
+      </a>
+
       <a href="public/soporte.html" class="option-box">
         <i class="fas fa-question-circle"></i>
         <h3>Soporte</h3>
@@ -91,5 +97,16 @@
   </div>
 
 
+<script>
+  // La tarjeta de analíticas solo se muestra al Programador (el backend lo vuelve a exigir)
+  if (window.sipconsOnAuthReady) {
+    window.sipconsOnAuthReady(function (auth) {
+      if (auth.user && auth.user.analiticas) {
+        var c = document.getElementById('card-analiticas');
+        if (c) c.style.display = '';
+      }
+    });
+  }
+</script>
 </body>
 </html>
