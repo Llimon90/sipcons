@@ -1,9 +1,8 @@
 <?php
-// API del panel de analíticas de uso. Solo Programador (o usuarios listados
-// en ANALYTICS_USUARIOS del .env). Responde 404 a cualquier otro usuario para
-// no revelar que existe.
+// API del panel de analíticas de uso. Solo con la cookie que entrega
+// public/analiticas.php al presentar el token de seguridad (ANALYTICS_TOKEN en
+// el .env del servidor). Sin ella responde 404 para no revelar que existe.
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../auth/analytics_acceso.php';
 require_once __DIR__ . '/lib/analytics_helpers.php';
 

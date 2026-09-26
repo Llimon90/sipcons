@@ -1,4 +1,4 @@
--- Migración 011: analíticas de uso del sistema (solo visibles para el rol Programador)
+-- Migración 011: analíticas de uso del sistema (panel privado protegido por token)
 --
 -- Objetivo: registrar cómo se usa el portal (páginas visitadas, tiempo activo,
 -- clics, filtros, errores, latencia de la API) para tomar decisiones de diseño,

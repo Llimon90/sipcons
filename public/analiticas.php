@@ -1,24 +1,27 @@
 <?php
-// Panel de analíticas de uso. Exclusivo del Programador: cualquier otro
-// usuario recibe un 404 (ni siquiera se entrega el HTML del panel).
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/auth.php';
+// Panel de analíticas de uso. Sin enlaces desde ningún sitio del portal:
+// se abre directo con el token largo (ANALYTICS_TOKEN del .env):
+//   public/analiticas.php?k=TOKEN
+// Sin token ni cookie válida responde 404 (ni siquiera se entrega el HTML).
+require_once __DIR__ . '/../config/database.php'; // carga el .env
 require_once __DIR__ . '/../auth/analytics_acceso.php';
 
-if (!isLoggedIn()) {
-    header('Location: ../auth/login.html');
-    exit;
+header('Cache-Control: no-store');
+header('X-Robots-Tag: noindex, nofollow');
+header('Referrer-Policy: no-referrer');
+
+if (isset($_GET['k'])) {
+    if (analyticsIniciarAcceso((string)$_GET['k'])) {
+        header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
+        exit;
+    }
+    analyticsResponder404(false);
 }
 if (!puedeVerAnaliticas()) {
-    http_response_code(404);
-    header('Content-Type: text/html; charset=utf-8');
-    echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>404</title></head><body><h1>404 Not Found</h1></body></html>';
-    exit;
+    analyticsResponder404(false);
 }
 
 header('Content-Type: text/html; charset=utf-8');
-header('Cache-Control: no-store');
-header('X-Robots-Tag: noindex, nofollow');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -104,7 +107,6 @@ tr.click{cursor:pointer}tr.click:hover{background:#f1f6ff}
     <h1><i class="fas fa-binoculars"></i> Analíticas de uso</h1>
     <small id="estado">Cargando…</small>
   </div>
-  <a href="../index.html"><i class="fas fa-arrow-left"></i> Volver al inicio</a>
 </div>
 
 <div class="wrap">

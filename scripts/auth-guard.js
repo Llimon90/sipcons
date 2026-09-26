@@ -105,7 +105,6 @@
             if (!data) return;
 
             var user = data.user || {};
-            user.analiticas = !!data.analiticas;
             var displayName = user.nombre || user.usuario || 'Usuario';
             var modulosPermitidos = data.modulos || [];
 
