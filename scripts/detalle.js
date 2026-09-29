@@ -37,7 +37,16 @@ async function eliminarArchivo(urlArchivo, containerElement, id) {
             body: formData
         });
 
-        const data = await response.json();
+        // Se lee como texto primero: si PHP falla sin devolver JSON (respuesta
+        // vacía, HTML de error o redirección al login) se ve qué llegó.
+        const texto = await response.text();
+        let data;
+        try {
+            data = JSON.parse(texto);
+        } catch (e) {
+            console.error(`Respuesta no JSON (HTTP ${response.status}, ${response.url}):`, texto || '(vacía)');
+            throw new Error(`El servidor no devolvió una respuesta válida (código ${response.status})`);
+        }
 
         if (!response.ok || !data.success) {
             console.error('Error del servidor:', data);

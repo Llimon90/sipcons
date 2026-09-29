@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ==============================================
 // 1. Dependencias Críticas (¡Aquí estaba el Error 500!)
 // ==============================================
@@ -35,7 +35,7 @@ if (!empty($data['modulo']) && $data['modulo'] === 'ventas') {
     // MÓDULO DE VENTAS
     $modulo = 'ventas';
     $idTabla = filter_var($data['id'], FILTER_VALIDATE_INT);
-    $rutaArchivo = filter_var($data['ruta'], FILTER_SANITIZE_STRING);
+    $rutaArchivo = trim((string)($data['ruta'] ?? ''));
     
     if (!$idTabla || !$rutaArchivo) {
         http_response_code(400);
@@ -47,7 +47,7 @@ else if (!empty($data['id_incidencia']) && !empty($data['url_archivo'])) {
     // MÓDULO DE INCIDENCIAS
     $modulo = 'incidencias';
     $idReferencia = filter_var($data['id_incidencia'], FILTER_VALIDATE_INT);
-    $rutaArchivo = filter_var($data['url_archivo'], FILTER_SANITIZE_STRING);
+    $rutaArchivo = trim((string)$data['url_archivo']);
     $nombreArchivo = basename($rutaArchivo);
     
     if (!$idReferencia || !$rutaArchivo) {
