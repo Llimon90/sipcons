@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   cargarIncidencias();
   cargarClientes();
+  // Técnicos desde la BD (usuarios con rol técnico/supervisor/administrador)
+  SipconsTecnicos.llenarSelect(document.getElementById("tecnico"), { placeholder: "Cualquier técnico" });
 
   const form = document.getElementById("report-form");
   if (form) {
