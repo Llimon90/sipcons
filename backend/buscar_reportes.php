@@ -79,8 +79,10 @@ try {
             $types .= "s";
         }
         if (!empty($tecnico)) {
-            $sql .= " AND tecnico LIKE ?";
-            $params[] = "%$tecnico%";
+            // Técnico completo dentro de "A/B": "Ernesto Chávez" no atrapa a
+            // su homónimo "Ernesto Chávez Rice" (ver sqlCoincideTecnico()).
+            $sql .= " AND CONCAT('/', REPLACE(REPLACE(TRIM(tecnico), ' /', '/'), '/ ', '/'), '/') LIKE ?";
+            $params[] = "%/$tecnico/%";
             $types .= "s";
         }
     }

@@ -61,8 +61,8 @@ function construirFiltros($conn, $tabla_alias = 'i', $campo_fecha = 'fecha', $fe
     // en BD están capitalizados, p.ej. "Cerrado con factura", pero no hay que
     // depender de la collation de la tabla para que el filtro funcione)
     if (!empty($tecnico)) {
-        $valor = $conn->real_escape_string($tecnico);
-        $filtros[] = "{$tabla_alias}.tecnico LIKE '%{$valor}%'";
+        $valor = $conn->real_escape_string(trim($tecnico));
+        $filtros[] = sqlCoincideTecnico("{$tabla_alias}.tecnico") . " LIKE CONCAT('%/', '{$valor}', '/%')";
     }
 
     if (!empty($sucursal)) {
@@ -155,6 +155,16 @@ function separarTecnicos($valorTecnico) {
  * en el dashboard del técnico (a propósito NO es un LIKE amplio: con acceso
  * a datos de una sola persona, una coincidencia parcial falsa sería grave).
  */
+/**
+ * Expresión SQL que envuelve el campo "tecnico" entre "/" y sin espacios
+ * alrededor de los separadores ("A / B" -> "/A/B/"). Comparándola con
+ * LIKE '%/Nombre/%' se filtra por técnico completo: "Ernesto Chávez" ya no
+ * atrapa las incidencias de su homónimo "Ernesto Chávez Rice".
+ */
+function sqlCoincideTecnico($columna) {
+    return "CONCAT('/', REPLACE(REPLACE(TRIM({$columna}), ' /', '/'), '/ ', '/'), '/')";
+}
+
 function tecnicoCoincide($nombreSesion, $valorTecnico) {
     $nombreSesion = trim($nombreSesion);
     if ($nombreSesion === '') return false;

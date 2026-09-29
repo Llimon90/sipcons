@@ -4,7 +4,7 @@
 //
 // Si una incidencia tiene guardado un técnico que ya no está en la lista
 // (usuario dado de baja, cambio de rol, nombre histórico), se agrega como
-// opción "(no registrado)" para no borrarlo sin querer al guardar.
+// opción "(sin usuario activo)" para no borrarlo sin querer al guardar.
 window.SipconsTecnicos = (function () {
     let promesa = null;
 
@@ -36,7 +36,7 @@ window.SipconsTecnicos = (function () {
         let html = `<option value="">${escapar(placeholder)}</option>`;
 
         if (actual && !lista.some(coincide)) {
-            html += `<option value="${escapar(actual)}" selected>${escapar(actual)} (no registrado)</option>`;
+            html += `<option value="${escapar(actual)}" selected>${escapar(actual)} (sin usuario activo)</option>`;
         }
         lista.forEach(t => {
             const sel = actual && coincide(t) ? ' selected' : '';
