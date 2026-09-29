@@ -159,7 +159,7 @@ function mostrarIncidenciasPagina() {
 
     row.innerHTML = `
       <td>${enlaceHTML}</td>
-      <td>${inc.numero || "N/A"}</td>
+      <td>${inc.reporte_cliente || "N/A"}</td>
       <td>${inc.cliente}</td>
       <td>${inc.sucursal}</td>
       <td>${inc.falla}</td>
@@ -255,7 +255,7 @@ window.abrirModalProgramada = function(indice) {
   }
 
   if(modalLabel) {
-      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${tituloModalVisual} - ${d.numero}`;
+      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${tituloModalVisual} - ${d.reporte_cliente}`;
   }
   
   if(modalBody) {

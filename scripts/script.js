@@ -12,11 +12,11 @@ form.addEventListener('submit', function(event) {
   // Prepara objeto con los datos actuales del formulario
   const nuevaIncidencia = {
     id: document.getElementById('incidencia-id').value || null,
-    numero: document.getElementById('numero').value,
+    reporte_cliente: document.getElementById('reporte_cliente').value,
     cliente: document.getElementById('cliente').value,
     contacto: document.getElementById('contacto').value,
     sucursal: document.getElementById('sucursal').value,
-    equipo: document.getElementById('equipo').value, // Nuevo campo
+    categoria: document.getElementById('categoria').value,
     numero_serie: (document.getElementById('numero_serie')?.value || '').trim(),
     falla: document.getElementById('falla').value,
     fecha: document.getElementById('fecha').value,

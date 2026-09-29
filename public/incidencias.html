@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../css/styles.css?v=20260927">
   <link rel="stylesheet" href="../css/dark.css?v=20260928">
   <script src="../scripts/contactos-widget.js?v=3"></script>
-  <script src="../scripts/script.js?v=8" defer></script>
+  <script src="../scripts/script.js?v=9" defer></script>
   <script src="../scripts/auth-guard.js?v=20260927"></script>
 </head>
 <body>
@@ -92,8 +92,8 @@
           </div>    
 
           <div>
-            <label for="numero"># Incidencia Cliente</label>
-            <input type="text" id="numero" name="numero" placeholder="Ejemplo: ST-66477">
+            <label for="reporte_cliente"># Incidencia Cliente</label>
+            <input type="text" id="reporte_cliente" name="reporte_cliente" placeholder="Ejemplo: ST-66477">
           </div>
         </div>
 
@@ -112,8 +112,8 @@
 
       <div class="form-row">
           <div>
-            <label for="equipo">Categoría</label>
-            <select id="equipo" name="equipo">
+            <label for="categoria">Categoría</label>
+            <select id="categoria" name="categoria">
               <option value="">Seleccione una categoría</option>
               <option value="Mr. Tienda/Mr. Chef">Mr. Tienda/Mr. Chef</option>
               <option value="Distribuidora el Florido">Distribuidora el Florido</option>
@@ -266,7 +266,7 @@
     window.sipconsAplicarRestriccionEstatus(document.getElementById("estatus"));
 
     const selectCliente = document.getElementById("cliente");
-    const selectCategoria = document.getElementById("equipo");
+    const selectCategoria = document.getElementById("categoria");
 
     // 2. Lógica de automatización de Categoría (Adaptada para el evento input/change del text field)
     selectCliente.addEventListener("change", function() {
@@ -313,6 +313,6 @@
 
   <script src="../scripts/serie-equipo.js"></script>
   <script src="../scripts/sidebar-state.js"></script>
-  <script src="../scripts/script_cargas.js?v=19"></script>
+  <script src="../scripts/script_cargas.js?v=20"></script>
 </body>
 </html>

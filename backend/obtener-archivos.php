@@ -17,7 +17,7 @@ $numero_incidente = $_GET['numero_incidente'];
 // Consulta para obtener los archivos de la incidencia
 $sql = "SELECT ruta_archivo FROM archivos_incidencias 
         INNER JOIN incidencias ON archivos_incidencias.incidencia_id = incidencias.id
-        WHERE incidencias.numero = ?";
+        WHERE incidencias.reporte_cliente = ?";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $numero_incidente);

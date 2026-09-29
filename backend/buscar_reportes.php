@@ -33,13 +33,13 @@ try {
             SELECT
                 MIN(p.id) as id,
                 'PROG-CAL' as numero_incidente,
-                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as numero,
+                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
                 CONCAT(COUNT(p.id), ' equipo(s) a Mantenimiento/Calibración.') as falla,
                 p.proxima_calibracion as fecha,
                 'Programado' as estatus,
-                MAX(p.equipo) as equipo,
+                MAX(p.equipo) as categoria,
                 'Por asignar' as tecnico,
                 GROUP_CONCAT(CONCAT_WS('~', p.marca, p.modelo, COALESCE(p.numero_serie, 'S/N'), COALESCE(p.calibracion, 0), COALESCE(p.frecuencia_servicio, 0), COALESCE(p.garantia, 0), COALESCE(DATE(p.fecha_registro), '')) SEPARATOR '||') as detalles_completos
             FROM padron_equipos p
@@ -52,13 +52,13 @@ try {
             SELECT
                 MIN(p.id) as id,
                 'PROG-SERV' as numero_incidente,
-                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as numero,
+                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
                 CONCAT(COUNT(p.id), ' equipo(s) a Servicio.') as falla,
                 p.proximo_servicio as fecha,
                 'Programado' as estatus,
-                MAX(p.equipo) as equipo,
+                MAX(p.equipo) as categoria,
                 'Por asignar' as tecnico,
                 GROUP_CONCAT(CONCAT_WS('~', p.marca, p.modelo, COALESCE(p.numero_serie, 'S/N'), COALESCE(p.calibracion, 0), COALESCE(p.frecuencia_servicio, 0), COALESCE(p.garantia, 0), COALESCE(DATE(p.fecha_registro), '')) SEPARATOR '||') as detalles_completos
             FROM padron_equipos p
@@ -67,7 +67,7 @@ try {
             GROUP BY p.venta_id, p.origen, p.cliente, p.sucursal, p.proximo_servicio
         ) AS programadas WHERE 1=1";
     } else {
-        $sql = "SELECT id, numero_incidente, numero, cliente, sucursal, falla, fecha, estatus, equipo, tecnico, '' as detalles_completos 
+        $sql = "SELECT id, numero_incidente, reporte_cliente, cliente, sucursal, falla, fecha, estatus, categoria, tecnico, '' as detalles_completos 
                 FROM incidencias WHERE 1=1";
                 
         if (!empty($solo_activas) && $solo_activas === '1') {
@@ -106,7 +106,7 @@ try {
         $types .= "s";
     }
     if (!empty($tipo_equipo)) {
-        $sql .= " AND equipo = ?";
+        $sql .= " AND categoria = ?";
         $params[] = $tipo_equipo;
         $types .= "s";
     }

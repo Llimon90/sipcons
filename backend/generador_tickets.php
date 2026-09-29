@@ -17,7 +17,7 @@ try {
     }
 
     $sqlInsert = "INSERT INTO incidencias 
-        (numero, numero_incidente, cliente, contacto, sucursal, fecha, tecnico, falla, equipo, estatus, accion, notas) 
+        (reporte_cliente, numero_incidente, cliente, contacto, sucursal, fecha, tecnico, falla, categoria, estatus, accion, notas) 
         VALUES (?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?)";
     $stmtInsertIncidencia = $pdo->prepare($sqlInsert);
 

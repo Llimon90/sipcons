@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
       let incidenciasArray = data.map(incidencia => ({
         id: incidencia.id,
         numero_incidente: incidencia.numero_incidente,
-        numero: incidencia.numero,
+        reporte_cliente: incidencia.reporte_cliente,
         cliente: incidencia.cliente,
         sucursal: incidencia.sucursal,
         falla: incidencia.falla,
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         fila.innerHTML = `
           <td></td>
-          <td>${incidencia.numero}</td>
+          <td>${incidencia.reporte_cliente ?? ''}</td>
           <td>${incidencia.cliente}</td>
           <td>${incidencia.sucursal}</td>
           <td>${incidencia.falla}</td>

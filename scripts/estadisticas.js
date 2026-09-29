@@ -527,15 +527,15 @@ function crearGraficos(data) {
     }
 
     // Equipos con más incidencias (antes mal etiquetado como "tipos de falla")
-    mostrarVacio('chartEquipos', !data.por_equipo || data.por_equipo.length === 0);
-    if (data.por_equipo && data.por_equipo.length > 0) {
+    mostrarVacio('chartEquipos', !data.por_categoria || data.por_categoria.length === 0);
+    if (data.por_categoria && data.por_categoria.length > 0) {
         charts.equipos = new Chart(document.getElementById('chartEquipos'), {
             type: 'bar',
             data: {
-                labels: data.por_equipo.map(item => item.equipo || 'Sin equipo'),
+                labels: data.por_categoria.map(item => item.categoria || 'Sin categoría'),
                 datasets: [{
                     label: 'Incidencias',
-                    data: data.por_equipo.map(item => item.cantidad),
+                    data: data.por_categoria.map(item => item.cantidad),
                     backgroundColor: '#0891b2',
                     borderColor: '#0e7490',
                     borderWidth: 1

@@ -38,7 +38,7 @@ require_once __DIR__ . '/lib/estadisticas_helpers.php';
  * la ejecución.
  */
 function exportarCsv($conn, $pdo, $filtros_where) {
-    $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha
+    $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha
             FROM incidencias i {$filtros_where}
             ORDER BY fecha DESC";
     $filas = ejecutarConsulta($conn, $sql);
@@ -52,7 +52,7 @@ function exportarCsv($conn, $pdo, $filtros_where) {
 
     $salida = fopen('php://output', 'w');
     fwrite($salida, "\xEF\xBB\xBF"); // BOM para que Excel abra los acentos bien
-    fputcsv($salida, ['Folio', 'Cliente', 'Sucursal', 'Técnico', 'Equipo', 'Falla', 'Estatus', 'Fecha', 'Tiempo de respuesta (h)', 'Tiempo de cierre (días)', 'Reincidencia']);
+    fputcsv($salida, ['Folio', 'Cliente', 'Sucursal', 'Técnico', 'Categoría', 'Falla', 'Estatus', 'Fecha', 'Tiempo de respuesta (h)', 'Tiempo de cierre (días)', 'Reincidencia']);
 
     foreach ($filas as $fila) {
         $tiempos = $porIncidencia[(string)$fila['id']] ?? ['respuesta_horas' => null, 'cierre_horas' => null];
@@ -61,7 +61,7 @@ function exportarCsv($conn, $pdo, $filtros_where) {
             $fila['cliente'],
             $fila['sucursal'],
             $fila['tecnico'],
-            $fila['equipo'],
+            $fila['categoria'],
             $fila['falla'],
             $fila['estatus'],
             $fila['fecha'],
@@ -136,7 +136,7 @@ switch ($action) {
 
             $placeholders = implode(',', array_fill(0, count($idsReincidentes), '?'));
             $stmt = $pdo->prepare("
-                SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha, numero_serie
+                SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha, numero_serie
                 FROM {$tabla_incidencias}
                 WHERE id IN ($placeholders)
                 ORDER BY numero_serie ASC, fecha DESC
@@ -168,7 +168,7 @@ switch ($action) {
         $conector = empty($filtros_where) ? "WHERE" : "AND";
         $sqlWhereEstatus = "(" . implode(" OR ", $condicionesEstatus) . ")";
 
-        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, equipo, falla, estatus, fecha
+        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha
                 FROM {$tabla_incidencias} i {$filtros_where} {$conector} {$sqlWhereEstatus}
                 ORDER BY fecha DESC
                 LIMIT 300";
@@ -214,7 +214,7 @@ switch ($action) {
         $eficiencia_total = $total_incidencias > 0 ? round(($resueltas_totales / $total_incidencias) * 100, 1) : 0;
 
         // 6. Estadísticas de equipos (CON filtros)
-        $sql_equipos = "SELECT COUNT(DISTINCT equipo) AS total_equipos FROM {$tabla_incidencias} i {$filtros_where} AND equipo IS NOT NULL AND equipo <> ''";
+        $sql_equipos = "SELECT COUNT(DISTINCT categoria) AS total_equipos FROM {$tabla_incidencias} i {$filtros_where} AND categoria IS NOT NULL AND categoria <> ''";
         $total_equipos = ejecutarConsulta($conn, $sql_equipos)[0]['total_equipos'] ?? 0;
 
         // 7. Top tipos de falla (CON filtros)
@@ -293,10 +293,10 @@ switch ($action) {
             $tecnicos_stats
         );
 
-        // Gráfico 6: Top tipos de equipo
+        // Gráfico 6: Top categorías
         $conector = empty($filtros_where) ? "WHERE" : "AND";
-        $sql_equipos = "SELECT equipo, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} equipo IS NOT NULL AND equipo != '' GROUP BY equipo ORDER BY cantidad DESC LIMIT 8";
-        $data_incidencias['por_equipo'] = ejecutarConsulta($conn, $sql_equipos);
+        $sql_equipos = "SELECT categoria, COUNT(id) AS cantidad FROM {$tabla_incidencias} i {$filtros_where} {$conector} categoria IS NOT NULL AND categoria != '' GROUP BY categoria ORDER BY cantidad DESC LIMIT 8";
+        $data_incidencias['por_categoria'] = ejecutarConsulta($conn, $sql_equipos);
 
         // Gráfico 7: Distribución real de tiempos de cierre (reemplaza el chart de "prioridad" que no existía en BD)
         $sql_dataset = "SELECT id, fecha, estatus, tecnico, sucursal FROM {$tabla_incidencias} i {$filtros_where}";

@@ -8,11 +8,11 @@ if ($conn->connect_error) {
 
 // Leer los datos enviados desde el frontend
 $id = $_POST['id'];
-$numero = $_POST['numero'];
+$reporteCliente = $_POST['reporte_cliente'];
 $cliente = $_POST['cliente'];
 $contacto = $_POST['contacto'];
 $sucursal = $_POST['sucursal'];
-$equipo = $_POST['equipo']; // NUEVO CAMPO - valores: "Mr. Tienda/Mr. Chef" o "Otros"
+$categoria = $_POST['categoria']; // "Mr. Tienda/Mr. Chef", "Calimax", "Otros", etc.
 $fecha = $_POST['fecha'];
 $tecnico = $_POST['tecnico'];
 $estatus = $_POST['estatus'];
@@ -27,8 +27,8 @@ if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($estatus, $estatusRestri
     die(json_encode(["error" => "Tu rol no tiene permiso para cerrar incidencias con/sin factura."]));
 }
 
-// Debug: Verificar el valor de equipo
-error_log("Valor de equipo recibido: " . $equipo);
+// Debug: Verificar el valor de categoría
+error_log("Valor de categoría recibido: " . $categoria);
 
 // Capturar el estado anterior para el historial de auditoría
 $estadoAnteriorStmt = $conn->prepare("SELECT * FROM incidencias WHERE id = ?");
@@ -39,11 +39,11 @@ $estadoAnteriorStmt->close();
 
 // Actualizar la incidencia en la base de datos
 $sql = "UPDATE incidencias SET 
-        numero = ?, 
+        reporte_cliente = ?,
         cliente = ?, 
         contacto = ?, 
         sucursal = ?, 
-        equipo = ?,  -- NUEVO CAMPO
+        categoria = ?,
         fecha = ?, 
         tecnico = ?, 
         estatus = ?, 
@@ -54,11 +54,11 @@ $sql = "UPDATE incidencias SET
         
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("sssssssssssi", 
-    $numero, 
+    $reporteCliente,
     $cliente, 
     $contacto, 
     $sucursal, 
-    $equipo,  // NUEVO CAMPO
+    $categoria,
     $fecha, 
     $tecnico,
     $estatus, 
@@ -107,11 +107,11 @@ if ($stmt->execute()) {
 
     $datosNuevos = [
         'id'        => $id,
-        'numero'    => $numero,
+        'reporte_cliente' => $reporteCliente,
         'cliente'   => $cliente,
         'contacto'  => $contacto,
         'sucursal'  => $sucursal,
-        'equipo'    => $equipo,
+        'categoria' => $categoria,
         'numero_serie' => $tieneSerie ? ($numeroSerie !== '' ? $numeroSerie : null) : null,
         'fecha'     => $fecha,
         'tecnico'   => $tecnico,

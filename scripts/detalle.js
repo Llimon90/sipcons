@@ -316,7 +316,7 @@ function createFormHTML(data) {
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                 <div style="flex: 1;">
                     <label># INCIDENCIA CLIENTE:</label>&nbsp;
-                    <input type="text" id="numero" value="${data.numero || ''}" style="width: 100%;">
+                    <input type="text" id="reporte_cliente" value="${escapeAttr(data.reporte_cliente)}" style="width: 100%;">
                 </div>&nbsp; &nbsp;
                 <div style="flex: 1;">
                     <label>CLIENTE:</label>&nbsp;
@@ -342,13 +342,13 @@ function createFormHTML(data) {
             <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                 <div style="flex: 1;">
                     <label>Categoría:</label>
-                        <select id="equipo" style="width: 100%;">
+                        <select id="categoria" style="width: 100%;">
                             <option value="">SELECCIONE UNA OPCIÓN</option>
-                            <option value="Mr. Tienda/Mr. Chef" ${data.equipo && data.equipo.trim() === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
-                            <option value="Distribuidora el Florido" ${data.equipo && data.equipo.trim() === 'Distribuidora el Florido' ? 'selected' : ''}>Distribuidora el Florido</option>
-                            <option value="Calimax" ${data.equipo && data.equipo.trim() === 'Calimax' ? 'selected' : ''}>Calimax</option>
-                            <option value="Recolección" ${data.equipo && data.equipo.trim() === 'Recolección' ? 'selected' : ''}>Recolección</option>
-                            <option value="Otros" ${data.equipo && data.equipo.trim() === 'Otros' ? 'selected' : ''}>Otros</option>
+                            <option value="Mr. Tienda/Mr. Chef" ${data.categoria && data.categoria.trim() === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
+                            <option value="Distribuidora el Florido" ${data.categoria && data.categoria.trim() === 'Distribuidora el Florido' ? 'selected' : ''}>Distribuidora el Florido</option>
+                            <option value="Calimax" ${data.categoria && data.categoria.trim() === 'Calimax' ? 'selected' : ''}>Calimax</option>
+                            <option value="Recolección" ${data.categoria && data.categoria.trim() === 'Recolección' ? 'selected' : ''}>Recolección</option>
+                            <option value="Otros" ${data.categoria && data.categoria.trim() === 'Otros' ? 'selected' : ''}>Otros</option>
                             
                         </select>
                     
@@ -655,11 +655,11 @@ async function handleFormSubmit(e, id) {
 
     const formData = new FormData();
     formData.append("id", id);
-    formData.append("numero", document.getElementById("numero").value);
+    formData.append("reporte_cliente", document.getElementById("reporte_cliente").value);
     formData.append("cliente", document.getElementById("cliente").value);
     formData.append("contacto", document.getElementById("contacto").value);
     formData.append("sucursal", document.getElementById("sucursal").value);
-    formData.append("equipo", document.getElementById("equipo").value); // NUEVO CAMPO AGREGADO
+    formData.append("categoria", document.getElementById("categoria").value);
     formData.append("numero_serie", document.getElementById("numero_serie").value.trim());
     formData.append("fecha", document.getElementById("fecha").value);
     

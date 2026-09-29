@@ -50,7 +50,7 @@ if ($method === "GET") {
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Validar los datos
-    if (!isset($data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"])) {
+    if (!isset($data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"])) {
         echo json_encode(["error" => "Todos los campos son obligatorios"]);
         exit();
     }
@@ -76,21 +76,21 @@ if ($method === "GET") {
         $nuevoNumeroIncidente = "SIP-" . str_pad($numeroIncremental, 4, "0", STR_PAD_LEFT);
     }
 
-    // Insertar la nueva incidencia con el campo equipo
+    // Insertar la nueva incidencia con el campo categoria
     // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
     $numeroSerie = trim($data["numero_serie"] ?? '');
     $colSerie = $conn->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'");
     $tieneSerie = $colSerie && $colSerie->num_rows > 0;
 
     if ($tieneSerie) {
-        $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, equipo, numero_serie, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO incidencias (reporte_cliente, cliente, contacto, sucursal, categoria, numero_serie, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $serieDb = $numeroSerie !== '' ? $numeroSerie : null;
-        $stmt->bind_param("ssssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $serieDb, $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
+        $stmt->bind_param("ssssssssssss", $data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["categoria"], $serieDb, $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
     } else {
-        $sql = "INSERT INTO incidencias (numero, cliente, contacto, sucursal, equipo, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO incidencias (reporte_cliente, cliente, contacto, sucursal, categoria, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssssssss", $data["numero"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["equipo"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
+        $stmt->bind_param("sssssssssss", $data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["categoria"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
     }
 
     if ($stmt->execute()) {
@@ -98,12 +98,12 @@ if ($method === "GET") {
 
         registrarAuditoria('incidencias', $nuevoId, 'CREATE', null, [
             'id'               => $nuevoId,
-            'numero'           => $data['numero'],
+            'reporte_cliente'  => $data['reporte_cliente'],
             'numero_incidente' => $nuevoNumeroIncidente,
             'cliente'          => $data['cliente'],
             'contacto'         => $data['contacto'],
             'sucursal'         => $data['sucursal'],
-            'equipo'           => $data['equipo'] ?? null,
+            'categoria'        => $data['categoria'] ?? null,
             'numero_serie'     => $tieneSerie && $numeroSerie !== '' ? $numeroSerie : null,
             'fecha'            => $data['fecha'],
             'tecnico'          => $data['tecnico'],

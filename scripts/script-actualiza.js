@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
 
                     fila.innerHTML = `
-                        <td>${incidencia.numero}</td>
+                        <td>${incidencia.reporte_cliente ?? ''}</td>
                         <td>${incidencia.numero_incidente}</td>
                         <td>${incidencia.cliente}</td>
                         <td>${incidencia.sucursal}</td>
