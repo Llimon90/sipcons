@@ -28,7 +28,10 @@ class SidebarStateManager {
         // 4. Marcar página activa
         this.setActivePage();
 
-        // 5. Reactivar las transiciones
+        // 5. Barra superior y menú deslizable para móvil/tablet
+        this.setupMobileNav();
+
+        // 6. Reactivar las transiciones
         this.enableTransitions();
     }
 
@@ -151,6 +154,83 @@ class SidebarStateManager {
                     link.classList.remove('active');
                 }
             }
+        });
+    }
+
+    // --- Navegación móvil (≤1024px, ver "NAVEGACIÓN MÓVIL" en styles.css) ---
+
+    /**
+     * Sustituye el botón "Volver al Inicio" por una barra fija con
+     * menú, título de la página e inicio. El menú abre la barra lateral
+     * como panel deslizable sobre un fondo oscuro.
+     */
+    setupMobileNav() {
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar || document.querySelector('.barra-movil')) return;
+
+        const linkInicio = sidebar.querySelector('a[href$="index.html"]');
+        const hrefInicio = linkInicio ? linkInicio.getAttribute('href') : '../index.html';
+        const linkActivo = sidebar.querySelector('a.active .sidebar-link-text');
+        const titulo = (document.title || (linkActivo && linkActivo.textContent) || 'SIPCONS').trim();
+
+        if (!sidebar.id) sidebar.id = 'sidebar-principal';
+
+        const barra = document.createElement('header');
+        barra.className = 'barra-movil';
+        barra.innerHTML = `
+            <button type="button" class="barra-movil-btn" aria-label="Abrir menú"
+                    aria-controls="${sidebar.id}" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="barra-movil-titulo"></h1>
+            <a class="barra-movil-btn" href="${hrefInicio}" aria-label="Inicio" title="Inicio">
+                <i class="fas fa-home"></i>
+            </a>`;
+        barra.querySelector('.barra-movil-titulo').textContent = titulo;
+
+        const fondo = document.createElement('div');
+        fondo.className = 'sidebar-fondo';
+
+        const cerrar = document.createElement('button');
+        cerrar.type = 'button';
+        cerrar.className = 'barra-movil-btn sidebar-cerrar';
+        cerrar.setAttribute('aria-label', 'Cerrar menú');
+        cerrar.innerHTML = '<i class="fas fa-times"></i>';
+        const header = sidebar.querySelector('.sidebar-header');
+        if (header) header.appendChild(cerrar);
+
+        const botonVolver = document.querySelector('.mobile-home-btn');
+        if (botonVolver) botonVolver.remove();
+        document.body.prepend(barra);
+        document.body.appendChild(fondo);
+        document.body.classList.add('con-barra-movil');
+
+        const botonMenu = barra.querySelector('button');
+
+        const abrir = () => {
+            sidebar.classList.add('abierta');
+            fondo.classList.add('visible');
+            document.body.classList.add('menu-abierto');
+            botonMenu.setAttribute('aria-expanded', 'true');
+            cerrar.focus();
+        };
+        const cerrarMenu = () => {
+            if (!sidebar.classList.contains('abierta')) return;
+            sidebar.classList.remove('abierta');
+            fondo.classList.remove('visible');
+            document.body.classList.remove('menu-abierto');
+            botonMenu.setAttribute('aria-expanded', 'false');
+        };
+
+        botonMenu.addEventListener('click', abrir);
+        cerrar.addEventListener('click', () => { cerrarMenu(); botonMenu.focus(); });
+        fondo.addEventListener('click', cerrarMenu);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') cerrarMenu();
+        });
+        // Al pasar a escritorio el panel deja de ser deslizable
+        window.matchMedia('(min-width: 1025px)').addEventListener('change', (e) => {
+            if (e.matches) cerrarMenu();
         });
     }
 

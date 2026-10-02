@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function cargarEquipos(nombreCliente) {
     const tbody = document.getElementById('tabla-padron-cliente');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Consultando inventario...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6">Consultando inventario...</td></tr>';
 
     try {
         const resp = await fetch(`../backend/obtener_equipos_cliente.php?cliente=${encodeURIComponent(nombreCliente)}`);
@@ -127,7 +127,7 @@ async function cargarEquipos(nombreCliente) {
         renderizarTablaEquipos(equiposPadron);
 
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#e74c3c;">Error al cargar el padrón de equipos.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="celda-error">Error al cargar el padrón de equipos.</td></tr>';
     }
 }
 
@@ -136,7 +136,7 @@ function renderizarTablaEquipos(equipos) {
     tbody.innerHTML = '';
 
     if (!equipos || equipos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#7f8c8d; padding:20px;">No se encontraron equipos para este cliente.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">No se encontraron equipos para este cliente.</td></tr>';
         return;
     }
 
@@ -149,11 +149,11 @@ function renderizarTablaEquipos(equipos) {
 
         // 2. Badge de Origen
         let badgeOrigen = eq.origen === 'Venta SIPCONS'
-            ? `<span style="background:#e8f4f8; color:#2980b9; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Venta #${eq.venta_folio || eq.venta_id}</span>`
-            : `<span style="background:#fef5e7; color:#d35400; padding:3px 6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Externo</span>`;
+            ? `<span class="etiqueta etiqueta-info">Venta #${eq.venta_folio || eq.venta_id}</span>`
+            : `<span class="etiqueta etiqueta-alerta">Externo</span>`;
 
         // 3. CALCULADORA DE GARANTÍA
-        let badgeGarantia = `<span style="background:#bdc3c7; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; white-space:nowrap;"><i class="fas fa-shield-alt"></i> Sin Garantía</span>`;
+        let badgeGarantia = `<span class="etiqueta etiqueta-neutral"><i class="fas fa-shield-alt"></i> Sin Garantía</span>`;
         
         if (eq.garantia > 0 && eq.fecha_registro) {
             const fRegistro = new Date(eq.fecha_registro + 'T12:00:00'); 
@@ -168,27 +168,24 @@ function renderizarTablaEquipos(equipos) {
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 let tiempoRestante = diffDays > 30 ? Math.floor(diffDays / 30) + " meses" : diffDays + " días";
                 
-                badgeGarantia = `<span style="background:#27ae60; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; white-space:nowrap;" title="Quedan ${tiempoRestante}"><i class="fas fa-check-circle"></i> Activa hasta: ${fechaVencimientoTexto}</span>`;
+                badgeGarantia = `<span class="etiqueta etiqueta-ok" title="Quedan ${tiempoRestante}"><i class="fas fa-check-circle"></i> Activa hasta: ${fechaVencimientoTexto}</span>`;
             } else {
-                badgeGarantia = `<span style="background:#e74c3c; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; white-space:nowrap;"><i class="fas fa-times-circle"></i> Venció: ${fechaVencimientoTexto}</span>`;
+                badgeGarantia = `<span class="etiqueta etiqueta-error"><i class="fas fa-times-circle"></i> Venció: ${fechaVencimientoTexto}</span>`;
             }
         }
 
         // 4. Dibujar la Fila
         const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.style.borderBottom = '1px solid #eee';
-        tr.addEventListener('mouseenter', () => tr.style.backgroundColor = (window.sipconsTema && window.sipconsTema.obtener() === 'oscuro' ? '#22374f' : '#f1f5f9'));
-        tr.addEventListener('mouseleave', () => tr.style.backgroundColor = 'transparent');
+        tr.className = 'fila-clic';
         
         tr.onclick = () => abrirModalEdicionEquipo(eq);
 
         tr.innerHTML = `
-            <td><strong>${eq.marca || ''} ${eq.modelo || ''}</strong><br><small style="color:#7f8c8d;">${eq.equipo}</small></td>
+            <td><strong>${eq.marca || ''} ${eq.modelo || ''}</strong><br><small class="texto-suave">${eq.equipo}</small></td>
             <td>${eq.numero_serie || 'S/N'}</td>
             <td>${eq.sucursal || '-'}</td>
             <td>${badgeOrigen}</td>
-            <td style="font-size:0.85rem; font-weight:bold; color:#2c3e50;">${txtPeriodo}</td>
+            <td><strong>${txtPeriodo}</strong></td>
             <td>${badgeGarantia}</td>
         `;
         tbody.appendChild(tr);

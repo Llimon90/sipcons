@@ -82,10 +82,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const enlace = document.createElement("a");
         enlace.href = `detalle.html?id=${incidencia.id}`;
         enlace.textContent = incidencia.numero_incidente;
-        enlace.style.color = "blue";
-        enlace.style.textDecoration = "underline";
 
         celdaNumeroIncidente.appendChild(enlace);
+
+        const estatus = window.SipconsTablas
+          ? SipconsTablas.estatusHTML(incidencia.estatus)
+          : incidencia.estatus;
 
         fila.innerHTML = `
           <td></td>
@@ -94,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
           <td>${incidencia.sucursal}</td>
           <td>${incidencia.falla}</td>
           <td>${incidencia.fecha}</td>
-          <td>${incidencia.estatus}</td>
+          <td>${estatus}</td>
         `;
 
         fila.children[0].replaceWith(celdaNumeroIncidente);

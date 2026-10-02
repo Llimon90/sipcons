@@ -12,20 +12,15 @@ async function cargarClientes(busqueda = '') {
 
     // Si no hay resultados
     if (!clientes || clientes.length === 0) {
-        listaClientes.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #7f8c8d;">No se encontraron clientes.</td></tr>`;
+        listaClientes.innerHTML = `<tr><td colspan="6">No se encontraron clientes.</td></tr>`;
         return;
     }
 
     clientes.forEach(cliente => {
       const row = document.createElement('tr');
 
-      // Convertimos toda la fila en un enlace gigante
-      row.style.cursor = 'pointer';
-      row.style.transition = 'background-color 0.2s ease';
-      
-      // Efecto hover (cambia de color al pasar el ratón)
-      row.addEventListener('mouseenter', () => row.style.backgroundColor = (window.sipconsTema && window.sipconsTema.obtener() === 'oscuro' ? '#22374f' : '#f1f5f9'));
-      row.addEventListener('mouseleave', () => row.style.backgroundColor = 'transparent');
+      // Toda la fila abre el perfil (cursor y hover vienen de tr.fila-clic en styles.css)
+      row.className = 'fila-clic';
       
       // Redirección a la nueva página de perfil enviando el ID por la URL
       row.onclick = () => {
@@ -34,7 +29,7 @@ async function cargarClientes(busqueda = '') {
 
       // Inyectamos solo las 6 columnas de datos (Eliminamos la columna de acciones)
       row.innerHTML = `
-        <td style="font-weight:bold; color:#2980b9;">${cliente.nombre}</td>
+        <td><a href="perfil-cliente.html?id=${cliente.id}">${cliente.nombre}</a></td>
         <td>${cliente.rfc || '-'}</td>
         <td>${cliente.direccion || '-'}</td>
         <td>${cliente.telefono || '-'}</td>
@@ -49,7 +44,7 @@ async function cargarClientes(busqueda = '') {
     console.error('Error al cargar clientes:', error);
     const listaClientes = document.getElementById('lista-clientes');
     if (listaClientes) {
-        listaClientes.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#e74c3c; font-weight:bold;">Error de conexión con el servidor.</td></tr>`;
+        listaClientes.innerHTML = `<tr><td colspan="6" class="celda-error">Error de conexión con el servidor.</td></tr>`;
     }
   }
 }

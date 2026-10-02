@@ -46,18 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = ''; // Limpiamos la tabla
 
         if (datos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: #7f8c8d;"><i class="fas fa-search"></i> No se encontraron resultados con estos filtros.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6"><i class="fas fa-search"></i> No se encontraron resultados con estos filtros.</td></tr>`;
             return;
         }
 
         datos.forEach(v => {
             const tr = document.createElement('tr');
             
-            // LA MAGIA DE LA FILA CLICKEABLE
-            tr.style.cursor = 'pointer';
-            tr.style.transition = 'background-color 0.2s ease';
-            tr.addEventListener('mouseenter', () => tr.style.backgroundColor = (window.sipconsTema && window.sipconsTema.obtener() === 'oscuro' ? '#22374f' : '#f1f5f9'));
-            tr.addEventListener('mouseleave', () => tr.style.backgroundColor = 'transparent');
+            // Fila clicable (cursor y hover vienen de tr.fila-clic en styles.css)
+            tr.className = 'fila-clic';
             
             // Redirección directa al detalle de la venta (Asegúrate de que este archivo exista)
             tr.onclick = () => {
@@ -65,13 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             tr.innerHTML = `
-                <td><span style="background:#e8f4f8; color:#2980b9; padding:4px 8px; border-radius:4px; font-weight:bold; font-size: 0.9em;">${v.folio}</span></td>
+                <td><span class="etiqueta etiqueta-info">${v.folio}</span></td>
                 <td>${v.fecha_registro.split(' ')[0]}</td> 
                 <td><strong>${v.cliente}</strong></td>
-                <td><small>${v.equipos || '-'}</small><br><small style="color:#7f8c8d;">${v.marcas || ''}</small></td>
-                <td style="text-align: center; font-weight: bold;">${v.cantidad_equipos}</td>
-                <td style="text-align: center;">
-                    ${v.equipos_con_servicio > 0 ? `<span style="color:#27ae60;" title="${v.equipos_con_servicio} equipos con cláusula"><i class="fas fa-check-circle"></i> Sí</span>` : '<span style="color:#e74c3c;"><i class="fas fa-times-circle"></i> No</span>'}
+                <td><small>${v.equipos || '-'}</small><br><small class="texto-suave">${v.marcas || ''}</small></td>
+                <td class="celda-centro"><strong>${v.cantidad_equipos}</strong></td>
+                <td class="celda-centro">
+                    ${v.equipos_con_servicio > 0 ? `<span class="etiqueta etiqueta-ok" title="${v.equipos_con_servicio} equipos con cláusula"><i class="fas fa-check-circle"></i> Sí</span>` : '<span class="etiqueta etiqueta-error"><i class="fas fa-times-circle"></i> No</span>'}
                 </td>
             `;
             tbody.appendChild(tr);

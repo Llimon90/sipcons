@@ -113,27 +113,33 @@ html[data-theme="dark"] .checkmark { border-color: #4aa8ee; }
 html[data-theme="dark"] .serie-input.input-error,
 html[data-theme="dark"] .input-error { background-color: #3a1c1e !important; border-color: #f87171 !important; }
 
-/* ---------- tablas ---------- */
-html[data-theme="dark"] .lista-incidencias thead,
-html[data-theme="dark"] .lista-clientes thead,
-html[data-theme="dark"] .lista-usuarios thead,
-html[data-theme="dark"] .lista-ventas thead { background: linear-gradient(135deg, #1e3a8a, #2447b8); }
-html[data-theme="dark"] .lista-incidencias th, html[data-theme="dark"] .lista-incidencias td,
-html[data-theme="dark"] .lista-clientes th, html[data-theme="dark"] .lista-clientes td,
-html[data-theme="dark"] .lista-usuarios th, html[data-theme="dark"] .lista-usuarios td,
-html[data-theme="dark"] .lista-ventas th, html[data-theme="dark"] .lista-ventas td,
-html[data-theme="dark"] .tabla-ventas td, html[data-theme="dark"] #tabla-ventas td { border-bottom-color: #2c3d50; }
-html[data-theme="dark"] .lista-incidencias tbody tr:nth-child(even),
-html[data-theme="dark"] .lista-clientes tbody tr:nth-child(even),
-html[data-theme="dark"] .lista-usuarios tbody tr:nth-child(even),
-html[data-theme="dark"] .lista-ventas tbody tr:nth-child(even) { background-color: #1b2836; }
-html[data-theme="dark"] .lista-incidencias tbody tr:hover,
-html[data-theme="dark"] .lista-clientes tbody tr:hover,
-html[data-theme="dark"] .lista-usuarios tbody tr:hover,
-html[data-theme="dark"] .lista-ventas tbody tr:hover { background-color: #22374f; }
-html[data-theme="dark"] .tabla-ventas tbody tr:hover { background-color: rgba(74, 168, 238, 0.12); }
-html[data-theme="dark"] #tabla-ventas th { background-color: #243547; color: #e6edf3; border-bottom-color: #3a4d63; }
+/* ---------- tablas (styles.css las pinta con estas variables) ---------- */
+html[data-theme="dark"] {
+  --tabla-borde: #2c3d50;
+  --tabla-linea: #2c3d50;
+  --tabla-encabezado: linear-gradient(135deg, #1e3a8a, #2447b8);
+  --tabla-encabezado-texto: #ffffff;
+  --tabla-texto: #e6edf3;
+  --tabla-texto-suave: #9fb0c1;
+  --tabla-fondo: #16212d;
+  --tabla-zebra: #1b2836;
+  --tabla-hover: #22374f;
+  --tabla-enlace: #6ab7f5;
+}
 html[data-theme="dark"] table { color: #e6edf3; }
+html[data-theme="dark"] table td.celda-error { color: #ff8a80; }
+
+/* ---------- etiquetas ---------- */
+html[data-theme="dark"] .etiqueta,
+html[data-theme="dark"] .etiqueta-neutral { background: #243547; color: #c3d0dc; }
+html[data-theme="dark"] .etiqueta-info    { background: #16324f; color: #8cc4ff; }
+html[data-theme="dark"] .etiqueta-ok      { background: #12351f; color: #8fe0aa; }
+html[data-theme="dark"] .etiqueta-alerta  { background: #3d2c10; color: #f6c26b; }
+html[data-theme="dark"] .etiqueta-error   { background: #3b1a1c; color: #ffb3b3; }
+html[data-theme="dark"] .etiqueta-morado  { background: #2c2147; color: #c4a8ff; }
+
+/* ---------- navegación móvil ---------- */
+html[data-theme="dark"] .barra-movil { background: linear-gradient(135deg, #0a121b 0%, #101b27 100%); }
 
 /* ---------- botones y mensajes ---------- */
 html[data-theme="dark"] .btn-edit { background: #1f3450; color: #8cc4ff; }
@@ -166,7 +172,6 @@ html[data-theme="dark"] .text-muted { color: #8fa1b3 !important; }
 html[data-theme="dark"] .text-dark { color: #e6edf3 !important; }
 
 /* ---------- lo que en modo claro usa --primary-color como fondo ---------- */
-html[data-theme="dark"] .tabla-ventas th,
 html[data-theme="dark"] .btn-paginacion { background: #2f6fa8; color: #fff; }
 html[data-theme="dark"] .btn-paginacion:hover:not(:disabled) { background: #3b8fd0; }
 html[data-theme="dark"] .btn-paginacion:disabled { background: #2c3d50; color: #7a8ea1; }
@@ -187,6 +192,13 @@ html[data-theme="dark"] .retorna a { color: #e6edf3; }
 html[data-theme="dark"] .archivo-container,
 html[data-theme="dark"] .file-item { background: #1b2836; border-color: #2c3d50; color: #e6edf3; }
 html[data-theme="dark"] .file-name { color: #e6edf3; }
+html[data-theme="dark"] .archivo-miniatura { background: #0e1620; }
+html[data-theme="dark"] .archivo-container:hover { border-color: #4aa8ee; }
+html[data-theme="dark"] .archivos-vacio { color: #9fb0c1; }
+html[data-theme="dark"] #form-editar input[type="text"],
+html[data-theme="dark"] #form-editar input[type="date"],
+html[data-theme="dark"] #form-editar select,
+html[data-theme="dark"] #form-editar textarea { border-color: #3a4d63; }
 html[data-theme="dark"] .file-type { color: #9fb0c1; }
 html[data-theme="dark"] .search-results-header { background: #1b2836; color: #e6edf3; }
 html[data-theme="dark"] .search-highlight { background-color: #5c4a12; color: #ffeaa7; }
@@ -212,7 +224,6 @@ html[data-theme="dark"] .model-card:hover,
 html[data-theme="dark"] .doc-item:hover { border-color: #4aa8ee; }
 
 /* ---------- Pasar el mouse sobre filas: siempre azul en oscuro ---------- */
-html[data-theme="dark"] .drilldown-table tbody tr:hover { background: #22374f; }
 html[data-theme="dark"] tbody tr:hover > td,
 html[data-theme="dark"] tbody tr:hover > th { background-color: transparent; }
 

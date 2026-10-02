@@ -155,9 +155,11 @@ function mostrarIncidenciasPagina() {
         nombreReporteVisual = 'PROG-SERV ';
     }
 
-    let enlaceHTML = esProgramado 
-      ? `<a href="javascript:void(0);" class="fw-bold text-primary text-decoration-none" onclick="abrirModalProgramada(${indiceGlobal})"><i class="bi bi-window-stack"></i> ${nombreReporteVisual}</a>`
-      : `<a href="detalle.html?id=${inc.id}" class="text-decoration-none">${nombreReporteVisual || "N/A"}</a>`;
+    let enlaceHTML = esProgramado
+      ? `<a href="javascript:void(0);" onclick="abrirModalProgramada(${indiceGlobal})"><i class="bi bi-window-stack"></i> ${nombreReporteVisual}</a>`
+      : `<a href="detalle.html?id=${inc.id}">${nombreReporteVisual || "N/A"}</a>`;
+
+    const estatus = window.SipconsTablas ? SipconsTablas.estatusHTML(inc.estatus) : inc.estatus;
 
     row.innerHTML = `
       <td>${enlaceHTML}</td>
@@ -166,8 +168,8 @@ function mostrarIncidenciasPagina() {
       <td>${inc.sucursal}</td>
       <td>${inc.falla}</td>
       <td>${inc.fecha}</td>
-      <td>${inc.estatus}</td>
-      <td><span class="${esActiva ? "badge-activo" : "badge-inactivo"}">${esActiva ? "Activa" : "Inactiva"}</span></td>
+      <td>${estatus}</td>
+      <td><span class="etiqueta ${esActiva ? "etiqueta-ok" : "etiqueta-neutral"}">${esActiva ? "Activa" : "Inactiva"}</span></td>
     `;
     tablaBody.appendChild(row);
   });

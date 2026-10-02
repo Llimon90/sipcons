@@ -53,7 +53,11 @@ async function eliminarArchivo(urlArchivo, containerElement, id) {
             throw new Error(data.error || `Error al eliminar el archivo. Código: ${response.status}`);
         }
 
+        const contenedorArchivos = containerElement.parentElement;
         containerElement.remove();
+        if (contenedorArchivos && !contenedorArchivos.querySelector('.archivo-container')) {
+            contenedorArchivos.innerHTML = '<p class="archivos-vacio">No hay archivos adjuntos.</p>';
+        }
         showNotification('Archivo eliminado correctamente', 'success');
 
     } catch (error) {
@@ -78,82 +82,82 @@ async function renderPdfThumbnail(archivo, canvas) {
     }
 }
 
-function createFilePreview(archivo, ext) {
+function createFilePreview(archivo) {
+    const tipo = SipconsVisor.tipoDe(archivo);
     let previewElement;
 
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+    if (tipo === 'imagen') {
         previewElement = document.createElement('img');
         previewElement.src = archivo;
-        previewElement.style.maxWidth = '100px';
-        previewElement.style.maxHeight = '100px';
-        previewElement.style.cursor = 'pointer';
-    } else if (ext === 'pdf') {
+        previewElement.alt = '';
+        previewElement.loading = 'lazy';
+        previewElement.onerror = () => previewElement.replaceWith(iconoArchivo(archivo));
+    } else if (tipo === 'pdf') {
         previewElement = document.createElement('canvas');
-        previewElement.style.maxWidth = '100px';
-        previewElement.style.maxHeight = '100px';
-        previewElement.style.cursor = 'pointer';
-    } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+    } else if (tipo === 'video') {
         previewElement = document.createElement('video');
-        previewElement.src = archivo;
-        previewElement.style.maxWidth = '100px';
-        previewElement.style.maxHeight = '100px';
-        previewElement.controls = false;
+        previewElement.src = `${archivo}#t=0.1`;
+        previewElement.preload = 'metadata';
         previewElement.muted = true;
         previewElement.loop = true;
-        previewElement.style.cursor = 'pointer';
-        previewElement.onmouseover = () => previewElement.play();
+        previewElement.playsInline = true;
+        previewElement.onmouseover = () => previewElement.play().catch(() => {});
         previewElement.onmouseout = () => previewElement.pause();
     }
 
     return previewElement;
 }
 
-function createFileContainer(archivo, ext, id) {
+function iconoArchivo(archivo) {
+    const icono = document.createElement('i');
+    icono.className = `fas ${SipconsVisor.iconoDe(archivo)} archivo-icono`;
+    return icono;
+}
+
+// Abre en el visor el archivo pulsado, con los demás archivos que sigan en pantalla
+function abrirEnVisor(archivoContainer) {
+    const contenedores = Array.from(document.querySelectorAll('#contenedor-archivos .archivo-container'));
+    const lista = contenedores.map(c => ({ url: c.dataset.url }));
+    SipconsVisor.abrir(lista, contenedores.indexOf(archivoContainer));
+}
+
+function createFileContainer(archivo, id) {
     const archivoContainer = document.createElement('div');
     archivoContainer.className = 'archivo-container';
-    archivoContainer.style.position = 'relative';
-    archivoContainer.style.margin = '10px';
-    archivoContainer.style.padding = '10px';
-    archivoContainer.style.border = '1px solid #ddd';
-    archivoContainer.style.borderRadius = '5px';
-    archivoContainer.style.display = 'inline-block';
+    archivoContainer.dataset.url = archivo;
 
+    const nombre = SipconsVisor.nombreDe(archivo);
+
+    // El enlace conserva la URL: Ctrl/Cmd + clic o clic central abren en pestaña nueva
     const link = document.createElement('a');
+    link.className = 'archivo-enlace';
     link.href = archivo;
     link.target = '_blank';
-    link.style.textDecoration = 'none';
-    link.style.color = '#333';
-    link.style.display = 'block';
+    link.rel = 'noopener';
+    link.title = `Ver ${nombre}`;
+    link.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        abrirEnVisor(archivoContainer);
+    });
 
-    const previewElement = createFilePreview(archivo, ext);
-    if (previewElement) {
-        previewElement.onclick = () => window.open(archivo, '_blank');
-        link.appendChild(previewElement);
-    }
+    const miniatura = document.createElement('div');
+    miniatura.className = 'archivo-miniatura';
+    const previewElement = createFilePreview(archivo);
+    miniatura.appendChild(previewElement || iconoArchivo(archivo));
+    link.appendChild(miniatura);
 
     const fileNameSpan = document.createElement('span');
-    fileNameSpan.textContent = getShortFileName(archivo);
-    fileNameSpan.style.display = 'block';
-    fileNameSpan.style.textAlign = 'center';
+    fileNameSpan.className = 'file-name';
+    fileNameSpan.textContent = getShortFileName(archivo, 28);
     link.appendChild(fileNameSpan);
 
     const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
     deleteBtn.className = 'eliminar-archivo';
-    deleteBtn.innerHTML = '×';
-    deleteBtn.style.position = 'absolute';
-    deleteBtn.style.top = '5px';
-    deleteBtn.style.right = '5px';
-    deleteBtn.style.background = 'red';
-    deleteBtn.style.color = 'white';
-    deleteBtn.style.border = 'none';
-    deleteBtn.style.borderRadius = '50%';
-    deleteBtn.style.width = '20px';
-    deleteBtn.style.height = '20px';
-    deleteBtn.style.cursor = 'pointer';
-    deleteBtn.style.display = 'flex';
-    deleteBtn.style.alignItems = 'center';
-    deleteBtn.style.justifyContent = 'center';
-    deleteBtn.style.padding = '0';
+    deleteBtn.title = 'Eliminar archivo';
+    deleteBtn.setAttribute('aria-label', `Eliminar ${nombre}`);
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
     deleteBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -172,26 +176,19 @@ async function cargarArchivosAdjuntos(archivos, id) {
 
     if (archivos && archivos.length > 0) {
         for (const archivo of archivos) {
-            const ext = archivo.split('.').pop().toLowerCase();
-            const { container, preview } = createFileContainer(archivo, ext, id);
+            const { container, preview } = createFileContainer(archivo, id);
+            contenedorArchivos.appendChild(container);
 
-            if (ext === 'pdf' && preview) {
+            if (preview && preview.tagName === 'CANVAS') {
                 try {
                     await renderPdfThumbnail(archivo, preview);
                 } catch (error) {
-                    preview.remove();
-                    const errorSpan = document.createElement('span');
-                    errorSpan.textContent = 'Error al cargar miniatura';
-                    errorSpan.style.display = 'block';
-                    errorSpan.style.textAlign = 'center';
-                    container.querySelector('a').appendChild(errorSpan);
+                    preview.replaceWith(iconoArchivo(archivo));
                 }
             }
-
-            contenedorArchivos.appendChild(container);
         }
     } else {
-        contenedorArchivos.innerHTML = "<p>No hay archivos adjuntos.</p>";
+        contenedorArchivos.innerHTML = '<p class="archivos-vacio">No hay archivos adjuntos.</p>';
     }
 }
 
@@ -305,6 +302,18 @@ async function eliminarIncidencia(id, folio) {
 }
 
 // Funciones relacionadas con el formulario
+function tecnicoGroupHTML(opcionesHTML, requerido) {
+    return `
+        <div class="tecnico-group">
+            <select name="tecnicos[]" class="tecnico-select" ${requerido ? 'required' : ''}>
+                ${opcionesHTML}
+            </select>
+            <button type="button" class="eliminar-tecnico" title="Quitar técnico" aria-label="Quitar técnico">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>`;
+}
+
 function createFormHTML(data, tecnicosLista) {
     // Convertir técnico existente en array si no lo es
     const tecnicosIniciales = Array.isArray(data.tecnico) ? data.tecnico : 
@@ -312,95 +321,73 @@ function createFormHTML(data, tecnicosLista) {
 
     return `
         <form id="form-editar">
-            <p><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
-            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <label># INCIDENCIA CLIENTE:</label>&nbsp;
-                    <input type="text" id="reporte_cliente" value="${escapeAttr(data.reporte_cliente)}" style="width: 100%;">
-                </div>&nbsp; &nbsp;
-                <div style="flex: 1;">
-                    <label>CLIENTE:</label>&nbsp;
-                    <input type="text" id="cliente" list="lista-clientes" autocomplete="off" placeholder="Escribe para buscar cliente..." value="${escapeAttr(data.cliente)}" required style="width: 100%;">
+            <p class="detalle-folio"><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
+            <div class="form-row">
+                <div>
+                    <label for="reporte_cliente"># INCIDENCIA CLIENTE:</label>
+                    <input type="text" id="reporte_cliente" value="${escapeAttr(data.reporte_cliente)}">
+                </div>
+                <div>
+                    <label for="cliente">CLIENTE:</label>
+                    <input type="text" id="cliente" list="lista-clientes" autocomplete="off" placeholder="Escribe para buscar cliente..." value="${escapeAttr(data.cliente)}" required>
                     <datalist id="lista-clientes"></datalist>
-                </div>&nbsp;&nbsp;
+                </div>
             </div>
 
-            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <label>CONTACTO:</label>
-                    <input type="text" id="contacto" list="lista-contactos" autocomplete="off" placeholder="Selecciona o escribe quién reporta" value="${escapeAttr(data.contacto)}" required style="width: 100%;">
+            <div class="form-row">
+                <div>
+                    <label for="contacto">CONTACTO:</label>
+                    <input type="text" id="contacto" list="lista-contactos" autocomplete="off" placeholder="Selecciona o escribe quién reporta" value="${escapeAttr(data.contacto)}" required>
                     <datalist id="lista-contactos"></datalist>
                 </div>
-                <div style="flex: 1;">
-                    <label>SUCURSAL:</label>
-                    <input type="text" id="sucursal" value="${data.sucursal || ''}" style="width: 100%;">
+                <div>
+                    <label for="sucursal">SUCURSAL:</label>
+                    <input type="text" id="sucursal" value="${escapeAttr(data.sucursal)}">
                 </div>
             </div>
 
-        
-            
-            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <label>Categoría:</label>
-                        <select id="categoria" style="width: 100%;">
-                            <option value="">SELECCIONE UNA OPCIÓN</option>
-                            <option value="Mr. Tienda/Mr. Chef" ${data.categoria && data.categoria.trim() === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
-                            <option value="Distribuidora el Florido" ${data.categoria && data.categoria.trim() === 'Distribuidora el Florido' ? 'selected' : ''}>Distribuidora el Florido</option>
-                            <option value="Calimax" ${data.categoria && data.categoria.trim() === 'Calimax' ? 'selected' : ''}>Calimax</option>
-                            <option value="Recolección" ${data.categoria && data.categoria.trim() === 'Recolección' ? 'selected' : ''}>Recolección</option>
-                            <option value="Otros" ${data.categoria && data.categoria.trim() === 'Otros' ? 'selected' : ''}>Otros</option>
-                            
-                        </select>
-                    
+            <div class="form-row">
+                <div>
+                    <label for="categoria">CATEGORÍA:</label>
+                    <select id="categoria">
+                        <option value="">SELECCIONE UNA OPCIÓN</option>
+                        <option value="Mr. Tienda/Mr. Chef" ${data.categoria && data.categoria.trim() === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
+                        <option value="Distribuidora el Florido" ${data.categoria && data.categoria.trim() === 'Distribuidora el Florido' ? 'selected' : ''}>Distribuidora el Florido</option>
+                        <option value="Calimax" ${data.categoria && data.categoria.trim() === 'Calimax' ? 'selected' : ''}>Calimax</option>
+                        <option value="Recolección" ${data.categoria && data.categoria.trim() === 'Recolección' ? 'selected' : ''}>Recolección</option>
+                        <option value="Otros" ${data.categoria && data.categoria.trim() === 'Otros' ? 'selected' : ''}>Otros</option>
+                    </select>
                 </div>
-
-
-                <div style="flex: 1;">
-                    <label>FECHA:</label>
-                    <input type="date" id="fecha" value="${data.fecha || ''}" required style="width: 100%;">
+                <div>
+                    <label for="fecha">FECHA:</label>
+                    <input type="date" id="fecha" value="${data.fecha || ''}" required>
                 </div>
             </div>
 
-            <div style="margin-bottom: 15px;">
-                <label>NÚMERO DE SERIE DEL EQUIPO (opcional):</label>
-                <input type="text" id="numero_serie" list="lista-series" autocomplete="off" maxlength="100" placeholder="Selecciona del padrón o escribe la serie" value="${escapeAttr(data.numero_serie)}" style="width: 100%;">
+            <div class="form-campo">
+                <label for="numero_serie">NÚMERO DE SERIE DEL EQUIPO (opcional):</label>
+                <input type="text" id="numero_serie" list="lista-series" autocomplete="off" maxlength="100" placeholder="Selecciona del padrón o escribe la serie" value="${escapeAttr(data.numero_serie)}">
                 <datalist id="lista-series"></datalist>
             </div>
 
-            <div style="flex: 1;">
+            <div class="form-campo">
                 <label>TÉCNICOS:</label>
                 <div id="tecnicos-container">
-                    ${tecnicosIniciales.map((tecnico, index) => `
-    <div class="tecnico-group" style="margin-bottom: 10px; display: flex; align-items: center;">
-        <select name="tecnicos[]" class="tecnico-select" ${index === 0 ? '' : 'required'} style="width: 90%;">
-            ${SipconsTecnicos.opcionesHTML(tecnicosLista, tecnico, "Sin técnico asignado")}
-        </select>
-        <button type="button" class="eliminar-tecnico" style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 5px;">
-            <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
-        </button>
-    </div>
-`).join('')}
-${tecnicosIniciales.length === 0 ? `
-    <div class="tecnico-group" style="margin-bottom: 10px; display: flex; align-items: center;">
-        <select name="tecnicos[]" class="tecnico-select" style="width: 90%;">
-            ${SipconsTecnicos.opcionesHTML(tecnicosLista, '', "Seleccione una opción")}
-        </select>
-        <button type="button" class="eliminar-tecnico" style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 5px;">
-            <i class="fas fa-trash-alt" style="color: #ff0000;"></i>
-        </button>
-    </div>
-` : ''}
+                    ${tecnicosIniciales.map((tecnico, index) => tecnicoGroupHTML(
+                        SipconsTecnicos.opcionesHTML(tecnicosLista, tecnico, "Sin técnico asignado"), index > 0
+                    )).join('')}
+                    ${tecnicosIniciales.length === 0 ? tecnicoGroupHTML(
+                        SipconsTecnicos.opcionesHTML(tecnicosLista, '', "Seleccione una opción"), false
+                    ) : ''}
                 </div>
-                <button type="button" id="agregar-tecnico" style="margin-top: 5px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    + Agregar técnico 
+                <button type="button" id="agregar-tecnico" class="btn-agregar-tecnico">
+                    <i class="fas fa-plus"></i> Agregar técnico
                 </button>
             </div>
-            
-            </div>
 
-            <div style="margin-bottom: 15px;">
-                <label><br>ESTATUS:</label>
-                <select id="estatus" style="width: 100%;">
+            <div class="form-campo">
+                <label for="estatus">ESTATUS:</label>
+                <select id="estatus">
                     <option value="Abierto" ${data.estatus === "Abierto" ? 'selected' : ''}>Abierto</option>
                     <option value="Asignado" ${data.estatus === "Asignado" ? 'selected' : ''}>Asignado</option>
                     <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
@@ -409,36 +396,37 @@ ${tecnicosIniciales.length === 0 ? `
                     <option value="Cerrado con factura" ${data.estatus === "Cerrado con factura" ? 'selected' : ''}>Cerrado con factura</option>
                 </select>
             </div>
-            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-    <div style="flex: 1;">
-        <label>FALLA:</label>
-        <textarea id="falla" required style="width: 100%; height: 100px;">${data.falla || ''}</textarea>
-    </div>
 
-    <div style="flex: 1;">
-        <label>TRABAJO REALIZADO:</label>
-        <textarea id="accion" style="width: 100%; height: 100px;">${data.accion || ''}</textarea>
-    </div>
-</div>
-
-            <div style="margin-bottom: 15px;">
-                <label>NOTAS ADICIONALES</label>
-                <textarea id="notas" style="width: 100%;">${data.notas || ''}</textarea>
+            <div class="form-row">
+                <div>
+                    <label for="falla">FALLA:</label>
+                    <textarea id="falla" required>${data.falla || ''}</textarea>
+                </div>
+                <div>
+                    <label for="accion">TRABAJO REALIZADO:</label>
+                    <textarea id="accion">${data.accion || ''}</textarea>
+                </div>
             </div>
 
-            <div style="margin-bottom: 15px;">
-                <label>AGREGAR NUEVOS ARCHIVOS:</label>
+            <div class="form-campo">
+                <label for="notas">NOTAS ADICIONALES</label>
+                <textarea id="notas">${data.notas || ''}</textarea>
+            </div>
+
+            <div class="form-campo">
+                <label for="archivos">AGREGAR NUEVOS ARCHIVOS:</label>
                 <input type="file" id="archivos" name="archivos[]" multiple
-                       accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-                       style="width: 100%;">
+                       accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ogg,.mov,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
             </div>
 
-            <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Guardar cambios
-            </button>
-            <button type="button" id="btn-eliminar-incidencia" class="btn-rojo" style="display: none; margin-left: 10px; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                <i class="fas fa-trash-alt"></i> Eliminar incidencia
-            </button>
+            <div class="detalle-acciones">
+                <button type="submit">
+                    <i class="fas fa-save"></i> Guardar cambios
+                </button>
+                <button type="button" id="btn-eliminar-incidencia" class="btn-rojo" style="display: none;">
+                    <i class="fas fa-trash-alt"></i> Eliminar incidencia
+                </button>
+            </div>
         </form>
 
     `;
@@ -468,39 +456,21 @@ function setupTecnicosMultiples(tecnicosLista) {
     }
     
     function crearSelectTecnico() {
-        const tecnicoGroup = document.createElement('div');
-        tecnicoGroup.className = 'tecnico-group';
-        tecnicoGroup.style.marginBottom = '10px';
-        tecnicoGroup.style.display = 'flex';
-        tecnicoGroup.style.alignItems = 'center';
-        
-        const select = document.createElement('select');
-        select.name = 'tecnicos[]';
-        select.className = 'tecnico-select';
-        select.required = true;
-        select.style.width = '90%';
-        
-        select.innerHTML = SipconsTecnicos.opcionesHTML(tecnicosLista, '', 'Seleccione una opción');
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'eliminar-tecnico';
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt" style="color: #ff0000;"></i>';
-        deleteBtn.style.background = 'none';
-        deleteBtn.style.border = 'none';
-        deleteBtn.style.cursor = 'pointer';
-        deleteBtn.style.padding = '0';
-        deleteBtn.style.marginLeft = '5px';
-        
+        const plantilla = document.createElement('template');
+        plantilla.innerHTML = tecnicoGroupHTML(
+            SipconsTecnicos.opcionesHTML(tecnicosLista, '', 'Seleccione una opción'), true
+        ).trim();
+        const tecnicoGroup = plantilla.content.firstElementChild;
+        const select = tecnicoGroup.querySelector('select');
+        const deleteBtn = tecnicoGroup.querySelector('.eliminar-tecnico');
+
         deleteBtn.addEventListener('click', function() {
             tecnicoGroup.remove();
             actualizarOpcionesTecnicos();
         });
-        
+
         select.addEventListener('change', actualizarOpcionesTecnicos);
-        
-        tecnicoGroup.appendChild(select);
-        tecnicoGroup.appendChild(deleteBtn);
+
         tecnicosContainer.appendChild(tecnicoGroup);
         
         actualizarOpcionesTecnicos();
