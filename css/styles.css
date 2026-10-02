@@ -872,7 +872,7 @@ table .celda-centro { text-align: center !important; }
   }
 
   /* Botones de formulario a todo el ancho (no los de tablas, iconos o modales de archivo) */
-  button:not(table button):not(.toggle-sidebar):not(.eliminar-archivo):not(.eliminar-tecnico):not(.visor-btn):not(.barra-movil-btn):not(.acciones-usuario button) {
+  button:not(table button):not(.toggle-sidebar):not(.eliminar-archivo):not(.eliminar-tecnico):not(.visor-btn):not(.barra-movil-btn):not(.modal-close):not(.acciones-usuario button) {
     padding: 14px 25px;
     font-size: 15px;
     width: 100%;
