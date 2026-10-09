@@ -26,7 +26,7 @@ try {
     }
 
     $datos = incidenciaParaFrontend($pdo, $fila);
-    $datos['limites_subida'] = limitesSubida();
+    $datos['limites_subida'] = limitesSubida() + ['extensiones' => EXTENSIONES_ADJUNTOS];
     echo json_encode($datos, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('detalle.php: ' . $e->getMessage());

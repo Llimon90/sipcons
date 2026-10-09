@@ -529,6 +529,9 @@ const estadoDetalle = {
     datosServidor: null, // la incidencia tal como llegó del servidor
     original: null,      // el formulario recién cargado (para saber si hay cambios)
     limites: null,
+    selector: null,      // selector de archivos nuevos (selector-archivos.js)
+    idPagina: Math.random().toString(36).slice(2, 10), // identifica el borrador escrito por esta página
+    borradorPendiente: false, // hay un borrador anterior sin recuperar ni descartar
     guardando: false,
     salirSinAviso: false
 };
@@ -581,10 +584,6 @@ function formatearFechaHora(valor) {
     return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} a las ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
 }
 
-function formatearMB(bytes) {
-    return (bytes / 1048576).toLocaleString('es-MX', { maximumFractionDigits: 1 }) + ' MB';
-}
-
 // ---------- borrador local ----------
 
 function claveBorrador() {
@@ -605,25 +604,44 @@ function leerBorrador() {
     }
 }
 
+// Reglas para no perder un borrador ajeno:
+//  - esta página solo borra el borrador que ella misma escribió (otra pestaña
+//    con la misma incidencia puede tener el suyo);
+//  - mientras hay un borrador anterior sin recuperar ni descartar, no se
+//    sobrescribe.
 function guardarBorrador() {
-    if (!estadoDetalle.original) return;
+    // Ya se guardó (o se va a recargar a propósito): no hay nada que respaldar
+    if (!estadoDetalle.original || estadoDetalle.salirSinAviso) return;
     const valores = leerFormulario();
     try {
+        const existente = JSON.parse(localStorage.getItem(claveBorrador()) || 'null');
+        const esMio = existente && existente.pagina === estadoDetalle.idPagina;
         if (mismosValores(valores, estadoDetalle.original)) {
-            localStorage.removeItem(claveBorrador());
-        } else {
+            if (esMio) localStorage.removeItem(claveBorrador());
+        } else if (!estadoDetalle.borradorPendiente) {
             localStorage.setItem(claveBorrador(), JSON.stringify({
+                pagina: estadoDetalle.idPagina,
                 valores,
                 fecha: Date.now(),
                 version: estadoDetalle.version,
+                // Contra qué se escribió: permite integrar si la incidencia cambia después
+                base: estadoDetalle.original,
+                baseServidor: valoresDeDatos(estadoDetalle.datosServidor),
                 archivos: archivosSeleccionados().length
             }));
         }
     } catch (e) { /* sin almacenamiento disponible: solo se pierde el respaldo */ }
 }
 
-function borrarBorrador() {
-    try { localStorage.removeItem(claveBorrador()); } catch (e) { /* nada */ }
+// soloPropio: borra únicamente si lo escribió esta página (no el de otra pestaña)
+function borrarBorrador(soloPropio = false) {
+    try {
+        if (soloPropio) {
+            const existente = JSON.parse(localStorage.getItem(claveBorrador()) || 'null');
+            if (existente && existente.pagina !== estadoDetalle.idPagina) return;
+        }
+        localStorage.removeItem(claveBorrador());
+    } catch (e) { /* nada */ }
 }
 
 let temporizadorBorrador = null;
@@ -661,9 +679,16 @@ function mostrarAvisoBorrador(borrador) {
     aviso.className = 'aviso-borrador';
     aviso.setAttribute('role', 'status');
 
+    // Si la incidencia cambió después de escribir el borrador (y se sabe contra
+    // qué se escribió), se ofrece integrar en vez de reemplazar.
+    const cambioDespues = borrador.version && borrador.version !== estadoDetalle.version;
+    const puedeIntegrar = cambioDespues && borrador.base && borrador.baseServidor;
+
     const notas = [`Los escribiste el ${formatearFechaHora(new Date(borrador.fecha))}.`];
-    if (borrador.version && borrador.version !== estadoDetalle.version) {
-        notas.push('La incidencia cambió desde entonces: revisa los datos antes de guardar.');
+    if (cambioDespues) {
+        notas.push(puedeIntegrar
+            ? 'Después de eso se guardaron otros cambios en esta incidencia; puedes integrarlos con los tuyos.'
+            : 'La incidencia cambió desde entonces: revisa los datos antes de guardar.');
     }
     if (borrador.archivos > 0) {
         notas.push('Los archivos que habías elegido tendrás que seleccionarlos otra vez.');
@@ -673,22 +698,237 @@ function mostrarAvisoBorrador(borrador) {
         <i class="fas fa-history" aria-hidden="true"></i>
         <div class="aviso-borrador-texto"><strong>Tienes cambios que no se guardaron</strong><span></span></div>
         <div class="aviso-borrador-acciones">
-            <button type="button" class="btn-recuperar">Recuperar mis cambios</button>
+            <button type="button" class="btn-recuperar"></button>
             <button type="button" class="btn-descartar">Descartar</button>
         </div>`;
     aviso.querySelector('.aviso-borrador-texto span').textContent = notas.join(' ');
+    aviso.querySelector('.btn-recuperar').textContent = puedeIntegrar ? 'Integrar mis cambios' : 'Recuperar mis cambios';
 
-    aviso.querySelector('.btn-recuperar').addEventListener('click', () => {
-        aplicarValores(borrador.valores);
-        aviso.remove();
-        showNotification('Se recuperaron tus cambios. Revísalos y presiona "Guardar cambios".');
+    aviso.querySelector('.btn-recuperar').addEventListener('click', async () => {
+        if (puedeIntegrar) {
+            const hecho = await integrarVersiones({
+                mios: borrador.valores,
+                original: borrador.base,
+                baseServidor: borrador.baseServidor,
+                actual: estadoDetalle.datosServidor,
+                quien: 'la versión guardada'
+            });
+            if (hecho) {
+                estadoDetalle.borradorPendiente = false;
+                aviso.remove();
+                guardarBorrador();
+            }
+        } else {
+            estadoDetalle.borradorPendiente = false;
+            aplicarValores(borrador.valores);
+            aviso.remove();
+            guardarBorrador();
+            showNotification('Se recuperaron tus cambios. Revísalos y presiona "Guardar cambios".');
+        }
     });
     aviso.querySelector('.btn-descartar').addEventListener('click', () => {
+        estadoDetalle.borradorPendiente = false;
         borrarBorrador();
         aviso.remove();
     });
 
+    estadoDetalle.borradorPendiente = true;
     form.prepend(aviso);
+}
+
+// ---------- integrar dos versiones ----------
+//
+// Compara campo por campo contra lo que había cuando se empezó a editar:
+//  - solo cambió quien edita aquí  -> se queda su valor
+//  - solo cambió la otra versión   -> se toma el de la otra versión
+//  - cambiaron ambos y son iguales -> no hay nada que decidir
+//  - cambiaron ambos y difieren    -> el usuario elige (o combina textos/técnicos)
+
+const CAMPOS_COMBINABLES = ['falla', 'accion', 'notas', 'tecnicos'];
+
+function combinarTextos(suyo, mio) {
+    const a = (suyo || '').trim();
+    const b = (mio || '').trim();
+    if (!a) return mio;
+    if (!b) return suyo;
+    if (b.includes(a)) return mio;
+    if (a.includes(b)) return suyo;
+    return `${a}\n\n${b}`;
+}
+
+function combinarValor(campo, suyo, mio) {
+    if (campo === 'tecnicos') return Array.from(new Set([...(suyo || []), ...(mio || [])]));
+    return combinarTextos(suyo, mio);
+}
+
+function textoDeValor(campo, valor) {
+    if (campo === 'tecnicos') return (valor || []).join(', ');
+    return String(valor ?? '');
+}
+
+function compararVersiones(mios, original, baseServidor, suyos) {
+    const resultado = {};
+    const deLaOtra = [];
+    const conflictos = [];
+    const igual = (a, b) => JSON.stringify(a ?? '') === JSON.stringify(b ?? '');
+
+    Object.keys(NOMBRES_CAMPO).forEach(campo => {
+        const cambieYo = !igual(mios[campo], original[campo]);
+        const cambioOtra = !igual(suyos[campo], baseServidor[campo]);
+
+        if (!cambioOtra || igual(mios[campo], suyos[campo])) {
+            resultado[campo] = mios[campo];
+        } else if (!cambieYo) {
+            resultado[campo] = suyos[campo];
+            deLaOtra.push(campo);
+        } else {
+            resultado[campo] = mios[campo];
+            conflictos.push(campo);
+        }
+    });
+    return { resultado, deLaOtra, conflictos };
+}
+
+// Pregunta qué conservar en los campos que cambiaron ambas versiones.
+// Devuelve { campo: 'mio' | 'suyo' | 'ambos' } o null si se canceló.
+async function elegirEnConflictos(conflictos, mios, suyos, quien) {
+    const contenido = document.createElement('div');
+
+    conflictos.forEach(campo => {
+        const grupo = document.createElement('fieldset');
+        grupo.className = 'integrar-campo';
+        const leyenda = document.createElement('legend');
+        leyenda.textContent = NOMBRES_CAMPO[campo];
+        grupo.appendChild(leyenda);
+
+        const opciones = [
+            { valor: 'mio', titulo: 'Lo tuyo', texto: textoDeValor(campo, mios[campo]) },
+            { valor: 'suyo', titulo: `Lo de ${quien}`, texto: textoDeValor(campo, suyos[campo]) }
+        ];
+        if (CAMPOS_COMBINABLES.includes(campo)) {
+            opciones.push({ valor: 'ambos', titulo: 'Conservar ambos', texto: textoDeValor(campo, combinarValor(campo, suyos[campo], mios[campo])) });
+        }
+        // Por defecto no se pierde nada: combinar cuando se puede; si no, lo propio
+        const porDefecto = CAMPOS_COMBINABLES.includes(campo) ? 'ambos' : 'mio';
+
+        opciones.forEach(op => {
+            const etiqueta = document.createElement('label');
+            etiqueta.className = 'integrar-opcion';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = `integrar-${campo}`;
+            radio.value = op.valor;
+            radio.checked = op.valor === porDefecto;
+            const cuerpo = document.createElement('span');
+            const titulo = document.createElement('strong');
+            titulo.textContent = op.titulo;
+            const texto = document.createElement('span');
+            texto.className = 'integrar-texto' + (op.texto.trim() ? '' : ' vacio');
+            texto.textContent = op.texto.trim() ? op.texto : '(vacío)';
+            cuerpo.append(titulo, texto);
+            etiqueta.append(radio, cuerpo);
+            grupo.appendChild(etiqueta);
+        });
+        contenido.appendChild(grupo);
+    });
+
+    const eleccion = await SipconsDialogo.mostrar({
+        tipo: 'info',
+        ancho: true,
+        titulo: conflictos.length === 1 ? 'Elige qué conservar en este campo' : 'Elige qué conservar en estos campos',
+        mensaje: `Tú y ${quien} cambiaron lo mismo. El resto de los cambios de ambos ya se integró.`,
+        contenido,
+        botones: [
+            { texto: 'Cancelar', valor: null, estilo: 'secundario' },
+            { texto: 'Aplicar', valor: 'aplicar', estilo: 'primario' }
+        ]
+    });
+    if (eleccion !== 'aplicar') return null;
+
+    const decisiones = {};
+    conflictos.forEach(campo => {
+        const marcado = contenido.querySelector(`input[name="integrar-${campo}"]:checked`);
+        decisiones[campo] = marcado ? marcado.value : 'mio';
+    });
+    return decisiones;
+}
+
+function elementoDeCampo(campo) {
+    return campo === 'tecnicos' ? document.getElementById('tecnicos-container') : document.getElementById(campo);
+}
+
+function resaltarCampos(campos) {
+    document.querySelectorAll('.campo-integrado').forEach(el => el.classList.remove('campo-integrado'));
+    campos.forEach(campo => {
+        const el = elementoDeCampo(campo);
+        if (!el) return;
+        el.classList.add('campo-integrado');
+        const quitar = () => el.classList.remove('campo-integrado');
+        el.addEventListener('input', quitar, { once: true });
+        el.addEventListener('change', quitar, { once: true });
+    });
+    const primero = campos.map(elementoDeCampo).find(Boolean);
+    if (primero) primero.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function mostrarAvisoIntegrado(cantidad) {
+    const form = document.getElementById('form-editar');
+    form.querySelectorAll('.aviso-borrador').forEach(a => a.remove());
+
+    const aviso = document.createElement('div');
+    aviso.className = 'aviso-borrador aviso-borrador--info';
+    aviso.setAttribute('role', 'status');
+    aviso.innerHTML = `
+        <i class="fas fa-layer-group" aria-hidden="true"></i>
+        <div class="aviso-borrador-texto"><strong>Se integraron ambas versiones</strong><span></span></div>
+        <div class="aviso-borrador-acciones">
+            <button type="button" class="btn-guardar-integrado">Guardar cambios</button>
+        </div>`;
+    aviso.querySelector('.aviso-borrador-texto span').textContent = cantidad
+        ? 'Los campos marcados traen cambios de la otra versión. Revisa y guarda para terminar; todavía no se ha guardado.'
+        : 'Tus cambios ya incluyen los de la otra versión. Guarda para terminar; todavía no se ha guardado.';
+    aviso.querySelector('.btn-guardar-integrado').addEventListener('click', () => {
+        aviso.remove();
+        handleFormSubmit(null);
+    });
+    form.prepend(aviso);
+}
+
+/**
+ * Junta en el formulario los cambios propios con los de la versión `actual`
+ * (la que está guardada ahora). No guarda: deja todo listo para revisar.
+ * Devuelve true si se integró, false si el usuario canceló.
+ */
+async function integrarVersiones({ mios, original, baseServidor, actual, quien }) {
+    const suyos = valoresDeDatos(actual);
+    const { resultado, deLaOtra, conflictos } = compararVersiones(mios, original, baseServidor, suyos);
+
+    if (conflictos.length) {
+        const decisiones = await elegirEnConflictos(conflictos, mios, suyos, quien);
+        if (!decisiones) return false;
+        conflictos.forEach(campo => {
+            if (decisiones[campo] === 'suyo') {
+                resultado[campo] = suyos[campo];
+                deLaOtra.push(campo);
+            } else if (decisiones[campo] === 'ambos') {
+                resultado[campo] = combinarValor(campo, suyos[campo], mios[campo]);
+                deLaOtra.push(campo);
+            }
+        });
+    }
+
+    // A partir de aquí se edita sobre la versión actual: el próximo guardado ya no choca
+    const archivosCambiaron = JSON.stringify(actual.archivos || []) !== JSON.stringify(estadoDetalle.datosServidor.archivos || []);
+    estadoDetalle.version = actual.version || estadoDetalle.version;
+    estadoDetalle.datosServidor = actual;
+    estadoDetalle.original = valoresDeDatos(actual);
+    if (archivosCambiaron) cargarArchivosAdjuntos(actual.archivos || [], estadoDetalle.id);
+
+    aplicarValores(resultado);
+    guardarBorrador();
+    resaltarCampos(deLaOtra);
+    mostrarAvisoIntegrado(deLaOtra.length);
+    return true;
 }
 
 // ---------- envío ----------
@@ -720,31 +960,9 @@ function registrarGuardadoEnAnaliticas(correcto, motivo, ms, estado) {
     } catch (e) { /* las analíticas nunca deben estorbar */ }
 }
 
-// Revisa el tamaño de los archivos antes de enviar, para avisar al momento
+// Revisa los archivos antes de enviar (peso, tipo, cantidad), para avisar al momento
 function revisarArchivosAntesDeEnviar() {
-    const archivos = archivosSeleccionados();
-    const limites = estadoDetalle.limites || {};
-    if (!archivos.length) return null;
-
-    if (limites.archivo_mb) {
-        const grandes = archivos.filter(a => a.size > limites.archivo_mb * 1048576);
-        if (grandes.length) {
-            return {
-                mensaje: `${grandes.length === 1 ? 'Este archivo pesa' : 'Estos archivos pesan'} más de lo permitido (máximo ${limites.archivo_mb} MB por archivo):`,
-                lista: grandes.map(a => `${a.name} (${formatearMB(a.size)})`)
-            };
-        }
-    }
-    const total = archivos.reduce((suma, a) => suma + a.size, 0);
-    if (limites.total_mb && total > limites.total_mb * 1048576 * 0.95) {
-        return {
-            mensaje: `Los archivos suman ${formatearMB(total)} y el máximo por guardado es ${limites.total_mb} MB. Guarda primero algunos y después los demás.`
-        };
-    }
-    if (limites.max_archivos && archivos.length > limites.max_archivos) {
-        return { mensaje: `Puedes adjuntar hasta ${limites.max_archivos} archivos a la vez.` };
-    }
-    return null;
+    return estadoDetalle.selector ? estadoDetalle.selector.revisar() : null;
 }
 
 async function handleFormSubmit(e, forzar = false) {
@@ -838,8 +1056,9 @@ async function handleFormSubmit(e, forzar = false) {
 }
 
 async function guardadoCorrecto(datos) {
-    borrarBorrador();
     estadoDetalle.salirSinAviso = true;
+    clearTimeout(temporizadorBorrador);
+    borrarBorrador(true);
 
     const agregados = (datos.archivos_agregados || []).length;
     await SipconsDialogo.mostrar({
@@ -880,11 +1099,12 @@ async function avisarSesionCerrada(forzar) {
 async function resolverConflicto(datos) {
     const actual = datos.actual;
     const valoresActuales = valoresDeDatos(actual);
+    const mios = leerFormulario();
 
     // Si lo que hay ahora en la base ya es lo mismo que se quiere guardar
     // (p. ej. se guardó igual desde otra pestaña), no hay nada que resolver.
-    if (mismosValores(leerFormulario(), valoresActuales) && !archivosSeleccionados().length) {
-        borrarBorrador();
+    if (mismosValores(mios, valoresActuales) && !archivosSeleccionados().length) {
+        borrarBorrador(true);
         estadoDetalle.salirSinAviso = true;
         await SipconsDialogo.mostrar({
             tipo: 'ok',
@@ -899,27 +1119,46 @@ async function resolverConflicto(datos) {
     const cambiados = camposDistintos(valoresDeDatos(estadoDetalle.datosServidor), valoresActuales)
         .map(campo => NOMBRES_CAMPO[campo]);
     const cuando = datos.modificado_en ? ` el ${formatearFechaHora(datos.modificado_en)}` : '';
-    const quien = datos.modificado_por_mi
+    const quienTexto = datos.modificado_por_mi
         ? `Tú mismo la modificaste desde otra pestaña o equipo${cuando}`
         : `${datos.modificado_por || 'Otra persona'} la modificó${cuando}`;
+    const quienCorto = datos.modificado_por_mi ? 'tu otra pestaña' : (datos.modificado_por || 'la otra persona');
 
     const eleccion = await SipconsDialogo.mostrar({
         tipo: 'aviso',
         titulo: 'Esta incidencia cambió mientras la editabas',
-        mensaje: `${quien}, después de que abriste esta página. Para no borrar esos cambios, todavía no se guardaron los tuyos.`,
+        mensaje: `${quienTexto}, después de que abriste esta página. Todavía no se guardaron tus cambios.`,
         lista: cambiados.length ? cambiados.map(nombre => `Cambió: ${nombre}`) : null,
-        nota: '"Ver versión actual" carga la incidencia como está ahora y te deja recuperar lo que escribiste. "Guardar de todos modos" reemplaza esos cambios con los tuyos.',
+        nota: '"Integrar ambas versiones" conserva tus cambios y los de la otra versión; solo si los dos cambiaron el mismo campo te preguntará qué dejar.',
         botones: [
             { texto: 'Cancelar', valor: null, estilo: 'secundario' },
-            { texto: 'Guardar de todos modos', valor: 'forzar', estilo: 'peligro' },
-            { texto: 'Ver versión actual', valor: 'recargar', estilo: 'primario' }
+            { texto: 'Descartar mis cambios', valor: 'descartar', estilo: 'secundario' },
+            { texto: 'Guardar solo los míos', valor: 'forzar', estilo: 'peligro' },
+            { texto: 'Integrar ambas versiones', valor: 'integrar', estilo: 'primario' }
         ]
     });
 
-    if (eleccion === 'forzar') {
-        handleFormSubmit(null, true);
-    } else if (eleccion === 'recargar') {
-        guardarBorrador();
+    if (eleccion === 'integrar') {
+        await integrarVersiones({
+            mios,
+            original: estadoDetalle.original,
+            baseServidor: valoresDeDatos(estadoDetalle.datosServidor),
+            actual,
+            quien: quienCorto
+        });
+    } else if (eleccion === 'forzar') {
+        const confirmar = await SipconsDialogo.mostrar({
+            tipo: 'aviso',
+            titulo: '¿Reemplazar los otros cambios?',
+            mensaje: 'Se guardará solo lo que tienes en pantalla y se perderán los cambios de la otra versión en los campos que no coinciden.',
+            botones: [
+                { texto: 'Volver', valor: null, estilo: 'secundario' },
+                { texto: 'Sí, guardar solo los míos', valor: 'si', estilo: 'peligro' }
+            ]
+        });
+        if (confirmar === 'si') handleFormSubmit(null, true);
+    } else if (eleccion === 'descartar') {
+        borrarBorrador(true);
         estadoDetalle.salirSinAviso = true;
         window.location.reload();
     }
@@ -954,6 +1193,12 @@ async function cargarDetalleIncidencia(id) {
         // Configurar la funcionalidad de múltiples técnicos
         setupTecnicosMultiples(tecnicosLista);
 
+        // Selector de archivos nuevos (vista previa, quitar, aviso de peso)
+        estadoDetalle.selector = SipconsArchivos.crear(document.getElementById('archivos'), {
+            limites: estadoDetalle.limites || {},
+            texto: 'Toca para agregar fotos o archivos'
+        });
+
         // Desplegables escribibles de cliente y de quien reporta
         configurarClienteYContacto(data.cliente);
 
@@ -986,7 +1231,7 @@ async function cargarDetalleIncidencia(id) {
             }
         }
 
-        ['input', 'change', 'click'].forEach(evento => form.addEventListener(evento, programarBorrador));
+        ['input', 'change', 'click', 'archivos-cambiados'].forEach(evento => form.addEventListener(evento, programarBorrador));
 
     } catch (error) {
         console.error("Error al cargar detalles:", error);

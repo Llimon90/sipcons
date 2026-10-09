@@ -176,7 +176,7 @@
                         '<td>' + escapeHtml(etiquetaAccion(registro.accion)) + '</td>' +
                         '<td>' + escapeHtml(registro.tabla) + '</td>' +
                         '<td>' + escapeHtml(identificadorRegistro(registro)) + '</td>' +
-                        '<td><button type="button" class="ver-detalle" data-id="' + escapeHtml(registro.id) + '">Ver</button></td>' +
+                        '<td><button type="button" class="ver-detalle" data-fila-accion data-id="' + escapeHtml(registro.id) + '">Ver</button></td>' +
                         '</tr>';
                 }).join('');
 

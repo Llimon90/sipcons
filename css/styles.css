@@ -872,7 +872,7 @@ table .celda-centro { text-align: center !important; }
   }
 
   /* Botones de formulario a todo el ancho (no los de tablas, iconos o modales de archivo) */
-  button:not(table button):not(.toggle-sidebar):not(.eliminar-archivo):not(.eliminar-tecnico):not(.visor-btn):not(.barra-movil-btn):not(.modal-close):not(.acciones-usuario button) {
+  button:not(table button):not(.toggle-sidebar):not(.eliminar-archivo):not(.eliminar-tecnico):not(.visor-btn):not(.barra-movil-btn):not(.modal-close):not(.selector-archivos-quitar):not(.acciones-usuario button) {
     padding: 14px 25px;
     font-size: 15px;
     width: 100%;
@@ -2827,6 +2827,168 @@ body.dialogo-abierto { overflow: hidden; }
 }
 .aviso-borrador-acciones button:hover { transform: none; }
 .aviso-borrador-acciones .btn-descartar { background: #f1e3cc; color: #6b4100; }
+
+/* Variante informativa (azul): versiones integradas, falta guardar */
+.aviso-borrador.aviso-borrador--info {
+  border-color: #a9cdf0;
+  border-left-color: #3498db;
+  background: #eef6fd;
+  color: #1d4f7a;
+}
+.aviso-borrador--info > i { color: #3498db; }
+
+/* Campos que trajeron cambios de la otra versión al integrar */
+.campo-integrado {
+  outline: 3px solid rgba(243, 156, 18, 0.55);
+  outline-offset: 2px;
+  border-radius: 8px;
+  transition: outline-color 0.3s ease;
+}
+
+/* ===== Diálogo ancho con opciones por campo (integrar versiones) ===== */
+.dialogo.dialogo--ancho { max-width: 640px; }
+.dialogo-contenido { margin-top: 16px; text-align: left; }
+
+.integrar-campo {
+  margin: 0 0 14px;
+  padding: 12px 14px 6px;
+  border: 1px solid #dfe5ec;
+  border-radius: 12px;
+}
+
+.integrar-campo legend {
+  padding: 0 6px;
+  font-weight: 700;
+  font-size: 14.5px;
+}
+
+.integrar-opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-weight: 400;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.integrar-opcion:hover { background: #f4f7fb; }
+.integrar-opcion:has(input:checked) { border-color: #3498db; background: #eef6fd; }
+.integrar-opcion input { margin-top: 3px; flex-shrink: 0; width: 18px; height: 18px; accent-color: #3498db; }
+.integrar-opcion strong { display: block; font-size: 13.5px; }
+
+.integrar-texto {
+  display: block;
+  margin-top: 2px;
+  color: #4a5968;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 7.5em;
+  overflow: hidden;
+}
+
+.integrar-texto.vacio { font-style: italic; color: #8a97a5; }
+
+/* ================================================================
+   SELECTOR DE ARCHIVOS (selector-archivos.js)
+   ================================================================ */
+.selector-archivos { position: relative; }
+
+/* El input real queda invisible pero accesible (teclado y lectores de pantalla) */
+.selector-archivos-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.selector-archivos-zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 18px 16px;
+  border: 2px dashed #9aa3ad;
+  border-radius: 12px;
+  background: #f8f9fa;
+  color: #34495e;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.selector-archivos-zona > i { font-size: 28px; color: #3498db; }
+.selector-archivos-zona small { font-weight: 400; color: #6c7a89; font-size: 13px; }
+.selector-archivos-zona:hover,
+.selector-archivos-zona.arrastrando { border-color: #3498db; background: #eef6fd; }
+.selector-archivos:focus-within .selector-archivos-zona { border-color: #3498db; box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15); }
+.selector-archivos.con-archivos .selector-archivos-zona { padding: 12px 16px; flex-direction: row; justify-content: center; gap: 10px; }
+.selector-archivos.con-archivos .selector-archivos-zona > i { font-size: 20px; }
+.selector-archivos.con-archivos .selector-archivos-zona small { display: none; }
+
+.selector-archivos-lista {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.selector-archivos-lista:empty { display: none; }
+
+.selector-archivos-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #dfe5ec;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.selector-archivos-item.con-problema { border-color: #e74c3c; background: #fdf2f1; }
+.selector-archivos-item.con-problema small { color: #c0392b; font-weight: 600; }
+
+.selector-archivos-vista {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2f6;
+  color: #7f8c8d;
+  font-size: 22px;
+}
+
+.selector-archivos-vista img { width: 100%; height: 100%; object-fit: cover; }
+
+.selector-archivos-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.selector-archivos-nombre { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.selector-archivos-info small { font-size: 12px; color: #6c7a89; }
+
+.selector-archivos-quitar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #7f8c8d;
+  box-shadow: none;
+  font-size: 15px;
+}
+
+.selector-archivos-quitar:hover { background: rgba(231, 76, 60, 0.12); color: #c0392b; transform: none; box-shadow: none; }
 
 /* Botón mientras se guarda */
 button.guardando {

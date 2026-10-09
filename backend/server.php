@@ -45,79 +45,121 @@ if ($method === "GET") {
     
 } elseif ($method === "POST") {
     // **INICIO - FUNCIÓN PARA CREAR NUEVAS INCIDENCIAS**
-    
-    // Leer los datos enviados desde fetch()
-    $data = json_decode(file_get_contents("php://input"), true);
+    // Acepta el formulario con archivos adjuntos (multipart) o JSON sin archivos.
+    // Siempre responde JSON: { success, message|error, motivo, numero_incidente, id }.
+    // La incidencia y sus archivos se guardan juntos o no se guarda nada.
+    require_once __DIR__ . '/../config/guardados_log.php';
+    require_once __DIR__ . '/lib/incidencias_helpers.php';
+    ini_set('display_errors', '0');
+
+    $archivosMovidos = [];
+    $responderError = function (int $http, string $motivo, string $mensaje, string $detalleLog = '') use (&$archivosMovidos, $pdo) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        foreach ($archivosMovidos as $ruta) @unlink($ruta);
+        registrarFalloGuardado('alta_' . $motivo, null, $detalleLog ?: $mensaje);
+        http_response_code($http);
+        echo json_encode(['success' => false, 'motivo' => $motivo, 'error' => $mensaje], JSON_UNESCAPED_UNICODE);
+        exit();
+    };
+
+    $limites = limitesSubida();
+    $esMultipart = stripos($_SERVER['CONTENT_TYPE'] ?? '', 'multipart/form-data') !== false;
+
+    if ($esMultipart) {
+        // Si el envío supera post_max_size, PHP descarta todo el formulario
+        if (empty($_POST) && empty($_FILES) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $responderError(413, 'envio_muy_grande',
+                'Los archivos que adjuntaste pesan demasiado' .
+                ($limites['total_mb'] ? " (el máximo es {$limites['total_mb']} MB en total)" : '') .
+                '. No se registró la incidencia. Quita o reduce los archivos e intenta de nuevo.');
+        }
+        $data = $_POST;
+    } else {
+        $data = json_decode(file_get_contents("php://input"), true) ?: [];
+    }
 
     // Validar los datos
     if (!isset($data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"])) {
-        echo json_encode(["error" => "Todos los campos son obligatorios"]);
-        exit();
+        $responderError(400, 'faltan_datos', 'Faltan datos de la incidencia. Recarga la página e intenta de nuevo.');
+    }
+    if (trim($data['cliente']) === '' || trim($data['contacto']) === '' || trim($data['fecha']) === '') {
+        $responderError(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta y fecha.');
     }
 
     // El rol Técnico no puede cerrar incidencias con/sin factura
     $estatusRestringidosTecnico = ['Cerrado con factura', 'Cerrado sin factura'];
     if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($data["status"], $estatusRestringidosTecnico, true)) {
-        http_response_code(403);
-        echo json_encode(["error" => "Tu rol no tiene permiso para cerrar incidencias con/sin factura."]);
-        exit();
+        $responderError(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
     }
 
-    // Obtener el último número de incidencia
-    $sqlUltimoNumero = "SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1";
-    $result = $conn->query($sqlUltimoNumero);
-
-    $nuevoNumeroIncidente = "SIP-0001"; // Valor inicial si no hay registros
-
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $ultimoNumero = $row["numero_incidente"]; // "SIP-0001"
-        $numeroIncremental = intval(explode("-", $ultimoNumero)[1]) + 1;
-        $nuevoNumeroIncidente = "SIP-" . str_pad($numeroIncremental, 4, "0", STR_PAD_LEFT);
+    // Archivos: se revisan antes de registrar nada
+    $revisionArchivos = revisarArchivosSubidos('archivos');
+    if ($rechazo = rechazoDeArchivos($revisionArchivos, $limites)) {
+        $responderError($rechazo[0], $rechazo[1], str_replace('No se guardó ningún cambio.', 'No se registró la incidencia.', $rechazo[2]));
     }
 
-    // Insertar la nueva incidencia con el campo categoria
-    // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
-    $numeroSerie = trim($data["numero_serie"] ?? '');
-    $colSerie = $conn->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'");
-    $tieneSerie = $colSerie && $colSerie->num_rows > 0;
+    try {
+        $pdo->beginTransaction();
 
-    if ($tieneSerie) {
-        $sql = "INSERT INTO incidencias (reporte_cliente, cliente, contacto, sucursal, categoria, numero_serie, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $serieDb = $numeroSerie !== '' ? $numeroSerie : null;
-        $stmt->bind_param("ssssssssssss", $data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["categoria"], $serieDb, $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
-    } else {
-        $sql = "INSERT INTO incidencias (reporte_cliente, cliente, contacto, sucursal, categoria, fecha, tecnico, estatus, falla, notas, numero_incidente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssssssss", $data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["categoria"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"], $nuevoNumeroIncidente);
-    }
+        // Obtener el último número de incidencia (bloqueado hasta terminar,
+        // para que dos registros simultáneos no tomen el mismo folio)
+        $ultimo = $pdo->query("SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1 FOR UPDATE")->fetchColumn();
+        $nuevoNumeroIncidente = "SIP-0001"; // Valor inicial si no hay registros
+        if ($ultimo) {
+            $numeroIncremental = intval(explode("-", $ultimo)[1] ?? 0) + 1;
+            $nuevoNumeroIncidente = "SIP-" . str_pad($numeroIncremental, 4, "0", STR_PAD_LEFT);
+        }
 
-    if ($stmt->execute()) {
-        $nuevoId = $stmt->insert_id;
+        // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
+        $numeroSerie = trim($data["numero_serie"] ?? '');
+        $tieneSerie = (bool)$pdo->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'")->fetch();
 
-        registrarAuditoria('incidencias', $nuevoId, 'CREATE', null, [
-            'id'               => $nuevoId,
-            'reporte_cliente'  => $data['reporte_cliente'],
+        $valores = [
+            'reporte_cliente'  => (string)$data['reporte_cliente'],
+            'cliente'          => trim((string)$data['cliente']),
+            'contacto'         => trim((string)$data['contacto']),
+            'sucursal'         => (string)$data['sucursal'],
+            'categoria'        => (string)($data['categoria'] ?? ''),
+            'fecha'            => (string)$data['fecha'],
+            'tecnico'          => (string)$data['tecnico'],
+            'estatus'          => (string)$data['status'],
+            'falla'            => (string)$data['falla'],
+            'notas'            => (string)$data['notas'],
             'numero_incidente' => $nuevoNumeroIncidente,
-            'cliente'          => $data['cliente'],
-            'contacto'         => $data['contacto'],
-            'sucursal'         => $data['sucursal'],
-            'categoria'        => $data['categoria'] ?? null,
-            'numero_serie'     => $tieneSerie && $numeroSerie !== '' ? $numeroSerie : null,
-            'fecha'            => $data['fecha'],
-            'tecnico'          => $data['tecnico'],
-            'estatus'          => $data['status'],
-            'falla'            => $data['falla'],
-            'notas'            => $data['notas'],
-        ], $nuevoNumeroIncidente);
+        ];
+        if ($tieneSerie) $valores['numero_serie'] = $numeroSerie !== '' ? $numeroSerie : null;
 
-        echo json_encode(["message" => "Incidencia registrada correctamente", "numero_incidente" => $nuevoNumeroIncidente, "id" => $nuevoId]);
-    } else {
-        echo json_encode(["error" => "Error al insertar incidencia"]);
+        $columnas = implode(', ', array_map(fn($c) => "`$c`", array_keys($valores)));
+        $marcas = implode(', ', array_fill(0, count($valores), '?'));
+        $pdo->prepare("INSERT INTO incidencias ($columnas) VALUES ($marcas)")->execute(array_values($valores));
+        $nuevoId = (int)$pdo->lastInsertId();
+
+        try {
+            $archivosAgregados = guardarArchivosIncidencia($pdo, $nuevoId, $revisionArchivos['validos'], $archivosMovidos);
+        } catch (RuntimeException $e) {
+            $responderError(500, 'archivo_no_guardado',
+                "No se pudo guardar el archivo \"{$e->getMessage()}\" en el servidor. No se registró la incidencia. Intenta de nuevo.");
+        }
+
+        $datosAuditoria = ['id' => $nuevoId] + $valores;
+        if ($archivosAgregados) $datosAuditoria['archivos_agregados'] = $archivosAgregados;
+        registrarAuditoria('incidencias', $nuevoId, 'CREATE', null, $datosAuditoria, $nuevoNumeroIncidente);
+
+        $pdo->commit();
+
+        echo json_encode([
+            "success" => true,
+            "message" => "Incidencia registrada correctamente",
+            "numero_incidente" => $nuevoNumeroIncidente,
+            "id" => $nuevoId,
+            "archivos_agregados" => $archivosAgregados,
+        ], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        error_log('server.php (alta de incidencia): ' . $e->getMessage());
+        $responderError(500, 'error_servidor',
+            'Ocurrió un problema en el servidor y no se registró la incidencia. Intenta de nuevo en un momento.',
+            get_class($e) . ': ' . $e->getMessage());
     }
-
-    $stmt->close();
 }
 
 $conn->close();

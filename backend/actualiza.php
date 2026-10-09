@@ -111,34 +111,11 @@ try {
         rechazar(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
     }
 
-    // Archivos: se revisan ANTES de tocar la base. Si alguno no llegó bien,
-    // no se guarda nada y se dice cuál fue.
-    $archivosValidos = [];
-    if (!empty($_FILES['archivos']['name']) && is_array($_FILES['archivos']['name'])) {
-        $muyGrandes = [];
-        $conFalla = [];
-        foreach ($_FILES['archivos']['name'] as $i => $nombre) {
-            $error = $_FILES['archivos']['error'][$i];
-            if ($error === UPLOAD_ERR_NO_FILE) continue;
-            if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
-                $muyGrandes[] = $nombre;
-            } elseif ($error !== UPLOAD_ERR_OK) {
-                $conFalla[] = $nombre;
-            } else {
-                $archivosValidos[] = ['nombre' => $nombre, 'tmp' => $_FILES['archivos']['tmp_name'][$i]];
-            }
-        }
-        if ($muyGrandes) {
-            rechazar(413, 'archivo_muy_grande',
-                (count($muyGrandes) === 1 ? "El archivo \"{$muyGrandes[0]}\" pesa demasiado" : 'Estos archivos pesan demasiado: ' . implode(', ', $muyGrandes)) .
-                ($limites['archivo_mb'] ? " (máximo {$limites['archivo_mb']} MB por archivo)" : '') .
-                '. No se guardó ningún cambio. Quítalo o redúcelo e intenta de nuevo.',
-                ['limites' => $limites]);
-        }
-        if ($conFalla) {
-            rechazar(400, 'archivo_incompleto',
-                'No se pudo recibir completo: ' . implode(', ', $conFalla) . '. No se guardó ningún cambio. Intenta de nuevo.');
-        }
+    // Archivos: se revisan ANTES de tocar la base. Si alguno no se puede
+    // aceptar, no se guarda nada y se dice cuál fue.
+    $revisionArchivos = revisarArchivosSubidos('archivos');
+    if ($rechazo = rechazoDeArchivos($revisionArchivos, $limites)) {
+        rechazar($rechazo[0], $rechazo[1], $rechazo[2], ['limites' => $limites]);
     }
 
     $pdo->beginTransaction();
@@ -175,25 +152,11 @@ try {
     $st = $pdo->prepare("UPDATE incidencias SET $sets WHERE id = ?");
     $st->execute(array_merge(array_values($valores), [$idIncidencia]));
 
-    // Archivos con nombre único: antes, dos archivos con el mismo nombre
-    // (p. ej. IMG_0001.jpg en dos incidencias) se sobrescribían entre sí.
-    $archivosAgregados = [];
-    if ($archivosValidos) {
-        $uploadDir = __DIR__ . '/../uploads/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        $insert = $pdo->prepare('INSERT INTO archivos_incidencias (incidencia_id, ruta_archivo) VALUES (?, ?)');
-        foreach ($archivosValidos as $archivo) {
-            $base = preg_replace('/[^A-Za-z0-9._-]+/', '_', basename($archivo['nombre']));
-            $nombreFinal = 'inc' . $idIncidencia . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '_' . $base;
-            if (!move_uploaded_file($archivo['tmp'], $uploadDir . $nombreFinal)) {
-                rechazar(500, 'archivo_no_guardado',
-                    "No se pudo guardar el archivo \"{$archivo['nombre']}\" en el servidor. No se guardó ningún cambio. Intenta de nuevo.");
-            }
-            $archivosMovidos[] = $uploadDir . $nombreFinal;
-            // Misma forma de ruta que ya usa el resto del sistema
-            $insert->execute([$idIncidencia, '../uploads/' . $nombreFinal]);
-            $archivosAgregados[] = $archivo['nombre'];
-        }
+    try {
+        $archivosAgregados = guardarArchivosIncidencia($pdo, $idIncidencia, $revisionArchivos['validos'], $archivosMovidos);
+    } catch (RuntimeException $e) {
+        rechazar(500, 'archivo_no_guardado',
+            "No se pudo guardar el archivo \"{$e->getMessage()}\" en el servidor. No se guardó ningún cambio. Intenta de nuevo.");
     }
 
     // Comprobación: se vuelve a leer y se compara con lo enviado

@@ -1,3 +1,7 @@
+// Registro de nuevas incidencias (incidencias.html).
+// Envía los datos y los archivos del cliente en un solo paso; el resultado se
+// muestra en un modal (dialogo.js). Si algo falla, el formulario se conserva
+// tal como estaba para poder corregir o reintentar.
 const form = document.getElementById('new-incidencia-form');
 const btnRegistrar = document.getElementById('btn-registrar');
 const btnActualizar = document.getElementById('btn-actualizar');
@@ -6,38 +10,168 @@ const btnEliminar = document.getElementById('btn-eliminar');
 // Establece fecha actual al cargar
 document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
 
-form.addEventListener('submit', function(event) {
-  event.preventDefault();
+// Selector de imágenes/archivos del cliente
+const selectorArchivos = SipconsArchivos.crear(document.getElementById('archivos-nuevos'), {
+  texto: 'Toca para agregar fotos o archivos del cliente'
+});
+SipconsArchivos.cargarLimites().then(limites => selectorArchivos.establecerLimites(limites));
 
-  // Prepara objeto con los datos actuales del formulario
-  const nuevaIncidencia = {
-    id: document.getElementById('incidencia-id').value || null,
-    reporte_cliente: document.getElementById('reporte_cliente').value,
-    cliente: document.getElementById('cliente').value,
-    contacto: document.getElementById('contacto').value,
-    sucursal: document.getElementById('sucursal').value,
-    categoria: document.getElementById('categoria').value,
-    numero_serie: (document.getElementById('numero_serie')?.value || '').trim(),
-    falla: document.getElementById('falla').value,
-    fecha: document.getElementById('fecha').value,
-    tecnico: document.getElementById('tecnico').value,
-    status: document.getElementById('estatus').value,
-    notas: document.getElementById('notas').value,
-  };
+let registrando = false;
 
-  fetch('../backend/server.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(nuevaIncidencia),
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert(data.message || data.error);
-    // Recarga completa al cerrar el alert
-    window.location.reload();
-  })
-  .catch(error => {
-    console.error('Error al enviar los datos:', error);
-    alert('Hubo un error al enviar los datos');
+function marcarRegistrando(activo) {
+  registrando = activo;
+  if (activo) {
+    btnRegistrar.dataset.textoOriginal = btnRegistrar.innerHTML;
+    btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando…';
+    btnRegistrar.classList.add('guardando');
+    btnRegistrar.disabled = true;
+  } else {
+    btnRegistrar.innerHTML = btnRegistrar.dataset.textoOriginal || 'Registrar Incidencia';
+    btnRegistrar.classList.remove('guardando');
+    btnRegistrar.disabled = false;
+  }
+}
+
+function registrarEnAnaliticas(correcto, motivo, ms, estado, folio) {
+  try {
+    if (!window.sipconsTrack) return;
+    window.sipconsTrack('guardado',
+      correcto ? 'Registro correcto' : `Registro fallido: ${motivo}`,
+      `${correcto ? 'ok' : 'error'} · ${folio || 'nueva incidencia'}`, ms, estado);
+    if (window.sipconsFlush) window.sipconsFlush();
+  } catch (e) { /* las analíticas nunca deben estorbar */ }
+}
+
+async function registrarIncidencia() {
+  if (registrando) return;
+
+  const problema = selectorArchivos.revisar();
+  if (problema) {
+    await SipconsDialogo.mostrar({
+      tipo: 'aviso',
+      titulo: 'Revisa los archivos',
+      mensaje: problema.mensaje,
+      lista: problema.lista,
+      nota: 'Todavía no se registró la incidencia. Lo que capturaste sigue en pantalla.',
+      botones: [{ texto: 'Entendido', valor: 'ok', estilo: 'primario' }]
+    });
+    return;
+  }
+
+  const datos = new FormData();
+  datos.append('reporte_cliente', document.getElementById('reporte_cliente').value);
+  datos.append('cliente', document.getElementById('cliente').value);
+  datos.append('contacto', document.getElementById('contacto').value);
+  datos.append('sucursal', document.getElementById('sucursal').value);
+  datos.append('categoria', document.getElementById('categoria').value);
+  datos.append('numero_serie', (document.getElementById('numero_serie')?.value || '').trim());
+  datos.append('falla', document.getElementById('falla').value);
+  datos.append('fecha', document.getElementById('fecha').value);
+  datos.append('tecnico', document.getElementById('tecnico').value);
+  datos.append('status', document.getElementById('estatus').value);
+  datos.append('notas', document.getElementById('notas').value);
+  selectorArchivos.archivos().forEach(archivo => datos.append('archivos[]', archivo));
+
+  marcarRegistrando(true);
+  const inicio = performance.now();
+  let respuesta = null;
+  let resultado = null;
+  let sinConexion = false;
+
+  try {
+    respuesta = await fetch('../backend/server.php', {
+      method: 'POST',
+      body: datos,
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    });
+    const texto = await respuesta.text();
+    try { resultado = JSON.parse(texto); } catch (e) { resultado = null; }
+  } catch (error) {
+    sinConexion = true;
+  } finally {
+    marcarRegistrando(false);
+  }
+
+  const ms = performance.now() - inicio;
+  const estado = respuesta ? respuesta.status : 0;
+  const sesionCerrada = estado === 401 || (respuesta && respuesta.redirected && /login/i.test(respuesta.url));
+
+  if (resultado && resultado.success) {
+    registrarEnAnaliticas(true, '', ms, estado, resultado.numero_incidente);
+    const adjuntos = (resultado.archivos_agregados || []).length;
+    const eleccion = await SipconsDialogo.mostrar({
+      tipo: 'ok',
+      titulo: 'Incidencia registrada',
+      mensaje: `Se registró la incidencia ${resultado.numero_incidente}.`,
+      nota: adjuntos ? `Se ${adjuntos === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${adjuntos} archivos`}.` : '',
+      botones: [
+        { texto: 'Registrar otra', valor: 'otra', estilo: 'secundario' },
+        { texto: 'Abrir incidencia', valor: 'abrir', estilo: 'primario' }
+      ]
+    });
+    if (eleccion === 'abrir' && resultado.id) {
+      window.location.href = `detalle.html?id=${encodeURIComponent(resultado.id)}`;
+    } else {
+      window.location.reload();
+    }
+    return;
+  }
+
+  const motivo = sinConexion ? 'sin_conexion' : sesionCerrada ? 'sesion_cerrada'
+    : (resultado && resultado.motivo) || `respuesta_invalida_${estado}`;
+  registrarEnAnaliticas(false, motivo, ms, estado);
+
+  if (sesionCerrada) {
+    const eleccion = await SipconsDialogo.mostrar({
+      tipo: 'aviso',
+      titulo: 'Tu sesión se cerró',
+      mensaje: 'Para registrar la incidencia, vuelve a iniciar sesión. Lo que capturaste sigue en pantalla y no se perderá.',
+      botones: [
+        { texto: 'Cerrar', valor: null, estilo: 'secundario' },
+        { texto: 'Iniciar sesión', valor: 'login', estilo: 'primario' }
+      ]
+    });
+    if (eleccion === 'login') {
+      window.open('../auth/login.html', '_blank');
+      const siguiente = await SipconsDialogo.mostrar({
+        tipo: 'info',
+        titulo: 'Inicia sesión y regresa',
+        mensaje: 'Se abrió una pestaña para iniciar sesión. Cuando termines, vuelve a esta pestaña y presiona "Registrar ahora".',
+        botones: [
+          { texto: 'Cerrar', valor: null, estilo: 'secundario' },
+          { texto: 'Registrar ahora', valor: 'reintentar', estilo: 'primario' }
+        ]
+      });
+      if (siguiente === 'reintentar') registrarIncidencia();
+    }
+    return;
+  }
+
+  let mensaje;
+  if (sinConexion) {
+    mensaje = 'No hubo respuesta del servidor. Revisa tu conexión a internet e inténtalo de nuevo.';
+  } else if (resultado && (resultado.error || resultado.message)) {
+    mensaje = resultado.error || resultado.message;
+  } else {
+    mensaje = 'El servidor respondió de forma inesperada y no se pudo confirmar el registro.';
+  }
+
+  const sinReintento = ['envio_muy_grande', 'archivo_muy_grande', 'archivo_no_permitido', 'faltan_datos', 'sin_permiso'];
+  const botones = [{ texto: 'Cerrar', valor: null, estilo: 'secundario' }];
+  if (!sinReintento.includes(motivo)) botones.push({ texto: 'Intentar de nuevo', valor: 'reintentar', estilo: 'primario' });
+
+  const eleccion = await SipconsDialogo.mostrar({
+    tipo: 'error',
+    titulo: 'No se registró la incidencia',
+    mensaje,
+    nota: 'Lo que capturaste sigue en pantalla; no se perdió nada.',
+    botones
   });
+  if (eleccion === 'reintentar') registrarIncidencia();
+}
+
+form.addEventListener('submit', function (event) {
+  event.preventDefault();
+  registrarIncidencia();
 });

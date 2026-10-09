@@ -149,6 +149,24 @@ html[data-theme="dark"] .aviso-borrador { background: #2f2414; border-color: #6b
 html[data-theme="dark"] .aviso-borrador > i { color: #f0a35a; }
 html[data-theme="dark"] .aviso-borrador-acciones .btn-descartar { background: #3d2f1a; color: #f6d9ae; }
 
+html[data-theme="dark"] .aviso-borrador.aviso-borrador--info { background: #12283b; border-color: #234d70; border-left-color: #4aa8ee; color: #cfe6fb; }
+html[data-theme="dark"] .aviso-borrador--info > i { color: #4aa8ee; }
+html[data-theme="dark"] .integrar-campo { border-color: #2c3d50; }
+html[data-theme="dark"] .integrar-opcion:hover { background: #1b2836; }
+html[data-theme="dark"] .integrar-opcion:has(input:checked) { border-color: #4aa8ee; background: #16324f; }
+html[data-theme="dark"] .integrar-texto { color: #b4c2d0; }
+html[data-theme="dark"] .integrar-texto.vacio { color: #7a8ea1; }
+
+html[data-theme="dark"] .selector-archivos-zona { background: #1b2836; border-color: #3a4d63; color: #e6edf3; }
+html[data-theme="dark"] .selector-archivos-zona small { color: #9fb0c1; }
+html[data-theme="dark"] .selector-archivos-zona:hover,
+html[data-theme="dark"] .selector-archivos-zona.arrastrando { background: #16324f; border-color: #4aa8ee; }
+html[data-theme="dark"] .selector-archivos-item { background: #16212d; border-color: #2c3d50; }
+html[data-theme="dark"] .selector-archivos-item.con-problema { background: #3b1a1c; border-color: #a5443d; }
+html[data-theme="dark"] .selector-archivos-item.con-problema small { color: #ffb3b3; }
+html[data-theme="dark"] .selector-archivos-vista { background: #0e1620; color: #9fb0c1; }
+html[data-theme="dark"] .selector-archivos-info small { color: #9fb0c1; }
+
 /* ---------- navegación móvil ---------- */
 html[data-theme="dark"] .barra-movil { background: linear-gradient(135deg, #0a121b 0%, #101b27 100%); }
 

@@ -11,6 +11,8 @@
  *       mensaje: 'Texto principal',
  *       lista: ['línea opcional', ...],
  *       nota: 'Texto secundario opcional',
+ *       contenido: nodoHTML,  // opcional: controles propios (p. ej. opciones a elegir)
+ *       ancho: false,         // true: caja más ancha y texto alineado a la izquierda
  *       botones: [{ texto: 'Aceptar', valor: 'ok', estilo: 'primario' | 'peligro' | 'secundario' }],
  *       cerrable: true   // Esc / clic fuera devuelven null
  *   }).then(valor => ...)
@@ -45,7 +47,7 @@
         fondo.className = 'dialogo-fondo';
 
         const caja = document.createElement('div');
-        caja.className = `dialogo dialogo--${o.tipo}`;
+        caja.className = `dialogo dialogo--${o.tipo}${o.ancho ? ' dialogo--ancho' : ''}`;
         caja.setAttribute('role', o.tipo === 'error' || o.tipo === 'aviso' ? 'alertdialog' : 'dialog');
         caja.setAttribute('aria-modal', 'true');
         caja.setAttribute('aria-labelledby', 'dialogo-titulo');
@@ -86,6 +88,13 @@
             caja.appendChild(nota);
         }
 
+        if (o.contenido) {
+            const contenedor = document.createElement('div');
+            contenedor.className = 'dialogo-contenido';
+            contenedor.appendChild(o.contenido);
+            caja.appendChild(contenedor);
+        }
+
         const acciones = document.createElement('div');
         acciones.className = 'dialogo-acciones';
         o.botones.forEach(b => {
@@ -106,7 +115,8 @@
         const alTeclado = (e) => {
             if (e.key === 'Escape' && o.cerrable) { e.preventDefault(); cerrar(null); return; }
             if (e.key === 'Tab') {
-                const botones = Array.from(acciones.querySelectorAll('button'));
+                const botones = Array.from(caja.querySelectorAll('button, input, select, textarea, a[href]'))
+                    .filter(n => !n.disabled && n.offsetParent !== null);
                 const i = botones.indexOf(document.activeElement);
                 if (e.shiftKey && i <= 0) { e.preventDefault(); botones[botones.length - 1].focus(); }
                 else if (!e.shiftKey && i === botones.length - 1) { e.preventDefault(); botones[0].focus(); }

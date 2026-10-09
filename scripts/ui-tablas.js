@@ -33,6 +33,12 @@
 
         Array.from(tabla.tBodies).forEach(tbody => {
             Array.from(tbody.rows).forEach(fila => {
+                // Fila clicable automática si tiene una acción principal
+                if (!fila.classList.contains('fila-clic') && accionDeFila(fila)) {
+                    fila.classList.add('fila-clic');
+                    fila.dataset.filaAuto = '1';
+                }
+
                 let columna = 0;
                 Array.from(fila.cells).forEach(celda => {
                     const etiqueta = celda.colSpan > 1 ? '' : (etiquetas[columna] || '');
@@ -44,6 +50,37 @@
             });
         });
     }
+
+    // ---------- filas clicables ----------
+    // La acción principal de una fila es el elemento marcado con
+    // data-fila-accion o, si no hay, su primer enlace real. Hacer clic en
+    // cualquier parte de la fila la activa. Las filas que ya traen su propio
+    // manejador (clase fila-clic puesta por su script) se dejan como están.
+    const INTERACTIVOS = 'a, button, input, select, textarea, label, summary, [role="button"], [contenteditable="true"]';
+
+    function accionDeFila(fila) {
+        const marcada = fila.querySelector('[data-fila-accion]');
+        if (marcada) return marcada;
+        return Array.from(fila.querySelectorAll('a[href]')).find(a => {
+            const href = (a.getAttribute('href') || '').trim();
+            return href && href !== '#' && !/^javascript:/i.test(href);
+        }) || null;
+    }
+
+    document.addEventListener('click', (e) => {
+        const fila = e.target.closest && e.target.closest('tr[data-fila-auto]');
+        if (!fila || e.target.closest(INTERACTIVOS)) return;
+        // Si el usuario está seleccionando texto para copiarlo, no se navega
+        const seleccion = window.getSelection && String(window.getSelection());
+        if (seleccion) return;
+        const accion = accionDeFila(fila);
+        if (!accion) return;
+        if (accion.tagName === 'A' && (e.ctrlKey || e.metaKey)) {
+            window.open(accion.href, '_blank', 'noopener');
+            return;
+        }
+        accion.click();
+    });
 
     function prepararTodas() {
         document.querySelectorAll('table').forEach(prepararTabla);

@@ -68,7 +68,7 @@ async function cargarUsuarios() {
                     <td>${usuario.rol}</td>
                     <td>
                         <div class="acciones-usuario">
-                            <button class="btn-editar" data-id="${usuario.id}" title="Editar">
+                            <button class="btn-editar" data-fila-accion data-id="${usuario.id}" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-eliminar" data-id="${usuario.id}" title="Eliminar">

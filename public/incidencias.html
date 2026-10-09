@@ -8,11 +8,13 @@
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css?v=20261009">
-  <link rel="stylesheet" href="../css/dark.css?v=20261009">
+  <link rel="stylesheet" href="../css/styles.css?v=20261009b">
+  <link rel="stylesheet" href="../css/dark.css?v=20261009b">
   <script src="../scripts/contactos-widget.js?v=3"></script>
   <script src="../scripts/tecnicos.js?v=2"></script>
-  <script src="../scripts/script.js?v=9" defer></script>
+  <script src="../scripts/dialogo.js?v=2" defer></script>
+  <script src="../scripts/selector-archivos.js?v=1" defer></script>
+  <script src="../scripts/script.js?v=10" defer></script>
   <script src="../scripts/auth-guard.js?v=20261009"></script>
 </head>
 <body>
@@ -171,6 +173,14 @@
           </div>
         </div>  
 
+        <div class="form-row">
+          <div>
+            <label for="archivos-nuevos">Imágenes o archivos del cliente (opcional)</label>
+            <input type="file" id="archivos-nuevos" name="archivos[]" multiple
+                   accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z">
+          </div>
+        </div>
+
         <button type="submit" id="btn-registrar">Registrar Incidencia</button>
         <button type="button" id="btn-actualizar" style="display: none;">Actualizar</button>
         <button type="button" id="btn-eliminar" style="display: none;" class="btn-rojo">Eliminar</button>
@@ -306,7 +316,7 @@
 
   <script src="../scripts/serie-equipo.js"></script>
   <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=1"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
   <script src="../scripts/script_cargas.js?v=21"></script>
 </body>
 </html>
