@@ -123,6 +123,39 @@ function guardarArchivosIncidencia(PDO $pdo, int $idIncidencia, array $validos, 
     return $guardados;
 }
 
+// ---------------------------------------------------------------------
+// Verificación después de escribir (alta y edición)
+// ---------------------------------------------------------------------
+
+/**
+ * Compara lo enviado con lo que quedó en la base de datos y devuelve los
+ * campos que no coinciden (vacío = se guardó tal cual). Los espacios al
+ * final no cuentan (algunas columnas los recortan) y la fecha se compara
+ * solo como AAAA-MM-DD.
+ */
+function camposQueNoCoinciden(array $enviados, array $enBase): array {
+    $distintos = [];
+    foreach ($enviados as $campo => $valor) {
+        $guardado = $enBase[$campo] ?? null;
+        $a = rtrim($valor === null ? '' : (string)$valor);
+        $b = rtrim($guardado === null ? '' : (string)$guardado);
+        if ($campo === 'fecha') { $a = substr($a, 0, 10); $b = substr($b, 0, 10); }
+        if ($a !== $b) $distintos[] = $campo;
+    }
+    return $distintos;
+}
+
+/** Nombres legibles de los campos de una incidencia (para mensajes al usuario). */
+function nombresCamposIncidencia(array $campos): string {
+    $nombres = [
+        'reporte_cliente' => '# incidencia cliente', 'cliente' => 'cliente', 'contacto' => 'contacto',
+        'sucursal' => 'sucursal', 'categoria' => 'categoría', 'fecha' => 'fecha', 'tecnico' => 'técnicos',
+        'estatus' => 'estatus', 'falla' => 'falla', 'accion' => 'trabajo realizado', 'notas' => 'notas',
+        'numero_serie' => 'número de serie', 'numero_incidente' => 'folio',
+    ];
+    return implode(', ', array_map(fn($c) => $nombres[$c] ?? $c, $campos));
+}
+
 /** Convierte un valor de php.ini como "8M" o "1G" a bytes. */
 function bytesDeIni(string $valor): int {
     $valor = trim($valor);

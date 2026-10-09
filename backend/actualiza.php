@@ -163,25 +163,11 @@ try {
     $st = $pdo->prepare('SELECT * FROM incidencias WHERE id = ?');
     $st->execute([$idIncidencia]);
     $guardada = $st->fetch(PDO::FETCH_ASSOC);
-    $distintos = [];
-    foreach ($valores as $campo => $valor) {
-        $enBase = $guardada[$campo] ?? null;
-        // Espacios al final no cuentan (algunas columnas los recortan)
-        $a = rtrim($valor === null ? '' : (string)$valor);
-        $b = rtrim($enBase === null ? '' : (string)$enBase);
-        if ($campo === 'fecha') { $a = substr($a, 0, 10); $b = substr($b, 0, 10); }
-        if ($a !== $b) $distintos[] = $campo;
-    }
+    $distintos = camposQueNoCoinciden($valores, $guardada ?: []);
     if ($distintos) {
-        $nombres = [
-            'reporte_cliente' => '# incidencia cliente', 'cliente' => 'cliente', 'contacto' => 'contacto',
-            'sucursal' => 'sucursal', 'categoria' => 'categoría', 'fecha' => 'fecha', 'tecnico' => 'técnicos',
-            'estatus' => 'estatus', 'falla' => 'falla', 'accion' => 'trabajo realizado', 'notas' => 'notas',
-            'numero_serie' => 'número de serie',
-        ];
-        $lista = implode(', ', array_map(fn($c) => $nombres[$c] ?? $c, $distintos));
         rechazar(500, 'verificacion',
-            "No se pudo guardar correctamente: $lista. Es posible que el texto sea demasiado largo o tenga caracteres especiales no admitidos (por ejemplo, emojis). No se guardó ningún cambio.",
+            'No se pudo guardar correctamente: ' . nombresCamposIncidencia($distintos) .
+            '. Es posible que el texto sea demasiado largo o tenga caracteres especiales no admitidos (por ejemplo, emojis). No se guardó ningún cambio.',
             [], 'Campos que no coinciden tras guardar: ' . implode(',', $distintos));
     }
 

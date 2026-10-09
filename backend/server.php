@@ -141,19 +141,55 @@ if ($method === "GET") {
                 "No se pudo guardar el archivo \"{$e->getMessage()}\" en el servidor. No se registró la incidencia. Intenta de nuevo.");
         }
 
+        // Comprobación: se vuelve a leer lo registrado y se compara con lo enviado
+        $st = $pdo->prepare('SELECT * FROM incidencias WHERE id = ?');
+        $st->execute([$nuevoId]);
+        $registrada = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$registrada) {
+            $responderError(500, 'verificacion', 'No se pudo confirmar el registro en la base de datos. No se registró la incidencia. Intenta de nuevo.');
+        }
+        $distintos = camposQueNoCoinciden($valores, $registrada);
+        if ($distintos) {
+            $responderError(500, 'verificacion',
+                'No se pudo registrar correctamente: ' . nombresCamposIncidencia($distintos) .
+                '. Es posible que el texto sea demasiado largo o tenga caracteres especiales no admitidos (por ejemplo, emojis). No se registró la incidencia.',
+                'Campos que no coinciden tras registrar: ' . implode(',', $distintos));
+        }
+        $st = $pdo->prepare('SELECT COUNT(*) FROM archivos_incidencias WHERE incidencia_id = ?');
+        $st->execute([$nuevoId]);
+        $archivosEnBase = (int)$st->fetchColumn();
+        if ($archivosEnBase !== count($archivosAgregados)) {
+            $responderError(500, 'verificacion', 'No se pudieron confirmar los archivos adjuntos. No se registró la incidencia. Intenta de nuevo.',
+                "Archivos esperados " . count($archivosAgregados) . ", en base $archivosEnBase");
+        }
+
         $datosAuditoria = ['id' => $nuevoId] + $valores;
         if ($archivosAgregados) $datosAuditoria['archivos_agregados'] = $archivosAgregados;
         registrarAuditoria('incidencias', $nuevoId, 'CREATE', null, $datosAuditoria, $nuevoNumeroIncidente);
 
-        $pdo->commit();
-
-        echo json_encode([
+        // La respuesta se arma antes de confirmar y muestra lo que quedó en la
+        // base (no lo que se envió), para que quien registra lo pueda revisar.
+        $respuesta = [
             "success" => true,
             "message" => "Incidencia registrada correctamente",
-            "numero_incidente" => $nuevoNumeroIncidente,
+            "numero_incidente" => $registrada['numero_incidente'],
             "id" => $nuevoId,
+            "guardado_en" => date('Y-m-d H:i:s'),
             "archivos_agregados" => $archivosAgregados,
-        ], JSON_UNESCAPED_UNICODE);
+            "incidencia" => [
+                'cliente'   => $registrada['cliente'],
+                'contacto'  => $registrada['contacto'],
+                'sucursal'  => $registrada['sucursal'],
+                'fecha'     => substr((string)$registrada['fecha'], 0, 10),
+                'falla'     => $registrada['falla'],
+                'tecnico'   => $registrada['tecnico'],
+                'estatus'   => $registrada['estatus'],
+                'archivos'  => $archivosEnBase,
+            ],
+        ];
+
+        $pdo->commit();
+        echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
     } catch (Throwable $e) {
         error_log('server.php (alta de incidencia): ' . $e->getMessage());
         $responderError(500, 'error_servidor',

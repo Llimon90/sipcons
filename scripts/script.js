@@ -18,6 +18,45 @@ SipconsArchivos.cargarLimites().then(limites => selectorArchivos.establecerLimit
 
 let registrando = false;
 
+// Aviso al salir si hay datos capturados que no se han registrado
+let hayDatosSinRegistrar = false;
+form.addEventListener('input', () => { hayDatosSinRegistrar = true; });
+form.addEventListener('change', () => { hayDatosSinRegistrar = true; });
+window.addEventListener('beforeunload', (e) => {
+  if (!hayDatosSinRegistrar || registrando) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+function formatearFechaHora(valor) {
+  const fecha = new Date(String(valor).replace(' ', 'T'));
+  if (isNaN(fecha)) return '';
+  const dos = n => String(n).padStart(2, '0');
+  return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} a las ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
+}
+
+// Resumen de lo que quedó guardado en la base (lo devuelve el servidor tras releerlo)
+function resumenRegistrado(resultado) {
+  const inc = resultado.incidencia;
+  if (!inc) return null;
+  const recortar = (texto, max = 90) => {
+    const t = String(texto || '').replace(/\s+/g, ' ').trim();
+    return t.length > max ? t.slice(0, max - 1) + '…' : t;
+  };
+  const filas = [
+    ['Cliente', inc.cliente],
+    ['Reporta', inc.contacto],
+    ['Sucursal', inc.sucursal],
+    ['Fecha', inc.fecha ? inc.fecha.split('-').reverse().join('/') : ''],
+    ['Falla', inc.falla],
+    ['Técnico', inc.tecnico],
+    ['Estatus', inc.estatus]
+  ].filter(([, valor]) => String(valor || '').trim())
+   .map(([nombre, valor]) => `${nombre}: ${recortar(valor)}`);
+  filas.push(`Archivos adjuntos: ${inc.archivos || 0}`);
+  return filas;
+}
+
 function marcarRegistrando(activo) {
   registrando = activo;
   if (activo) {
@@ -99,12 +138,13 @@ async function registrarIncidencia() {
 
   if (resultado && resultado.success) {
     registrarEnAnaliticas(true, '', ms, estado, resultado.numero_incidente);
-    const adjuntos = (resultado.archivos_agregados || []).length;
+    hayDatosSinRegistrar = false;
     const eleccion = await SipconsDialogo.mostrar({
       tipo: 'ok',
       titulo: 'Incidencia registrada',
-      mensaje: `Se registró la incidencia ${resultado.numero_incidente}.`,
-      nota: adjuntos ? `Se ${adjuntos === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${adjuntos} archivos`}.` : '',
+      mensaje: `La incidencia ${resultado.numero_incidente} se registró correctamente${resultado.guardado_en ? ` el ${formatearFechaHora(resultado.guardado_en)}` : ''}.`,
+      lista: resumenRegistrado(resultado),
+      nota: 'Estos son los datos que quedaron guardados.',
       botones: [
         { texto: 'Registrar otra', valor: 'otra', estilo: 'secundario' },
         { texto: 'Abrir incidencia', valor: 'abrir', estilo: 'primario' }

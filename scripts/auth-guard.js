@@ -58,6 +58,14 @@
         document.head.appendChild(trackerScript);
     } catch (e) { /* las analíticas nunca deben romper la página */ }
 
+    // Aviso de "sin conexión a internet" y bloqueo de envíos sin conexión (todas las páginas)
+    try {
+        var conexionScript = document.createElement('script');
+        conexionScript.src = (inPublic ? '../' : '') + 'scripts/conexion.js?v=1';
+        conexionScript.async = true;
+        document.head.appendChild(conexionScript);
+    } catch (e) { /* nunca debe romper la página */ }
+
     function rastrear(tipo, elemento) {
         try {
             if (window.sipconsTrack) {
