@@ -1,5 +1,6 @@
 // Registro de nuevas incidencias (incidencias.html).
-// Envía los datos y los archivos del cliente en un solo paso; el resultado se
+// Envía los datos y los archivos del cliente en un solo paso (las fotos se
+// reducen antes de subirlas y el botón muestra el avance); el resultado se
 // muestra en un modal (dialogo.js). Si algo falla, el formulario se conserva
 // tal como estaba para poder corregir o reintentar.
 const form = document.getElementById('new-incidencia-form');
@@ -7,8 +8,15 @@ const btnRegistrar = document.getElementById('btn-registrar');
 const btnActualizar = document.getElementById('btn-actualizar');
 const btnEliminar = document.getElementById('btn-eliminar');
 
+function fechaDeHoy() {
+  // Fecha local (toISOString daría la de UTC: después de las 4-5 p. m. en Tijuana sería "mañana")
+  const hoy = new Date();
+  const dos = n => String(n).padStart(2, '0');
+  return `${hoy.getFullYear()}-${dos(hoy.getMonth() + 1)}-${dos(hoy.getDate())}`;
+}
+
 // Establece fecha actual al cargar
-document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+document.getElementById('fecha').value = fechaDeHoy();
 
 // Selector de imágenes/archivos del cliente
 const selectorArchivos = SipconsArchivos.crear(document.getElementById('archivos-nuevos'), {
@@ -35,37 +43,19 @@ function formatearFechaHora(valor) {
   return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} a las ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
 }
 
-// Resumen de lo que quedó guardado en la base (lo devuelve el servidor tras releerlo)
-function resumenRegistrado(resultado) {
-  const inc = resultado.incidencia;
-  if (!inc) return null;
-  const recortar = (texto, max = 90) => {
-    const t = String(texto || '').replace(/\s+/g, ' ').trim();
-    return t.length > max ? t.slice(0, max - 1) + '…' : t;
-  };
-  const filas = [
-    ['Cliente', inc.cliente],
-    ['Reporta', inc.contacto],
-    ['Sucursal', inc.sucursal],
-    ['Fecha', inc.fecha ? inc.fecha.split('-').reverse().join('/') : ''],
-    ['Falla', inc.falla],
-    ['Técnico', inc.tecnico],
-    ['Estatus', inc.estatus]
-  ].filter(([, valor]) => String(valor || '').trim())
-   .map(([nombre, valor]) => `${nombre}: ${recortar(valor)}`);
-  filas.push(`Archivos adjuntos: ${inc.archivos || 0}`);
-  return filas;
+function textoBoton(html) {
+  btnRegistrar.innerHTML = html;
 }
 
 function marcarRegistrando(activo) {
   registrando = activo;
   if (activo) {
     btnRegistrar.dataset.textoOriginal = btnRegistrar.innerHTML;
-    btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando…';
+    textoBoton('<i class="fas fa-spinner fa-spin"></i> Registrando…');
     btnRegistrar.classList.add('guardando');
     btnRegistrar.disabled = true;
   } else {
-    btnRegistrar.innerHTML = btnRegistrar.dataset.textoOriginal || 'Registrar Incidencia';
+    textoBoton(btnRegistrar.dataset.textoOriginal || 'Registrar Incidencia');
     btnRegistrar.classList.remove('guardando');
     btnRegistrar.disabled = false;
   }
@@ -79,6 +69,15 @@ function registrarEnAnaliticas(correcto, motivo, ms, estado, folio) {
       `${correcto ? 'ok' : 'error'} · ${folio || 'nueva incidencia'}`, ms, estado);
     if (window.sipconsFlush) window.sipconsFlush();
   } catch (e) { /* las analíticas nunca deben estorbar */ }
+}
+
+// Deja el formulario listo para otra incidencia sin recargar la página
+function limpiarFormulario() {
+  form.reset();
+  selectorArchivos.limpiar();
+  document.getElementById('fecha').value = fechaDeHoy();
+  hayDatosSinRegistrar = false;
+  if (window.recargarListaIncidencias) window.recargarListaIncidencias();
 }
 
 async function registrarIncidencia() {
@@ -97,6 +96,9 @@ async function registrarIncidencia() {
     return;
   }
 
+  marcarRegistrando(true);
+  const inicio = performance.now();
+
   const datos = new FormData();
   datos.append('reporte_cliente', document.getElementById('reporte_cliente').value);
   datos.append('cliente', document.getElementById('cliente').value);
@@ -109,42 +111,33 @@ async function registrarIncidencia() {
   datos.append('tecnico', document.getElementById('tecnico').value);
   datos.append('status', document.getElementById('estatus').value);
   datos.append('notas', document.getElementById('notas').value);
-  selectorArchivos.archivos().forEach(archivo => datos.append('archivos[]', archivo));
 
-  marcarRegistrando(true);
-  const inicio = performance.now();
-  let respuesta = null;
-  let resultado = null;
-  let sinConexion = false;
-
-  try {
-    respuesta = await fetch('../backend/server.php', {
-      method: 'POST',
-      body: datos,
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' }
-    });
-    const texto = await respuesta.text();
-    try { resultado = JSON.parse(texto); } catch (e) { resultado = null; }
-  } catch (error) {
-    sinConexion = true;
-  } finally {
-    marcarRegistrando(false);
+  const elegidos = selectorArchivos.archivos();
+  if (elegidos.length) {
+    textoBoton('<i class="fas fa-spinner fa-spin"></i> Preparando archivos…');
+    const listos = await SipconsArchivos.prepararParaEnvio(elegidos);
+    listos.forEach(archivo => datos.append('archivos[]', archivo));
   }
 
+  const respuesta = await SipconsArchivos.enviarConAvance('../backend/server.php', datos, (porcentaje) => {
+    textoBoton(porcentaje < 100 && elegidos.length
+      ? `<i class="fas fa-spinner fa-spin"></i> Subiendo… ${porcentaje}%`
+      : '<i class="fas fa-spinner fa-spin"></i> Registrando…');
+  });
+  marcarRegistrando(false);
+
   const ms = performance.now() - inicio;
-  const estado = respuesta ? respuesta.status : 0;
-  const sesionCerrada = estado === 401 || (respuesta && respuesta.redirected && /login/i.test(respuesta.url));
+  const resultado = respuesta.datos;
 
   if (resultado && resultado.success) {
-    registrarEnAnaliticas(true, '', ms, estado, resultado.numero_incidente);
+    registrarEnAnaliticas(true, '', ms, respuesta.estado, resultado.numero_incidente);
     hayDatosSinRegistrar = false;
+    const adjuntos = (resultado.archivos_agregados || []).length;
     const eleccion = await SipconsDialogo.mostrar({
       tipo: 'ok',
       titulo: 'Incidencia registrada',
       mensaje: `La incidencia ${resultado.numero_incidente} se registró correctamente${resultado.guardado_en ? ` el ${formatearFechaHora(resultado.guardado_en)}` : ''}.`,
-      lista: resumenRegistrado(resultado),
-      nota: 'Estos son los datos que quedaron guardados.',
+      nota: adjuntos ? `Se ${adjuntos === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${adjuntos} archivos`}.` : '',
       botones: [
         { texto: 'Registrar otra', valor: 'otra', estilo: 'secundario' },
         { texto: 'Abrir incidencia', valor: 'abrir', estilo: 'primario' }
@@ -153,16 +146,16 @@ async function registrarIncidencia() {
     if (eleccion === 'abrir' && resultado.id) {
       window.location.href = `detalle.html?id=${encodeURIComponent(resultado.id)}`;
     } else {
-      window.location.reload();
+      limpiarFormulario();
     }
     return;
   }
 
-  const motivo = sinConexion ? 'sin_conexion' : sesionCerrada ? 'sesion_cerrada'
-    : (resultado && resultado.motivo) || `respuesta_invalida_${estado}`;
-  registrarEnAnaliticas(false, motivo, ms, estado);
+  const motivo = respuesta.sinConexion ? 'sin_conexion' : respuesta.sesionCerrada ? 'sesion_cerrada'
+    : (resultado && resultado.motivo) || `respuesta_invalida_${respuesta.estado}`;
+  registrarEnAnaliticas(false, motivo, ms, respuesta.estado);
 
-  if (sesionCerrada) {
+  if (respuesta.sesionCerrada) {
     const eleccion = await SipconsDialogo.mostrar({
       tipo: 'aviso',
       titulo: 'Tu sesión se cerró',
@@ -189,7 +182,7 @@ async function registrarIncidencia() {
   }
 
   let mensaje;
-  if (sinConexion) {
+  if (respuesta.sinConexion) {
     mensaje = 'No hubo respuesta del servidor. Revisa tu conexión a internet e inténtalo de nuevo.';
   } else if (resultado && (resultado.error || resultado.message)) {
     mensaje = resultado.error || resultado.message;

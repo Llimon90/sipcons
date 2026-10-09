@@ -26,7 +26,7 @@
         ppt: 'fa-file-powerpoint', pptx: 'fa-file-powerpoint',
         zip: 'fa-file-archive', rar: 'fa-file-archive', '7z': 'fa-file-archive'
     };
-    const MAX_PAGINAS_PDF = 50;
+    const MAX_PAGINAS_PDF = 300; // las páginas se dibujan al acercarse, así que el tope puede ser alto
 
     let el = null;           // nodos del visor (se crean al primer uso)
     let archivos = [];
@@ -159,33 +159,117 @@
         return div;
     }
 
+    // ---------- PDF ----------
+    // Un documento se descarga una sola vez por página y lo comparten las
+    // miniaturas (detalle.js) y el visor. Se pide por partes (rangos): para la
+    // miniatura o la primera página no hace falta bajar el archivo completo.
+    const documentosPdf = new Map();
+    let trabajadorPdf = null;
+
+    // Arranca el motor de PDF (≈1 MB la primera vez) antes de necesitarlo, para
+    // que la miniatura o el visor no tengan que esperarlo.
+    function precalentarPdf() {
+        if (!trabajadorPdf && window.pdfjsLib && pdfjsLib.PDFWorker) {
+            try { trabajadorPdf = new pdfjsLib.PDFWorker({ name: 'sipcons-pdf' }); } catch (e) { trabajadorPdf = null; }
+        }
+        return trabajadorPdf;
+    }
+
+    function cargarPdf(url) {
+        if (!window.pdfjsLib) return Promise.reject(new Error('pdf.js no está cargado'));
+        if (!documentosPdf.has(url)) {
+            const trabajador = precalentarPdf();
+            const promesa = pdfjsLib.getDocument({
+                url,
+                ...(trabajador ? { worker: trabajador } : {}),
+                disableAutoFetch: true,
+                disableStream: true,
+                rangeChunkSize: 262144
+            }).promise.catch(error => {
+                documentosPdf.delete(url);
+                throw error;
+            });
+            documentosPdf.set(url, promesa);
+        }
+        return documentosPdf.get(url);
+    }
+
+    let observadorPaginas = null;
+
+    function detenerPaginas() {
+        if (observadorPaginas) observadorPaginas.disconnect();
+        observadorPaginas = null;
+    }
+
     async function renderPdf(url, contenedor, cuerpo, idCarga) {
-        const pdf = await pdfjsLib.getDocument(url).promise;
+        const pdf = await cargarPdf(url);
         if (idCarga !== carga) return;
 
         const ancho = Math.min(cuerpo.clientWidth - 20, 960);
-        const escalaPantalla = window.devicePixelRatio || 1;
+        // Más de 2x no se nota en pantalla y multiplica el trabajo
+        const escalaPantalla = Math.min(window.devicePixelRatio || 1, 2);
         const total = Math.min(pdf.numPages, MAX_PAGINAS_PDF);
 
-        for (let n = 1; n <= total; n++) {
-            const pagina = await pdf.getPage(n);
-            if (idCarga !== carga) return;
+        // Proporción de la primera página para reservar el espacio de las demás
+        const primera = await pdf.getPage(1);
+        if (idCarga !== carga) return;
+        const base1 = primera.getViewport({ scale: 1 });
 
-            const base = pagina.getViewport({ scale: 1 });
-            const viewport = pagina.getViewport({ scale: (ancho / base.width) * escalaPantalla });
-            const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            canvas.setAttribute('aria-label', `Página ${n} de ${pdf.numPages}`);
-            contenedor.appendChild(canvas);
-            await pagina.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-            if (n === 1) {
-                const cargando = contenedor.querySelector('.visor-aviso');
-                if (cargando) cargando.remove();
-            }
+        const marcos = [];
+        for (let n = 1; n <= total; n++) {
+            const marco = document.createElement('div');
+            marco.className = 'visor-pdf-pagina';
+            marco.style.aspectRatio = `${base1.width} / ${base1.height}`;
+            marco.dataset.pagina = n;
+            marco.setAttribute('aria-label', `Página ${n} de ${pdf.numPages}`);
+            contenedor.appendChild(marco);
+            marcos.push(marco);
         }
 
-        if (pdf.numPages > MAX_PAGINAS_PDF && idCarga === carga) {
+        // Las páginas se dibujan de una en una, solo las que están cerca de la vista
+        let cola = Promise.resolve();
+        const dibujar = (marco) => {
+            if (marco.dataset.estado) return;
+            marco.dataset.estado = 'pendiente';
+            cola = cola.then(async () => {
+                if (idCarga !== carga) return;
+                const n = Number(marco.dataset.pagina);
+                const pagina = n === 1 ? primera : await pdf.getPage(n);
+                if (idCarga !== carga) return;
+                const base = pagina.getViewport({ scale: 1 });
+                const viewport = pagina.getViewport({ scale: (ancho / base.width) * escalaPantalla });
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                marco.style.aspectRatio = `${base.width} / ${base.height}`;
+                marco.appendChild(canvas);
+                await pagina.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                marco.dataset.estado = 'listo';
+                if (n === 1) {
+                    const cargando = contenedor.querySelector('.visor-aviso');
+                    if (cargando) cargando.remove();
+                }
+            }).catch(error => {
+                console.error('Error al dibujar página PDF:', error);
+                if (marco.dataset.pagina === '1' && idCarga === carga) {
+                    contenedor.innerHTML = '';
+                    contenedor.appendChild(aviso('fa-file-pdf', 'No se pudo mostrar el PDF aquí.', url));
+                }
+            });
+        };
+
+        detenerPaginas();
+        if ('IntersectionObserver' in window) {
+            observadorPaginas = new IntersectionObserver((entradas) => {
+                entradas.forEach(e => { if (e.isIntersecting) dibujar(e.target); });
+            }, { root: cuerpo, rootMargin: '800px 0px' });
+            marcos.forEach(m => observadorPaginas.observe(m));
+            dibujar(marcos[0]);
+        } else {
+            marcos.forEach(dibujar);
+        }
+
+        if (pdf.numPages > MAX_PAGINAS_PDF) {
             contenedor.appendChild(aviso('fa-file-pdf',
                 `Se muestran las primeras ${MAX_PAGINAS_PDF} de ${pdf.numPages} páginas. Abre el documento para verlo completo.`, url));
         }
@@ -211,6 +295,7 @@
         el.querySelector('.visor-nav--next').hidden = archivos.length < 2;
 
         const cuerpo = el.querySelector('.visor-cuerpo');
+        detenerPaginas();
         cuerpo.innerHTML = '';
         cuerpo.classList.remove('visor-zoom');
         cuerpo.scrollTop = 0;
@@ -320,6 +405,7 @@
 
     function cerrarVisor() {
         carga++;
+        detenerPaginas();
         el.classList.remove('abierto');
         document.body.classList.remove('visor-abierto');
         el.querySelector('.visor-cuerpo').innerHTML = ''; // detiene videos/audio
@@ -335,5 +421,5 @@
         }
     }
 
-    window.SipconsVisor = { abrir, cerrar, tipoDe, iconoDe, nombreDe };
+    window.SipconsVisor = { abrir, cerrar, tipoDe, iconoDe, nombreDe, cargarPdf, precalentarPdf };
 })();

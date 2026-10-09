@@ -1,7 +1,28 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 // backend/generador_tickets.php
+//
+// Genera tickets automáticos de calibración/servicio desde el padrón. Antes
+// corría en cada consulta y en cada alta de incidencia, haciendo lentas
+// ambas. Ahora corre como máximo cada GENERADOR_CADA_SEGUNDOS y un solo
+// proceso a la vez (dos usuarios simultáneos podían duplicar tickets).
+const GENERADOR_CADA_SEGUNDOS = 600;
 
+$candadoGenerador = null;
+$rutaCandado = __DIR__ . '/../storage/logs/.generador_tickets';
+$puedeGenerar = true;
+if (is_dir(dirname($rutaCandado)) && ($candadoGenerador = @fopen($rutaCandado, 'c+'))) {
+    if (!flock($candadoGenerador, LOCK_EX | LOCK_NB)) {
+        $puedeGenerar = false; // otro usuario lo está ejecutando en este momento
+    } else {
+        $ultimaVez = (int)trim((string)stream_get_contents($candadoGenerador));
+        if ($ultimaVez > 0 && time() - $ultimaVez < GENERADOR_CADA_SEGUNDOS) {
+            $puedeGenerar = false;
+        }
+    }
+}
+
+if ($puedeGenerar) {
 try {
     $pdo->beginTransaction();
 
@@ -109,8 +130,21 @@ try {
     }
 
     $pdo->commit();
+
+    if ($candadoGenerador) {
+        ftruncate($candadoGenerador, 0);
+        rewind($candadoGenerador);
+        fwrite($candadoGenerador, (string)time());
+        fflush($candadoGenerador);
+    }
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log("Error generando tickets automáticos: " . $e->getMessage());
+}
+}
+
+if ($candadoGenerador) {
+    flock($candadoGenerador, LOCK_UN);
+    fclose($candadoGenerador);
 }
 ?>

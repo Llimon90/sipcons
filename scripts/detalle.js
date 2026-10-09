@@ -67,19 +67,48 @@ async function eliminarArchivo(urlArchivo, containerElement, id) {
     }
 }
 
+// Miniatura de la primera página a tamaño de miniatura (antes se dibujaba a
+// tamaño completo). El documento lo comparte el visor: abrirlo después no
+// lo vuelve a descargar.
+const ANCHO_MINIATURA_PX = 320;
+
 async function renderPdfThumbnail(archivo, canvas) {
     try {
-        const pdf = await pdfjsLib.getDocument(archivo).promise;
+        const pdf = await SipconsVisor.cargarPdf(archivo);
         const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 1 });
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
+        const base = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: ANCHO_MINIATURA_PX / base.width });
         canvas.width = viewport.width;
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
     } catch (error) {
         console.error('Error al renderizar miniatura de PDF:', error);
         throw error;
     }
+}
+
+// Las miniaturas PDF se generan de una en una y solo cuando están a la vista;
+// antes se esperaba cada PDF completo antes de mostrar el siguiente archivo.
+let colaMiniaturas = Promise.resolve();
+let observadorMiniaturas = null;
+
+function programarMiniaturaPdf(archivo, canvas) {
+    const generar = () => {
+        colaMiniaturas = colaMiniaturas.then(() => renderPdfThumbnail(archivo, canvas))
+            .catch(() => { if (canvas.isConnected) canvas.replaceWith(iconoArchivo(archivo)); });
+    };
+    if (!('IntersectionObserver' in window)) return generar();
+    if (!observadorMiniaturas) {
+        observadorMiniaturas = new IntersectionObserver((entradas) => {
+            entradas.forEach(e => {
+                if (!e.isIntersecting) return;
+                observadorMiniaturas.unobserve(e.target);
+                e.target._generarMiniatura();
+            });
+        }, { rootMargin: '600px 0px' });
+    }
+    canvas._generarMiniatura = generar;
+    observadorMiniaturas.observe(canvas);
 }
 
 function createFilePreview(archivo) {
@@ -175,17 +204,11 @@ async function cargarArchivosAdjuntos(archivos, id) {
     contenedorArchivos.innerHTML = "";
 
     if (archivos && archivos.length > 0) {
+        if (archivos.some(a => SipconsVisor.tipoDe(a) === 'pdf')) SipconsVisor.precalentarPdf();
         for (const archivo of archivos) {
             const { container, preview } = createFileContainer(archivo, id);
             contenedorArchivos.appendChild(container);
-
-            if (preview && preview.tagName === 'CANVAS') {
-                try {
-                    await renderPdfThumbnail(archivo, preview);
-                } catch (error) {
-                    preview.replaceWith(iconoArchivo(archivo));
-                }
-            }
+            if (preview && preview.tagName === 'CANVAS') programarMiniaturaPdf(archivo, preview);
         }
     } else {
         contenedorArchivos.innerHTML = '<p class="archivos-vacio">No hay archivos adjuntos.</p>';
@@ -949,6 +972,11 @@ function marcarGuardando(activo) {
     }
 }
 
+function textoBotonGuardar(texto) {
+    const boton = document.querySelector('#form-editar button[type="submit"]');
+    if (boton && estadoDetalle.guardando) boton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${texto}`;
+}
+
 function registrarGuardadoEnAnaliticas(correcto, motivo, ms, estado) {
     try {
         if (!window.sipconsTrack) return;
@@ -992,33 +1020,29 @@ async function handleFormSubmit(e, forzar = false) {
     if (forzar) formData.append('forzar', '1');
     CAMPOS_FORM.forEach(campo => formData.append(campo, valores[campo]));
     formData.append('tecnico', valores.tecnicos.join('/'));
-    archivosSeleccionados().forEach(archivo => formData.append('archivos[]', archivo));
 
     guardarBorrador();
     marcarGuardando(true);
     const inicio = performance.now();
-    let respuesta = null;
-    let datos = null;
-    let sinConexion = false;
 
-    try {
-        respuesta = await fetch('../backend/actualiza.php', {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        });
-        const texto = await respuesta.text();
-        try { datos = JSON.parse(texto); } catch (err) { datos = null; }
-    } catch (err) {
-        sinConexion = true;
-    } finally {
-        marcarGuardando(false);
+    // Fotos reducidas antes de subir y avance visible en el botón
+    const elegidos = archivosSeleccionados();
+    if (elegidos.length) {
+        textoBotonGuardar('Preparando archivos…');
+        const listos = await SipconsArchivos.prepararParaEnvio(elegidos);
+        listos.forEach(archivo => formData.append('archivos[]', archivo));
     }
 
+    const envio = await SipconsArchivos.enviarConAvance('../backend/actualiza.php', formData, (porcentaje) => {
+        textoBotonGuardar(porcentaje < 100 && elegidos.length ? `Subiendo… ${porcentaje}%` : 'Guardando…');
+    });
+    marcarGuardando(false);
+
+    const datos = envio.datos;
+    const sinConexion = envio.sinConexion;
+    const sesionCerrada = envio.sesionCerrada;
+    const estado = envio.estado;
     const ms = performance.now() - inicio;
-    const estado = respuesta ? respuesta.status : 0;
-    const sesionCerrada = estado === 401 || (respuesta && respuesta.redirected && /login/i.test(respuesta.url));
 
     if (datos && datos.success) {
         registrarGuardadoEnAnaliticas(true, '', ms, estado);
@@ -1068,7 +1092,23 @@ async function guardadoCorrecto(datos) {
         nota: agregados ? `Se ${agregados === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${agregados} archivos`}.` : '',
         botones: [{ texto: 'Aceptar', valor: 'ok', estilo: 'primario' }]
     });
-    window.location.reload();
+
+    // Sin recargar la página (antes se volvía a descargar todo, incluidos los
+    // archivos): se sigue editando sobre la versión recién guardada.
+    const incidencia = datos.incidencia;
+    if (!incidencia) {
+        window.location.reload();
+        return;
+    }
+    estadoDetalle.version = incidencia.version || estadoDetalle.version;
+    estadoDetalle.datosServidor = incidencia;
+    estadoDetalle.original = leerFormulario();
+    if (estadoDetalle.selector) estadoDetalle.selector.limpiar();
+    if (agregados) cargarArchivosAdjuntos(incidencia.archivos || [], estadoDetalle.id);
+    document.querySelectorAll('#form-editar .aviso-borrador').forEach(a => a.remove());
+    document.querySelectorAll('.campo-integrado').forEach(el => el.classList.remove('campo-integrado'));
+    clearTimeout(temporizadorBorrador);
+    estadoDetalle.salirSinAviso = false;
 }
 
 async function avisarSesionCerrada(forzar) {

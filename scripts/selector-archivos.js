@@ -31,6 +31,8 @@
         ? Math.max(1, Math.round(bytes / 1024)).toLocaleString('es-MX') + ' KB'
         : (bytes / MB).toLocaleString('es-MX', { maximumFractionDigits: 1 }) + ' MB';
     const claveArchivo = f => `${f.name}|${f.size}|${f.lastModified}`;
+    // Fotos que el navegador puede reducir antes de enviar (ver comprimirImagen)
+    const seReduce = f => ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(extension(f.name)) && f.size >= 600 * 1024;
 
     function crear(input, opciones = {}) {
         let limites = opciones.limites || {};
@@ -113,7 +115,8 @@
             if (limites.extensiones && limites.extensiones.length && !limites.extensiones.includes(ext)) {
                 return 'Este tipo de archivo no se permite';
             }
-            if (limites.archivo_mb && archivo.size > limites.archivo_mb * MB) {
+            // Las fotos grandes se reducen al enviar: no se marcan como problema
+            if (limites.archivo_mb && archivo.size > limites.archivo_mb * MB && !seReduce(archivo)) {
                 return `Pesa más de ${limites.archivo_mb} MB`;
             }
             return '';
@@ -150,7 +153,8 @@
                 nombre.textContent = archivo.name;
                 nombre.title = archivo.name;
                 const detalle = document.createElement('small');
-                detalle.textContent = problema ? `${formatearMB(archivo.size)} · ${problema}` : formatearMB(archivo.size);
+                detalle.textContent = problema ? `${formatearMB(archivo.size)} · ${problema}`
+                    : seReduce(archivo) ? `${formatearMB(archivo.size)} · se reducirá al enviar` : formatearMB(archivo.size);
                 info.append(nombre, detalle);
 
                 item.append(vista, info);
@@ -218,7 +222,8 @@
                         lista: conProblema.map(a => `${a.name} — ${problemaDe(a)} (${formatearMB(a.size)})`)
                     };
                 }
-                const total = archivos.reduce((suma, a) => suma + a.size, 0);
+                // Las fotos que se reducen cuentan con un tamaño estimado tras reducirlas
+                const total = archivos.reduce((suma, a) => suma + (seReduce(a) ? Math.min(a.size, 800 * 1024) : a.size), 0);
                 if (limites.total_mb && total > limites.total_mb * MB * 0.95) {
                     return { mensaje: `Los archivos suman ${formatearMB(total)} y el máximo por envío es ${limites.total_mb} MB. Envía primero algunos y después los demás.` };
                 }
@@ -228,6 +233,105 @@
                 return null;
             }
         };
+    }
+
+    // ---------- compresión de fotos ----------
+    // Las fotos de celular (3-10 MB) hacían muy lento cada guardado. Se
+    // reducen a COMPRIMIR_LADO_MAX px por lado en JPEG: una foto de 5 MB queda
+    // en ~300-600 KB y se sigue viendo nítida como evidencia. Si el navegador
+    // no puede abrir la imagen (p. ej. HEIC fuera de Safari) o el resultado no
+    // es más chico, se envía la original.
+    const COMPRIMIR_DESDE_BYTES = 600 * 1024;
+    const COMPRIMIR_LADO_MAX = 2048;
+    const COMPRIMIR_CALIDAD = 0.82;
+    const COMPRIMIBLES = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'heic', 'heif'];
+
+    async function abrirImagen(archivo) {
+        if (window.createImageBitmap) {
+            try { return await createImageBitmap(archivo, { imageOrientation: 'from-image' }); } catch (e) { /* se intenta abajo */ }
+        }
+        const url = URL.createObjectURL(archivo);
+        try {
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = url;
+            await img.decode();
+            return img;
+        } finally {
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    async function comprimirImagen(archivo) {
+        const ext = extension(archivo.name);
+        if (!COMPRIMIBLES.includes(ext) || archivo.size < COMPRIMIR_DESDE_BYTES) return archivo;
+        try {
+            const imagen = await abrirImagen(archivo);
+            const ancho = imagen.width, alto = imagen.height;
+            const escala = Math.min(1, COMPRIMIR_LADO_MAX / Math.max(ancho, alto));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(ancho * escala);
+            canvas.height = Math.round(alto * escala);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff'; // PNG con transparencia: fondo blanco en vez de negro
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
+            if (imagen.close) imagen.close();
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', COMPRIMIR_CALIDAD));
+            if (!blob || blob.size >= archivo.size) return archivo;
+            const nombre = archivo.name.replace(/\.[^.]+$/, '') + '.jpg';
+            return new File([blob], nombre, { type: 'image/jpeg', lastModified: archivo.lastModified });
+        } catch (e) {
+            return archivo;
+        }
+    }
+
+    // Devuelve los archivos listos para enviar (fotos comprimidas), en orden
+    async function prepararParaEnvio(archivos) {
+        const listos = [];
+        for (const archivo of archivos) listos.push(await comprimirImagen(archivo));
+        return listos;
+    }
+
+    // ---------- envío con avance ----------
+    /**
+     * Envía un FormData por POST mostrando el avance de la subida.
+     * Resuelve siempre (nunca rechaza) con:
+     *   { estado, datos, sinConexion, sesionCerrada }
+     * alProgresar(porcentaje) se llama mientras se suben los datos; con 100
+     * la subida terminó y falta la respuesta del servidor.
+     */
+    function enviarConAvance(url, formData, alProgresar) {
+        return new Promise(resolver => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.withCredentials = true;
+            xhr.setRequestHeader('Accept', 'application/json');
+            if (alProgresar && xhr.upload) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) alProgresar(Math.min(100, Math.round((e.loaded / e.total) * 100)));
+                };
+                xhr.upload.onload = () => alProgresar(100);
+            }
+            xhr.onload = () => {
+                let datos = null;
+                try { datos = JSON.parse(xhr.responseText); } catch (e) { datos = null; }
+                const redirigidoALogin = xhr.responseURL && /login/i.test(xhr.responseURL) && !/\.php/i.test(xhr.responseURL.split('?')[0].split('/').pop());
+                resolver({
+                    estado: xhr.status,
+                    datos,
+                    sinConexion: false,
+                    sesionCerrada: xhr.status === 401 || !!redirigidoALogin
+                });
+            };
+            const sinRed = () => {
+                if (window.SipconsConexion) window.SipconsConexion.revisar();
+                resolver({ estado: 0, datos: null, sinConexion: true, sesionCerrada: false });
+            };
+            xhr.onerror = sinRed;
+            xhr.ontimeout = sinRed;
+            xhr.send(formData);
+        });
     }
 
     // Límites del servidor (se piden una sola vez por página)
@@ -241,5 +345,5 @@
         return promesaLimites;
     }
 
-    window.SipconsArchivos = { crear, cargarLimites };
+    window.SipconsArchivos = { crear, cargarLimites, prepararParaEnvio, enviarConAvance };
 })();

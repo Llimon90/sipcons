@@ -2602,12 +2602,18 @@ body.visor-abierto { overflow: hidden; }
   gap: 14px;
 }
 
-.visor-pdf canvas {
+.visor-pdf-pagina {
   width: 100%;
-  height: auto;
   background: #fff;
   border-radius: 3px;
+  overflow: hidden;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.visor-pdf-pagina canvas {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .visor-pdf iframe {

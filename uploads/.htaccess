@@ -10,3 +10,19 @@
         Deny from all
     </IfModule>
 </FilesMatch>
+
+# El .htaccess raíz prohíbe el caché en todo el sitio (no-store), lo que hacía
+# descargar cada PDF/imagen completo una y otra vez (miniatura, visor, cada
+# visita).
+#  - Archivos con nombre único (inc<ID>_<fecha>_<hora>_<aleatorio>_...): nunca
+#    cambian, se guardan 30 días en el navegador del usuario.
+#  - Los demás (antiguos o de ventas, que podrían reemplazarse con el mismo
+#    nombre): el navegador pregunta si cambiaron y, si no, no los descarga.
+<IfModule mod_headers.c>
+    Header unset Pragma
+    Header unset Expires
+    Header set Cache-Control "private, no-cache"
+    <FilesMatch "^inc[0-9]+_[0-9]{8}_[0-9]{6}_[0-9a-f]{6}_">
+        Header set Cache-Control "private, max-age=2592000, immutable"
+    </FilesMatch>
+</IfModule>

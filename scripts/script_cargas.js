@@ -107,5 +107,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Para refrescar la lista tras registrar una incidencia sin recargar la página
+  window.recargarListaIncidencias = cargarIncidencias;
+
   cargarIncidencias();
 });

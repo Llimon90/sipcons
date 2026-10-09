@@ -8,13 +8,13 @@
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css?v=20261009c">
+  <link rel="stylesheet" href="../css/styles.css?v=20261009d">
   <link rel="stylesheet" href="../css/dark.css?v=20261009b">
   <script src="../scripts/contactos-widget.js?v=3"></script>
   <script src="../scripts/tecnicos.js?v=2"></script>
   <script src="../scripts/dialogo.js?v=2" defer></script>
-  <script src="../scripts/selector-archivos.js?v=1" defer></script>
-  <script src="../scripts/script.js?v=11" defer></script>
+  <script src="../scripts/selector-archivos.js?v=2" defer></script>
+  <script src="../scripts/script.js?v=12" defer></script>
   <script src="../scripts/auth-guard.js?v=20261009b"></script>
 </head>
 <body>
@@ -256,7 +256,7 @@
 
   document.addEventListener("DOMContentLoaded", function() {
     // 1. Establecer fecha por defecto (tu código original)
-    document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+    // La fecha del día (hora local) la pone scripts/script.js
 
     // Cargar la lista asíncrona de clientes en el Datalist
     cargarClientesEnDatalist();
@@ -317,6 +317,6 @@
   <script src="../scripts/serie-equipo.js"></script>
   <script src="../scripts/sidebar-state.js?v=20261002"></script>
   <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/script_cargas.js?v=21"></script>
+  <script src="../scripts/script_cargas.js?v=22"></script>
 </body>
 </html>

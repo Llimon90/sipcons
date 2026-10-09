@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
-// DISPARADOR AUTOMÁTICO: Revisa si hay mantenimientos antes de cargar la tabla
-require_once 'generador_tickets.php';
 
 // Encabezados generales
 header("Access-Control-Allow-Origin: *");
@@ -24,6 +22,10 @@ $method = $_SERVER["REQUEST_METHOD"];
 
 
 if ($method === "GET") {
+    // DISPARADOR AUTOMÁTICO: revisa si hay mantenimientos antes de cargar la tabla.
+    // Solo al consultar la lista (no al registrar) y como máximo cada pocos minutos.
+    require_once __DIR__ . '/generador_tickets.php';
+
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
     // Consulta para obtener todas las incidencias sin filtrar
