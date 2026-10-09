@@ -53,7 +53,7 @@
     // Analíticas de uso (solo registra; el panel es exclusivo del Programador)
     try {
         var trackerScript = document.createElement('script');
-        trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=1';
+        trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=2';
         trackerScript.async = true;
         document.head.appendChild(trackerScript);
     } catch (e) { /* las analíticas nunca deben romper la página */ }

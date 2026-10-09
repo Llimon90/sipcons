@@ -46,8 +46,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Mientras llegan los resultados los filtros rápidos se ven ocupados y no
+  // aceptan otro clic (antes no había respuesta visible y se hacían clics repetidos)
+  let filtrandoRapido = false;
   document.querySelectorAll('.btn-filtro-rapido').forEach(button => {
-    button.addEventListener('click', function() {
+    button.addEventListener('click', async function() {
+      if (filtrandoRapido) return;
       const filtro = this.getAttribute('data-filtro');
       document.querySelectorAll('.btn-filtro-rapido').forEach(btn => btn.classList.remove('active'));
       this.classList.add('active');
@@ -65,7 +69,19 @@ document.addEventListener("DOMContentLoaded", function () {
         if(checkActivas) checkActivas.checked = true;
       }
       paginaActual = 1;
-      cargarIncidencias();
+
+      const botones = document.querySelectorAll('.btn-filtro-rapido');
+      const textoOriginal = this.innerHTML;
+      filtrandoRapido = true;
+      botones.forEach(btn => { btn.classList.add('cargando-filtro'); btn.setAttribute('aria-busy', 'true'); });
+      this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' + textoOriginal;
+      try {
+        await cargarIncidencias();
+      } finally {
+        filtrandoRapido = false;
+        this.innerHTML = textoOriginal;
+        botones.forEach(btn => { btn.classList.remove('cargando-filtro'); btn.removeAttribute('aria-busy'); });
+      }
     });
   });
 });
@@ -171,6 +187,20 @@ function mostrarIncidenciasPagina() {
       <td>${estatus}</td>
       <td><span class="etiqueta ${esActiva ? "etiqueta-ok" : "etiqueta-neutral"}">${esActiva ? "Activa" : "Inactiva"}</span></td>
     `;
+
+    // Toda la fila abre la incidencia (antes solo el folio respondía al clic)
+    row.className = 'fila-clic';
+    row.title = esProgramado ? 'Ver detalle de la programación' : 'Abrir incidencia';
+    row.addEventListener('click', (ev) => {
+      if (ev.target.closest('a, button')) return;
+      if (esProgramado) {
+        abrirModalProgramada(indiceGlobal);
+      } else if (ev.ctrlKey || ev.metaKey) {
+        window.open(`detalle.html?id=${inc.id}`, '_blank');
+      } else {
+        window.location.href = `detalle.html?id=${inc.id}`;
+      }
+    });
     tablaBody.appendChild(row);
   });
   actualizarControlesPaginacion();

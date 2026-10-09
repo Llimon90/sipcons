@@ -636,10 +636,10 @@
             var nombresTipo = {
                 pageview: 'Abrió', carga: 'Carga completa', permanencia: 'Tiempo activo', click: 'Clic', tab: 'Pestaña', submit: 'Envió formulario',
                 cambio: 'Cambió lista', busqueda: 'Buscó', error_js: 'ERROR JS', api: 'API', rage_click: 'Clics furiosos', dead_click: 'Clic sin respuesta',
-                validacion_fallida: 'Validación fallida', acceso_denegado: 'Acceso denegado'
+                validacion_fallida: 'Validación fallida', acceso_denegado: 'Acceso denegado', guardado: 'Guardado'
             };
             d.eventos.forEach(function (e) {
-                var esError = e.tipo === 'error_js' || (e.tipo === 'api' && (e.extra === 0 || e.extra >= 400)) || e.tipo === 'rage_click' || e.tipo === 'dead_click' || e.tipo === 'validacion_fallida' || e.tipo === 'acceso_denegado';
+                var esError = e.tipo === 'error_js' || (e.tipo === 'api' && (e.extra === 0 || e.extra >= 400)) || e.tipo === 'rage_click' || e.tipo === 'dead_click' || e.tipo === 'validacion_fallida' || e.tipo === 'acceso_denegado' || (e.tipo === 'guardado' && /^error/.test(e.detalle || ''));
                 var clase = 'ev' + (esError ? ' error' : '') + (e.tipo === 'pageview' ? ' pageview' : '') + (e.tipo === 'permanencia' || e.tipo === 'carga' ? ' perm' : '');
                 var fila = el('div', clase);
                 var partes = [nombresTipo[e.tipo] || e.tipo];

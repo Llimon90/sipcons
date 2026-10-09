@@ -2671,3 +2671,169 @@ body.visor-abierto { overflow: hidden; }
   .visor-nav:hover { transform: none; }
   .visor-pdf iframe { height: calc(100vh - 150px); }
 }
+
+/* Zoom de imágenes en el visor: clic para ver a tamaño completo */
+.visor-cuerpo img { cursor: zoom-in; }
+.visor-cuerpo.visor-zoom {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+.visor-cuerpo.visor-zoom img {
+  flex-shrink: 0;
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  cursor: zoom-out;
+}
+
+/* ================================================================
+   DIÁLOGOS (dialogo.js): resultados importantes que el usuario debe leer
+   ================================================================ */
+.dialogo-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 18, 27, 0.55);
+  animation: dialogo-aparecer 0.15s ease-out;
+}
+
+body.dialogo-abierto { overflow: hidden; }
+
+.dialogo {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 28px 26px 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #2c3e50;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.dialogo-icono {
+  font-size: 46px;
+  margin-bottom: 12px;
+}
+
+.dialogo--ok .dialogo-icono { color: #27ae60; }
+.dialogo--error .dialogo-icono { color: #e74c3c; }
+.dialogo--aviso .dialogo-icono { color: #e67e22; }
+.dialogo--info .dialogo-icono { color: #3498db; }
+
+.dialogo-titulo {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: inherit;
+}
+
+.dialogo-mensaje {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.dialogo-lista {
+  margin: 12px auto 0;
+  padding: 10px 14px 10px 32px;
+  max-width: 360px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.6;
+  border-radius: 10px;
+  background: #f4f6f9;
+}
+
+.dialogo-nota {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: #6c7a89;
+}
+
+.dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.dialogo-btn {
+  min-width: 120px;
+  padding: 11px 20px;
+  font-size: 15px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.dialogo-btn:hover { transform: none; }
+.dialogo-btn--primario { background: linear-gradient(135deg, #3498db, #2980b9); }
+.dialogo-btn--peligro { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.dialogo-btn--secundario {
+  background: #eef1f5;
+  color: #34495e;
+}
+.dialogo-btn--secundario:hover { background: #e2e7ee; box-shadow: none; }
+.dialogo-btn:focus-visible { outline: 3px solid rgba(52, 152, 219, 0.5); outline-offset: 2px; }
+
+@keyframes dialogo-aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .dialogo-fondo { align-items: flex-end; padding: 0; }
+  .dialogo {
+    max-width: none;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  }
+  .dialogo-acciones { flex-direction: column-reverse; }
+  .dialogo-acciones .dialogo-btn { width: 100%; }
+}
+
+/* ================================================================
+   AVISO DE CAMBIOS SIN GUARDAR (borrador local del detalle)
+   ================================================================ */
+.aviso-borrador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid #f5c26b;
+  border-left: 5px solid #e67e22;
+  border-radius: 10px;
+  background: #fff8ec;
+  color: #6b4100;
+}
+
+.aviso-borrador > i { font-size: 20px; color: #e67e22; }
+.aviso-borrador-texto { flex: 1; min-width: 220px; font-size: 14.5px; line-height: 1.5; }
+.aviso-borrador-texto strong { display: block; font-size: 15px; }
+.aviso-borrador-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.aviso-borrador-acciones button {
+  padding: 9px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.aviso-borrador-acciones button:hover { transform: none; }
+.aviso-borrador-acciones .btn-descartar { background: #f1e3cc; color: #6b4100; }
+
+/* Botón mientras se guarda */
+button.guardando {
+  opacity: 0.75;
+  cursor: progress;
+  pointer-events: none;
+}
+
+/* Botones de filtro mientras cargan resultados */
+.cargando-filtro { opacity: 0.65; cursor: progress !important; }

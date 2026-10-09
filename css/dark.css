@@ -138,6 +138,17 @@ html[data-theme="dark"] .etiqueta-alerta  { background: #3d2c10; color: #f6c26b;
 html[data-theme="dark"] .etiqueta-error   { background: #3b1a1c; color: #ffb3b3; }
 html[data-theme="dark"] .etiqueta-morado  { background: #2c2147; color: #c4a8ff; }
 
+/* ---------- diálogos y aviso de borrador ---------- */
+html[data-theme="dark"] .dialogo { background: #16212d; color: #e6edf3; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
+html[data-theme="dark"] .dialogo-lista { background: #1b2836; }
+html[data-theme="dark"] .dialogo-nota { color: #9fb0c1; }
+html[data-theme="dark"] .dialogo-btn--secundario { background: #243547; color: #e6edf3; }
+html[data-theme="dark"] .dialogo-btn--secundario:hover { background: #2c4157; }
+html[data-theme="dark"] .dialogo-fondo { background: rgba(0, 0, 0, 0.65); }
+html[data-theme="dark"] .aviso-borrador { background: #2f2414; border-color: #6b4d1c; border-left-color: #f0a35a; color: #f6d9ae; }
+html[data-theme="dark"] .aviso-borrador > i { color: #f0a35a; }
+html[data-theme="dark"] .aviso-borrador-acciones .btn-descartar { background: #3d2f1a; color: #f6d9ae; }
+
 /* ---------- navegación móvil ---------- */
 html[data-theme="dark"] .barra-movil { background: linear-gradient(135deg, #0a121b 0%, #101b27 100%); }
 

@@ -38,7 +38,7 @@ try {
 <title>Analíticas de uso - SIPCONS</title>
 <link rel="icon" href="../img/favicon.ico" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
 <style>
 :root{--ink:#1f2d3a;--ink2:#5b6b7a;--line:#dde3ea;--bg:#f3f5f8;--panel:#fff;--accent:#2563eb;--accent2:#0f766e;--good:#16a34a;--warn:#d97706;--bad:#dc2626;--info:#64748b;
 --top:#1f2d3a;--th:#f8fafc;--hover:#f1f6ff;--sec:#e8edf3;--errbg:#fde8e8;--errink:#991b1b;--heat0:#eef2f6;--heatink:#0b2540;--muted:#cbd5e1;--scrim:rgba(15,23,42,.55);color-scheme:light}
@@ -168,6 +168,6 @@ tr.click{cursor:pointer}tr.click:hover{background:var(--hover)}
 
 <div class="overlay" id="overlay"><div class="drawer" id="drawer"></div></div>
 
-<script src="../scripts/analiticas-panel.js?v=3"></script>
+<script src="../scripts/analiticas-panel.js?v=4"></script>
 </body>
 </html>

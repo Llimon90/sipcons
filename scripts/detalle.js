@@ -2,7 +2,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 
 // Funciones de utilidad
 function getShortFileName(url, maxLength = 20) {
-    const fileName = url.split('/').pop();
+    const fileName = SipconsVisor.nombreDe(url);
     return fileName.length > maxLength
         ? fileName.substring(0, maxLength) + '...'
         : fileName;
@@ -293,6 +293,8 @@ async function eliminarIncidencia(id, folio) {
             throw new Error(result.error || 'No se pudo eliminar la incidencia');
         }
 
+        estadoDetalle.salirSinAviso = true;
+        borrarBorrador();
         showNotification('Incidencia eliminada correctamente');
         setTimeout(() => { window.location.href = 'incidencias.html'; }, 1200);
     } catch (error) {
@@ -493,76 +495,461 @@ function setupTecnicosMultiples(tecnicosLista) {
     });
 }
 
-async function handleFormSubmit(e, id) {
-    e.preventDefault();
+// =====================================================================
+// GUARDADO CONFIABLE
+// - El resultado se muestra en un modal (dialogo.js) que no desaparece solo,
+//   y el éxito solo se anuncia cuando el servidor confirma que la base de
+//   datos quedó con lo enviado (ver backend/actualiza.php).
+// - Lo que se escribe se respalda en el navegador (borrador local) hasta que
+//   se guarda; si la página se cierra o el guardado falla, al volver se
+//   ofrece recuperarlo.
+// - "version" detecta si la incidencia cambió en otro lugar (otra persona, u
+//   otra pestaña/equipo del mismo usuario) para no pisar esos cambios.
+// =====================================================================
 
-    const formData = new FormData();
-    formData.append("id", id);
-    formData.append("reporte_cliente", document.getElementById("reporte_cliente").value);
-    formData.append("cliente", document.getElementById("cliente").value);
-    formData.append("contacto", document.getElementById("contacto").value);
-    formData.append("sucursal", document.getElementById("sucursal").value);
-    formData.append("categoria", document.getElementById("categoria").value);
-    formData.append("numero_serie", document.getElementById("numero_serie").value.trim());
-    formData.append("fecha", document.getElementById("fecha").value);
-    
-    // Obtener todos los técnicos seleccionados y unirlos con "/"
-    const tecnicosSelects = document.querySelectorAll('.tecnico-select');
-    const tecnicos = Array.from(tecnicosSelects)
+const CAMPOS_FORM = ['reporte_cliente', 'cliente', 'contacto', 'sucursal', 'categoria', 'fecha',
+    'numero_serie', 'estatus', 'falla', 'accion', 'notas'];
+
+const NOMBRES_CAMPO = {
+    reporte_cliente: '# Incidencia cliente', cliente: 'Cliente', contacto: 'Contacto',
+    sucursal: 'Sucursal', categoria: 'Categoría', fecha: 'Fecha', numero_serie: 'Número de serie',
+    estatus: 'Estatus', falla: 'Falla', accion: 'Trabajo realizado', notas: 'Notas', tecnicos: 'Técnicos'
+};
+
+// No se ofrece un borrador más viejo que esto
+const BORRADOR_DIAS = 30;
+
+// Motivos de error en los que reintentar igual no sirve (hay que cambiar algo antes)
+const MOTIVOS_SIN_REINTENTO = ['envio_muy_grande', 'archivo_muy_grande', 'faltan_datos', 'sin_permiso', 'no_existe', 'id_invalido'];
+
+const estadoDetalle = {
+    id: null,
+    folio: '',
+    version: '',
+    datosServidor: null, // la incidencia tal como llegó del servidor
+    original: null,      // el formulario recién cargado (para saber si hay cambios)
+    limites: null,
+    guardando: false,
+    salirSinAviso: false
+};
+
+function leerFormulario() {
+    const valores = {};
+    CAMPOS_FORM.forEach(campo => {
+        const el = document.getElementById(campo);
+        valores[campo] = el ? el.value : '';
+    });
+    valores.numero_serie = valores.numero_serie.trim();
+    valores.tecnicos = Array.from(document.querySelectorAll('.tecnico-select'))
         .map(select => select.value)
-        .filter(tecnico => tecnico); // Filtrar valores vacíos
-    
-    formData.append("tecnico", tecnicos.join('/')); // Unir con "/"
-    
-    formData.append("estatus", document.getElementById("estatus").value);
-    formData.append("falla", document.getElementById("falla").value);
-    formData.append("accion", document.getElementById("accion").value);
-    formData.append("notas", document.getElementById("notas").value);
+        .filter(Boolean);
+    return valores;
+}
 
-    const archivosInput = document.getElementById("archivos").files;
-    for (let i = 0; i < archivosInput.length; i++) {
-        formData.append("archivos[]", archivosInput[i]);
+// Los mismos campos que leerFormulario(), pero tomados de la respuesta del servidor
+function valoresDeDatos(datos) {
+    const valores = {};
+    CAMPOS_FORM.forEach(campo => { valores[campo] = datos[campo] == null ? '' : String(datos[campo]); });
+    valores.fecha = valores.fecha.substring(0, 10);
+    valores.numero_serie = valores.numero_serie.trim();
+    valores.tecnicos = (Array.isArray(datos.tecnico) ? datos.tecnico : []).filter(Boolean);
+    return valores;
+}
+
+function mismosValores(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function camposDistintos(a, b) {
+    return Object.keys(NOMBRES_CAMPO).filter(campo => JSON.stringify(a[campo]) !== JSON.stringify(b[campo]));
+}
+
+function archivosSeleccionados() {
+    const input = document.getElementById('archivos');
+    return input ? Array.from(input.files) : [];
+}
+
+function hayCambiosSinGuardar() {
+    if (!estadoDetalle.original) return false;
+    return !mismosValores(leerFormulario(), estadoDetalle.original) || archivosSeleccionados().length > 0;
+}
+
+function formatearFechaHora(valor) {
+    const fecha = valor instanceof Date ? valor : new Date(String(valor).replace(' ', 'T'));
+    if (isNaN(fecha)) return '';
+    const dos = n => String(n).padStart(2, '0');
+    return `${dos(fecha.getDate())}/${dos(fecha.getMonth() + 1)}/${fecha.getFullYear()} a las ${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
+}
+
+function formatearMB(bytes) {
+    return (bytes / 1048576).toLocaleString('es-MX', { maximumFractionDigits: 1 }) + ' MB';
+}
+
+// ---------- borrador local ----------
+
+function claveBorrador() {
+    return `sipcons_borrador_incidencia_${estadoDetalle.id}`;
+}
+
+function leerBorrador() {
+    try {
+        const borrador = JSON.parse(localStorage.getItem(claveBorrador()) || 'null');
+        if (!borrador || !borrador.valores) return null;
+        if (Date.now() - borrador.fecha > BORRADOR_DIAS * 86400000) {
+            borrarBorrador();
+            return null;
+        }
+        return borrador;
+    } catch (e) {
+        return null;
+    }
+}
+
+function guardarBorrador() {
+    if (!estadoDetalle.original) return;
+    const valores = leerFormulario();
+    try {
+        if (mismosValores(valores, estadoDetalle.original)) {
+            localStorage.removeItem(claveBorrador());
+        } else {
+            localStorage.setItem(claveBorrador(), JSON.stringify({
+                valores,
+                fecha: Date.now(),
+                version: estadoDetalle.version,
+                archivos: archivosSeleccionados().length
+            }));
+        }
+    } catch (e) { /* sin almacenamiento disponible: solo se pierde el respaldo */ }
+}
+
+function borrarBorrador() {
+    try { localStorage.removeItem(claveBorrador()); } catch (e) { /* nada */ }
+}
+
+let temporizadorBorrador = null;
+function programarBorrador() {
+    clearTimeout(temporizadorBorrador);
+    temporizadorBorrador = setTimeout(guardarBorrador, 400);
+}
+
+function aplicarValores(valores) {
+    CAMPOS_FORM.forEach(campo => {
+        const el = document.getElementById(campo);
+        if (el && valores[campo] !== undefined) el.value = valores[campo];
+    });
+    // Actualiza la lista de contactos del cliente recuperado
+    const cliente = document.getElementById('cliente');
+    if (cliente) cliente.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const contenedor = document.getElementById('tecnicos-container');
+    const agregar = document.getElementById('agregar-tecnico');
+    const deseados = valores.tecnicos && valores.tecnicos.length ? valores.tecnicos : [''];
+    let grupos = contenedor.querySelectorAll('.tecnico-group');
+    for (let intentos = 0; grupos.length < deseados.length && intentos < 20; intentos++) {
+        agregar.click();
+        grupos = contenedor.querySelectorAll('.tecnico-group');
+    }
+    Array.from(grupos).slice(deseados.length).forEach(grupo => grupo.remove());
+    const selects = contenedor.querySelectorAll('.tecnico-select');
+    selects.forEach((select, i) => { select.value = deseados[i] || ''; });
+    selects.forEach(select => select.dispatchEvent(new Event('change', { bubbles: true })));
+}
+
+function mostrarAvisoBorrador(borrador) {
+    const form = document.getElementById('form-editar');
+    const aviso = document.createElement('div');
+    aviso.className = 'aviso-borrador';
+    aviso.setAttribute('role', 'status');
+
+    const notas = [`Los escribiste el ${formatearFechaHora(new Date(borrador.fecha))}.`];
+    if (borrador.version && borrador.version !== estadoDetalle.version) {
+        notas.push('La incidencia cambió desde entonces: revisa los datos antes de guardar.');
+    }
+    if (borrador.archivos > 0) {
+        notas.push('Los archivos que habías elegido tendrás que seleccionarlos otra vez.');
     }
 
+    aviso.innerHTML = `
+        <i class="fas fa-history" aria-hidden="true"></i>
+        <div class="aviso-borrador-texto"><strong>Tienes cambios que no se guardaron</strong><span></span></div>
+        <div class="aviso-borrador-acciones">
+            <button type="button" class="btn-recuperar">Recuperar mis cambios</button>
+            <button type="button" class="btn-descartar">Descartar</button>
+        </div>`;
+    aviso.querySelector('.aviso-borrador-texto span').textContent = notas.join(' ');
+
+    aviso.querySelector('.btn-recuperar').addEventListener('click', () => {
+        aplicarValores(borrador.valores);
+        aviso.remove();
+        showNotification('Se recuperaron tus cambios. Revísalos y presiona "Guardar cambios".');
+    });
+    aviso.querySelector('.btn-descartar').addEventListener('click', () => {
+        borrarBorrador();
+        aviso.remove();
+    });
+
+    form.prepend(aviso);
+}
+
+// ---------- envío ----------
+
+function marcarGuardando(activo) {
+    estadoDetalle.guardando = activo;
+    const boton = document.querySelector('#form-editar button[type="submit"]');
+    if (!boton) return;
+    if (activo) {
+        boton.dataset.textoOriginal = boton.innerHTML;
+        boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+        boton.classList.add('guardando');
+        boton.disabled = true;
+    } else {
+        if (boton.dataset.textoOriginal) boton.innerHTML = boton.dataset.textoOriginal;
+        boton.classList.remove('guardando');
+        boton.disabled = false;
+    }
+}
+
+function registrarGuardadoEnAnaliticas(correcto, motivo, ms, estado) {
     try {
-        const response = await fetch("../backend/actualiza.php", {
-            method: "POST",
-            body: formData
-        });
+        if (!window.sipconsTrack) return;
+        window.sipconsTrack('guardado',
+            correcto ? 'Guardado correcto' : `Guardado fallido: ${motivo}`,
+            `${correcto ? 'ok' : 'error'} · ${estadoDetalle.folio || estadoDetalle.id}`,
+            ms, estado);
+        if (window.sipconsFlush) window.sipconsFlush();
+    } catch (e) { /* las analíticas nunca deben estorbar */ }
+}
 
-        const data = await response.json();
+// Revisa el tamaño de los archivos antes de enviar, para avisar al momento
+function revisarArchivosAntesDeEnviar() {
+    const archivos = archivosSeleccionados();
+    const limites = estadoDetalle.limites || {};
+    if (!archivos.length) return null;
 
-        if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Error al actualizar la incidencia');
+    if (limites.archivo_mb) {
+        const grandes = archivos.filter(a => a.size > limites.archivo_mb * 1048576);
+        if (grandes.length) {
+            return {
+                mensaje: `${grandes.length === 1 ? 'Este archivo pesa' : 'Estos archivos pesan'} más de lo permitido (máximo ${limites.archivo_mb} MB por archivo):`,
+                lista: grandes.map(a => `${a.name} (${formatearMB(a.size)})`)
+            };
         }
+    }
+    const total = archivos.reduce((suma, a) => suma + a.size, 0);
+    if (limites.total_mb && total > limites.total_mb * 1048576 * 0.95) {
+        return {
+            mensaje: `Los archivos suman ${formatearMB(total)} y el máximo por guardado es ${limites.total_mb} MB. Guarda primero algunos y después los demás.`
+        };
+    }
+    if (limites.max_archivos && archivos.length > limites.max_archivos) {
+        return { mensaje: `Puedes adjuntar hasta ${limites.max_archivos} archivos a la vez.` };
+    }
+    return null;
+}
 
-        showNotification('Incidencia actualizada correctamente');
-        
-        // Actualizar la página después de guardar los cambios
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+async function handleFormSubmit(e, forzar = false) {
+    if (e) e.preventDefault();
+    if (estadoDetalle.guardando) return;
 
-    } catch (error) {
-        console.error("Error al actualizar incidencia:", error);
-        showNotification(error.message, 'error');
+    const form = document.getElementById('form-editar');
+    if (!form.reportValidity()) return;
+
+    const problemaArchivos = revisarArchivosAntesDeEnviar();
+    if (problemaArchivos) {
+        await SipconsDialogo.mostrar({
+            tipo: 'aviso',
+            titulo: 'Revisa los archivos',
+            mensaje: problemaArchivos.mensaje,
+            lista: problemaArchivos.lista,
+            nota: 'No se guardó nada todavía. Lo que escribiste sigue en pantalla.',
+            botones: [{ texto: 'Entendido', valor: 'ok', estilo: 'primario' }]
+        });
+        return;
+    }
+
+    const valores = leerFormulario();
+    const formData = new FormData();
+    formData.append('id', estadoDetalle.id);
+    formData.append('version', estadoDetalle.version);
+    if (forzar) formData.append('forzar', '1');
+    CAMPOS_FORM.forEach(campo => formData.append(campo, valores[campo]));
+    formData.append('tecnico', valores.tecnicos.join('/'));
+    archivosSeleccionados().forEach(archivo => formData.append('archivos[]', archivo));
+
+    guardarBorrador();
+    marcarGuardando(true);
+    const inicio = performance.now();
+    let respuesta = null;
+    let datos = null;
+    let sinConexion = false;
+
+    try {
+        respuesta = await fetch('../backend/actualiza.php', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+        const texto = await respuesta.text();
+        try { datos = JSON.parse(texto); } catch (err) { datos = null; }
+    } catch (err) {
+        sinConexion = true;
+    } finally {
+        marcarGuardando(false);
+    }
+
+    const ms = performance.now() - inicio;
+    const estado = respuesta ? respuesta.status : 0;
+    const sesionCerrada = estado === 401 || (respuesta && respuesta.redirected && /login/i.test(respuesta.url));
+
+    if (datos && datos.success) {
+        registrarGuardadoEnAnaliticas(true, '', ms, estado);
+        return guardadoCorrecto(datos);
+    }
+
+    const motivo = sinConexion ? 'sin_conexion' : sesionCerrada ? 'sesion_cerrada'
+        : (datos && datos.motivo) || `respuesta_invalida_${estado}`;
+    registrarGuardadoEnAnaliticas(false, motivo, ms, estado);
+
+    if (sesionCerrada) return avisarSesionCerrada(forzar);
+    if (estado === 409 && datos && datos.actual) return resolverConflicto(datos);
+
+    let mensaje;
+    if (sinConexion) {
+        mensaje = 'No hubo respuesta del servidor. Revisa tu conexión a internet e inténtalo de nuevo.';
+    } else if (datos && datos.error) {
+        mensaje = datos.error;
+    } else {
+        mensaje = 'El servidor respondió de forma inesperada y no se pudo confirmar el guardado.';
+    }
+
+    const botones = [{ texto: 'Cerrar', valor: null, estilo: 'secundario' }];
+    if (!MOTIVOS_SIN_REINTENTO.includes(motivo)) {
+        botones.push({ texto: 'Intentar de nuevo', valor: 'reintentar', estilo: 'primario' });
+    }
+    const eleccion = await SipconsDialogo.mostrar({
+        tipo: 'error',
+        titulo: 'No se guardaron los cambios',
+        mensaje,
+        nota: 'Lo que escribiste sigue en pantalla; no se perdió nada.',
+        botones
+    });
+    if (eleccion === 'reintentar') handleFormSubmit(null, forzar);
+}
+
+async function guardadoCorrecto(datos) {
+    borrarBorrador();
+    estadoDetalle.salirSinAviso = true;
+
+    const agregados = (datos.archivos_agregados || []).length;
+    await SipconsDialogo.mostrar({
+        tipo: 'ok',
+        titulo: 'Cambios guardados',
+        mensaje: `La incidencia ${estadoDetalle.folio} se guardó correctamente el ${formatearFechaHora(datos.guardado_en || new Date())}.`,
+        nota: agregados ? `Se ${agregados === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${agregados} archivos`}.` : '',
+        botones: [{ texto: 'Aceptar', valor: 'ok', estilo: 'primario' }]
+    });
+    window.location.reload();
+}
+
+async function avisarSesionCerrada(forzar) {
+    const eleccion = await SipconsDialogo.mostrar({
+        tipo: 'aviso',
+        titulo: 'Tu sesión se cerró',
+        mensaje: 'Para guardar, vuelve a iniciar sesión. Lo que escribiste sigue en pantalla y no se perderá.',
+        botones: [
+            { texto: 'Cerrar', valor: null, estilo: 'secundario' },
+            { texto: 'Iniciar sesión', valor: 'login', estilo: 'primario' }
+        ]
+    });
+    if (eleccion !== 'login') return;
+
+    window.open('../auth/login.html', '_blank');
+    const siguiente = await SipconsDialogo.mostrar({
+        tipo: 'info',
+        titulo: 'Inicia sesión y regresa',
+        mensaje: 'Se abrió una pestaña para iniciar sesión. Cuando termines, vuelve a esta pestaña y presiona "Guardar ahora".',
+        botones: [
+            { texto: 'Cerrar', valor: null, estilo: 'secundario' },
+            { texto: 'Guardar ahora', valor: 'reintentar', estilo: 'primario' }
+        ]
+    });
+    if (siguiente === 'reintentar') handleFormSubmit(null, forzar);
+}
+
+async function resolverConflicto(datos) {
+    const actual = datos.actual;
+    const valoresActuales = valoresDeDatos(actual);
+
+    // Si lo que hay ahora en la base ya es lo mismo que se quiere guardar
+    // (p. ej. se guardó igual desde otra pestaña), no hay nada que resolver.
+    if (mismosValores(leerFormulario(), valoresActuales) && !archivosSeleccionados().length) {
+        borrarBorrador();
+        estadoDetalle.salirSinAviso = true;
+        await SipconsDialogo.mostrar({
+            tipo: 'ok',
+            titulo: 'Cambios guardados',
+            mensaje: 'Estos cambios ya estaban guardados.',
+            botones: [{ texto: 'Aceptar', valor: 'ok', estilo: 'primario' }]
+        });
+        window.location.reload();
+        return;
+    }
+
+    const cambiados = camposDistintos(valoresDeDatos(estadoDetalle.datosServidor), valoresActuales)
+        .map(campo => NOMBRES_CAMPO[campo]);
+    const cuando = datos.modificado_en ? ` el ${formatearFechaHora(datos.modificado_en)}` : '';
+    const quien = datos.modificado_por_mi
+        ? `Tú mismo la modificaste desde otra pestaña o equipo${cuando}`
+        : `${datos.modificado_por || 'Otra persona'} la modificó${cuando}`;
+
+    const eleccion = await SipconsDialogo.mostrar({
+        tipo: 'aviso',
+        titulo: 'Esta incidencia cambió mientras la editabas',
+        mensaje: `${quien}, después de que abriste esta página. Para no borrar esos cambios, todavía no se guardaron los tuyos.`,
+        lista: cambiados.length ? cambiados.map(nombre => `Cambió: ${nombre}`) : null,
+        nota: '"Ver versión actual" carga la incidencia como está ahora y te deja recuperar lo que escribiste. "Guardar de todos modos" reemplaza esos cambios con los tuyos.',
+        botones: [
+            { texto: 'Cancelar', valor: null, estilo: 'secundario' },
+            { texto: 'Guardar de todos modos', valor: 'forzar', estilo: 'peligro' },
+            { texto: 'Ver versión actual', valor: 'recargar', estilo: 'primario' }
+        ]
+    });
+
+    if (eleccion === 'forzar') {
+        handleFormSubmit(null, true);
+    } else if (eleccion === 'recargar') {
+        guardarBorrador();
+        estadoDetalle.salirSinAviso = true;
+        window.location.reload();
     }
 }
 
 // Función principal para cargar los detalles
 async function cargarDetalleIncidencia(id) {
     try {
-        const response = await fetch(`../backend/detalle.php?id=${id}`);
+        const response = await fetch(`../backend/detalle.php?id=${encodeURIComponent(id)}`, {
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store'
+        });
         const data = await response.json();
 
         if (!response.ok || data.error) {
             throw new Error(data.error || 'Error al cargar los detalles');
         }
 
+        estadoDetalle.id = id;
+        estadoDetalle.folio = data.numero_incidente || '';
+        estadoDetalle.version = data.version || '';
+        estadoDetalle.datosServidor = data;
+        estadoDetalle.limites = data.limites_subida || null;
+
         // Lista de técnicos desde la BD (usuarios con rol técnico/supervisor/administrador)
         const tecnicosLista = await SipconsTecnicos.cargar();
 
         document.getElementById("detalle-incidencia").innerHTML = createFormHTML(data, tecnicosLista);
+        const form = document.getElementById("form-editar");
+        form.addEventListener("submit", (e) => handleFormSubmit(e));
 
         // Configurar la funcionalidad de múltiples técnicos
         setupTecnicosMultiples(tecnicosLista);
@@ -587,14 +974,39 @@ async function cargarDetalleIncidencia(id) {
             cargarArchivosAdjuntos(data.archivos, id);
         }
 
-        document.getElementById("form-editar").addEventListener("submit", (e) => handleFormSubmit(e, id));
+        // Punto de partida para saber si hay cambios sin guardar
+        estadoDetalle.original = leerFormulario();
+
+        const borrador = leerBorrador();
+        if (borrador) {
+            if (mismosValores(borrador.valores, estadoDetalle.original)) {
+                borrarBorrador();
+            } else {
+                mostrarAvisoBorrador(borrador);
+            }
+        }
+
+        ['input', 'change', 'click'].forEach(evento => form.addEventListener(evento, programarBorrador));
 
     } catch (error) {
         console.error("Error al cargar detalles:", error);
         document.getElementById("detalle-incidencia").innerHTML =
-            `<p>Error al cargar los detalles: ${error.message}</p>`;
+            `<p>Error al cargar los detalles: ${escapeAttr(error.message)}</p>`;
     }
 }
+
+// Aviso del navegador al salir con cambios sin guardar (el borrador ya quedó respaldado)
+window.addEventListener('beforeunload', (e) => {
+    if (estadoDetalle.salirSinAviso || !hayCambiosSinGuardar()) return;
+    guardarBorrador();
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+// En móvil el navegador puede cerrar la pestaña sin "beforeunload": se respalda al ocultarse
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && !estadoDetalle.salirSinAviso) guardarBorrador();
+});
 
 // Inicialización
 document.addEventListener("DOMContentLoaded", function () {

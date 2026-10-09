@@ -1,135 +1,245 @@
 <?php
+// Guarda los cambios de una incidencia (detalle.html).
+//
+// Garantías para quien guarda:
+//  - Siempre responde JSON con { success: true } o { success: false, motivo, error }.
+//    "error" es un mensaje sencillo que el usuario puede leer tal cual.
+//  - O se guarda todo (campos y archivos) o no se guarda nada (transacción).
+//  - Solo responde éxito después de volver a leer la incidencia de la base de
+//    datos y comprobar que quedó con lo que se envió.
+//  - Si alguien más (u otra pestaña/equipo del mismo usuario) guardó cambios
+//    desde que se abrió la página, no los sobrescribe sin confirmación (409).
+// Cada intento que no se completa queda en storage/logs/guardados-AAAA-MM.log.
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/../config/guardados_log.php';
+require_once __DIR__ . '/lib/incidencias_helpers.php';
 
-if ($conn->connect_error) {
-    die(json_encode(["error" => "Error de conexión: " . $conn->connect_error]));
+// Un aviso de PHP impreso en la respuesta rompería el JSON en el navegador
+ini_set('display_errors', '0');
+
+$idIncidencia = null;
+$archivosMovidos = [];
+
+function responder(int $http, array $cuerpo): void {
+    http_response_code($http);
+    echo json_encode($cuerpo, JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-// Leer los datos enviados desde el frontend
-$id = $_POST['id'];
-$reporteCliente = $_POST['reporte_cliente'];
-$cliente = $_POST['cliente'];
-$contacto = $_POST['contacto'];
-$sucursal = $_POST['sucursal'];
-$categoria = $_POST['categoria']; // "Mr. Tienda/Mr. Chef", "Calimax", "Otros", etc.
-$fecha = $_POST['fecha'];
-$tecnico = $_POST['tecnico'];
-$estatus = $_POST['estatus'];
-$falla = $_POST['falla'];
-$accion = $_POST['accion'];
-$notas = $_POST['notas'];
-
-// El rol Técnico no puede cerrar incidencias con/sin factura
-$estatusRestringidosTecnico = ['Cerrado con factura', 'Cerrado sin factura'];
-if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($estatus, $estatusRestringidosTecnico, true)) {
-    http_response_code(403);
-    die(json_encode(["error" => "Tu rol no tiene permiso para cerrar incidencias con/sin factura."]));
+/** Responde un guardado que no se completó y lo anota en la bitácora. */
+function rechazar(int $http, string $motivo, string $mensaje, array $extra = [], string $detalleLog = ''): void {
+    global $idIncidencia, $archivosMovidos, $pdo;
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    foreach ($archivosMovidos as $ruta) @unlink($ruta);
+    registrarFalloGuardado($motivo, $idIncidencia !== null ? (string)$idIncidencia : null, $detalleLog ?: $mensaje);
+    responder($http, ['success' => false, 'motivo' => $motivo, 'error' => $mensaje] + $extra);
 }
 
-// Debug: Verificar el valor de categoría
-error_log("Valor de categoría recibido: " . $categoria);
+/** Quién guardó por última vez la incidencia y cuándo (para explicar un conflicto). */
+function ultimoCambio(PDO $pdo, int $id): array {
+    try {
+        $st = $pdo->prepare("SELECT usuario_id, usuario_nombre, creado_en FROM auditoria
+            WHERE tabla = 'incidencias' AND registro_id = ? AND accion IN ('UPDATE', 'CREATE', 'INSERT')
+            ORDER BY id DESC LIMIT 1");
+        $st->execute([(string)$id]);
+        $fila = $st->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $fila = false;
+    }
+    if (!$fila) return ['modificado_por' => null, 'modificado_en' => null, 'modificado_por_mi' => false];
+    return [
+        'modificado_por' => $fila['usuario_nombre'],
+        'modificado_en' => $fila['creado_en'],
+        'modificado_por_mi' => (string)$fila['usuario_id'] === (string)($_SESSION['user_id'] ?? ''),
+    ];
+}
 
-// Capturar el estado anterior para el historial de auditoría
-$estadoAnteriorStmt = $conn->prepare("SELECT * FROM incidencias WHERE id = ?");
-$estadoAnteriorStmt->bind_param("i", $id);
-$estadoAnteriorStmt->execute();
-$estadoAnterior = $estadoAnteriorStmt->get_result()->fetch_assoc();
-$estadoAnteriorStmt->close();
-
-// Actualizar la incidencia en la base de datos
-$sql = "UPDATE incidencias SET 
-        reporte_cliente = ?,
-        cliente = ?, 
-        contacto = ?, 
-        sucursal = ?, 
-        categoria = ?,
-        fecha = ?, 
-        tecnico = ?, 
-        estatus = ?, 
-        falla = ?, 
-        accion = ?, 
-        notas = ? 
-        WHERE id = ?";
-        
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("sssssssssssi", 
-    $reporteCliente,
-    $cliente, 
-    $contacto, 
-    $sucursal, 
-    $categoria,
-    $fecha, 
-    $tecnico,
-    $estatus, 
-    $falla, 
-    $accion, 
-    $notas, 
-    $id
-);
-
-if ($stmt->execute()) {
-    // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
-    $numeroSerie = trim($_POST['numero_serie'] ?? '');
-    $colSerie = $conn->query("SHOW COLUMNS FROM incidencias LIKE 'numero_serie'");
-    $tieneSerie = $colSerie && $colSerie->num_rows > 0;
-    if ($tieneSerie) {
-        $serieDb = $numeroSerie !== '' ? $numeroSerie : null;
-        $stmtSerie = $conn->prepare("UPDATE incidencias SET numero_serie = ? WHERE id = ?");
-        $stmtSerie->bind_param("si", $serieDb, $id);
-        $stmtSerie->execute();
-        $stmtSerie->close();
+try {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        responder(405, ['success' => false, 'motivo' => 'metodo', 'error' => 'Solicitud no válida.']);
     }
 
-    // Manejar la subida de archivos antes de auditar, para poder incluir sus
-    // nombres en el mismo registro de historial (se ven en el panel "Después").
-    $archivosAgregados = [];
-    if (!empty($_FILES['archivos'])) {
-        $uploadDir = '../uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
+    $limites = limitesSubida();
+
+    // Si el envío supera post_max_size, PHP descarta TODO el formulario
+    // (campos y archivos) sin avisar: antes esto respondía "éxito".
+    $tamanoEnvio = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+    if (empty($_POST) && empty($_FILES) && $tamanoEnvio > 0) {
+        rechazar(413, 'envio_muy_grande',
+            'Los archivos que adjuntaste pesan demasiado' .
+            ($limites['total_mb'] ? " (el máximo es {$limites['total_mb']} MB en total)" : '') .
+            '. No se guardó ningún cambio. Quita o reduce los archivos e intenta de nuevo.',
+            ['limites' => $limites],
+            'Envío de ' . round($tamanoEnvio / 1048576, 1) . ' MB descartado por post_max_size');
+    }
+
+    $idIncidencia = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if (!$idIncidencia) {
+        $idIncidencia = null;
+        rechazar(400, 'id_invalido', 'No se pudo identificar la incidencia. Recarga la página e intenta de nuevo.');
+    }
+
+    // Campos que el formulario siempre envía; si faltan, el envío llegó incompleto
+    foreach (['cliente', 'contacto', 'fecha', 'estatus', 'falla'] as $campo) {
+        if (!array_key_exists($campo, $_POST)) {
+            rechazar(400, 'envio_incompleto', 'Los datos llegaron incompletos al servidor. Recarga la página e intenta de nuevo.',
+                [], "Falta el campo $campo");
         }
+    }
 
-        foreach ($_FILES['archivos']['tmp_name'] as $key => $tmp_name) {
-            $fileName = basename($_FILES['archivos']['name'][$key]);
-            $uploadFilePath = $uploadDir . $fileName;
+    $valores = [
+        'reporte_cliente' => (string)($_POST['reporte_cliente'] ?? ''),
+        'cliente'   => trim((string)$_POST['cliente']),
+        'contacto'  => trim((string)$_POST['contacto']),
+        'sucursal'  => (string)($_POST['sucursal'] ?? ''),
+        'categoria' => (string)($_POST['categoria'] ?? ''),
+        'fecha'     => (string)$_POST['fecha'],
+        'tecnico'   => (string)($_POST['tecnico'] ?? ''),
+        'estatus'   => (string)$_POST['estatus'],
+        'falla'     => (string)$_POST['falla'],
+        'accion'    => (string)($_POST['accion'] ?? ''),
+        'notas'     => (string)($_POST['notas'] ?? ''),
+    ];
 
-            if (move_uploaded_file($tmp_name, $uploadFilePath)) {
-                $sql = "INSERT INTO archivos_incidencias (incidencia_id, ruta_archivo) VALUES (?, ?)";
-                $stmt2 = $conn->prepare($sql);
-                $stmt2->bind_param("is", $id, $uploadFilePath);
-                $stmt2->execute();
-                $stmt2->close();
-                $archivosAgregados[] = $fileName;
+    if ($valores['cliente'] === '' || $valores['contacto'] === '' || $valores['fecha'] === '' || trim($valores['falla']) === '') {
+        rechazar(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta, fecha y falla.');
+    }
+
+    // El rol Técnico no puede cerrar incidencias con/sin factura
+    if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($valores['estatus'], ['Cerrado con factura', 'Cerrado sin factura'], true)) {
+        rechazar(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
+    }
+
+    // Archivos: se revisan ANTES de tocar la base. Si alguno no llegó bien,
+    // no se guarda nada y se dice cuál fue.
+    $archivosValidos = [];
+    if (!empty($_FILES['archivos']['name']) && is_array($_FILES['archivos']['name'])) {
+        $muyGrandes = [];
+        $conFalla = [];
+        foreach ($_FILES['archivos']['name'] as $i => $nombre) {
+            $error = $_FILES['archivos']['error'][$i];
+            if ($error === UPLOAD_ERR_NO_FILE) continue;
+            if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+                $muyGrandes[] = $nombre;
+            } elseif ($error !== UPLOAD_ERR_OK) {
+                $conFalla[] = $nombre;
+            } else {
+                $archivosValidos[] = ['nombre' => $nombre, 'tmp' => $_FILES['archivos']['tmp_name'][$i]];
             }
         }
+        if ($muyGrandes) {
+            rechazar(413, 'archivo_muy_grande',
+                (count($muyGrandes) === 1 ? "El archivo \"{$muyGrandes[0]}\" pesa demasiado" : 'Estos archivos pesan demasiado: ' . implode(', ', $muyGrandes)) .
+                ($limites['archivo_mb'] ? " (máximo {$limites['archivo_mb']} MB por archivo)" : '') .
+                '. No se guardó ningún cambio. Quítalo o redúcelo e intenta de nuevo.',
+                ['limites' => $limites]);
+        }
+        if ($conFalla) {
+            rechazar(400, 'archivo_incompleto',
+                'No se pudo recibir completo: ' . implode(', ', $conFalla) . '. No se guardó ningún cambio. Intenta de nuevo.');
+        }
     }
 
-    $datosNuevos = [
-        'id'        => $id,
-        'reporte_cliente' => $reporteCliente,
-        'cliente'   => $cliente,
-        'contacto'  => $contacto,
-        'sucursal'  => $sucursal,
-        'categoria' => $categoria,
-        'numero_serie' => $tieneSerie ? ($numeroSerie !== '' ? $numeroSerie : null) : null,
-        'fecha'     => $fecha,
-        'tecnico'   => $tecnico,
-        'estatus'   => $estatus,
-        'falla'     => $falla,
-        'accion'    => $accion,
-        'notas'     => $notas,
+    $pdo->beginTransaction();
+
+    // Bloquea la fila hasta terminar: dos guardados simultáneos no se pisan
+    $st = $pdo->prepare('SELECT * FROM incidencias WHERE id = ? FOR UPDATE');
+    $st->execute([$idIncidencia]);
+    $anterior = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$anterior) {
+        rechazar(404, 'no_existe', 'Esta incidencia ya no existe; es posible que alguien la haya eliminado.');
+    }
+
+    // ¿Cambió desde que se abrió la página? (otra persona, u otra pestaña/equipo propio)
+    $versionCliente = (string)($_POST['version'] ?? '');
+    $forzar = ($_POST['forzar'] ?? '') === '1';
+    if ($versionCliente !== '' && !$forzar && versionIncidencia($anterior) !== $versionCliente) {
+        $quien = ultimoCambio($pdo, $idIncidencia);
+        rechazar(409, 'conflicto',
+            'La incidencia se modificó en otro lugar después de que la abriste.',
+            $quien + ['actual' => incidenciaParaFrontend($pdo, $anterior)],
+            'Modificada por ' . ($quien['modificado_por'] ?? '?') . ' el ' . ($quien['modificado_en'] ?? '?'));
+    }
+    if ($forzar) {
+        registrarFalloGuardado('conflicto_sobrescrito', (string)$idIncidencia, 'El usuario decidió guardar encima de cambios ajenos');
+    }
+
+    $tieneSerie = array_key_exists('numero_serie', $anterior);
+    if ($tieneSerie) {
+        $serie = trim((string)($_POST['numero_serie'] ?? ''));
+        $valores['numero_serie'] = $serie !== '' ? $serie : null;
+    }
+
+    $sets = implode(', ', array_map(fn($c) => "`$c` = ?", array_keys($valores)));
+    $st = $pdo->prepare("UPDATE incidencias SET $sets WHERE id = ?");
+    $st->execute(array_merge(array_values($valores), [$idIncidencia]));
+
+    // Archivos con nombre único: antes, dos archivos con el mismo nombre
+    // (p. ej. IMG_0001.jpg en dos incidencias) se sobrescribían entre sí.
+    $archivosAgregados = [];
+    if ($archivosValidos) {
+        $uploadDir = __DIR__ . '/../uploads/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        $insert = $pdo->prepare('INSERT INTO archivos_incidencias (incidencia_id, ruta_archivo) VALUES (?, ?)');
+        foreach ($archivosValidos as $archivo) {
+            $base = preg_replace('/[^A-Za-z0-9._-]+/', '_', basename($archivo['nombre']));
+            $nombreFinal = 'inc' . $idIncidencia . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '_' . $base;
+            if (!move_uploaded_file($archivo['tmp'], $uploadDir . $nombreFinal)) {
+                rechazar(500, 'archivo_no_guardado',
+                    "No se pudo guardar el archivo \"{$archivo['nombre']}\" en el servidor. No se guardó ningún cambio. Intenta de nuevo.");
+            }
+            $archivosMovidos[] = $uploadDir . $nombreFinal;
+            // Misma forma de ruta que ya usa el resto del sistema
+            $insert->execute([$idIncidencia, '../uploads/' . $nombreFinal]);
+            $archivosAgregados[] = $archivo['nombre'];
+        }
+    }
+
+    // Comprobación: se vuelve a leer y se compara con lo enviado
+    $st = $pdo->prepare('SELECT * FROM incidencias WHERE id = ?');
+    $st->execute([$idIncidencia]);
+    $guardada = $st->fetch(PDO::FETCH_ASSOC);
+    $distintos = [];
+    foreach ($valores as $campo => $valor) {
+        $enBase = $guardada[$campo] ?? null;
+        // Espacios al final no cuentan (algunas columnas los recortan)
+        $a = rtrim($valor === null ? '' : (string)$valor);
+        $b = rtrim($enBase === null ? '' : (string)$enBase);
+        if ($campo === 'fecha') { $a = substr($a, 0, 10); $b = substr($b, 0, 10); }
+        if ($a !== $b) $distintos[] = $campo;
+    }
+    if ($distintos) {
+        $nombres = [
+            'reporte_cliente' => '# incidencia cliente', 'cliente' => 'cliente', 'contacto' => 'contacto',
+            'sucursal' => 'sucursal', 'categoria' => 'categoría', 'fecha' => 'fecha', 'tecnico' => 'técnicos',
+            'estatus' => 'estatus', 'falla' => 'falla', 'accion' => 'trabajo realizado', 'notas' => 'notas',
+            'numero_serie' => 'número de serie',
+        ];
+        $lista = implode(', ', array_map(fn($c) => $nombres[$c] ?? $c, $distintos));
+        rechazar(500, 'verificacion',
+            "No se pudo guardar correctamente: $lista. Es posible que el texto sea demasiado largo o tenga caracteres especiales no admitidos (por ejemplo, emojis). No se guardó ningún cambio.",
+            [], 'Campos que no coinciden tras guardar: ' . implode(',', $distintos));
+    }
+
+    $datosNuevos = ['id' => $idIncidencia] + $valores;
+    if ($archivosAgregados) $datosNuevos['archivos_agregados'] = $archivosAgregados;
+    registrarAuditoria('incidencias', $idIncidencia, 'UPDATE', $anterior, $datosNuevos, $anterior['numero_incidente'] ?? null);
+
+    // La respuesta se arma antes de confirmar: si algo fallara después del
+    // commit, se le diría al usuario que no se guardó cuando sí se guardó.
+    $respuesta = [
+        'success' => true,
+        'guardado_en' => date('Y-m-d H:i:s'),
+        'archivos_agregados' => $archivosAgregados,
+        'incidencia' => incidenciaParaFrontend($pdo, $guardada),
     ];
-    if ($archivosAgregados) {
-        $datosNuevos['archivos_agregados'] = $archivosAgregados;
-    }
-    registrarAuditoria('incidencias', $id, 'UPDATE', $estadoAnterior ?: null, $datosNuevos, $estadoAnterior['numero_incidente'] ?? null);
 
-    echo json_encode(["success" => true]);
-} else {
-    echo json_encode(["error" => "Error al actualizar la incidencia: " . $stmt->error]);
+    $pdo->commit();
+    responder(200, $respuesta);
+} catch (Throwable $e) {
+    error_log('actualiza.php: ' . $e->getMessage());
+    rechazar(500, 'error_servidor',
+        'Ocurrió un problema en el servidor y no se guardaron los cambios. Intenta de nuevo en un momento.',
+        [], get_class($e) . ': ' . $e->getMessage());
 }
-
-$stmt->close();
-$conn->close();
-?>

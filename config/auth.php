@@ -60,6 +60,13 @@ function requireAuth(): void {
     }
 
     if (!isLoggedIn()) {
+        // Un envío (guardar, eliminar...) que llega sin sesión se pierde:
+        // se anota para poder explicar después un "guardé y no aparece".
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            require_once __DIR__ . '/guardados_log.php';
+            registrarFalloGuardado('sesion_cerrada', $_POST['id'] ?? null);
+        }
+
         $appUrl   = rtrim($_ENV['APP_URL'] ?? '', '/');
         $loginUrl = $appUrl . '/auth/login.html';
 

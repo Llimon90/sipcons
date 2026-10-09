@@ -53,12 +53,12 @@
         return ICONOS[extension(url)] || 'fa-file-alt';
     }
 
+    // Nombre para mostrar: sin el prefijo único que el servidor agrega al
+    // guardar (inc<ID>_<fecha>_<hora>_<aleatorio>_nombre.ext)
     function nombreDe(url) {
-        try {
-            return decodeURIComponent(String(url).split('?')[0].split('/').pop());
-        } catch (e) {
-            return String(url).split('/').pop();
-        }
+        let nombre = String(url).split('?')[0].split('/').pop();
+        try { nombre = decodeURIComponent(nombre); } catch (e) { /* se deja como está */ }
+        return nombre.replace(/^inc\d+_\d{8}_\d{6}_[0-9a-f]{6}_/, '');
     }
 
     function crear() {
@@ -110,7 +110,7 @@
             inicioY = e.touches[0].clientY;
         }, { passive: true });
         cuerpo.addEventListener('touchend', (e) => {
-            if (inicioX === null) return;
+            if (inicioX === null || cuerpo.classList.contains('visor-zoom')) return;
             const dx = e.changedTouches[0].clientX - inicioX;
             const dy = e.changedTouches[0].clientY - inicioY;
             inicioX = null;
@@ -212,6 +212,7 @@
 
         const cuerpo = el.querySelector('.visor-cuerpo');
         cuerpo.innerHTML = '';
+        cuerpo.classList.remove('visor-zoom');
         cuerpo.scrollTop = 0;
         cuerpo.classList.toggle('visor-cuerpo--doc', tipo === 'pdf' || tipo === 'texto');
 
@@ -224,6 +225,29 @@
                 cuerpo.innerHTML = '';
                 cuerpo.appendChild(aviso('fa-file-image', 'No se pudo cargar la imagen.', url));
             };
+            // Clic en la imagen: ver a tamaño completo (o al doble si es pequeña) y volver
+            img.title = 'Clic para acercar';
+            img.setAttribute('data-clic', '');
+            img.addEventListener('click', (e) => {
+                // Punto del clic dentro de la imagen (0 a 1), medido antes de agrandarla
+                const r = img.getBoundingClientRect();
+                const px = r.width ? (e.clientX - r.left) / r.width : 0.5;
+                const py = r.height ? (e.clientY - r.top) / r.height : 0.5;
+                const anchoActual = img.clientWidth;
+
+                const acercada = cuerpo.classList.toggle('visor-zoom');
+                img.title = acercada ? 'Clic para alejar' : 'Clic para acercar';
+                if (acercada) {
+                    img.style.width = `${Math.max(img.naturalWidth, Math.round(anchoActual * 2))}px`;
+                    // Centra el zoom en el punto donde se hizo clic;
+                    // offsetWidth fuerza el cálculo del nuevo tamaño antes de desplazar
+                    cuerpo.scrollLeft = img.offsetLeft + img.offsetWidth * px - cuerpo.clientWidth / 2;
+                    cuerpo.scrollTop = img.offsetTop + img.offsetHeight * py - cuerpo.clientHeight / 2;
+                } else {
+                    img.style.width = '';
+                }
+            });
+            cuerpo.classList.remove('visor-zoom');
             cuerpo.appendChild(img);
         } else if (tipo === 'video' || tipo === 'audio') {
             const media = document.createElement(tipo);

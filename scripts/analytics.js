@@ -151,7 +151,7 @@
         }
 
         // ---------- clics
-        var INTERACTIVO = 'a[href],button,input,select,textarea,summary,[role="button"],[role="tab"],[onclick],.tab,[data-tab],.option-box,.stat-card--clickable,.btn,tr[data-id]';
+        var INTERACTIVO = 'a[href],button,input,select,textarea,summary,[role="button"],[role="tab"],[onclick],.tab,[data-tab],.option-box,.stat-card--clickable,.btn,tr[data-id],tr.fila-clic,[data-clic]';
         var esc = (window.CSS && CSS.escape) ? CSS.escape : function (s) { return String(s).replace(/"/g, '\\"'); };
 
         function etiqueta(el) {
@@ -304,7 +304,10 @@
                         var metodo = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
                         var t0 = performance.now();
                         promesa.then(function (r) {
-                            track('api', metodo + ' ' + nombre, null, performance.now() - t0, r.status);
+                            // Sin sesión, el servidor redirige al login y fetch lo sigue con 200:
+                            // se registra como 401 para que no parezca una respuesta correcta.
+                            var estado = (r.redirected && /login/i.test(r.url)) ? 401 : r.status;
+                            track('api', metodo + ' ' + nombre, null, performance.now() - t0, estado);
                         }, function () {
                             track('api', metodo + ' ' + nombre, null, performance.now() - t0, 0);
                         });

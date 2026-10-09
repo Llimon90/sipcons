@@ -11,12 +11,12 @@ require_once __DIR__ . '/../../auth/permisos.php'; // ROL_ACCESO_TOTAL
 const ANALYTICS_TIPOS = [
     'pageview', 'carga', 'permanencia', 'click', 'tab', 'submit', 'cambio',
     'busqueda', 'error_js', 'api', 'rage_click', 'dead_click',
-    'validacion_fallida', 'acceso_denegado',
+    'validacion_fallida', 'acceso_denegado', 'guardado',
 ];
 
-// SQL que cuenta como "error": fallos de JavaScript y llamadas a la API con
-// respuesta >= 400 o sin respuesta (extra = 0).
-const ANALYTICS_SQL_ES_ERROR = "(tipo = 'error_js' OR (tipo = 'api' AND (extra >= 400 OR extra = 0)))";
+// SQL que cuenta como "error": fallos de JavaScript, llamadas a la API con
+// respuesta >= 400 o sin respuesta (extra = 0) y guardados que no se completaron.
+const ANALYTICS_SQL_ES_ERROR = "(tipo = 'error_js' OR (tipo = 'api' AND (extra >= 400 OR extra = 0)) OR (tipo = 'guardado' AND detalle LIKE 'error%'))";
 
 // ---------------------------------------------------------------- catálogo
 
@@ -470,7 +470,7 @@ function analyticsFriccion(PDO $pdo, array $get): array {
 
     $js = analyticsSql($pdo, "SELECT elemento AS mensaje, pagina, MAX(detalle) AS origen, COUNT(*) AS n,
             COUNT(DISTINCT usuario_id) AS usuarios, MAX(creado_en) AS ultimo
-        FROM analytics_eventos WHERE {$f['sql']} AND tipo = 'error_js'
+        FROM analytics_eventos WHERE {$f['sql']} AND (tipo = 'error_js' OR (tipo = 'guardado' AND detalle LIKE 'error%'))
         GROUP BY elemento, pagina ORDER BY n DESC LIMIT 60", $f['params']);
     $js = array_map(fn($r) => [
         'mensaje' => $r['mensaje'], 'pagina' => $r['pagina'], 'nombre_pagina' => analyticsInfoPagina($r['pagina'])['nombre'],
