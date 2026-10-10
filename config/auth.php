@@ -83,6 +83,28 @@ function requireAuth(): void {
     }
 }
 
+/**
+ * ¿Puede el usuario en sesión poner una incidencia en "Cerrado con factura"
+ * o "Cerrado sin factura"?
+ *  - El rol Técnico nunca puede.
+ *  - Usuarios restringidos individualmente (cualquier rol) en el .env de cada
+ *    servidor: USUARIOS_SIN_CIERRE=ariana,otro_usuario (nombre de usuario de
+ *    inicio de sesión, sin importar mayúsculas). Para quitar la restricción
+ *    basta con borrar al usuario de esa línea; no hay que cambiar código.
+ */
+function puedeCerrarIncidencias(): bool {
+    if (($_SESSION['rol'] ?? '') === 'Técnico') return false;
+
+    $lista = array_filter(array_map(
+        fn($u) => mb_strtolower(trim($u)),
+        explode(',', (string)($_ENV['USUARIOS_SIN_CIERRE'] ?? ''))
+    ));
+    $usuario = mb_strtolower(trim((string)($_SESSION['usuario'] ?? '')));
+    return $usuario === '' || !in_array($usuario, $lista, true);
+}
+
+const ESTATUS_DE_CIERRE = ['Cerrado con factura', 'Cerrado sin factura'];
+
 function requireRole(string ...$roles): void {
     requireAuth();
     if (!in_array($_SESSION['rol'] ?? '', $roles, true)) {

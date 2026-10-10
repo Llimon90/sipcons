@@ -106,11 +106,6 @@ try {
         rechazar(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta, fecha y falla.');
     }
 
-    // El rol Técnico no puede cerrar incidencias con/sin factura
-    if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($valores['estatus'], ['Cerrado con factura', 'Cerrado sin factura'], true)) {
-        rechazar(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
-    }
-
     // Archivos: se revisan ANTES de tocar la base. Si alguno no se puede
     // aceptar, no se guarda nada y se dice cuál fue.
     $revisionArchivos = revisarArchivosSubidos('archivos');
@@ -126,6 +121,15 @@ try {
     $anterior = $st->fetch(PDO::FETCH_ASSOC);
     if (!$anterior) {
         rechazar(404, 'no_existe', 'Esta incidencia ya no existe; es posible que alguien la haya eliminado.');
+    }
+
+    // Cerrar con/sin factura: no lo puede hacer el rol Técnico ni los usuarios
+    // restringidos en el .env (ver puedeCerrarIncidencias). Solo se bloquea
+    // CAMBIAR a cerrado: si ya estaba cerrada, pueden guardar otros cambios.
+    if (!puedeCerrarIncidencias()
+        && in_array($valores['estatus'], ESTATUS_DE_CIERRE, true)
+        && $valores['estatus'] !== ($anterior['estatus'] ?? null)) {
+        rechazar(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
     }
 
     // ¿Cambió desde que se abrió la página? (otra persona, u otra pestaña/equipo propio)

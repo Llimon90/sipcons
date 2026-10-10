@@ -88,9 +88,9 @@ if ($method === "GET") {
         $responderError(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta y fecha.');
     }
 
-    // El rol Técnico no puede cerrar incidencias con/sin factura
-    $estatusRestringidosTecnico = ['Cerrado con factura', 'Cerrado sin factura'];
-    if (($_SESSION['rol'] ?? '') === 'Técnico' && in_array($data["status"], $estatusRestringidosTecnico, true)) {
+    // Cerrar con/sin factura: no lo puede hacer el rol Técnico ni los usuarios
+    // restringidos en el .env (ver puedeCerrarIncidencias en config/auth.php)
+    if (!puedeCerrarIncidencias() && in_array($data["status"], ESTATUS_DE_CIERRE, true)) {
         $responderError(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
     }
 

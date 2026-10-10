@@ -28,4 +28,6 @@ echo json_encode([
     'user'          => currentUser(),
     'modulos'       => modulosPermitidos(),
     'tema'          => $tema,
+    // Si puede poner estatus "Cerrado con/sin factura" (rol y .env USUARIOS_SIN_CIERRE)
+    'puede_cerrar'  => puedeCerrarIncidencias(),
 ]);

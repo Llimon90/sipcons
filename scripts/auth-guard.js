@@ -98,13 +98,16 @@
     }
 
     // Deshabilita, en un <select> de estatus de incidencia, las opciones de
-    // cierre (con/sin factura) cuando el rol en sesión es "Técnico". Se deja
-    // la opción visible (por si ya era el valor guardado) pero no elegible.
+    // cierre (con/sin factura) cuando el usuario en sesión no puede cerrar:
+    // rol "Técnico" o usuario restringido en el .env del servidor (lo decide
+    // session_check.php en "puede_cerrar"). Se deja la opción visible (por si
+    // ya era el valor guardado) pero no elegible.
     window.sipconsAplicarRestriccionEstatus = function (selectEl) {
         if (!selectEl) return;
         window.sipconsOnAuthReady(function (auth) {
-            var rol = auth.user && auth.user.rol;
-            if (rol !== 'Técnico') return;
+            var user = auth.user || {};
+            var puedeCerrar = typeof user.puede_cerrar === 'boolean' ? user.puede_cerrar : user.rol !== 'Técnico';
+            if (puedeCerrar) return;
             var restringidos = ['Cerrado con factura', 'Cerrado sin factura'];
             Array.prototype.forEach.call(selectEl.options, function (opt) {
                 if (restringidos.indexOf(opt.value) !== -1) {
@@ -150,6 +153,7 @@
             if (!data) return;
 
             var user = data.user || {};
+            if (typeof data.puede_cerrar === 'boolean') user.puede_cerrar = data.puede_cerrar;
             aplicarTema(data.tema, true); // el tema de la cuenta manda sobre el recordado en este navegador
             var displayName = user.nombre || user.usuario || 'Usuario';
             var modulosPermitidos = data.modulos || [];
