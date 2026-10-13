@@ -197,20 +197,20 @@
                 <h4 style="margin-top:0; font-size:0.95rem; color:#2980b9;">Configuración de Mantenimiento</h4>
                 <div class="form-row">
                     <div>
-                        <label style="font-size:0.85rem;">Calibración (Meses):</label>
+                        <label style="font-size:0.85rem;">Mantenimiento / Calibración cada (meses):</label>
                         <input type="number" id="ext-calibracion" name="calibracion" min="0" placeholder="0 = No aplica" style="width:100%;">
                     </div>
                     <div>
-                        <label style="font-size:0.85rem; display:block; margin-bottom:5px;">
-                            <input type="checkbox" id="ext-servicio" name="servicio" value="1"> Cláusula Servicio
+                        <label style="font-size:0.85rem; display:block; margin-top:22px; cursor:pointer;">
+                            <input type="checkbox" id="ext-servicio" name="servicio" value="1"> Cliente con póliza / acuerdo de mantenimiento
                         </label>
-                        <input type="number" id="ext-frecuencia" name="frecuencia_servicio" min="0" placeholder="Frecuencia (meses)" style="width:100%;">
                     </div>
                     <div>
                         <label style="font-size:0.85rem;">Garantía (Meses):</label>
                         <input type="number" id="ext-garantia" name="garantia" min="0" placeholder="0 = Sin garantía" style="width:100%;">
                     </div>
                 </div>
+                <div id="ext-aviso-periodicidad" style="font-size:0.85rem; margin-top:8px;"></div>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -231,6 +231,7 @@
   <script src="../scripts/sidebar-state.js?v=20261002"></script>
   <script src="../scripts/ui-tablas.js?v=2"></script>
   <script src="../scripts/contactos-widget.js?v=3"></script>
-  <script src="../scripts/perfil-cliente.js?v=20261002"></script>
+  <script src="../scripts/periodicidad.js?v=1"></script>
+  <script src="../scripts/perfil-cliente.js?v=20261012"></script>
 </body>
 </html>

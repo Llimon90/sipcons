@@ -216,21 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardar = document.getElementById('btn-guardar-cambios');
     let valorPrevioQty = 0;
 
-    const checkServicio = document.getElementById('servicio');
-    const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
-    const inputFrecuencia = document.getElementById('frecuencia_servicio');
-
-    checkServicio.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            contenedorFrecuencia.style.display = 'block';
-            inputFrecuencia.required = true;
-            if (!inputFrecuencia.value) inputFrecuencia.value = 6;
-        } else {
-            contenedorFrecuencia.style.display = 'none';
-            inputFrecuencia.required = false;
-            inputFrecuencia.value = ''; 
-        }
-    });
+    // Periodicidad de mantenimiento/calibración + check de póliza
+    const refrescarPeriodicidad = SipconsPeriodicidad.enlazar(
+        document.getElementById('calibracion'),
+        document.getElementById('servicio'),
+        document.getElementById('aviso-periodicidad')
+    );
 
     const validarSeries = () => {
         const inputs = document.querySelectorAll('.serie-edit-input');
@@ -328,15 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('marca').value = d.marca || '';
                     document.getElementById('modelo').value = d.modelo || '';
                     document.getElementById('garantia').value = d.garantia || 0;
-                    document.getElementById('calibracion').value = d.calibracion || 0;
+                    document.getElementById('calibracion').value = SipconsPeriodicidad.mesesDe(d);
                     document.getElementById('notas').value = d.notas || '';
-                    
+
                     document.getElementById('servicio').checked = (d.servicio == 1);
-                    if (d.servicio == 1) {
-                        contenedorFrecuencia.style.display = 'block';
-                        inputFrecuencia.required = true;
-                        inputFrecuencia.value = d.frecuencia_servicio || 6;
-                    }
+                    refrescarPeriodicidad();
                 }
 
                 qtyInput.value = data.series.length;

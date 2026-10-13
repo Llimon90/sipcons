@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/lib/periodicidad_helpers.php';
 header('Content-Type: application/json');
 
 $idVenta = $_POST['venta_id'] ?? null;
@@ -142,8 +143,7 @@ try {
         $idsQueSeQuedan = [];
 
         // Evaluar variables de servicio
-        $tieneServicio = !empty($_POST['servicio']) ? 1 : 0;
-        $frecuencia = $tieneServicio ? ($_POST['frecuencia_servicio'] ?? 0) : 0;
+        [$calibracionInt, $tieneServicio, $frecuenciaInt] = normalizarPeriodicidad($_POST);
 
         // Preparar sentencias SQL
         $stmtUpdate = $pdo->prepare("UPDATE venta_detalles SET equipo=?, marca=?, modelo=?, numero_serie=?, garantia=?, calibracion=?, servicio=?, frecuencia_servicio=?, notas=? WHERE id=?");
@@ -151,8 +151,6 @@ try {
 
         if (!empty($seriesRecibidas)) {
             $garantiaInt = (int)($_POST['garantia'] ?? 0);
-            $calibracionInt = (int)($_POST['calibracion'] ?? 0);
-            $frecuenciaInt = (int)$frecuencia;
             $serieNueva = null;
 
             foreach ($seriesRecibidas as $s) {

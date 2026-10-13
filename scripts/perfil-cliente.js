@@ -1,5 +1,6 @@
 // scripts/perfil-cliente.js
 let equiposPadron = []; 
+let refrescarPeriodicidadExt = () => {};
 
 document.addEventListener("DOMContentLoaded", async () => {
     const editorContactos = SipconsContactos.init(
@@ -67,6 +68,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.error("Error al actualizar:", error);
         }
     });
+
+    // Periodicidad de mantenimiento/calibración + check de póliza
+    refrescarPeriodicidadExt = SipconsPeriodicidad.enlazar(
+        document.getElementById('ext-calibracion'),
+        document.getElementById('ext-servicio'),
+        document.getElementById('ext-aviso-periodicidad')
+    );
 
     // 3. Guardar / Actualizar Equipo (Ruta Inteligente)
     document.getElementById('form-equipo-externo').addEventListener('submit', async (e) => {
@@ -142,10 +150,7 @@ function renderizarTablaEquipos(equipos) {
 
     equipos.forEach(eq => {
         // 1. Textos de Periodicidad
-        let periodos = [];
-        if (eq.calibracion > 0) periodos.push(`Cal: ${eq.calibracion}m`);
-        if (eq.servicio > 0 && eq.frecuencia_servicio > 0) periodos.push(`Serv: ${eq.frecuencia_servicio}m`);
-        let txtPeriodo = periodos.length > 0 ? periodos.join(' | ') : 'Sin programa';
+        let txtPeriodo = SipconsPeriodicidad.etiqueta(eq);
 
         // 2. Badge de Origen
         let badgeOrigen = eq.origen === 'Venta SIPCONS'
@@ -201,6 +206,7 @@ window.abrirModalEquipo = function() {
     
     document.getElementById('titulo-modal-equipo').innerHTML = '<i class="fas fa-plus-circle"></i> Registrar Nuevo Equipo';
     document.getElementById('btn-eliminar-equipo').style.display = 'none'; 
+    refrescarPeriodicidadExt();
     
     document.getElementById('modalEquipoExterno').style.display = 'flex';
 };
@@ -216,9 +222,9 @@ window.abrirModalEdicionEquipo = function(eq) {
     document.getElementById('ext-modelo').value = eq.modelo || '';
     document.getElementById('ext-serie').value = eq.numero_serie || '';
     
-    document.getElementById('ext-calibracion').value = eq.calibracion || '';
+    document.getElementById('ext-calibracion').value = SipconsPeriodicidad.mesesDe(eq) || '';
     document.getElementById('ext-servicio').checked = eq.servicio == 1;
-    document.getElementById('ext-frecuencia').value = eq.frecuencia_servicio || '';
+    refrescarPeriodicidadExt();
     document.getElementById('ext-garantia').value = eq.garantia || '';
 
     document.getElementById('titulo-modal-equipo').innerHTML = `<i class="fas fa-edit"></i> Editar Equipo: ${eq.equipo}`;

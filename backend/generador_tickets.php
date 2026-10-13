@@ -2,7 +2,12 @@
 require_once __DIR__ . '/../auth/middleware.php';
 // backend/generador_tickets.php
 //
-// Genera tickets automáticos de calibración/servicio desde el padrón. Antes
+// Genera tickets automáticos de mantenimiento/calibración desde el padrón:
+//   - Equipos SIN póliza (servicio = 0, meses en "calibracion"): ticket para
+//     contactar al cliente y recomendar el mantenimiento/calibración.
+//   - Equipos CON póliza (servicio = 1, meses en "frecuencia_servicio"):
+//     ticket de servicio programado.
+// Antes
 // corría en cada consulta y en cada alta de incidencia, haciendo lentas
 // ambas. Ahora corre como máximo cada GENERADOR_CADA_SEGUNDOS y un solo
 // proceso a la vez (dos usuarios simultáneos podían duplicar tickets).
@@ -43,12 +48,13 @@ try {
     $stmtInsertIncidencia = $pdo->prepare($sqlInsert);
 
     // ========================================================
-    // 1. TICKETS DE CALIBRACIÓN LEYENDO DESDE PADRÓN
+    // 1. SIN PÓLIZA: CONTACTAR AL CLIENTE PARA RECOMENDAR EL SERVICIO
     // ========================================================
     $sqlCal = "SELECT p.id, p.cliente, p.sucursal, p.equipo, p.marca, p.modelo, p.numero_serie, p.calibracion, p.proxima_calibracion, p.origen, p.venta_id, v.folio AS venta_folio
                FROM padron_equipos p
                LEFT JOIN ventas v ON p.venta_id = v.id
-               WHERE p.calibracion > 0 AND p.proxima_calibracion <= DATE_ADD(CURDATE(), INTERVAL 10 DAY)";
+               WHERE COALESCE(p.servicio, 0) = 0
+                 AND p.calibracion > 0 AND p.proxima_calibracion <= DATE_ADD(CURDATE(), INTERVAL 10 DAY)";
     
     $equiposCalibracion = $pdo->query($sqlCal)->fetchAll(PDO::FETCH_ASSOC);
     $stmtUpdateCal = $pdo->prepare("UPDATE padron_equipos SET proxima_calibracion = DATE_ADD(proxima_calibracion, INTERVAL ? MONTH) WHERE id = ?");
@@ -65,8 +71,8 @@ try {
         $primerEq = $equipos[0]; 
         $cantidad = count($equipos);
         
-        $falla = "ALERTA DE CONTACTO PARA RECOMENDAR CALIBRACIÓN O SERVICIO: Próxima a Vencer ($cantidad equipos)";
-        $notas = "Equipos en seguimineto:\n";
+        $falla = "CONTACTAR CLIENTE (SIN PÓLIZA): Recomendar Mantenimiento/Calibración ($cantidad equipos)";
+        $notas = "Cliente sin póliza de mantenimiento. Contactar para recomendar mantenimiento/calibración de:\n";
         
         foreach ($equipos as $eq) {
             $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';
@@ -87,7 +93,7 @@ try {
     }
 
     // ========================================================
-    // 2. TICKETS DE SERVICIO LEYENDO DESDE PADRÓN
+    // 2. CON PÓLIZA: SERVICIO PROGRAMADO
     // ========================================================
     $sqlServ = "SELECT p.id, p.cliente, p.sucursal, p.equipo, p.marca, p.modelo, p.numero_serie, p.frecuencia_servicio, p.proximo_servicio, p.origen, p.venta_id, v.folio AS venta_folio
                 FROM padron_equipos p
@@ -108,8 +114,8 @@ try {
         $primerEq = $equipos[0];
         $cantidad = count($equipos);
         
-        $falla = "Mantenimiento o Calibración: Servicio Próximo a Vencer ($cantidad equipos)";
-        $notas = "Equipos para mantenimiento/calibración:\n";
+        $falla = "PÓLIZA: Mantenimiento/Calibración Programado ($cantidad equipos)";
+        $notas = "Cliente con póliza de mantenimiento. Equipos a atender:\n";
         
         foreach ($equipos as $eq) {
             $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';

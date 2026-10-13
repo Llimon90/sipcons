@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="../css/styles.css?v=20261009d">
   <link rel="stylesheet" href="../css/dark.css?v=20261009b">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/ventas.js?v=7" defer></script>
+  <script src="../scripts/periodicidad.js?v=1" defer></script>
+  <script src="../scripts/ventas.js?v=8" defer></script>
   <script src="../scripts/auth-guard.js?v=20261009c"></script>
 </head>
 
@@ -105,28 +106,23 @@
             <input type="number" id="garantia" name="garantia" min="0" placeholder="0">
           </div>
           <div>
-            <label for="calibracion"><i class="fas fa-tools"></i> Calibración o Servicio Recomendado (meses):</label>
-            <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0">
+            <label for="calibracion"><i class="fas fa-tools"></i> Mantenimiento / Calibración cada (meses):</label>
+            <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0 = no aplica">
           </div>
-          
+
           <div style="display: flex; flex-direction: column;">
-            <label style="visibility: hidden; margin-bottom: 5px;">Opciones</label>
-            
+            <label style="visibility: hidden; margin-bottom: 5px;">Póliza</label>
+
             <div style="display: flex; align-items: center; padding: 8px 0;">
               <input type="checkbox" id="servicio" name="servicio" style="width: 20px !important; height: 20px !important; margin: 0 10px 0 0 !important; cursor: pointer !important; display: inline-block !important; opacity: 1 !important; visibility: visible !important;">
               <label for="servicio" style="margin: 0; cursor: pointer; font-weight: bold; color: #2c3e50; font-size: 1rem;">
-                <i class="fas fa-concierge-bell"></i> Cláusula de servicio
+                <i class="fas fa-file-signature"></i> Cliente con póliza / acuerdo de mantenimiento
               </label>
-            </div>
-            
-            <div id="contenedor-frecuencia" style="display: none; margin-top: 5px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db; width: 100%; box-sizing: border-box;">
-                <label style="font-size: 0.8rem; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px;">
-                    <i class="fas fa-calendar-alt"></i> FRECUENCIA (MESES):
-                </label>
-                <input type="number" id="frecuencia_servicio" name="frecuencia_servicio" min="1" placeholder="Ej. 6" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box;">
             </div>
           </div>
         </div>
+
+        <div id="aviso-periodicidad" style="font-size: 0.85rem; margin: -5px 0 15px; padding: 8px 10px; background: #f1f5f9; border-radius: 5px;"></div>
 
         <div id="series-container" class="series-container"></div>
 
@@ -203,27 +199,6 @@
         }
     });
 
-    // Control nativo de la visibilidad de la frecuencia de servicio
-    document.addEventListener('DOMContentLoaded', () => {
-        const checkServicio = document.getElementById('servicio');
-        const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
-        const inputFrecuencia = document.getElementById('frecuencia_servicio');
-
-        if (checkServicio && contenedorFrecuencia) {
-            checkServicio.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    contenedorFrecuencia.style.display = 'block';
-                    if (inputFrecuencia) inputFrecuencia.required = true;
-                } else {
-                    contenedorFrecuencia.style.display = 'none';
-                    if (inputFrecuencia) {
-                        inputFrecuencia.required = false;
-                        inputFrecuencia.value = '';
-                    }
-                }
-            });
-        }
-    });
   </script>
 
   <script src="../scripts/sidebar-state.js?v=20261002"></script>

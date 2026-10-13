@@ -108,23 +108,18 @@
                         <input type="number" id="garantia" name="garantia" min="0">
                     </div>
                     <div class="form-group">
-                        <label>CALIBRACIÓN RECOMENDADA (MESES):</label>
-                        <input type="number" id="calibracion" name="calibracion" min="0">
+                        <label>MANTENIMIENTO / CALIBRACIÓN CADA (MESES):</label>
+                        <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0 = no aplica">
                     </div>
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 10px;">
                             <input type="checkbox" id="servicio" name="servicio" style="width: 20px; height: 20px;">
-                            <strong>CLÁUSULA DE SERVICIO</strong>
+                            <strong>CLIENTE CON PÓLIZA / ACUERDO DE MANTENIMIENTO</strong>
                         </label>
-                        
-                        <div id="contenedor-frecuencia" style="display: none; margin-top: 10px; background: #f1f5f9; padding: 10px; border-radius: 5px; border-left: 3px solid #3498db;">
-                            <label style="font-size: 0.8rem; font-weight: bold; color: #2c3e50;">
-                                <i class="fas fa-calendar-alt"></i> FRECUENCIA (MESES):
-                            </label>
-                            <input type="number" id="frecuencia_servicio" name="frecuencia_servicio" min="1" placeholder="Ej. 6">
-                        </div>
                     </div>
                 </div>
+
+                <div id="aviso-periodicidad" style="font-size: 0.85rem; margin-bottom: 15px; padding: 8px 10px; background: #f1f5f9; border-radius: 5px;"></div>
 
                 <div class="form-group" style="width: 100%;">
                     <label><strong>NÚMEROS DE SERIE:</strong></label>
@@ -168,6 +163,7 @@
   <script src="../scripts/ui-tablas.js?v=2"></script>
     <script src="../scripts/clientes-datalist.js?v=1"></script>
     <script>SipconsClientes.enlazar(document.getElementById('cliente'));</script>
-    <script src="../scripts/detalles-venta.js?v=13"></script>
+    <script src="../scripts/periodicidad.js?v=1"></script>
+    <script src="../scripts/detalles-venta.js?v=14"></script>
 </body>
 </html>

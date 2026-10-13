@@ -15,10 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // NUEVO: Elemento de la fecha de venta
     const inputFechaVenta = document.getElementById('fecha_venta');
 
-    // Elementos de la Cláusula de Servicio
-    const checkServicio = document.getElementById('servicio');
-    const contenedorFrecuencia = document.getElementById('contenedor-frecuencia');
-    const inputFrecuencia = document.getElementById('frecuencia_servicio');
+    // Periodicidad de mantenimiento/calibración + check de póliza
+    SipconsPeriodicidad.enlazar(
+        document.getElementById('calibracion'),
+        document.getElementById('servicio'),
+        document.getElementById('aviso-periodicidad')
+    );
 
     let valorPrevioQty = 0;
 
@@ -30,19 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const dd = String(hoy.getDate()).padStart(2, '0');
         inputFechaVenta.value = `${yyyy}-${mm}-${dd}`;
     }
-
-    // --- EVENTO CLÁUSULA DE SERVICIO ---
-    checkServicio.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            contenedorFrecuencia.style.display = 'block';
-            inputFrecuencia.required = true;
-            if (!inputFrecuencia.value) inputFrecuencia.value = 6; // Valor sugerido
-        } else {
-            contenedorFrecuencia.style.display = 'none';
-            inputFrecuencia.required = false;
-            inputFrecuencia.value = ''; 
-        }
-    });
 
     // --- VALIDACIÓN DE SERIES (DUPLICADOS) ---
     const validarSeries = () => {
@@ -151,10 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('garantia', document.getElementById('garantia').value);
         formData.append('calibracion', document.getElementById('calibracion').value || 0);
         
-        // Agregar los datos del servicio
-        const servicioActivado = document.getElementById('servicio').checked;
-        formData.append('servicio', servicioActivado ? 1 : 0);
-        formData.append('frecuencia_servicio', servicioActivado ? (inputFrecuencia.value || 0) : 0);
+        // Check de póliza: la periodicidad es el campo de arriba
+        formData.append('servicio', document.getElementById('servicio').checked ? 1 : 0);
         
         formData.append('notas', document.getElementById('notas').value);
 

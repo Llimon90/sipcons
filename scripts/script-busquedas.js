@@ -168,7 +168,7 @@ function mostrarIncidenciasPagina() {
     if (inc.numero_incidente === 'PROG-CAL') {
         nombreReporteVisual = 'CONTACTAR CLIENTE';
     } else if (inc.numero_incidente === 'PROG-SERV') {
-        nombreReporteVisual = 'PROG-SERV ';
+        nombreReporteVisual = 'PÓLIZA';
     }
 
     let enlaceHTML = esProgramado
@@ -250,9 +250,9 @@ window.abrirModalProgramada = function(indice) {
       // --- TEXTOS DE PERIODICIDAD MEJORADOS Y EXPLICATIVOS ---
       let textoPeriodo = "";
       if (d.numero_incidente === 'PROG-CAL' && calibracion > 0) {
-          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-phone-alt text-danger"></i> <strong>Acción Técnica:</strong> Contactar al cliente para ofrecer Servicio programada cada ${calibracion} meses</div>`;
+          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-phone-alt text-danger"></i> <strong>Acción Técnica:</strong> Sin póliza. Contactar al cliente para recomendar Mantenimiento/Calibración cada ${calibracion} meses</div>`;
       } else if (d.numero_incidente === 'PROG-SERV' && servicio > 0) {
-          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-sync-alt text-primary"></i> <strong>Frecuencia de Servicio:</strong> Mantenimiento Preventivo o Calibración requerida cada ${servicio} meses</div>`;
+          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-file-signature text-primary"></i> <strong>Póliza:</strong> Mantenimiento/Calibración programado cada ${servicio} meses</div>`;
       }
 
       // --- CONSTRUCCIÓN DEL ROW DEL EQUIPO ---
@@ -281,11 +281,11 @@ window.abrirModalProgramada = function(indice) {
   let explicacionTipoVisita = "";
 
   if (d.numero_incidente === 'PROG-CAL') {
-      tituloModalVisual = 'CONTACTAR CLIENTE (RECOMENDAR SERVICIO)';
-      explicacionTipoVisita = 'CONTACTAR PARA OFRECER MANTENIMIENTO O CALIBRACIÓN';
+      tituloModalVisual = 'CONTACTAR CLIENTE (SIN PÓLIZA)';
+      explicacionTipoVisita = 'CONTACTAR PARA RECOMENDAR MANTENIMIENTO / CALIBRACIÓN';
   } else if (d.numero_incidente === 'PROG-SERV') {
-      tituloModalVisual = 'PROG-SERV (MANTENIMIENTO / CALIBRACIÓN)';
-      explicacionTipoVisita = 'SERVICIO (MANTENIMIENTO O CALIBRACIÓN)';
+      tituloModalVisual = 'PÓLIZA (MANTENIMIENTO / CALIBRACIÓN)';
+      explicacionTipoVisita = 'SERVICIO PROGRAMADO POR PÓLIZA (MANTENIMIENTO / CALIBRACIÓN)';
   }
 
   if(modalLabel) {

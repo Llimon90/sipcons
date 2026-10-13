@@ -36,7 +36,7 @@ try {
                 IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
-                CONCAT(COUNT(p.id), ' equipo(s) a Mantenimiento/Calibración.') as falla,
+                CONCAT('Sin póliza: contactar para recomendar Mantenimiento/Calibración de ', COUNT(p.id), ' equipo(s).') as falla,
                 p.proxima_calibracion as fecha,
                 'Programado' as estatus,
                 MAX(p.equipo) as categoria,
@@ -44,7 +44,7 @@ try {
                 GROUP_CONCAT(CONCAT_WS('~', p.marca, p.modelo, COALESCE(p.numero_serie, 'S/N'), COALESCE(p.calibracion, 0), COALESCE(p.frecuencia_servicio, 0), COALESCE(p.garantia, 0), COALESCE(DATE(p.fecha_registro), '')) SEPARATOR '||') as detalles_completos
             FROM padron_equipos p
             LEFT JOIN ventas v ON p.venta_id = v.id
-            WHERE p.calibracion > 0 AND p.proxima_calibracion IS NOT NULL
+            WHERE COALESCE(p.servicio, 0) = 0 AND p.calibracion > 0 AND p.proxima_calibracion IS NOT NULL
             GROUP BY p.venta_id, p.origen, p.cliente, p.sucursal, p.proxima_calibracion
 
             UNION ALL
@@ -55,7 +55,7 @@ try {
                 IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
-                CONCAT(COUNT(p.id), ' equipo(s) a Servicio.') as falla,
+                CONCAT('Póliza: Mantenimiento/Calibración de ', COUNT(p.id), ' equipo(s).') as falla,
                 p.proximo_servicio as fecha,
                 'Programado' as estatus,
                 MAX(p.equipo) as categoria,

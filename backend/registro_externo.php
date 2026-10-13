@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/lib/periodicidad_helpers.php';
 header('Content-Type: application/json');
 
 try {
@@ -27,9 +28,7 @@ try {
 
     $fecha_registro = !empty($_POST['fecha_registro']) ? $_POST['fecha_registro'] : date('Y-m-d');
     
-    $mesesCalibracion = (int)($_POST['calibracion'] ?? 0);
-    $tieneServicio = !empty($_POST['servicio']) ? 1 : 0;
-    $mesesServicio = (int)($_POST['frecuencia_servicio'] ?? 0);
+    [$mesesCalibracion, $tieneServicio, $mesesServicio] = normalizarPeriodicidad($_POST);
     $mesesGarantia = (int)($_POST['garantia'] ?? 0);
 
     $fechaProximaCalibracion = $mesesCalibracion > 0 ? date('Y-m-d', strtotime("$fecha_registro +$mesesCalibracion months")) : null;
