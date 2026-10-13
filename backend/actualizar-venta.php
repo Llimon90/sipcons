@@ -274,6 +274,7 @@ try {
     }
 
     $pdo->commit();
+    solicitarRevisionTickets();
 
     // Nombres de los archivos agregados en este mismo cambio, para que se vean
     // en el panel "Después" del historial (fotografiarVenta no los incluye).

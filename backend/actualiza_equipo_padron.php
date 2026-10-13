@@ -53,6 +53,7 @@ try {
         'garantia'            => $mesesGarantia,
     ]);
 
+    solicitarRevisionTickets();
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo actualizado con éxito.']);
 
 } catch (Exception $e) {

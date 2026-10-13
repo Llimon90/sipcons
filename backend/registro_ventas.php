@@ -128,6 +128,7 @@ try {
     }
 
     $pdo->commit();
+    solicitarRevisionTickets();
 
     $datosVentaNueva = [
         'folio'               => $nFolio,

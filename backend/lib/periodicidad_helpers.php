@@ -26,3 +26,16 @@ function normalizarPeriodicidad(array $datos): array {
     }
     return $poliza ? [0, 1, $meses] : [$meses, 0, 0];
 }
+
+// Candado/marca de tiempo del generador de tickets (generador_tickets.php).
+const RUTA_CANDADO_GENERADOR = __DIR__ . '/../../storage/logs/.generador_tickets';
+
+/**
+ * Tras un cambio en el padrón, hace que el generador de tickets revise en la
+ * siguiente consulta en vez de esperar su intervalo normal.
+ */
+function solicitarRevisionTickets(): void {
+    if (is_file(RUTA_CANDADO_GENERADOR)) {
+        @file_put_contents(RUTA_CANDADO_GENERADOR, '0', LOCK_EX);
+    }
+}

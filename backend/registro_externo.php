@@ -59,6 +59,7 @@ try {
         'origen'              => 'Externo',
     ]);
 
+    solicitarRevisionTickets();
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo externo registrado en el Padrón con éxito.']);
 
 } catch (Exception $e) {
