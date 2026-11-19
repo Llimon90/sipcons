@@ -18,6 +18,17 @@
         var ENDPOINT = (enPublic ? '../' : '') + 'backend/analytics_registrar.php';
         var SESION_TTL = 30 * 60 * 1000;
         var LOTE_MAX = 40;
+        // Cada cuánto se manda lo acumulado mientras la pestaña está abierta
+        // (antes 15 s: ~4 peticiones PHP por minuto por pestaña).
+        var ENVIO_CADA_MS = 2 * 60 * 1000;
+        // Al ocultar la pestaña solo se envía si pasó al menos esto desde el
+        // último envío (o si hay muchos eventos); al cerrar/salir siempre.
+        var OCULTAR_MIN_MS = 60 * 1000;
+        // Si el servidor responde 429/5xx o no responde, se pausa el envío
+        // en esta pestaña para no cargarlo más.
+        var PAUSA_MS = 10 * 60 * 1000;
+        var PAUSA_KEY = 'sipcons_an_pausa';
+        var ultimoEnvio = Date.now();
         var cola = [];
         var origFetch = window.fetch ? window.fetch.bind(window) : null;
 
@@ -70,8 +81,20 @@
         }
         window.sipconsTrack = track;
 
+        function enPausa() {
+            try { return Date.now() < Number(sessionStorage.getItem(PAUSA_KEY) || 0); } catch (e) { return false; }
+        }
+        function pausar() {
+            try { sessionStorage.setItem(PAUSA_KEY, String(Date.now() + PAUSA_MS)); } catch (e) { /* nada */ }
+        }
+
         function flush(alSalir) {
             if (!cola.length) return;
+            if (enPausa()) {
+                if (alSalir) cola = []; // lo pendiente se descarta: el servidor está saturado
+                return;
+            }
+            ultimoEnvio = Date.now();
             var lote = cola.splice(0, 50);
             var cuerpo = JSON.stringify({
                 s: sesionId(), p: visitaId, pg: pagina, ref: paginaPrevia,
@@ -84,7 +107,9 @@
                     origFetch(ENDPOINT, {
                         method: 'POST', body: cuerpo, keepalive: true, credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json' }
-                    }).catch(function () {});
+                    }).then(function (r) {
+                        if (r.status === 429 || r.status >= 500) pausar();
+                    }, function () { pausar(); });
                 }
             } catch (e) { /* silencioso */ }
             if (cola.length) flush(alSalir);
@@ -318,12 +343,18 @@
         }
 
         // ---------- envío periódico y al salir
+        // Todo se agrupa en lotes: una petición cada ENVIO_CADA_MS como máximo
+        // (o antes si se juntan LOTE_MAX eventos) y una al salir de la página.
         setInterval(function () {
-            if (document.visibilityState === 'visible') enviarPermanencia();
+            if (document.visibilityState !== 'visible') return; // en segundo plano no se envía nada
+            enviarPermanencia();
             flush(false);
-        }, 15000);
+        }, ENVIO_CADA_MS);
         document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'hidden') { enviarPermanencia(); flush(true); }
+            if (document.visibilityState !== 'hidden') return;
+            enviarPermanencia();
+            // Cambiar de pestaña muchas veces ya no genera una petición por cambio
+            if (cola.length >= 10 || Date.now() - ultimoEnvio >= OCULTAR_MIN_MS) flush(true);
         });
         window.addEventListener('pagehide', function () { enviarPermanencia(); flush(true); });
     } catch (e) {

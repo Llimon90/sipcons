@@ -1,6 +1,9 @@
 // Técnicos asignables desde la BD (usuarios con rol técnico, supervisor o
 // administrador), compartido por alta, detalle y reportes. La lista se pide
-// una sola vez por página.
+// una sola vez por página y se guarda en sessionStorage durante CACHE_TTL_MS,
+// así que navegar entre incidencias/detalle/reportes no vuelve a pedirla.
+// Un técnico recién dado de alta aparece, a más tardar, a los 10 minutos (o
+// al iniciar sesión de nuevo: login.html y el cierre de sesión borran la caché).
 //
 // Si una incidencia tiene guardado un técnico que ya no está en la lista
 // (usuario dado de baja, cambio de rol, nombre histórico), se agrega como
@@ -16,13 +19,40 @@ window.SipconsTecnicos = (function () {
             .replace(/>/g, '&gt;');
     }
 
+    const CACHE_KEY = 'sipcons_tecnicos';
+    const CACHE_TTL_MS = 10 * 60 * 1000;
+
+    function leerCache() {
+        try {
+            const o = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+            if (o && Array.isArray(o.data) && Date.now() - o.t < CACHE_TTL_MS) return o.data;
+        } catch (e) { /* sin storage */ }
+        return null;
+    }
+
+    function guardarCache(data) {
+        try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (e) { /* sin storage */ }
+    }
+
     function cargar() {
         if (!promesa) {
+            const enCache = leerCache();
+            if (enCache) {
+                promesa = Promise.resolve(enCache);
+                return promesa;
+            }
             promesa = fetch('../backend/obtener_tecnicos.php', { cache: 'no-store' })
                 .then(r => r.json())
-                .then(json => (json && json.success && Array.isArray(json.data)) ? json.data : [])
+                .then(json => {
+                    if (json && json.success && Array.isArray(json.data)) {
+                        guardarCache(json.data); // solo se guarda una respuesta correcta
+                        return json.data;
+                    }
+                    return [];
+                })
                 .catch(err => {
                     console.error('No se pudo cargar la lista de técnicos:', err);
+                    promesa = null; // permitir reintentar en la siguiente llamada
                     return [];
                 });
         }

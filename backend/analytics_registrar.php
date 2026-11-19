@@ -3,17 +3,36 @@
 // La identidad (usuario, rol) SIEMPRE sale de la sesión del servidor, nunca
 // del cliente. Nunca debe romper el sitio: ante cualquier problema responde
 // rápido y en silencio.
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/auth.php';
-require_once __DIR__ . '/lib/analytics_helpers.php';
+//
+// Interruptor de emergencia en el .env:  ANALYTICS_ENABLED=0
+// Con eso este endpoint responde 204 sin abrir MySQL ni la sesión, y además
+// session_check.php avisa al navegador para que ni siquiera cargue
+// scripts/analytics.js (cero peticiones). Se reactiva con ANALYTICS_ENABLED=1
+// o borrando la línea.
+require_once __DIR__ . '/../config/env.php';
 
-header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
+if (!envBool('ANALYTICS_ENABLED', true)) {
+    http_response_code(204);
+    exit;
+}
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
     exit;
 }
+// Sin cookie de sesión no hay usuario: se corta antes de conectar a MySQL
+if (!isset($_COOKIE[session_name()])) {
+    http_response_code(401);
+    exit;
+}
+
+// La sesión se abre en solo lectura (read_and_close, ver config/auth.php):
+// no bloquea las demás peticiones de la pestaña.
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/lib/analytics_helpers.php';
+
 if (!isLoggedIn()) {
     http_response_code(401);
     exit;

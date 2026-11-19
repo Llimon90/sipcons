@@ -1,4 +1,7 @@
 <?php
+// Único script (junto con logout.php) que escribe en $_SESSION: abre la
+// sesión en modo escritura (ver config/auth.php).
+define('SESION_ESCRITURA', true);
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/login_log.php';
@@ -40,6 +43,10 @@ $_SESSION['user_id'] = $user['id'];
 $_SESSION['nombre']  = $user['nombre'];
 $_SESSION['usuario'] = $user['usuario'];
 $_SESSION['rol']     = $user['rol'];
+$_SESSION['_renovada'] = time();
+
+// Se guarda y se suelta el candado de la sesión antes de responder
+session_write_close();
 
 logLoginEvent('OK', $user['usuario'], 'rol=' . $user['rol']);
 

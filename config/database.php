@@ -1,20 +1,5 @@
 <?php
-function loadEnv(string $path): void {
-    if (!file_exists($path)) return;
-    foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        $line = trim($line);
-        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) continue;
-        [$key, $value] = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-        if ($key !== '') {
-            $_ENV[$key] = $value;
-            putenv("$key=$value");
-        }
-    }
-}
-
-loadEnv(__DIR__ . '/../.env');
+require_once __DIR__ . '/env.php'; // carga el .env (loadEnv, envBool)
 
 // La operación es en Tijuana (Baja California), no en el huso horario por
 // defecto del hosting (normalmente CDMX). Se fija aquí, en el punto central

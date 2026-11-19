@@ -7,7 +7,23 @@
 // llamar más de una vez si config/database.php también lo hace.
 date_default_timezone_set('America/Tijuana');
 
-if (session_status() === PHP_SESSION_NONE) {
+require_once __DIR__ . '/env.php'; // SESSION_LIFETIME también aplica en logout.php
+
+// ---------------------------------------------------------------- SESIÓN
+// PHP bloquea el archivo de sesión (flock) desde session_start() hasta que
+// termina el script. En el hosting compartido, con disco lento, eso hacía que
+// las peticiones simultáneas de una misma pestaña (session_check, analíticas,
+// técnicos, la API de la página...) se formaran en fila esperando el candado
+// y acabaran en 504.
+//
+// Por eso la sesión se abre en modo SOLO LECTURA (read_and_close): se lee
+// $_SESSION y el candado se suelta en el acto. Solo login.php y logout.php
+// escriben en la sesión; esos scripts definen, ANTES de incluir este archivo:
+//     define('SESION_ESCRITURA', true);
+// Cualquier script nuevo que necesite modificar $_SESSION debe hacer lo mismo
+// (y llamar session_write_close() en cuanto termine de escribir).
+if (session_status() === PHP_SESSION_NONE && !defined('SIPCONS_SESION_INICIADA')) {
+    define('SIPCONS_SESION_INICIADA', true);
     // 30 días: la sesión persiste hasta que el usuario cierre sesión explícitamente
     $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 2592000);
 
@@ -28,15 +44,49 @@ if (session_status() === PHP_SESSION_NONE) {
         session_save_path($sessionPath);
     }
 
-    session_set_cookie_params([
+    $cookieParams = [
         'lifetime' => $lifetime,
         'path'     => '/',
         'secure'   => isset($_SERVER['HTTPS']),
         'httponly' => true,
         'samesite' => 'Lax',
-    ]);
+    ];
+    session_set_cookie_params($cookieParams);
 
-    session_start();
+    $sesionEscritura = defined('SESION_ESCRITURA') && SESION_ESCRITURA;
+
+    if ($sesionEscritura) {
+        session_start();
+    } elseif (isset($_COOKIE[session_name()])) {
+        session_start(['read_and_close' => true]);
+
+        // read_and_close no reescribe el archivo, así que su fecha de
+        // modificación (la que usa la limpieza de PHP para borrar sesiones
+        // viejas) no avanzaría. Una vez al día se abre un instante en modo
+        // escritura para renovarla y se reenvía la cookie con otros
+        // $lifetime segundos: el usuario activo no pierde la sesión.
+        if (!empty($_SESSION['user_id'])
+            && time() - (int)($_SESSION['_renovada'] ?? 0) > 86400
+            && !headers_sent()
+            && @session_start()
+        ) {
+            $_SESSION['_renovada'] = time();
+            session_write_close();
+            setcookie(session_name(), session_id(), [
+                'expires'  => time() + $lifetime,
+                'path'     => $cookieParams['path'],
+                'secure'   => $cookieParams['secure'],
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+    } else {
+        // Sin cookie de sesión no hay nada que leer: no se toca el disco ni
+        // se crea un archivo de sesión vacío (evita miles de archivos/inodos
+        // por peticiones anónimas, bots o monitores).
+        $_SESSION = [];
+    }
+    unset($sesionEscritura, $cookieParams);
 }
 
 function isLoggedIn(): bool {

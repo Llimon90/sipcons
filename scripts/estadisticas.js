@@ -847,5 +847,16 @@ window.abrirModalPorEstatus = abrirModalPorEstatus;
 window.abrirModalReabiertas = abrirModalReabiertas;
 window.cerrarModalDrilldown = cerrarModalDrilldown;
 
-// Actualizar cada 5 minutos
-setInterval(cargarEstadisticas, 300000);
+// Actualizar cada 5 minutos, pero solo con la pestaña a la vista: en segundo
+// plano no se lanzan las consultas pesadas. Al volver a la pestaña, si ya
+// pasaron 5 minutos desde la última actualización, se refresca una vez.
+const ESTADISTICAS_REFRESCO_MS = 300000;
+let estadisticasUltimaCarga = Date.now();
+function refrescarEstadisticasSiToca() {
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - estadisticasUltimaCarga < ESTADISTICAS_REFRESCO_MS) return;
+    estadisticasUltimaCarga = Date.now();
+    cargarEstadisticas();
+}
+setInterval(refrescarEstadisticasSiToca, 60000);
+document.addEventListener('visibilitychange', refrescarEstadisticasSiToca);

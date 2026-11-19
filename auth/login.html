@@ -224,6 +224,10 @@
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  // Al llegar al login se descarta la sesión guardada en la pestaña
+  // (caché de scripts/auth-guard.js y la lista de técnicos).
+  try { sessionStorage.removeItem('sipcons_auth'); sessionStorage.removeItem('sipcons_tecnicos'); } catch (e) {}
+
   // Toggle mostrar/ocultar contraseña
   document.getElementById('togglePwd').addEventListener('click', function () {
     const pwd = document.getElementById('password');

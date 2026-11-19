@@ -3025,6 +3025,7 @@ body.dialogo-abierto { overflow: hidden; }
 
 .aviso-conexion.visible { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
 .aviso-conexion--ok { background: #1e7b45; }
+.aviso-conexion--servidor { background: #b45309; } /* 502/503/504: servidor saturado (scripts/conexion.js) */
 .aviso-conexion > i { font-size: 18px; flex-shrink: 0; }
 .aviso-conexion:not(.aviso-conexion--ok) > i { opacity: 0.85; }
 

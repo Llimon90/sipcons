@@ -31,7 +31,9 @@ try {
     $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$fila || !password_verify($actual, $fila['password'])) {
-        http_response_code(401);
+        // 403, no 401: la sesión es válida. El frontend (scripts/conexion.js)
+        // interpreta cualquier 401 como "tu sesión se cerró".
+        http_response_code(403);
         die(json_encode(['success' => false, 'message' => 'La contraseña actual no es correcta']));
     }
 

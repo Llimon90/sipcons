@@ -1,4 +1,6 @@
 <?php
+// Escribe en la sesión (la destruye): modo escritura, ver config/auth.php
+define('SESION_ESCRITURA', true);
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/login_log.php';
 
@@ -21,7 +23,9 @@ if (ini_get('session.use_cookies')) {
     );
 }
 
-session_destroy();
+if (session_status() === PHP_SESSION_ACTIVE) {
+    session_destroy();
+}
 
 // Ruta relativa (sin "/" inicial): se resuelve contra la carpeta actual
 // (auth/), donde vive login.html. Usar una ruta absoluta desde la raíz del

@@ -4,6 +4,9 @@ require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/permisos.php';
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
+// La sesión ya se leyó y se liberó (read_and_close en config/auth.php): este
+// endpoint no bloquea a las demás peticiones de la pestaña.
 
 if (!isLoggedIn()) {
     http_response_code(401);
@@ -30,4 +33,7 @@ echo json_encode([
     'tema'          => $tema,
     // Si puede poner estatus "Cerrado con/sin factura" (rol y .env USUARIOS_SIN_CIERRE)
     'puede_cerrar'  => puedeCerrarIncidencias(),
+    // Interruptor ANALYTICS_ENABLED del .env: en false el navegador no carga
+    // scripts/analytics.js y no se manda ninguna petición de analíticas.
+    'analytics'     => envBool('ANALYTICS_ENABLED', true),
 ]);

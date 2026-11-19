@@ -39,6 +39,7 @@
         // Aplica el tema al instante y lo guarda en la cuenta del usuario.
         establecer: function (tema) {
             aplicarTema(tema, true);
+            actualizarCache({ tema: temaActual });
             return fetch((inPublic ? '../' : '') + 'backend/guardar_tema.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -50,18 +51,69 @@
         }
     };
 
-    // Analíticas de uso (solo registra; el panel es exclusivo del Programador)
-    try {
-        var trackerScript = document.createElement('script');
-        trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=2';
-        trackerScript.async = true;
-        document.head.appendChild(trackerScript);
-    } catch (e) { /* las analíticas nunca deben romper la página */ }
+    // ---------- Caché de la sesión (sessionStorage, por pestaña) ----------
+    // session_check.php se consultaba en CADA carga de página. Ahora su
+    // respuesta se reutiliza durante AUTH_TTL_MS en la misma pestaña. La
+    // seguridad no cambia: cada endpoint del backend sigue validando la sesión
+    // en el servidor (requireAuth); esto solo decide qué menú/página pintar.
+    // Se borra al cerrar sesión, al entrar al login y ante cualquier 401.
+    var AUTH_CACHE_KEY = 'sipcons_auth';
+    var AUTH_TTL_MS = 5 * 60 * 1000;             // se usa sin preguntar al servidor
+    var AUTH_RESPALDO_MS = 12 * 60 * 60 * 1000;  // respaldo si el servidor no responde
+
+    function leerCache() {
+        try {
+            var o = JSON.parse(sessionStorage.getItem(AUTH_CACHE_KEY) || 'null');
+            if (o && o.t && o.data && o.data.authenticated === true) return o;
+        } catch (e) { /* sin storage */ }
+        return null;
+    }
+    function guardarCache(data) {
+        try { sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); } catch (e) { /* sin storage */ }
+    }
+    function actualizarCache(cambios) {
+        var o = leerCache();
+        if (!o) return;
+        for (var k in cambios) { if (Object.prototype.hasOwnProperty.call(cambios, k)) o.data[k] = cambios[k]; }
+        try { sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(o)); } catch (e) { /* sin storage */ }
+    }
+    function borrarCache() {
+        try {
+            sessionStorage.removeItem(AUTH_CACHE_KEY);
+            sessionStorage.removeItem('sipcons_tecnicos'); // caché de scripts/tecnicos.js
+        } catch (e) { /* sin storage */ }
+    }
+    function irAlLogin() {
+        borrarCache();
+        window.location.replace(authPath + 'login.html');
+    }
+    window.SipconsAuth = { borrarCache: borrarCache, irAlLogin: irAlLogin };
+
+    // Cualquier enlace de "Cerrar sesión" (inyectado o fijo en el HTML) limpia la caché
+    document.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href*="logout.php"]') : null;
+        if (a) borrarCache();
+    }, true);
+
+    // Analíticas de uso (solo registra; el panel es exclusivo del Programador).
+    // Se cargan cuando session_check confirma que están habilitadas
+    // (ANALYTICS_ENABLED en el .env); así un "apagado" no genera ni una petición.
+    var analyticsCargado = false;
+    function cargarAnalytics() {
+        if (analyticsCargado) return;
+        analyticsCargado = true;
+        try {
+            var trackerScript = document.createElement('script');
+            trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=3';
+            trackerScript.async = true;
+            document.head.appendChild(trackerScript);
+        } catch (e) { /* las analíticas nunca deben romper la página */ }
+    }
 
     // Aviso de "sin conexión a internet" y bloqueo de envíos sin conexión (todas las páginas)
     try {
         var conexionScript = document.createElement('script');
-        conexionScript.src = (inPublic ? '../' : '') + 'scripts/conexion.js?v=1';
+        conexionScript.src = (inPublic ? '../' : '') + 'scripts/conexion.js?v=2';
         conexionScript.async = true;
         document.head.appendChild(conexionScript);
     } catch (e) { /* nunca debe romper la página */ }
@@ -141,16 +193,134 @@
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado
     document.documentElement.style.visibility = 'hidden';
 
-    fetch(authPath + 'session_check.php', { cache: 'no-store', credentials: 'same-origin' })
-        .then(function (r) {
-            if (!r.ok) {
-                window.location.replace(authPath + 'login.html');
-                return null;
+    // Ejecuta fn cuando exista el DOM (con caché la sesión está lista antes
+    // de que el navegador termine de leer el HTML).
+    function alDom(fn) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn, { once: true });
+        } else {
+            fn();
+        }
+    }
+
+    // ---------- Aviso "el servidor no responde" (nunca expulsa al usuario) ----------
+    var avisoServidor = null;
+    function mostrarAvisoServidor(texto, conBoton) {
+        alDom(function () {
+            if (!avisoServidor) {
+                avisoServidor = document.createElement('div');
+                avisoServidor.setAttribute('role', 'alert');
+                // visibility: visible para verse aunque la página siga oculta
+                avisoServidor.style.cssText =
+                    'visibility:visible;position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:2147483000;' +
+                    'max-width:min(560px,calc(100% - 32px));box-sizing:border-box;padding:14px 18px;border-radius:10px;' +
+                    'background:#b45309;color:#fff;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;' +
+                    'box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
+                avisoServidor.innerHTML =
+                    '<span class="aviso-servidor-texto" style="flex:1 1 240px"></span>' +
+                    '<button type="button" style="visibility:visible;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.5);' +
+                    'border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit">Reintentar ahora</button>';
+                avisoServidor.querySelector('button').addEventListener('click', function () {
+                    clearTimeout(temporizadorReintento);
+                    verificarSesion(intentoActual);
+                });
+                document.body.appendChild(avisoServidor);
             }
-            return r.json();
+            avisoServidor.querySelector('.aviso-servidor-texto').textContent = texto;
+            avisoServidor.querySelector('button').style.display = conBoton ? '' : 'none';
+            avisoServidor.style.display = 'flex';
+        });
+    }
+    function ocultarAvisoServidor() {
+        if (avisoServidor) avisoServidor.style.display = 'none';
+    }
+
+    // ---------- Verificación de sesión ----------
+    // SOLO un 401 (o una respuesta que diga authenticated:false) manda al
+    // login. Un 502/503/504, una respuesta ilegible o un fallo de red son
+    // problemas temporales del servidor: se reintenta con espera creciente y,
+    // si la pestaña ya tenía la sesión verificada, se sigue trabajando con ella.
+    var RETRASOS_MS = [2000, 5000, 10000, 20000, 30000];
+    var MAX_INTENTOS_AUTO = RETRASOS_MS.length;
+    var intentoActual = 0;
+    var temporizadorReintento = null;
+    var sesionAplicada = false;
+
+    function verificarSesion(intento) {
+        intentoActual = intento;
+        var control = window.AbortController ? new AbortController() : null;
+        var limite = setTimeout(function () { if (control) control.abort(); }, 20000);
+
+        fetch(authPath + 'session_check.php', {
+            cache: 'no-store',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+            signal: control ? control.signal : undefined
         })
-        .then(function (data) {
-            if (!data) return;
+            .then(function (r) {
+                clearTimeout(limite);
+                if (r.status === 401) return { authenticated: false };
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json().catch(function () { throw new Error('Respuesta ilegible (HTTP ' + r.status + ')'); });
+            })
+            .then(function (data) {
+                if (!data || data.authenticated !== true) {
+                    irAlLogin(); // sesión inválida confirmada por el servidor
+                    return;
+                }
+                guardarCache(data);
+                ocultarAvisoServidor();
+                if (sesionAplicada) {
+                    aplicarTema(data.tema, true); // la página ya está pintada (con el respaldo)
+                } else {
+                    alDom(function () { aplicarSesion(data); });
+                }
+            })
+            .catch(function (err) {
+                clearTimeout(limite);
+                falloTemporal(intento, err);
+            });
+    }
+
+    function falloTemporal(intento, err) {
+        try { console.warn('session_check no respondió:', err && err.message ? err.message : err); } catch (e) { /* nada */ }
+
+        // Respaldo: la última sesión verificada en esta pestaña (máx. 12 h)
+        var respaldo = leerCache();
+        if (!sesionAplicada && respaldo && Date.now() - respaldo.t < AUTH_RESPALDO_MS) {
+            alDom(function () { aplicarSesion(respaldo.data); });
+        }
+
+        // Si ya se pinta con el respaldo, basta con 2 reintentos en segundo
+        // plano: no cargar más a un servidor que está saturado.
+        if (intento + 1 >= (sesionAplicada ? 2 : MAX_INTENTOS_AUTO)) {
+            if (!sesionAplicada) {
+                mostrarAvisoServidor('El servidor no está respondiendo. Tu sesión sigue abierta; vuelve a intentarlo en un momento.', true);
+            } else {
+                ocultarAvisoServidor(); // con respaldo se sigue trabajando; no insistir
+            }
+            return;
+        }
+
+        var espera = RETRASOS_MS[intento];
+        if (!sesionAplicada) {
+            mostrarAvisoServidor('El servidor tarda en responder. Reintentando en ' + Math.round(espera / 1000) + ' s… (tu sesión sigue abierta)', true);
+        }
+        temporizadorReintento = setTimeout(function () { verificarSesion(intento + 1); }, espera);
+    }
+
+    var cacheInicial = leerCache();
+    if (cacheInicial && Date.now() - cacheInicial.t < AUTH_TTL_MS) {
+        alDom(function () { aplicarSesion(cacheInicial.data); });
+    } else {
+        verificarSesion(0);
+    }
+
+    function aplicarSesion(data) {
+        if (sesionAplicada) return;
+        sesionAplicada = true;
+        try {
+            if (data.analytics !== false) cargarAnalytics();
 
             var user = data.user || {};
             if (typeof data.puede_cerrar === 'boolean') user.puede_cerrar = data.puede_cerrar;
@@ -246,9 +416,10 @@
                     item.style.display = 'none';
                 }
             }
-        })
-        .catch(function () {
-            // Falla cerrado: sin poder verificar la sesión no se muestra nada
-            window.location.replace(authPath + 'login.html');
-        });
+        } catch (e) {
+            // Un error al pintar el menú no debe dejar la página invisible
+            try { console.error('auth-guard:', e); } catch (e2) { /* nada */ }
+            document.documentElement.style.visibility = '';
+        }
+    }
 })();
