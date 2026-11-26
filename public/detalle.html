@@ -91,6 +91,29 @@
             <button type="button" id="btn-agregar-tiempo">Registrar tiempo</button>
             <span id="mensaje-bitacora" style="margin-left:10px;"></span>
         </section>
+
+        <!-- ============================================================ -->
+        <!-- Refacciones usadas en esta incidencia (descuenta inventario).
+             Sección independiente, no toca detalle.js ni detalle-extras.js. -->
+        <!-- ============================================================ -->
+        <section class="archivos-incidencia" id="seccion-refacciones-incidencia">
+            <h2>Refacciones utilizadas</h2>
+            <div id="refacciones-consumidas"><p>Cargando...</p></div>
+            <div class="form-row" style="margin-top:8px; align-items:flex-end;">
+                <div class="full-width">
+                    <label for="refaccion-producto">Producto (SKU o nombre)</label>
+                    <select id="refaccion-producto"><option value="">Buscando productos...</option></select>
+                </div>
+                <div>
+                    <label for="refaccion-cantidad">Cantidad</label>
+                    <input type="number" id="refaccion-cantidad" min="1" value="1" style="width:90px;">
+                </div>
+                <div>
+                    <button type="button" id="btn-registrar-refaccion">Registrar uso</button>
+                </div>
+            </div>
+            <span id="mensaje-refaccion" style="margin-left:10px;"></span>
+        </section>
     </main>
 
     <script src="../scripts/sidebar-state.js?v=20261002"></script>
@@ -102,5 +125,6 @@
     <script src="../scripts/selector-archivos.js?v=2"></script>
     <script src="../scripts/detalle.js?v=20"></script>
     <script src="../scripts/detalle-extras.js?v=1"></script>
+    <script src="../scripts/detalle-refacciones.js?v=1"></script>
 </body>
 </html>

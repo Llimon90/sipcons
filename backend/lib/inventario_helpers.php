@@ -4,6 +4,27 @@
 // movimiento es parte de una operación más grande (ej. una venta que consume
 // refacciones), todo se guarde o nada se guarde.
 
+// Categorías reales de Servidesk (backend/lib/inventario_helpers.php allá).
+// No se portan 'Servicio'/'Mano de obra' (conceptos sin existencia, D-23 de
+// Servidesk): el inventario de SIPCONS por ahora solo controla piezas
+// físicas.
+const INV_CATEGORIAS = ['Equipo', 'Refacción', 'Consumible', 'Herramienta'];
+
+/**
+ * Cuánto de un producto sigue consumido (neto) en una incidencia: lo que
+ * salió por esa referencia menos lo que ya se devolvió. Sirve para no dejar
+ * devolver más de lo que de verdad está pendiente.
+ */
+function consumoNetoProductoIncidencia(PDO $pdo, int $incidenciaId, int $productoId): int {
+    $stmt = $pdo->prepare(
+        "SELECT COALESCE(SUM(CASE WHEN tipo = 'Salida' THEN cantidad WHEN tipo = 'Entrada' THEN -cantidad ELSE 0 END), 0)
+         FROM inventario_movimientos
+         WHERE producto_id = ? AND referencia_tipo = 'incidencia' AND referencia_id = ?"
+    );
+    $stmt->execute([$productoId, $incidenciaId]);
+    return (int)$stmt->fetchColumn();
+}
+
 /**
  * @throws RuntimeException si el producto no existe o si una Salida deja el
  *                           stock en negativo.

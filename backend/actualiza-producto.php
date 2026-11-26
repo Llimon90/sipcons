@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/permisos.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/lib/inventario_helpers.php';
 requirePermiso('inventario');
 header('Content-Type: application/json');
 
@@ -24,7 +25,11 @@ try {
     }
 
     $nombre = trim((string)($data['nombre'] ?? $anterior['nombre']));
+    $categoria = trim((string)($data['categoria'] ?? $anterior['categoria']));
+    $marca = array_key_exists('marca', $data) ? (trim((string)$data['marca']) ?: null) : $anterior['marca'];
+    $modelo = array_key_exists('modelo', $data) ? (trim((string)$data['modelo']) ?: null) : $anterior['modelo'];
     $descripcion = trim((string)($data['descripcion'] ?? $anterior['descripcion']));
+    $ubicacion = array_key_exists('ubicacion', $data) ? (trim((string)$data['ubicacion']) ?: null) : $anterior['ubicacion'];
     $unidad = trim((string)($data['unidad'] ?? $anterior['unidad'])) ?: $anterior['unidad'];
     $stockMinimo = max(0, (int)($data['stock_minimo'] ?? $anterior['stock_minimo']));
     $costo = max(0, (float)($data['costo'] ?? $anterior['costo']));
@@ -36,18 +41,24 @@ try {
         echo json_encode(['success' => false, 'message' => 'El nombre es obligatorio.']);
         exit;
     }
+    if (!in_array($categoria, INV_CATEGORIAS, true)) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => 'Categoría no válida.']);
+        exit;
+    }
 
     // El stock_actual NO se edita aquí: solo se mueve con movimientos
     // registrados (backend/registrar-movimiento-inventario.php), para que
     // siempre quede rastro de por qué cambió.
     $pdo->prepare(
         'UPDATE inventario_productos
-         SET nombre = ?, descripcion = ?, unidad = ?, stock_minimo = ?, costo = ?, precio_venta = ?, activo = ?
+         SET nombre = ?, categoria = ?, marca = ?, modelo = ?, descripcion = ?, ubicacion = ?, unidad = ?, stock_minimo = ?, costo = ?, precio_venta = ?, activo = ?
          WHERE id = ?'
-    )->execute([$nombre, $descripcion, $unidad, $stockMinimo, $costo, $precioVenta, $activo, $id]);
+    )->execute([$nombre, $categoria, $marca, $modelo, $descripcion, $ubicacion, $unidad, $stockMinimo, $costo, $precioVenta, $activo, $id]);
 
     registrarAuditoria('inventario_productos', $id, 'UPDATE', $anterior, [
-        'nombre' => $nombre, 'descripcion' => $descripcion, 'unidad' => $unidad,
+        'nombre' => $nombre, 'categoria' => $categoria, 'marca' => $marca, 'modelo' => $modelo,
+        'descripcion' => $descripcion, 'ubicacion' => $ubicacion, 'unidad' => $unidad,
         'stock_minimo' => $stockMinimo, 'costo' => $costo, 'precio_venta' => $precioVenta, 'activo' => (bool)$activo,
     ]);
 
