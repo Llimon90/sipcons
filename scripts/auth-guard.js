@@ -193,6 +193,8 @@
         'cotizacion-detalle.html': 'cotizaciones',
         'cuentas-por-cobrar.html': 'cuentas_por_cobrar',
         'finanzas.html': 'finanzas',
+        'problemas.html': 'problemas',
+        'cambios.html': 'cambios',
     };
 
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado

@@ -12,6 +12,8 @@
         cotizaciones: 'Cotizaciones',
         cuentas_por_cobrar: 'Cuentas por Cobrar',
         finanzas: 'Finanzas',
+        problemas: 'Gestión de Problemas',
+        cambios: 'Gestión de Cambios',
     };
 
     function mostrarMensaje(elId, texto, tipo) {
