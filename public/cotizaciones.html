@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizaciones</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
+    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <ul>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="ventas.html"><i class="fas fa-chart-line"></i> <span class="sidebar-link-text">Ventas</span></a></li>
+      <li><a href="cotizaciones.html" class="active"><i class="fas fa-file-invoice-dollar"></i> <span class="sidebar-link-text">Cotizaciones</span></a></li>
+      <li><a href="cuentas-por-cobrar.html"><i class="fas fa-hand-holding-usd"></i> <span class="sidebar-link-text">Cuentas por Cobrar</span></a></li>
+      <li><a href="inventario.html"><i class="fas fa-boxes"></i> <span class="sidebar-link-text">Inventario</span></a></li>
+      <li><a href="finanzas.html"><i class="fas fa-chart-pie"></i> <span class="sidebar-link-text">Finanzas</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Cotizaciones</h2>
+      <p>Cotiza antes de vender. Una cotización aprobada se puede convertir en venta.</p>
+    </section>
+
+    <section class="encabezado">
+      <form id="form-cotizacion">
+        <h2>Nueva cotización</h2>
+        <div class="form-row">
+          <div>
+            <label for="cliente_id">Cliente:</label>
+            <select id="cliente_id" required><option value="">Selecciona...</option></select>
+          </div>
+          <div>
+            <label for="sucursal">Sucursal:</label>
+            <input type="text" id="sucursal" placeholder="Opcional">
+          </div>
+          <div>
+            <label for="fecha">Fecha:</label>
+            <input type="date" id="fecha" required>
+          </div>
+          <div>
+            <label for="fecha_vigencia">Vigente hasta:</label>
+            <input type="date" id="fecha_vigencia">
+          </div>
+        </div>
+
+        <h3>Líneas</h3>
+        <table class="tabla-ventas" style="width:100%;" id="tabla-lineas">
+          <thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Importe</th><th></th></tr></thead>
+          <tbody id="cuerpo-lineas"></tbody>
+        </table>
+        <button type="button" id="btn-agregar-linea" style="margin:10px 0;">+ Agregar línea</button>
+
+        <div style="text-align:right; max-width:300px; margin-left:auto;">
+          <p>Subtotal: $<span id="total-subtotal">0.00</span></p>
+          <p>IVA (16%): $<span id="total-iva">0.00</span></p>
+          <p><strong>Total: $<span id="total-total">0.00</span></strong></p>
+        </div>
+
+        <div class="form-row">
+          <div class="full-width">
+            <label for="notas">Notas:</label>
+            <input type="text" id="notas">
+          </div>
+        </div>
+
+        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar cotización</button>
+        <span id="mensaje-cotizacion" style="margin-left:10px;"></span>
+      </form>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Cotizaciones registradas</h2>
+      <div class="form-row">
+        <input type="text" id="campo-busqueda" placeholder="Buscar por folio o cliente..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+        <select id="filtro-estatus">
+          <option value="">Todos los estatus</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Aprobada">Aprobada</option>
+          <option value="Rechazada">Rechazada</option>
+          <option value="Convertida">Convertida</option>
+          <option value="Vencida">Vencida</option>
+        </select>
+      </div>
+      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
+        <thead><tr><th>Folio</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estatus</th><th>Acciones</th></tr></thead>
+        <tbody id="cuerpo-cotizaciones"><tr><td colspan="6">Cargando...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/cotizaciones.js?v=1"></script>
+</body>
+</html>

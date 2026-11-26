@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuentas por Cobrar</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
+    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <ul>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="ventas.html"><i class="fas fa-chart-line"></i> <span class="sidebar-link-text">Ventas</span></a></li>
+      <li><a href="cotizaciones.html"><i class="fas fa-file-invoice-dollar"></i> <span class="sidebar-link-text">Cotizaciones</span></a></li>
+      <li><a href="cuentas-por-cobrar.html" class="active"><i class="fas fa-hand-holding-usd"></i> <span class="sidebar-link-text">Cuentas por Cobrar</span></a></li>
+      <li><a href="inventario.html"><i class="fas fa-boxes"></i> <span class="sidebar-link-text">Inventario</span></a></li>
+      <li><a href="finanzas.html"><i class="fas fa-chart-pie"></i> <span class="sidebar-link-text">Finanzas</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Cuentas por Cobrar</h2>
+      <p>Saldo pendiente por cliente y registro de abonos.</p>
+    </section>
+
+    <section class="encabezado">
+      <form id="form-cxc">
+        <h2>Dar de alta una cuenta por cobrar</h2>
+        <div class="form-row">
+          <div>
+            <label for="cliente_id">Cliente:</label>
+            <select id="cliente_id" required><option value="">Selecciona...</option></select>
+          </div>
+          <div>
+            <label for="sucursal">Sucursal:</label>
+            <input type="text" id="sucursal" placeholder="Opcional">
+          </div>
+          <div class="full-width">
+            <label for="concepto">Concepto:</label>
+            <input type="text" id="concepto" placeholder="Ej. Folio de venta, servicio, etc." required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="monto_total">Monto:</label>
+            <input type="number" id="monto_total" min="0.01" step="0.01" required>
+          </div>
+          <div>
+            <label for="fecha_emision">Fecha de emisión:</label>
+            <input type="date" id="fecha_emision" required>
+          </div>
+          <div>
+            <label for="dias_vencimiento">Días de crédito:</label>
+            <input type="number" id="dias_vencimiento" min="1" value="30">
+          </div>
+        </div>
+        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar</button>
+        <span id="mensaje-cxc" style="margin-left:10px;"></span>
+      </form>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Cuentas registradas</h2>
+      <div class="form-row">
+        <select id="filtro-estatus">
+          <option value="">Todos los estatus</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Parcial">Parcial</option>
+          <option value="Pagada">Pagada</option>
+          <option value="Vencida">Vencida</option>
+        </select>
+      </div>
+      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
+        <thead><tr><th>Cliente</th><th>Sucursal</th><th>Concepto</th><th>Total</th><th>Saldo</th><th>Vence</th><th>Estatus</th><th>Acciones</th></tr></thead>
+        <tbody id="cuerpo-cxc"><tr><td colspan="8">Cargando...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="lista-incidencias" id="seccion-pago" style="display:none;">
+      <h2>Registrar pago — <span id="cxc-cliente-pago"></span></h2>
+      <form id="form-pago" class="form-row" style="align-items:flex-end;">
+        <input type="hidden" id="pago-cxc-id">
+        <div>
+          <label for="pago-monto">Monto:</label>
+          <input type="number" id="pago-monto" min="0.01" step="0.01" required>
+        </div>
+        <div>
+          <label for="pago-fecha">Fecha:</label>
+          <input type="date" id="pago-fecha" required>
+        </div>
+        <div>
+          <label for="pago-metodo">Método:</label>
+          <input type="text" id="pago-metodo" placeholder="Transferencia, efectivo...">
+        </div>
+        <div>
+          <label for="pago-referencia">Referencia:</label>
+          <input type="text" id="pago-referencia">
+        </div>
+        <div><button type="submit">Registrar pago</button></div>
+      </form>
+      <div id="historial-pagos" style="margin-top:15px;"></div>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/cuentas-por-cobrar.js?v=1"></script>
+</body>
+</html>

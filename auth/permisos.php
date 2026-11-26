@@ -8,7 +8,7 @@
 const ROL_ACCESO_TOTAL = 'Programador';
 
 // Módulos válidos que puede configurar el checklist de privilegios.
-const MODULOS_PERMISOS = ['incidencias', 'reportes', 'clientes', 'ventas', 'usuarios', 'soporte', 'informes', 'historial'];
+const MODULOS_PERMISOS = ['incidencias', 'reportes', 'clientes', 'ventas', 'usuarios', 'soporte', 'informes', 'historial', 'inventario', 'cotizaciones', 'cuentas_por_cobrar', 'finanzas'];
 
 // Roles que se pueden asignar a un usuario. "Programador" está incluido
 // (es un rol asignable, para quien da mantenimiento al sistema) pero NO

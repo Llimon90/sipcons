@@ -8,6 +8,10 @@
         soporte: 'Soporte Técnico',
         informes: 'Estadísticas',
         historial: 'Historial de cambios',
+        inventario: 'Inventario',
+        cotizaciones: 'Cotizaciones',
+        cuentas_por_cobrar: 'Cuentas por Cobrar',
+        finanzas: 'Finanzas',
     };
 
     function mostrarMensaje(elId, texto, tipo) {
