@@ -2,6 +2,22 @@
 // Utilidades compartidas por detalle.php y actualiza.php.
 
 /**
+ * Si una incidencia activa (sin cerrar) ya rebasó su propio SLA de cierre
+ * (categoría+prioridad, ver backend/lib/sla_helpers.php::obtenerReglaSla).
+ * Misma regla que ya usa backend/alertas_incidentes.php, factorizada aquí
+ * para que backend/inicio.php (bandeja/avisos del dashboard) no la duplique.
+ * Requiere que sla_helpers.php ya esté incluido (obtenerReglaSla()).
+ */
+function incidenciaAtrasada(PDO $pdo, ?string $fecha, ?string $categoria, ?string $prioridad): bool {
+    if (!$fecha) return false;
+    $ts = strtotime($fecha);
+    if ($ts === false) return false;
+    $horasAbierta = (time() - $ts) / 3600;
+    $regla = obtenerReglaSla($pdo, $categoria, $prioridad);
+    return $horasAbierta >= $regla['horas_cierre'];
+}
+
+/**
  * Huella del contenido de una incidencia tal como está en la base de datos.
  *
  * detalle.php la entrega al abrir la incidencia y actualiza.php la compara
