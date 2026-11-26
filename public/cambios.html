@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cambios</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
+    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <ul>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="problemas.html"><i class="fas fa-bug"></i> <span class="sidebar-link-text">Problemas</span></a></li>
+      <li><a href="cambios.html" class="active"><i class="fas fa-exchange-alt"></i> <span class="sidebar-link-text">Cambios</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="ventas.html"><i class="fas fa-chart-line"></i> <span class="sidebar-link-text">Ventas</span></a></li>
+      <li><a href="cotizaciones.html"><i class="fas fa-file-invoice-dollar"></i> <span class="sidebar-link-text">Cotizaciones</span></a></li>
+      <li><a href="cuentas-por-cobrar.html"><i class="fas fa-hand-holding-usd"></i> <span class="sidebar-link-text">Cuentas por Cobrar</span></a></li>
+      <li><a href="inventario.html"><i class="fas fa-boxes"></i> <span class="sidebar-link-text">Inventario</span></a></li>
+      <li><a href="finanzas.html"><i class="fas fa-chart-pie"></i> <span class="sidebar-link-text">Finanzas</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Gestión de Cambios</h2>
+      <p>Solicitudes de cambio (RFC) con aprobación formal antes de implementarse.</p>
+    </section>
+
+    <section class="encabezado">
+      <form id="form-cambio">
+        <h2>Nueva solicitud de cambio</h2>
+        <div class="form-row">
+          <div class="full-width">
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="full-width">
+            <label for="descripcion">Descripción:</label>
+            <input type="text" id="descripcion">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="tipo">Tipo:</label>
+            <select id="tipo">
+              <option value="Estándar">Estándar</option>
+              <option value="Normal" selected>Normal</option>
+              <option value="Emergencia">Emergencia</option>
+            </select>
+          </div>
+          <div>
+            <label for="riesgo">Riesgo:</label>
+            <select id="riesgo">
+              <option value="Bajo">Bajo</option>
+              <option value="Medio" selected>Medio</option>
+              <option value="Alto">Alto</option>
+            </select>
+          </div>
+          <div>
+            <label for="fecha_planeada">Fecha planeada:</label>
+            <input type="date" id="fecha_planeada">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="full-width">
+            <label for="notas">Notas:</label>
+            <input type="text" id="notas">
+          </div>
+        </div>
+        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Enviar a aprobación</button>
+        <span id="mensaje-cambio" style="margin-left:10px;"></span>
+      </form>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Solicitudes de cambio</h2>
+      <div class="form-row">
+        <input type="text" id="campo-busqueda" placeholder="Buscar por folio o título..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+        <select id="filtro-estatus">
+          <option value="">Todos los estatus</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Aprobado">Aprobado</option>
+          <option value="Rechazado">Rechazado</option>
+          <option value="Implementado">Implementado</option>
+          <option value="Cerrado">Cerrado</option>
+        </select>
+      </div>
+      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
+        <thead><tr><th>Folio</th><th>Título</th><th>Tipo</th><th>Riesgo</th><th>Estatus</th><th>Acciones</th></tr></thead>
+        <tbody id="cuerpo-cambios"><tr><td colspan="6">Cargando...</td></tr></tbody>
+      </table>
+      <p style="font-size:0.85em; color:#777;">Aprobar o rechazar un cambio solo lo puede hacer un Administrador.</p>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/cambios.js?v=1"></script>
+</body>
+</html>
