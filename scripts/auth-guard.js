@@ -195,6 +195,8 @@
         'finanzas.html': 'finanzas',
         'problemas.html': 'problemas',
         'cambios.html': 'cambios',
+        'catalogo-servicios.html': 'catalogo_servicios',
+        'base-conocimiento.html': 'base_conocimiento',
     };
 
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado
