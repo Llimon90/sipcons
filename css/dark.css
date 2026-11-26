@@ -1102,3 +1102,14 @@ html[data-theme="dark"] [style*=";color: #1a4de4" i],
 html[data-theme="dark"] [style*=" color: #1a4de4" i] {
   color: #6ab7f5 !important;
 }
+
+/* Menú lateral + buscador global (scripts/menu-lateral.js) */
+html[data-theme="dark"] .buscador-caja { background: #16212d; color: #e6edf3; }
+html[data-theme="dark"] .buscador-campo, html[data-theme="dark"] .buscador-pie { border-color: #2c3d50; }
+html[data-theme="dark"] .buscador-campo i { color: #9fb0c1; }
+html[data-theme="dark"] .buscador-item > i { background: #22303f; color: #6ab7f5; }
+html[data-theme="dark"] .buscador-item em, html[data-theme="dark"] .buscador-caja kbd { background: #22303f; border-color: #2c3d50; color: #9fb0c1; }
+html[data-theme="dark"] .buscador-item small, html[data-theme="dark"] .buscador-grupo, html[data-theme="dark"] .buscador-pie, html[data-theme="dark"] .buscador-vacio { color: #9fb0c1; }
+html[data-theme="dark"] .nav-inferior { background: #16212d; border-color: #2c3d50; }
+html[data-theme="dark"] .nav-inferior a, html[data-theme="dark"] .nav-inferior button { color: #9fb0c1; }
+html[data-theme="dark"] .nav-inferior .activo { color: #6ab7f5; }
