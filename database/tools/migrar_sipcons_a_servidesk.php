@@ -292,10 +292,18 @@ try {
     $sinMapear = $pdo->query("SELECT DISTINCT rol FROM {$o('usuarios')}
         WHERE rol NOT IN ('Administrador','Supervisor','Administrativo','Técnico','Programador','Técnico/Administrador','Técnico/Administrativo')")->fetchAll(PDO::FETCH_COLUMN);
     if ($sinMapear) echo "   AVISO: roles no reconocidos (van a 'Técnico'): " . implode(', ', $sinMapear) . "\n";
-    migrar($pdo, 'usuarios', $DESTINO, 'usuarios', $o('usuarios'), [
-        'id' => 'id', 'empresa_id' => (string)$EMPRESA, 'nombre' => 'nombre', 'alias_tecnico' => 'alias_tecnico',
-        'correo' => "COALESCE(correo,'')", 'telefono' => "COALESCE(telefono,'')", 'usuario' => 'usuario',
-        'password' => 'password', 'rol' => $mapRol, 'tema' => "COALESCE(NULLIF(tema,''),'claro')",
+    // Servidesk exige nombre único por empresa (uniq_empresa_nombre, insensible a
+    // acentos: "Tomás" y "Tomas" chocan). A los nombres repetidos (salvo el de
+    // menor id) se les agrega " (<usuario>)" para conservar TODOS los usuarios.
+    $dupNom = $pdo->query("SELECT nombre, COUNT(*) n FROM {$o('usuarios')} GROUP BY nombre HAVING n > 1")->fetchAll();
+    if ($dupNom) echo "   AVISO: nombres de usuario repetidos (se les agrega el login): "
+        . implode(', ', array_map(fn($r) => $r['nombre'], $dupNom)) . "\n";
+    $exprNombre = "CASE WHEN EXISTS (SELECT 1 FROM {$o('usuarios')} u2 WHERE u2.nombre = u.nombre AND u2.id < u.id)
+                     THEN CONCAT(u.nombre, ' (', u.usuario, ')') ELSE u.nombre END";
+    migrar($pdo, 'usuarios', $DESTINO, 'usuarios', "{$o('usuarios')} u", [
+        'id' => 'u.id', 'empresa_id' => (string)$EMPRESA, 'nombre' => $exprNombre, 'alias_tecnico' => 'u.alias_tecnico',
+        'correo' => "COALESCE(u.correo,'')", 'telefono' => "COALESCE(u.telefono,'')", 'usuario' => 'u.usuario',
+        'password' => 'u.password', 'rol' => $mapRol, 'tema' => "COALESCE(NULLIF(u.tema,''),'claro')",
         'puede_cerrar' => '1', 'puede_autorizar_descuentos' => '0', 'debe_cambiar_password' => '0',
         'fecha_creacion' => 'NOW()']);
     // permisos_rol: el destino ya trae los defaults de Servidesk; INSERT IGNORE no los pisa.
