@@ -28,10 +28,10 @@ INSERT IGNORE INTO `permisos_rol` (`rol`, `modulo`, `permitido`) VALUES
 ('Administrativo', 'cuentas_por_cobrar', 1),
 ('Administrativo', 'finanzas', 0),
 
-('Técnico/Administrativo', 'inventario', 1),
-('Técnico/Administrativo', 'cotizaciones', 1),
-('Técnico/Administrativo', 'cuentas_por_cobrar', 1),
-('Técnico/Administrativo', 'finanzas', 0),
+('Supervisor', 'inventario', 1),
+('Supervisor', 'cotizaciones', 1),
+('Supervisor', 'cuentas_por_cobrar', 1),
+('Supervisor', 'finanzas', 0),
 
 ('Técnico/Administrador', 'inventario', 1),
 ('Técnico/Administrador', 'cotizaciones', 1),
