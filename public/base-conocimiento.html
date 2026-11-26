@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Conocimiento</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
+    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <ul>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="catalogo-servicios.html"><i class="fas fa-concierge-bell"></i> <span class="sidebar-link-text">Catálogo de Servicios</span></a></li>
+      <li><a href="base-conocimiento.html" class="active"><i class="fas fa-book"></i> <span class="sidebar-link-text">Base de Conocimiento</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Base de Conocimiento</h2>
+      <p>Artículos de solución. Marca "Público" para que también se vea en el portal de clientes.</p>
+    </section>
+
+    <section class="encabezado">
+      <form id="form-articulo">
+        <input type="hidden" id="articulo-id">
+        <div class="form-row">
+          <div class="full-width">
+            <label for="titulo">Título:</label>
+            <input type="text" id="titulo" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="categoria">Categoría:</label>
+            <input type="text" id="categoria" placeholder="Opcional">
+          </div>
+          <div>
+            <label for="visibilidad">Visibilidad:</label>
+            <select id="visibilidad">
+              <option value="Interno">Interno (solo personal)</option>
+              <option value="Publico">Público (también en el portal)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="full-width">
+            <label for="contenido">Contenido:</label>
+            <textarea id="contenido" rows="6" required></textarea>
+          </div>
+        </div>
+        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar artículo</button>
+        <button type="button" id="btn-nuevo-articulo">Nuevo</button>
+        <span id="mensaje-articulo" style="margin-left:10px;"></span>
+      </form>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Artículos</h2>
+      <input type="text" id="campo-busqueda" placeholder="Buscar..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; margin-bottom:10px;">
+      <table class="tabla-ventas" style="width:100%;">
+        <thead><tr><th>Título</th><th>Categoría</th><th>Visibilidad</th><th>Vistas</th><th>Acciones</th></tr></thead>
+        <tbody id="cuerpo-articulos"><tr><td colspan="5">Cargando...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/base-conocimiento.js?v=1"></script>
+</body>
+</html>

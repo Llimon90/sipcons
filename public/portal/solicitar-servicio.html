@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solicitar servicio — Portal SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../img/favicon-32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body>
+
+<div class="portal-shell">
+  <header class="portal-topbar">
+    <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+    <nav>
+      <a href="mis-tickets.html"><i class="fas fa-arrow-left"></i> Mis tickets</a>
+      <a href="#" id="btnSalir">Salir</a>
+    </nav>
+  </header>
+
+  <section class="card">
+    <h2>Solicitar un servicio</h2>
+    <p class="estado-vacio" style="margin-bottom:16px;">Elige un servicio del catálogo. Esto no es para reportar una falla (para eso usa "Nuevo ticket"), es para pedir algo (una instalación, una capacitación, una visita, etc.).</p>
+
+    <div id="contenedorCatalogo"><p class="estado-vacio">Cargando…</p></div>
+
+    <form id="formSolicitud" style="display:none; margin-top:20px;">
+      <input type="hidden" id="servicio_id" />
+      <p><strong>Servicio:</strong> <span id="servicioNombre"></span></p>
+      <label for="sucursal">Sucursal (opcional)</label>
+      <input type="text" id="sucursal" placeholder="Sucursal" />
+      <label for="descripcion">Detalles de tu solicitud</label>
+      <textarea id="descripcion" rows="4" placeholder="Cuéntanos qué necesitas..."></textarea>
+      <button type="submit">Enviar solicitud</button>
+      <button type="button" id="btnCancelar">Cancelar</button>
+      <p id="mensajeSolicitud"></p>
+    </form>
+  </section>
+</div>
+
+<script>
+  function escapeHtml(t) {
+    return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function cargarCatalogo() {
+    const contenedor = document.getElementById('contenedorCatalogo');
+    try {
+      const res = await fetch('../../backend/portal/catalogo-servicios.php', { credentials: 'include' });
+      if (res.status === 401) { window.location.href = 'login.html'; return; }
+      const data = await res.json();
+      if (!data.success || !data.servicios.length) {
+        contenedor.innerHTML = '<p class="estado-vacio">No hay servicios disponibles en este momento.</p>';
+        return;
+      }
+      contenedor.innerHTML = data.servicios.map(s => `
+        <div class="card" style="border:1px solid var(--border, #ddd); margin-bottom:10px; cursor:pointer;" onclick="elegirServicio(${s.id}, '${escapeHtml(s.nombre).replace(/'/g, "&#39;")}')">
+          <h3>${escapeHtml(s.nombre)}</h3>
+          <p>${escapeHtml(s.descripcion || '')}</p>
+        </div>
+      `).join('');
+    } catch (_) {
+      contenedor.innerHTML = '<p class="estado-vacio">No se pudo cargar el catálogo.</p>';
+    }
+  }
+
+  function elegirServicio(id, nombre) {
+    document.getElementById('servicio_id').value = id;
+    document.getElementById('servicioNombre').textContent = nombre;
+    document.getElementById('formSolicitud').style.display = 'block';
+    document.getElementById('contenedorCatalogo').style.display = 'none';
+  }
+
+  document.getElementById('btnCancelar').addEventListener('click', function () {
+    document.getElementById('formSolicitud').style.display = 'none';
+    document.getElementById('contenedorCatalogo').style.display = 'block';
+  });
+
+  document.getElementById('formSolicitud').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const mensaje = document.getElementById('mensajeSolicitud');
+    mensaje.textContent = 'Enviando...';
+    try {
+      const res = await fetch('../../backend/portal/nueva-solicitud-servicio.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          servicio_id: document.getElementById('servicio_id').value,
+          sucursal: document.getElementById('sucursal').value,
+          descripcion: document.getElementById('descripcion').value,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = 'mis-solicitudes.html';
+      } else {
+        mensaje.textContent = data.error || 'No se pudo enviar la solicitud.';
+      }
+    } catch (_) {
+      mensaje.textContent = 'Error de conexión. Intenta de nuevo.';
+    }
+  });
+
+  document.getElementById('btnSalir').addEventListener('click', async function (e) {
+    e.preventDefault();
+    try { await fetch('../../backend/portal/logout.php', { method: 'POST', credentials: 'include' }); } catch (_) {}
+    window.location.href = 'login.html';
+  });
+
+  cargarCatalogo();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encuesta de satisfacción — SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../img/favicon-32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body>
+
+<div class="portal-shell">
+  <header class="portal-topbar">
+    <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+  </header>
+
+  <section class="card" id="contenedor"><p class="estado-vacio">Cargando…</p></section>
+</div>
+
+<script>
+  const token = new URLSearchParams(window.location.search).get('token');
+  const contenedor = document.getElementById('contenedor');
+
+  function escapeHtml(t) {
+    return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function cargar() {
+    if (!token) { contenedor.innerHTML = '<p class="estado-vacio">Enlace inválido.</p>'; return; }
+    try {
+      const res = await fetch('../../backend/responder-encuesta-csat.php?token=' + encodeURIComponent(token));
+      const data = await res.json();
+      if (!data.success) { contenedor.innerHTML = '<p class="estado-vacio">No encontramos esta encuesta.</p>'; return; }
+
+      if (data.ya_respondida) {
+        contenedor.innerHTML = '<h2>¡Gracias!</h2><p>Ya registramos tu respuesta para el folio ' + escapeHtml(data.numero_incidente) + '.</p>';
+        return;
+      }
+
+      contenedor.innerHTML = `
+        <h2>¿Cómo calificarías el servicio del folio ${escapeHtml(data.numero_incidente)}?</h2>
+        <div id="estrellas" style="font-size:2rem; margin:16px 0;">
+          ${[1,2,3,4,5].map(n => `<i class="fas fa-star estrella" data-valor="${n}" style="cursor:pointer; color:#ccc;"></i>`).join(' ')}
+        </div>
+        <textarea id="comentario" rows="3" placeholder="¿Algo que quieras contarnos? (opcional)" style="width:100%;"></textarea>
+        <button type="button" id="btnEnviar">Enviar</button>
+        <p id="mensaje"></p>
+      `;
+
+      let calificacion = 0;
+      document.querySelectorAll('.estrella').forEach(estrella => {
+        estrella.addEventListener('click', function () {
+          calificacion = parseInt(this.dataset.valor, 10);
+          document.querySelectorAll('.estrella').forEach(e => {
+            e.style.color = parseInt(e.dataset.valor, 10) <= calificacion ? '#f5a623' : '#ccc';
+          });
+        });
+      });
+
+      document.getElementById('btnEnviar').addEventListener('click', async function () {
+        const mensaje = document.getElementById('mensaje');
+        if (!calificacion) { mensaje.textContent = 'Elige una calificación.'; return; }
+        mensaje.textContent = 'Enviando...';
+        try {
+          const res = await fetch('../../backend/responder-encuesta-csat.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, calificacion, comentario: document.getElementById('comentario').value }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            contenedor.innerHTML = '<h2>¡Gracias por tu respuesta!</h2>';
+          } else {
+            mensaje.textContent = data.message || 'No se pudo enviar.';
+          }
+        } catch (_) {
+          mensaje.textContent = 'Error de conexión. Intenta de nuevo.';
+        }
+      });
+    } catch (_) {
+      contenedor.innerHTML = '<p class="estado-vacio">No se pudo cargar la encuesta.</p>';
+    }
+  }
+
+  cargar();
+</script>
+
+</body>
+</html>

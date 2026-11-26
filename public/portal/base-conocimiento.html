@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base de conocimiento — Portal SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../img/favicon-32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body>
+
+<div class="portal-shell">
+  <header class="portal-topbar">
+    <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+    <nav>
+      <a href="mis-tickets.html"><i class="fas fa-arrow-left"></i> Mis tickets</a>
+      <a href="#" id="btnSalir">Salir</a>
+    </nav>
+  </header>
+
+  <section class="card">
+    <h2>Base de conocimiento</h2>
+    <input type="text" id="buscador" placeholder="Buscar un artículo..." style="width:100%; padding:10px; margin-bottom:16px;" />
+    <div id="contenedorArticulos"><p class="estado-vacio">Cargando…</p></div>
+    <div id="contenedorArticulo" style="display:none;">
+      <button type="button" id="btnVolverLista">&larr; Volver a la lista</button>
+      <h3 id="articuloTitulo"></h3>
+      <div id="articuloContenido" style="white-space:pre-wrap; margin-top:10px;"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+  function escapeHtml(t) {
+    return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function buscarArticulos(q) {
+    const contenedor = document.getElementById('contenedorArticulos');
+    try {
+      const res = await fetch('../../backend/portal/buscar-articulos-kb.php?q=' + encodeURIComponent(q || ''), { credentials: 'include' });
+      if (res.status === 401) { window.location.href = 'login.html'; return; }
+      const data = await res.json();
+      if (!data.success || !data.articulos.length) {
+        contenedor.innerHTML = '<p class="estado-vacio">No encontramos artículos.</p>';
+        return;
+      }
+      contenedor.innerHTML = data.articulos.map(a => `
+        <div class="card" style="border:1px solid var(--border, #ddd); margin-bottom:8px; cursor:pointer;" onclick="verArticulo(${a.id})">
+          <strong>${escapeHtml(a.titulo)}</strong>
+          <p class="estado-vacio">${escapeHtml(a.categoria || '')}</p>
+        </div>
+      `).join('');
+    } catch (_) {
+      contenedor.innerHTML = '<p class="estado-vacio">No se pudo cargar la base de conocimiento.</p>';
+    }
+  }
+
+  async function verArticulo(id) {
+    try {
+      const res = await fetch('../../backend/portal/obtener-articulo-kb.php?id=' + id, { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+      document.getElementById('articuloTitulo').textContent = data.articulo.titulo;
+      document.getElementById('articuloContenido').textContent = data.articulo.contenido;
+      document.getElementById('contenedorArticulos').style.display = 'none';
+      document.getElementById('contenedorArticulo').style.display = 'block';
+    } catch (_) {}
+  }
+
+  document.getElementById('btnVolverLista').addEventListener('click', function () {
+    document.getElementById('contenedorArticulo').style.display = 'none';
+    document.getElementById('contenedorArticulos').style.display = 'block';
+  });
+
+  document.getElementById('buscador').addEventListener('input', function (e) {
+    buscarArticulos(e.target.value);
+  });
+
+  document.getElementById('btnSalir').addEventListener('click', async function (e) {
+    e.preventDefault();
+    try { await fetch('../../backend/portal/logout.php', { method: 'POST', credentials: 'include' }); } catch (_) {}
+    window.location.href = 'login.html';
+  });
+
+  buscarArticulos('');
+</script>
+
+</body>
+</html>

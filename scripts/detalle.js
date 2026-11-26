@@ -483,6 +483,17 @@ function createFormHTML(data, tecnicosLista) {
             </div>
         </form>
 
+        <div class="form-campo" id="seccion-comentarios">
+            <label>SEGUIMIENTO / COMENTARIOS</label>
+            <div id="lista-comentarios"><p>Cargando…</p></div>
+            <textarea id="nuevo-comentario" placeholder="Escribe una actualización para el expediente..."></textarea>
+            <label style="font-weight:normal; display:block; margin:6px 0;">
+                <input type="checkbox" id="comentario-visible-cliente"> Visible para el cliente en el portal
+            </label>
+            <button type="button" id="btn-agregar-comentario"><i class="fas fa-comment"></i> Agregar comentario</button>
+            <span id="mensaje-comentario"></span>
+        </div>
+
     `;
 }
 
@@ -1234,6 +1245,55 @@ async function resolverConflicto(datos) {
 }
 
 // Función principal para cargar los detalles
+async function cargarComentarios(id) {
+    const lista = document.getElementById('lista-comentarios');
+    if (!lista) return;
+    try {
+        const res = await fetch(`../backend/obtener-comentarios-incidencia.php?incidencia_id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!data.success || !data.comentarios.length) {
+            lista.innerHTML = '<p class="estado-vacio">Sin comentarios todavía.</p>';
+            return;
+        }
+        lista.innerHTML = data.comentarios.map(c => `
+            <div class="comentario-item">
+                <p class="comentario-meta">${escapeAttr(c.autor_nombre)} · ${escapeAttr(c.creado_en)}${c.visible_cliente == 1 ? ' · <span class="badge-visible-cliente">Visible al cliente</span>' : ''}</p>
+                <p>${escapeAttr(c.comentario)}</p>
+            </div>
+        `).join('');
+    } catch (e) {
+        lista.innerHTML = '<p class="estado-vacio">No se pudieron cargar los comentarios.</p>';
+    }
+}
+
+async function agregarComentario(id) {
+    const textarea = document.getElementById('nuevo-comentario');
+    const visibleCliente = document.getElementById('comentario-visible-cliente');
+    const mensaje = document.getElementById('mensaje-comentario');
+    const comentario = textarea.value.trim();
+    if (!comentario) return;
+
+    mensaje.textContent = 'Guardando...';
+    try {
+        const res = await fetch('../backend/guardar-comentario-incidencia.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ incidencia_id: id, comentario, visible_cliente: visibleCliente.checked }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            textarea.value = '';
+            visibleCliente.checked = false;
+            mensaje.textContent = '';
+            cargarComentarios(id);
+        } else {
+            mensaje.textContent = data.message || 'No se pudo guardar el comentario.';
+        }
+    } catch (e) {
+        mensaje.textContent = 'Error de conexión.';
+    }
+}
+
 async function cargarDetalleIncidencia(id) {
     try {
         const response = await fetch(`../backend/detalle.php?id=${encodeURIComponent(id)}`, {
@@ -1287,6 +1347,9 @@ async function cargarDetalleIncidencia(id) {
         if (data.archivos) {
             cargarArchivosAdjuntos(data.archivos, id);
         }
+
+        cargarComentarios(id);
+        document.getElementById('btn-agregar-comentario').addEventListener('click', () => agregarComentario(id));
 
         // Punto de partida para saber si hay cambios sin guardar
         estadoDetalle.original = leerFormulario();
