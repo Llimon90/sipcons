@@ -3,6 +3,7 @@ require_once __DIR__ . '/../auth/middleware.php';
 requireRole('Administrador', 'Programador');
 require_once __DIR__ . '/../auth/audit.php';
 require_once __DIR__ . '/lib/automatizacion_helpers.php';
+require_once __DIR__ . '/lib/sla_helpers.php'; // prioridadValida() vive ahí
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

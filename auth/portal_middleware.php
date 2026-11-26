@@ -25,7 +25,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
     session_set_cookie_params([
         'lifetime' => 0, // el cliente cierra sesión explícitamente o cierra el navegador
-        'path'     => '/portal',
+        // '/' y no '/portal': las páginas viven en public/portal/ pero los
+        // endpoints en backend/portal/, ninguno bajo una ruta real "/portal".
+        // Un path más angosto hace que el navegador nunca reenvíe la cookie
+        // a backend/portal/*.php y el login parezca funcionar sin dejar la
+        // sesión realmente abierta. El aislamiento con la sesión de personal
+        // lo da el nombre de sesión distinto (PORTAL_SESSION_NAME), no el path.
+        'path'     => '/',
         'secure'   => isset($_SERVER['HTTPS']),
         'httponly' => true,
         'samesite' => 'Lax',

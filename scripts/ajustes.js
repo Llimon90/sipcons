@@ -281,7 +281,7 @@
             });
         });
 
-        fetch('../backend/guardar_sla_reglas.php', {
+        fetch('../backend/guardar-sla-reglas.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reglas: reglas }),
@@ -301,7 +301,7 @@
     }
 
     function initSla() {
-        fetch('../backend/obtener_sla_reglas.php')
+        fetch('../backend/obtener-sla-reglas.php')
             .then(function (r) {
                 if (r.status === 403) return null; // rol sin acceso: la sección queda oculta
                 return r.json();
