@@ -4,19 +4,29 @@ Memoria compartida entre agentes. Solo lo no obvio: el porqué, lo descartado y 
 
 ## Estado actual / siguiente paso
 - Rama de trabajo `pruebas`; producción en `master` (cPanel, `public_html/apptest`).
-- Siguiente: validar en apptest (al amanecer del 2026-11-26) las TRES rondas de upgrades de hoy
-  (ServiceDesk base + Finanzas/Inventario + catálogo ITSM completo, ver hitos de hoy). Aplicar
-  TODAS las migraciones 015-064 en phpMyAdmin de apptest ANTES de probar, en orden (no se aplican
-  solas; faltan números a propósito — varios agentes trabajaron en paralelo y se numeraron por
-  bloque para no chocar: 015-018 SLA/portal, 030-034 finanzas, 040-049 problemas/cambios, 050-055
-  catálogo/KB/CSAT, 060-064 automatización/etiquetas/tiempo). El repo de GitHub se puso de nuevo
-  en público (estaba en privado y eso rompía el pull de cPanel). Confirmar en cPanel que el push
-  a `pruebas` (último commit `93b63c5`) se desplegó a apptest o disparar el deploy manual si no es
-  automático. Si algo no convence, revertir el commit correspondiente en `pruebas` — no se tocó
-  `master`. **Para desarrollo local**: ya existe `sipcons_pruebas` en el MariaDB de XAMPP de esta
-  máquina con esquema+datos de prueba (`database/schema_base_dev.sql`, `database/SEED_PRUEBAS_LOCAL.md`,
-  `.env` en la raíz sin commitear) — toda la ronda de ITSM de esta noche se probó de verdad contra
-  esa base (no solo `php -l`) antes de pushear.
+- **IMPORTANTE para la próxima sesión**: SIPCONS es un derivado de un producto real del dueño,
+  **Servidesk** (`C:\Users\weruz\Proyectos\SERVIDESK`, otro repo git, remoto propio
+  `Llimon90/servidesk.git`, NO fusionar con `git merge` — es multiempresa con prefijo `e7_`/tabla
+  `empresas`, incompatible tal cual). Es la fuente de verdad de qué funciones "reales" debería
+  tener SIPCONS; `database/plantilla_empresa.sql` ahí es el esquema de una sola empresa sin
+  prefijo, y ya coincide con el esquema real de SIPCONS. El catálogo tipo ITIL (problemas, cambios,
+  catálogo de servicios, KB, CSAT, automatización, etiquetas, bitácora de tiempo) se construyó
+  ANTES de descubrir esto y **no existe en Servidesk real** — sigue en `pruebas`, pendiente que el
+  dueño decida qué conservar.
+- Siguiente: validar en apptest (al amanecer del 2026-11-26) TODAS las rondas de hoy. Aplicar
+  TODAS las migraciones 015-070 en phpMyAdmin de apptest ANTES de probar, en orden (no se aplican
+  solas; faltan números a propósito, varios bloques se numeraron aparte para no chocar: 015-018
+  SLA/portal, 030-034 finanzas, 040-049 problemas/cambios, 050-055 catálogo/KB/CSAT, 060-064
+  automatización/etiquetas/tiempo, 070 inventario kárdex). **Ojo con acentos**: si se aplican por
+  `mysql` de línea de comandos en vez de phpMyAdmin, usar `--default-character-set=utf8mb4` o los
+  ENUM con acentos (`Refacción`, etc.) se corrompen silenciosamente (ya pasó en local, se detectó
+  y corrigió). El repo de GitHub se puso de nuevo en público (estaba en privado y eso rompía el
+  pull de cPanel). Confirmar en cPanel que el push a `pruebas` (último commit `04f90fb`) se
+  desplegó a apptest o disparar el deploy manual si no es automático. Si algo no convence, revertir
+  el commit correspondiente en `pruebas` — no se tocó `master`. **Para desarrollo local**: ya
+  existe `sipcons_pruebas` en el MariaDB de XAMPP de esta máquina con esquema+datos de prueba
+  (`database/schema_base_dev.sql`, `database/SEED_PRUEBAS_LOCAL.md`, `.env` en la raíz sin
+  commitear) — todo lo de esta noche se probó de verdad contra esa base (no solo `php -l`).
 
 ## Decisiones de arquitectura
 | ID | Fecha | Decisión | Por qué |
@@ -58,5 +68,17 @@ Memoria compartida entre agentes. Solo lo no obvio: el porqué, lo descartado y 
   verdad contra `sipcons_pruebas` local (login, CRUD, flujos completos), con 3 bugs reales corregidos
   antes de pushear (`1ba0592`, `93b63c5`). Solo en `pruebas`, pendiente aplicar migraciones y validar
   en apptest.
+- 2026-11-26 · Primer lote portado de Servidesk real (no ITIL inventado): menú lateral unificado +
+  buscador global Ctrl+K (`scripts/menu-lateral.js`, `backend/buscar-global.php`, en todas las
+  páginas de `public/*` salvo `public/portal/*`) reemplazando los enlaces de sidebar a medias que
+  cada bloque de anoche había pegado por su cuenta; inventario extendido a categorías tipo kárdex
+  (Equipo/Refacción/Consumible/Herramienta, migración 070) con consumo/devolución de refacciones
+  ligado a una incidencia; dashboard de Inicio real (`backend/inicio.php`: bandeja de trabajo,
+  indicadores clicables, avisos, carga por técnico, "Mi día" para rol Técnico) reemplazando las
+  tarjetas estáticas; manual de usuario en la app (`public/manual.html`). Construido en 3 clones
+  (dos en paralelo, uno después) y fusionado sin conflictos de contenido (`74cf705`, `ae9fdf6`,
+  `04f90fb`), probado contra `sipcons_pruebas` local con los roles Administrador y Técnico. **No
+  se portó**: descuento automático de inventario al vender un equipo (`venta_detalles` no liga a
+  un `producto_id` real, es trabajo aparte) ni el badge de contador de incidencias en el menú.
 - 2026-11-19 · Rendimiento: sesión sin bloqueo, sin falsos logouts y menos peticiones PHP (`f38872e`).
 - 2026-10 · Tickets automáticos de mantenimiento: una sola periodicidad y verificación de póliza.
