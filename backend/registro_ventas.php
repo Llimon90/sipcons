@@ -49,9 +49,20 @@ try {
     $nFolio = "VT-" . str_pad($uFolio ? (int)substr($uFolio, 3) + 1 : 1, 5, "0", STR_PAD_LEFT);
 
     // 2. Insertar Cabecera (Venta)
-    $sqlV = "INSERT INTO ventas (folio, cliente, sucursal, fecha_registro) VALUES (?, ?, ?, ?)";
+    // cliente_id (migración 030) se busca por coincidencia de nombre porque el
+    // formulario solo manda el texto del cliente (igual que siempre); si no hay
+    // match exacto, la venta se guarda igual pero sin cliente_id (se puede
+    // vincular manualmente después desde Clientes). No se tocan forma_pago ni
+    // monto_total aquí: esta pantalla registra equipos (garantía/calibración),
+    // no importes — el módulo de Cuentas por Cobrar (backend/guardar-cxc.php)
+    // es independiente a propósito, para no mezclar ambos flujos.
+    $stmtCliente = $pdo->prepare('SELECT id FROM clientes WHERE TRIM(LOWER(nombre)) = TRIM(LOWER(?)) LIMIT 1');
+    $stmtCliente->execute([$cliente]);
+    $clienteIdEncontrado = $stmtCliente->fetchColumn() ?: null;
+
+    $sqlV = "INSERT INTO ventas (folio, cliente, cliente_id, sucursal, fecha_registro) VALUES (?, ?, ?, ?, ?)";
     $stmtV = $pdo->prepare($sqlV);
-    $stmtV->execute([$nFolio, $cliente, $_POST['sucursal'], $fecha_venta]);
+    $stmtV->execute([$nFolio, $cliente, $clienteIdEncontrado, $_POST['sucursal'], $fecha_venta]);
     $venta_id = $pdo->lastInsertId();
 
     // 3. Procesar Archivos (Facturas)

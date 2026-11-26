@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
+    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <ul>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="ventas.html"><i class="fas fa-chart-line"></i> <span class="sidebar-link-text">Ventas</span></a></li>
+      <li><a href="cotizaciones.html"><i class="fas fa-file-invoice-dollar"></i> <span class="sidebar-link-text">Cotizaciones</span></a></li>
+      <li><a href="cuentas-por-cobrar.html"><i class="fas fa-hand-holding-usd"></i> <span class="sidebar-link-text">Cuentas por Cobrar</span></a></li>
+      <li><a href="inventario.html" class="active"><i class="fas fa-boxes"></i> <span class="sidebar-link-text">Inventario</span></a></li>
+      <li><a href="finanzas.html"><i class="fas fa-chart-pie"></i> <span class="sidebar-link-text">Finanzas</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Inventario</h2>
+      <p>Catálogo de refacciones y productos, con su stock y movimientos.</p>
+    </section>
+
+    <section class="encabezado">
+      <form id="form-producto">
+        <h2>Dar de alta un producto</h2>
+        <div class="form-row">
+          <div>
+            <label for="sku">SKU:</label>
+            <input type="text" id="sku" name="sku" required>
+          </div>
+          <div>
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+          </div>
+          <div>
+            <label for="unidad">Unidad:</label>
+            <input type="text" id="unidad" name="unidad" value="pza">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="full-width">
+            <label for="descripcion">Descripción:</label>
+            <input type="text" id="descripcion" name="descripcion">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="stock_actual">Stock inicial:</label>
+            <input type="number" id="stock_actual" name="stock_actual" min="0" value="0">
+          </div>
+          <div>
+            <label for="stock_minimo">Stock mínimo:</label>
+            <input type="number" id="stock_minimo" name="stock_minimo" min="0" value="0">
+          </div>
+          <div>
+            <label for="costo">Costo:</label>
+            <input type="number" id="costo" name="costo" min="0" step="0.01" value="0">
+          </div>
+          <div>
+            <label for="precio_venta">Precio de venta:</label>
+            <input type="number" id="precio_venta" name="precio_venta" min="0" step="0.01" value="0">
+          </div>
+        </div>
+        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar producto</button>
+        <span id="mensaje-producto" style="margin-left:10px;"></span>
+      </form>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Catálogo</h2>
+      <div class="form-row">
+        <input type="text" id="campo-busqueda" placeholder="Buscar por SKU, nombre o descripción..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+        <label style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
+          <input type="checkbox" id="filtro-bajo-minimo"> Solo bajo mínimo
+        </label>
+      </div>
+      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
+        <thead>
+          <tr>
+            <th>SKU</th><th>Nombre</th><th>Unidad</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-productos"><tr><td colspan="8">Cargando...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="lista-incidencias" id="seccion-movimiento" style="display:none;">
+      <h2>Registrar movimiento — <span id="nombre-producto-movimiento"></span></h2>
+      <form id="form-movimiento" class="form-row" style="align-items:flex-end;">
+        <input type="hidden" id="movimiento-producto-id">
+        <div>
+          <label for="movimiento-tipo">Tipo:</label>
+          <select id="movimiento-tipo">
+            <option value="Entrada">Entrada</option>
+            <option value="Salida">Salida</option>
+            <option value="Ajuste">Ajuste</option>
+          </select>
+        </div>
+        <div>
+          <label for="movimiento-cantidad">Cantidad:</label>
+          <input type="number" id="movimiento-cantidad" min="1" value="1">
+        </div>
+        <div class="full-width">
+          <label for="movimiento-motivo">Motivo:</label>
+          <input type="text" id="movimiento-motivo" placeholder="Ej. venta, uso en servicio, compra a proveedor...">
+        </div>
+        <div>
+          <button type="submit">Registrar</button>
+        </div>
+      </form>
+      <div id="historial-movimientos" style="margin-top:15px;"></div>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/inventario.js?v=1"></script>
+</body>
+</html>

@@ -188,6 +188,11 @@
         'soporte.html': 'soporte',
         'informes.html': 'informes',
         'historial.html': 'historial',
+        'inventario.html': 'inventario',
+        'cotizaciones.html': 'cotizaciones',
+        'cotizacion-detalle.html': 'cotizaciones',
+        'cuentas-por-cobrar.html': 'cuentas_por_cobrar',
+        'finanzas.html': 'finanzas',
     };
 
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado

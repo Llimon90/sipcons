@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanzas</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
+    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+  <style>
+    .tarjetas-finanzas { display:flex; flex-wrap:wrap; gap:15px; margin:15px 0; }
+    .tarjeta-finanzas { background:#fff; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:18px; flex:1 1 200px; }
+    .tarjeta-finanzas h3 { margin:0 0 8px; font-size:0.9rem; color:#7f8c8d; }
+    .tarjeta-finanzas p { margin:0; font-size:1.6rem; font-weight:bold; }
+  </style>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+
+    <ul>
+      <li><a href="../index.html"><i class="fas fa-home"></i> <span class="sidebar-link-text">Inicio</span></a></li>
+      <li><a href="incidencias.html"><i class="fas fa-tasks"></i> <span class="sidebar-link-text">Incidencias</span></a></li>
+      <li><a href="reportes.html"><i class="fas fa-search"></i> <span class="sidebar-link-text">Buscar Incidencias</span></a></li>
+      <li><a href="clientes.html"><i class="fas fa-users"></i> <span class="sidebar-link-text">Clientes</span></a></li>
+      <li><a href="ventas.html"><i class="fas fa-chart-line"></i> <span class="sidebar-link-text">Ventas</span></a></li>
+      <li><a href="cotizaciones.html"><i class="fas fa-file-invoice-dollar"></i> <span class="sidebar-link-text">Cotizaciones</span></a></li>
+      <li><a href="cuentas-por-cobrar.html"><i class="fas fa-hand-holding-usd"></i> <span class="sidebar-link-text">Cuentas por Cobrar</span></a></li>
+      <li><a href="inventario.html"><i class="fas fa-boxes"></i> <span class="sidebar-link-text">Inventario</span></a></li>
+      <li><a href="finanzas.html" class="active"><i class="fas fa-chart-pie"></i> <span class="sidebar-link-text">Finanzas</span></a></li>
+      <li><a href="soporte.html"><i class="fas fa-headset"></i> <span class="sidebar-link-text">Soporte Técnico</span></a></li>
+      <li><a href="ajustes.html"><i class="fas fa-cog"></i> <span class="sidebar-link-text">Ajustes</span></a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado">
+      <h2>Finanzas</h2>
+      <p>Resumen ejecutivo: ventas, cuentas por cobrar, cotizaciones e inventario, con desglose por cliente y sucursal.</p>
+    </section>
+
+    <section class="encabezado">
+      <div class="form-row" style="align-items:flex-end;">
+        <div>
+          <label for="cliente_id">Cliente:</label>
+          <select id="cliente_id"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <label for="fecha_inicio">Desde:</label>
+          <input type="date" id="fecha_inicio">
+        </div>
+        <div>
+          <label for="fecha_fin">Hasta:</label>
+          <input type="date" id="fecha_fin">
+        </div>
+        <div>
+          <button type="button" id="btn-filtrar">Filtrar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="encabezado">
+      <div class="tarjetas-finanzas">
+        <div class="tarjeta-finanzas"><h3>Ventas del periodo</h3><p id="t-ventas">0</p></div>
+        <div class="tarjeta-finanzas"><h3>Por cobrar (saldo vigente)</h3><p id="t-por-cobrar">$0.00</p></div>
+        <div class="tarjeta-finanzas"><h3>Vencido</h3><p id="t-vencido" style="color:#e74c3c;">$0.00</p></div>
+        <div class="tarjeta-finanzas"><h3>Cobrado en el periodo</h3><p id="t-cobrado">$0.00</p></div>
+        <div class="tarjeta-finanzas"><h3>Cotizaciones (tasa de conversión)</h3><p id="t-conversion">0%</p></div>
+        <div class="tarjeta-finanzas"><h3>Valor de inventario</h3><p id="t-inventario">$0.00</p></div>
+      </div>
+    </section>
+
+    <section class="lista-incidencias">
+      <h2>Desglose por cliente y sucursal</h2>
+      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
+        <thead><tr><th>Cliente</th><th>Sucursal</th><th>Ventas (periodo)</th><th>Saldo por cobrar</th></tr></thead>
+        <tbody id="cuerpo-desglose"><tr><td colspan="4">Cargando...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/finanzas.js?v=1"></script>
+</body>
+</html>
