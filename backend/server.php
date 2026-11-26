@@ -53,6 +53,7 @@ if ($method === "GET") {
     require_once __DIR__ . '/../config/guardados_log.php';
     require_once __DIR__ . '/lib/incidencias_helpers.php';
     require_once __DIR__ . '/lib/sla_helpers.php';
+    require_once __DIR__ . '/lib/automatizacion_helpers.php';
     ini_set('display_errors', '0');
 
     $archivosMovidos = [];
@@ -136,6 +137,17 @@ if ($method === "GET") {
             'numero_incidente' => $nuevoNumeroIncidente,
         ];
         if ($tieneSerie) $valores['numero_serie'] = $numeroSerie !== '' ? $numeroSerie : null;
+
+        // Reglas de automatización (migración 060): solo al CREAR, nunca al
+        // editar, para no pelear con un cambio manual posterior del técnico.
+        // Puede sobreescribir 'tecnico' y/o 'prioridad' según categoria/sucursal/prioridad.
+        $tieneReglasAutomatizacion = (bool)$pdo->query("SHOW TABLES LIKE 'reglas_automatizacion'")->fetch();
+        if ($tieneReglasAutomatizacion) {
+            $sobreescritos = aplicarReglasAutomatizacion($pdo, $valores);
+            foreach ($sobreescritos as $campo => $valor) {
+                $valores[$campo] = $valor;
+            }
+        }
 
         // cliente_id (migración 017): se resuelve por nombre al dar de alta,
         // para que el portal de autoservicio pueda ubicar el ticket sin
