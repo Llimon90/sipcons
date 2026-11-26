@@ -14,6 +14,7 @@ require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
 require_once __DIR__ . '/../config/guardados_log.php';
 require_once __DIR__ . '/lib/incidencias_helpers.php';
+require_once __DIR__ . '/lib/sla_helpers.php';
 
 // Un aviso de PHP impreso en la respuesta rompería el JSON en el navegador
 ini_set('display_errors', '0');
@@ -94,6 +95,7 @@ try {
         'contacto'  => trim((string)$_POST['contacto']),
         'sucursal'  => (string)($_POST['sucursal'] ?? ''),
         'categoria' => (string)($_POST['categoria'] ?? ''),
+        'prioridad' => prioridadValida($_POST['prioridad'] ?? null) ? $_POST['prioridad'] : PRIORIDAD_DEFAULT,
         'fecha'     => (string)$_POST['fecha'],
         'tecnico'   => (string)($_POST['tecnico'] ?? ''),
         'estatus'   => (string)$_POST['estatus'],
@@ -150,6 +152,19 @@ try {
     if ($tieneSerie) {
         $serie = trim((string)($_POST['numero_serie'] ?? ''));
         $valores['numero_serie'] = $serie !== '' ? $serie : null;
+    }
+
+    // cliente_id (migración 017): solo se recalcula si el texto del cliente
+    // cambió; así no se pierde un vínculo ya corregido a mano en el admin
+    // cuando el nombre no calza exacto con clientes.nombre.
+    if (array_key_exists('cliente_id', $anterior)) {
+        if ($valores['cliente'] !== ($anterior['cliente'] ?? '')) {
+            $stClienteId = $pdo->prepare("SELECT id FROM clientes WHERE TRIM(LOWER(nombre)) = TRIM(LOWER(?)) LIMIT 1");
+            $stClienteId->execute([$valores['cliente']]);
+            $valores['cliente_id'] = $stClienteId->fetchColumn() ?: null;
+        } else {
+            $valores['cliente_id'] = $anterior['cliente_id'];
+        }
     }
 
     $sets = implode(', ', array_map(fn($c) => "`$c` = ?", array_keys($valores)));

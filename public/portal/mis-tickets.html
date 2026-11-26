@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis tickets — Portal SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../img/favicon-32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body>
+
+<div class="portal-shell">
+  <header class="portal-topbar">
+    <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+    <nav>
+      <span id="nombreCliente" style="color:var(--muted); font-size:0.85rem;"></span>
+      <a href="nuevo-ticket.html"><i class="fas fa-plus"></i> Nuevo ticket</a>
+      <a href="#" id="btnSalir">Salir</a>
+    </nav>
+  </header>
+
+  <section class="card">
+    <h2>Mis tickets</h2>
+    <div id="contenedorTickets"><p class="estado-vacio">Cargando…</p></div>
+  </section>
+</div>
+
+<script>
+  function escapeHtml(t) {
+    return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function claseP(p) {
+    return { 'Baja': 'p-baja', 'Media': 'p-media', 'Alta': 'p-alta', 'Crítica': 'p-critica' }[p] || 'p-media';
+  }
+
+  function formatearFecha(f) {
+    if (!f) return '';
+    const d = new Date(f);
+    return isNaN(d) ? f : d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  async function cargarTickets() {
+    const contenedor = document.getElementById('contenedorTickets');
+    try {
+      const res = await fetch('../../backend/portal/mis-tickets.php', { credentials: 'include' });
+      if (res.status === 401) { window.location.href = 'login.html'; return; }
+      const data = await res.json();
+
+      if (!data.success || !data.tickets.length) {
+        contenedor.innerHTML = '<p class="estado-vacio">Todavía no tienes tickets registrados. <a href="nuevo-ticket.html">Abre el primero</a>.</p>';
+        return;
+      }
+
+      const filas = data.tickets.map(t => `
+        <tr class="fila-clicable" onclick="window.location.href='ticket-detalle.html?id=${t.id}'">
+          <td>${escapeHtml(t.numero_incidente)}</td>
+          <td>${escapeHtml(t.categoria || '—')}</td>
+          <td><span class="badge-prioridad ${claseP(t.prioridad)}">${escapeHtml(t.prioridad || 'Media')}</span></td>
+          <td><span class="badge-estatus">${escapeHtml(t.estatus)}</span></td>
+          <td>${formatearFecha(t.fecha)}</td>
+        </tr>
+      `).join('');
+
+      contenedor.innerHTML = `
+        <table>
+          <thead><tr><th>Folio</th><th>Categoría</th><th>Prioridad</th><th>Estatus</th><th>Fecha</th></tr></thead>
+          <tbody>${filas}</tbody>
+        </table>`;
+    } catch (_) {
+      contenedor.innerHTML = '<p class="estado-vacio">No se pudieron cargar tus tickets. Verifica tu conexión e intenta de nuevo.</p>';
+    }
+  }
+
+  document.getElementById('btnSalir').addEventListener('click', async function (e) {
+    e.preventDefault();
+    try { await fetch('../../backend/portal/logout.php', { method: 'POST', credentials: 'include' }); } catch (_) {}
+    window.location.href = 'login.html';
+  });
+
+  cargarTickets();
+</script>
+
+</body>
+</html>

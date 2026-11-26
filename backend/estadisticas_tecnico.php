@@ -62,7 +62,7 @@ if ($action !== 'resumen') {
 $rango = construirFiltros($conn, 'i', 'fecha', null, null, $identidadTecnico);
 $filtros_where = $rango['where'];
 
-$sqlPeriodo = "SELECT id, fecha, estatus, tecnico, sucursal FROM incidencias i {$filtros_where}";
+$sqlPeriodo = "SELECT id, fecha, estatus, tecnico, sucursal, categoria, prioridad FROM incidencias i {$filtros_where}";
 $candidatasPeriodo = ejecutarConsulta($conn, $sqlPeriodo);
 $misIncidenciasPeriodo = array_values(array_filter(
     $candidatasPeriodo,

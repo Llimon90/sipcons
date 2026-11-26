@@ -3,10 +3,13 @@
 // (backend/estadisticas.php) y el dashboard personal del técnico
 // (backend/estadisticas_tecnico.php), para no duplicar el cálculo de
 // tiempos reales de respuesta/cierre en dos archivos.
+require_once __DIR__ . '/sla_helpers.php';
 
-// Umbrales de SLA (mismo criterio de 7 días que ya usa backend/alertas_incidentes.php)
-const SLA_RESPUESTA_HORAS = 4;
-const SLA_CIERRE_HORAS = 24 * 7;
+// Umbrales de SLA fijos: solo de respaldo si una incidencia no trae
+// categoria/prioridad (datasets antiguos) o sla_reglas no está disponible.
+// El SLA real y configurable vive en obtenerReglaSla() (sla_helpers.php).
+const SLA_RESPUESTA_HORAS = SLA_RESPUESTA_HORAS_FALLBACK;
+const SLA_CIERRE_HORAS = SLA_CIERRE_HORAS_FALLBACK;
 
 // Estatus considerados "cierre" (coincide con la definición de "resueltas" ya usada en el panel)
 const ESTADOS_CERRADOS = ['completado', 'cerrado con factura', 'cerrado sin factura', 'resuelto'];
@@ -234,6 +237,10 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
     $porIncidencia = [];
     $cierrePorTecnico = []; // tecnico => [horas, ...]
     $cierrePorSucursal = []; // sucursal => [horas, ...]
+    $dentroSlaRespuestaCount = 0;
+    $dentroSlaCierreCount = 0;
+    $dentroSlaPorTecnico = []; // tecnico => cantidad dentro de SLA
+    $dentroSlaPorSucursal = []; // sucursal => cantidad dentro de SLA
 
     foreach ($filas as $fila) {
         $id = (string)$fila['id'];
@@ -308,14 +315,26 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
         $respuestaHoras = ($tsRespuesta !== null && $tsRespuesta >= $tsCreacion) ? ($tsRespuesta - $tsCreacion) / 3600 : null;
         $cierreHoras = ($tsCierre !== null && $tsCierre >= $tsCreacion) ? ($tsCierre - $tsCreacion) / 3600 : null;
 
-        if ($respuestaHoras !== null) $tiemposRespuesta[] = $respuestaHoras;
+        // SLA por incidencia: depende de su categoría y prioridad (sla_reglas,
+        // ver backend/lib/sla_helpers.php), no de un umbral único para todas.
+        $regla = obtenerReglaSla($pdo, $fila['categoria'] ?? null, $fila['prioridad'] ?? null);
+
+        if ($respuestaHoras !== null) {
+            $tiemposRespuesta[] = $respuestaHoras;
+            if ($respuestaHoras <= $regla['horas_respuesta']) $dentroSlaRespuestaCount++;
+        }
         if ($cierreHoras !== null) {
             $tiemposCierre[] = $cierreHoras;
+            $dentroSla = $cierreHoras <= $regla['horas_cierre'];
+            if ($dentroSla) $dentroSlaCierreCount++;
             foreach (separarTecnicos($fila['tecnico'] ?? '') as $tecnico) {
                 $cierrePorTecnico[$tecnico][] = $cierreHoras;
+                if ($dentroSla) $dentroSlaPorTecnico[$tecnico] = ($dentroSlaPorTecnico[$tecnico] ?? 0) + 1;
             }
             if (sucursalEsReal($fila['sucursal'] ?? '')) {
-                $cierrePorSucursal[trim($fila['sucursal'])][] = $cierreHoras;
+                $sucursalNombre = trim($fila['sucursal']);
+                $cierrePorSucursal[$sucursalNombre][] = $cierreHoras;
+                if ($dentroSla) $dentroSlaPorSucursal[$sucursalNombre] = ($dentroSlaPorSucursal[$sucursalNombre] ?? 0) + 1;
             }
         }
 
@@ -339,28 +358,25 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
         else $buckets[3]['cantidad']++;
     }
 
-    $dentroSlaRespuesta = array_filter($tiemposRespuesta, fn($h) => $h <= SLA_RESPUESTA_HORAS);
-    $dentroSlaCierre = array_filter($tiemposCierre, fn($h) => $h <= SLA_CIERRE_HORAS);
-
     $porTecnico = [];
     foreach ($cierrePorTecnico as $tecnico => $horas) {
-        $dentroSla = array_filter($horas, fn($h) => $h <= SLA_CIERRE_HORAS);
+        $dentroSla = $dentroSlaPorTecnico[$tecnico] ?? 0;
         $porTecnico[$tecnico] = [
             'muestras' => count($horas),
             'cierre_mediana_horas' => mediana($horas),
             'cierre_promedio_horas' => promedio($horas),
-            'sla_pct' => round((count($dentroSla) / count($horas)) * 100, 1),
+            'sla_pct' => round(($dentroSla / count($horas)) * 100, 1),
         ];
     }
 
     $porSucursal = [];
     foreach ($cierrePorSucursal as $sucursal => $horas) {
-        $dentroSla = array_filter($horas, fn($h) => $h <= SLA_CIERRE_HORAS);
+        $dentroSla = $dentroSlaPorSucursal[$sucursal] ?? 0;
         $porSucursal[$sucursal] = [
             'muestras' => count($horas),
             'cierre_mediana_horas' => mediana($horas),
             'cierre_promedio_horas' => promedio($horas),
-            'sla_pct' => round((count($dentroSla) / count($horas)) * 100, 1),
+            'sla_pct' => round(($dentroSla / count($horas)) * 100, 1),
         ];
     }
 
@@ -373,8 +389,8 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             'cierre_promedio_horas' => promedio($tiemposCierre),
             'cierre_mediana_horas' => mediana($tiemposCierre),
             'muestras_cierre' => count($tiemposCierre),
-            'sla_respuesta_pct' => count($tiemposRespuesta) > 0 ? round((count($dentroSlaRespuesta) / count($tiemposRespuesta)) * 100, 1) : null,
-            'sla_cierre_pct' => count($tiemposCierre) > 0 ? round((count($dentroSlaCierre) / count($tiemposCierre)) * 100, 1) : null,
+            'sla_respuesta_pct' => count($tiemposRespuesta) > 0 ? round(($dentroSlaRespuestaCount / count($tiemposRespuesta)) * 100, 1) : null,
+            'sla_cierre_pct' => count($tiemposCierre) > 0 ? round(($dentroSlaCierreCount / count($tiemposCierre)) * 100, 1) : null,
             'total_incidencias' => count($filas),
             'cierre_buckets' => $buckets,
         ],

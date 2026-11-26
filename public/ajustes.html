@@ -180,6 +180,41 @@
         <span id="mensaje-privilegios" style="margin-left:10px;"></span>
       </div>
     </section>
+
+    <!-- ============================================================ -->
+    <!-- AVANZADO: solo Administrador / Programador -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias" id="seccion-sla" style="display:none;">
+      <h2>Reglas de SLA</h2>
+      <p style="color:#7f8c8d; margin-top:-10px;">
+        Horas máximas de respuesta y de cierre por prioridad. Una fila con categoría vacía es la
+        regla general de esa prioridad; agrega una fila con categoría para afinar un caso particular.
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table id="tabla-sla">
+          <thead>
+            <tr>
+              <th>Categoría (vacío = general)</th>
+              <th>Prioridad</th>
+              <th>Horas de respuesta</th>
+              <th>Horas de cierre</th>
+              <th>Activa</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-sla">
+            <tr><td colspan="6">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px;">
+        <button type="button" id="btn-agregar-regla-sla">Agregar regla</button>
+        <button type="button" id="btn-guardar-sla">Guardar reglas de SLA</button>
+        <span id="mensaje-sla" style="margin-left:10px;"></span>
+      </div>
+    </section>
   </main>
 
   <script src="../scripts/sidebar-state.js?v=20261002"></script>

@@ -4,6 +4,7 @@
 // la página estaba abierta, y los límites de subida del servidor.
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/lib/incidencias_helpers.php';
+require_once __DIR__ . '/lib/sla_helpers.php';
 
 ini_set('display_errors', '0');
 
@@ -27,6 +28,7 @@ try {
 
     $datos = incidenciaParaFrontend($pdo, $fila);
     $datos['limites_subida'] = limitesSubida() + ['extensiones' => EXTENSIONES_ADJUNTOS];
+    $datos['sla'] = obtenerReglaSla($pdo, $fila['categoria'] ?? null, $fila['prioridad'] ?? null);
     echo json_encode($datos, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('detalle.php: ' . $e->getMessage());

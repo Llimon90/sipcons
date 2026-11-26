@@ -38,7 +38,7 @@ require_once __DIR__ . '/lib/estadisticas_helpers.php';
  * la ejecución.
  */
 function exportarCsv($conn, $pdo, $filtros_where) {
-    $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha
+    $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, prioridad, falla, estatus, fecha
             FROM incidencias i {$filtros_where}
             ORDER BY fecha DESC";
     $filas = ejecutarConsulta($conn, $sql);
@@ -136,7 +136,7 @@ switch ($action) {
 
             $placeholders = implode(',', array_fill(0, count($idsReincidentes), '?'));
             $stmt = $pdo->prepare("
-                SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha, numero_serie
+                SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, prioridad, falla, estatus, fecha, numero_serie
                 FROM {$tabla_incidencias}
                 WHERE id IN ($placeholders)
                 ORDER BY numero_serie ASC, fecha DESC
@@ -168,7 +168,7 @@ switch ($action) {
         $conector = empty($filtros_where) ? "WHERE" : "AND";
         $sqlWhereEstatus = "(" . implode(" OR ", $condicionesEstatus) . ")";
 
-        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha
+        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, prioridad, falla, estatus, fecha
                 FROM {$tabla_incidencias} i {$filtros_where} {$conector} {$sqlWhereEstatus}
                 ORDER BY fecha DESC
                 LIMIT 300";

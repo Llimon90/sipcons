@@ -20,22 +20,25 @@ if ($conn->connect_error) {
     die(json_encode(["error" => "Error de conexión BD: " . $conn->connect_error]));
 }
 
-$busqueda = isset($_GET['busqueda']) ? $conn->real_escape_string($_GET['busqueda']) : '';
+$busqueda = isset($_GET['busqueda']) ? trim($_GET['busqueda']) : '';
 
-if ($busqueda) {
-    $sql = "SELECT * FROM clientes WHERE 
-            nombre LIKE '%$busqueda%' OR 
-            rfc LIKE '%$busqueda%' OR 
-            direccion LIKE '%$busqueda%' OR 
-            telefono LIKE '%$busqueda%' OR 
-            contactos LIKE '%$busqueda%' OR 
-            email LIKE '%$busqueda%' 
+if ($busqueda !== '') {
+    $sql = "SELECT * FROM clientes WHERE
+            nombre LIKE ? OR
+            rfc LIKE ? OR
+            direccion LIKE ? OR
+            telefono LIKE ? OR
+            contactos LIKE ? OR
+            email LIKE ?
             ORDER BY nombre";
+    $stmt = $conn->prepare($sql);
+    $comodin = '%' . $busqueda . '%';
+    $stmt->bind_param('ssssss', $comodin, $comodin, $comodin, $comodin, $comodin, $comodin);
+    $stmt->execute();
+    $result = $stmt->get_result();
 } else {
-    $sql = "SELECT * FROM clientes ORDER BY nombre";
+    $result = $conn->query("SELECT * FROM clientes ORDER BY nombre");
 }
-
-$result = $conn->query($sql);
 
 if (!$result) {
     ob_clean();

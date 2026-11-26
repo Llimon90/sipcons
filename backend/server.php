@@ -52,6 +52,7 @@ if ($method === "GET") {
     // La incidencia y sus archivos se guardan juntos o no se guarda nada.
     require_once __DIR__ . '/../config/guardados_log.php';
     require_once __DIR__ . '/lib/incidencias_helpers.php';
+    require_once __DIR__ . '/lib/sla_helpers.php';
     ini_set('display_errors', '0');
 
     $archivosMovidos = [];
@@ -88,6 +89,10 @@ if ($method === "GET") {
         $responderError(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta y fecha.');
     }
 
+    // Prioridad: lista blanca en el servidor, nunca se confía en lo que
+    // mande el formulario. Si falta o no es válida, se usa "Media".
+    $prioridad = prioridadValida($data['prioridad'] ?? null) ? $data['prioridad'] : PRIORIDAD_DEFAULT;
+
     // Cerrar con/sin factura: no lo puede hacer el rol Técnico ni los usuarios
     // restringidos en el .env (ver puedeCerrarIncidencias en config/auth.php)
     if (!puedeCerrarIncidencias() && in_array($data["status"], ESTATUS_DE_CIERRE, true)) {
@@ -122,6 +127,7 @@ if ($method === "GET") {
             'contacto'         => trim((string)$data['contacto']),
             'sucursal'         => (string)$data['sucursal'],
             'categoria'        => (string)($data['categoria'] ?? ''),
+            'prioridad'        => $prioridad,
             'fecha'            => (string)$data['fecha'],
             'tecnico'          => (string)$data['tecnico'],
             'estatus'          => (string)$data['status'],
@@ -130,6 +136,18 @@ if ($method === "GET") {
             'numero_incidente' => $nuevoNumeroIncidente,
         ];
         if ($tieneSerie) $valores['numero_serie'] = $numeroSerie !== '' ? $numeroSerie : null;
+
+        // cliente_id (migración 017): se resuelve por nombre al dar de alta,
+        // para que el portal de autoservicio pueda ubicar el ticket sin
+        // depender de que el formulario interno ya mande un id de cliente.
+        // Si no hay coincidencia exacta, queda NULL y se vincula a mano desde
+        // Clientes → Acceso al portal.
+        $tieneClienteId = (bool)$pdo->query("SHOW COLUMNS FROM incidencias LIKE 'cliente_id'")->fetch();
+        if ($tieneClienteId) {
+            $stClienteId = $pdo->prepare("SELECT id FROM clientes WHERE TRIM(LOWER(nombre)) = TRIM(LOWER(?)) LIMIT 1");
+            $stClienteId->execute([$valores['cliente']]);
+            $valores['cliente_id'] = $stClienteId->fetchColumn() ?: null;
+        }
 
         $columnas = implode(', ', array_map(fn($c) => "`$c`", array_keys($valores)));
         $marcas = implode(', ', array_fill(0, count($valores), '?'));

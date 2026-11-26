@@ -1,5 +1,21 @@
 /* Detalle de incidencia (detalle.html). Se carga después de styles.css. */
 
+.badge-sla {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+.badge-sla.sla-verde { background: #e6f6ec; color: #1e7e42; }
+.badge-sla.sla-amarillo { background: #fff6e0; color: #92700f; }
+.badge-sla.sla-rojo { background: #fdecea; color: #a8322b; }
+html[data-theme="dark"] .badge-sla.sla-verde { background: #163a26; color: #6fd99a; }
+html[data-theme="dark"] .badge-sla.sla-amarillo { background: #3a2f0f; color: #f0cf6e; }
+html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b3; }
+
 .retorna {
     padding: 10px;
     background-color: #e9e9e9;

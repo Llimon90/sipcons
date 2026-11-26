@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar contraseña — Portal SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../img/favicon-32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body class="portal-auth">
+
+<main class="login-card" id="paso-solicitar">
+  <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+  <p class="portal-subtitulo">Recuperar contraseña</p>
+
+  <div class="ok-msg" id="okMsg1" role="status"><i class="fas fa-circle-check"></i><span>Si el correo está registrado, se generó un enlace. Pide a SIPCONS que te lo comparta mientras no haya envío automático por correo.</span></div>
+
+  <form id="formSolicitar" autocomplete="off">
+    <div class="form-group">
+      <label for="email">Correo registrado en el portal</label>
+      <input type="email" id="email" name="email" required autofocus />
+    </div>
+    <button type="submit" class="btn-login" id="btnSolicitar">Enviar enlace de recuperación</button>
+  </form>
+  <p class="portal-link"><a href="login.html">Volver a iniciar sesión</a></p>
+</main>
+
+<main class="login-card" id="paso-confirmar" style="display:none;">
+  <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+  <p class="portal-subtitulo">Define tu nueva contraseña</p>
+
+  <div class="error-msg" id="errorMsg2" role="alert"><i class="fas fa-circle-exclamation"></i><span id="errorText2"></span></div>
+  <div class="ok-msg" id="okMsg2" role="status"><i class="fas fa-circle-check"></i><span id="okText2"></span></div>
+
+  <form id="formConfirmar" autocomplete="off">
+    <div class="form-group">
+      <label for="password_nueva">Nueva contraseña (mínimo 8 caracteres)</label>
+      <input type="password" id="password_nueva" minlength="8" required />
+    </div>
+    <button type="submit" class="btn-login" id="btnConfirmar">Guardar nueva contraseña</button>
+  </form>
+</main>
+
+<footer class="page-footer">&copy; <span id="year"></span> SIPCONS. Portal exclusivo para clientes registrados.</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const email = params.get('email');
+
+  if (token && email) {
+    document.getElementById('paso-solicitar').style.display = 'none';
+    document.getElementById('paso-confirmar').style.display = 'block';
+  }
+
+  document.getElementById('formSolicitar').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSolicitar');
+    btn.disabled = true;
+    try {
+      const formData = new FormData(this);
+      await fetch('../../backend/portal/solicitar-reset.php', { method: 'POST', body: formData, credentials: 'include' });
+    } catch (_) { /* se muestra el mismo mensaje genérico de cualquier forma */ }
+    document.getElementById('okMsg1').classList.add('visible');
+    this.reset();
+    btn.disabled = false;
+  });
+
+  document.getElementById('formConfirmar').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnConfirmar');
+    const errorMsg = document.getElementById('errorMsg2');
+    const okMsg = document.getElementById('okMsg2');
+    errorMsg.classList.remove('visible');
+    okMsg.classList.remove('visible');
+    btn.disabled = true;
+
+    try {
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('token', token);
+      formData.append('password_nueva', document.getElementById('password_nueva').value);
+
+      const res = await fetch('../../backend/portal/confirmar-reset.php', { method: 'POST', body: formData, credentials: 'include' });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('okText2').textContent = data.message || 'Contraseña actualizada.';
+        okMsg.classList.add('visible');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1800);
+      } else {
+        document.getElementById('errorText2').textContent = data.error || 'No se pudo actualizar la contraseña.';
+        errorMsg.classList.add('visible');
+        btn.disabled = false;
+      }
+    } catch (_) {
+      document.getElementById('errorText2').textContent = 'Error de conexión. Intenta de nuevo.';
+      errorMsg.classList.add('visible');
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

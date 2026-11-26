@@ -4,5 +4,7 @@ uploads/*
 error_log
 storage/sessions/*
 !storage/sessions/.htaccess
+storage/sessions_portal/*
+!storage/sessions_portal/.htaccess
 storage/logs/*
 !storage/logs/.htaccess

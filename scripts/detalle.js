@@ -339,6 +339,26 @@ function tecnicoGroupHTML(opcionesHTML, requerido) {
         </div>`;
 }
 
+// Insignia de SLA: compara la fecha de reporte con el límite de cierre que
+// aplica a esta incidencia (categoría+prioridad, ver backend/lib/sla_helpers.php).
+// No se muestra si ya está cerrada (ahí lo que importa es si se cerró a tiempo,
+// no una cuenta en vivo) o si el servidor no envió la regla.
+const ESTATUS_SLA_CERRADOS = ['completado', 'cerrado con factura', 'cerrado sin factura', 'resuelto'];
+function slaBadgeHTML(data) {
+    if (!data.sla || !data.fecha) return '';
+    if (ESTATUS_SLA_CERRADOS.includes((data.estatus || '').trim().toLowerCase())) return '';
+
+    const horasTranscurridas = (Date.now() - new Date(data.fecha).getTime()) / 3600000;
+    const limite = Number(data.sla.horas_cierre) || 0;
+    if (!limite) return '';
+
+    let color = 'sla-verde', texto = 'Dentro de SLA';
+    if (horasTranscurridas >= limite) { color = 'sla-rojo'; texto = 'SLA vencido'; }
+    else if (horasTranscurridas >= limite * 0.8) { color = 'sla-amarillo'; texto = 'SLA por vencer'; }
+
+    return `<span class="badge-sla ${color}" title="Límite de cierre: ${limite} h (prioridad ${escapeAttr(data.prioridad || 'Media')})">${texto}</span>`;
+}
+
 function createFormHTML(data, tecnicosLista) {
     // Convertir técnico existente en array si no lo es
     const tecnicosIniciales = Array.isArray(data.tecnico) ? data.tecnico : 
@@ -346,7 +366,7 @@ function createFormHTML(data, tecnicosLista) {
 
     return `
         <form id="form-editar">
-            <p class="detalle-folio"><strong># REPORTE INTERNO:</strong> ${data.numero_incidente}</p>
+            <p class="detalle-folio"><strong># REPORTE INTERNO:</strong> ${data.numero_incidente} ${slaBadgeHTML(data)}</p>
             <div class="form-row">
                 <div>
                     <label for="reporte_cliente"># INCIDENCIA CLIENTE:</label>
@@ -386,6 +406,15 @@ function createFormHTML(data, tecnicosLista) {
                 <div>
                     <label for="fecha">FECHA:</label>
                     <input type="date" id="fecha" value="${data.fecha || ''}" required>
+                </div>
+                <div>
+                    <label for="prioridad">PRIORIDAD:</label>
+                    <select id="prioridad">
+                        <option value="Baja" ${data.prioridad === "Baja" ? 'selected' : ''}>Baja</option>
+                        <option value="Media" ${!data.prioridad || data.prioridad === "Media" ? 'selected' : ''}>Media</option>
+                        <option value="Alta" ${data.prioridad === "Alta" ? 'selected' : ''}>Alta</option>
+                        <option value="Crítica" ${data.prioridad === "Crítica" ? 'selected' : ''}>Crítica</option>
+                    </select>
                 </div>
             </div>
 
@@ -530,12 +559,12 @@ function setupTecnicosMultiples(tecnicosLista) {
 //   otra pestaña/equipo del mismo usuario) para no pisar esos cambios.
 // =====================================================================
 
-const CAMPOS_FORM = ['reporte_cliente', 'cliente', 'contacto', 'sucursal', 'categoria', 'fecha',
+const CAMPOS_FORM = ['reporte_cliente', 'cliente', 'contacto', 'sucursal', 'categoria', 'prioridad', 'fecha',
     'numero_serie', 'estatus', 'falla', 'accion', 'notas'];
 
 const NOMBRES_CAMPO = {
     reporte_cliente: '# Incidencia cliente', cliente: 'Cliente', contacto: 'Contacto',
-    sucursal: 'Sucursal', categoria: 'Categoría', fecha: 'Fecha', numero_serie: 'Número de serie',
+    sucursal: 'Sucursal', categoria: 'Categoría', prioridad: 'Prioridad', fecha: 'Fecha', numero_serie: 'Número de serie',
     estatus: 'Estatus', falla: 'Falla', accion: 'Trabajo realizado', notas: 'Notas', tecnicos: 'Técnicos'
 };
 

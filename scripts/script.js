@@ -105,6 +105,7 @@ async function registrarIncidencia() {
   datos.append('contacto', document.getElementById('contacto').value);
   datos.append('sucursal', document.getElementById('sucursal').value);
   datos.append('categoria', document.getElementById('categoria').value);
+  datos.append('prioridad', document.getElementById('prioridad').value);
   datos.append('numero_serie', (document.getElementById('numero_serie')?.value || '').trim());
   datos.append('falla', document.getElementById('falla').value);
   datos.append('fecha', document.getElementById('fecha').value);

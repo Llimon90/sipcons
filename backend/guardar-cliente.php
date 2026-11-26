@@ -44,19 +44,12 @@ if (empty($nombre) || empty($contactos) ) {
     exit;
 }
 
-// Evitar inyecciones SQL
-$nombre = $conn->real_escape_string($nombre);
-$rfc = $conn->real_escape_string($rfc);
-$direccion = $conn->real_escape_string($direccion);
-$telefono = $conn->real_escape_string($telefono);
-$contactos = $conn->real_escape_string($contactos);
-$email = $conn->real_escape_string($email);
+// Inserta en la base de datos (parametrizado: ver AGENTS.md, regla 1)
+$sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param('ssssss', $nombre, $rfc, $direccion, $telefono, $contactos, $email);
 
-// Inserta en la base de datos
-$sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) 
-        VALUES ('$nombre', '$rfc', '$direccion', '$telefono', '$contactos', '$email')";
-
-if ($conn->query($sql) === TRUE) {
+if ($stmt->execute()) {
     $nuevoId = $conn->insert_id;
     sincronizarContactosCliente($nuevoId, $listaContactos);
     registrarAuditoria('clientes', $nuevoId, 'CREATE', null, [

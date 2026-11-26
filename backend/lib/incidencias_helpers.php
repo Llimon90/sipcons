@@ -149,7 +149,7 @@ function camposQueNoCoinciden(array $enviados, array $enBase): array {
 function nombresCamposIncidencia(array $campos): string {
     $nombres = [
         'reporte_cliente' => '# incidencia cliente', 'cliente' => 'cliente', 'contacto' => 'contacto',
-        'sucursal' => 'sucursal', 'categoria' => 'categoría', 'fecha' => 'fecha', 'tecnico' => 'técnicos',
+        'sucursal' => 'sucursal', 'categoria' => 'categoría', 'prioridad' => 'prioridad', 'cliente_id' => 'cliente vinculado', 'fecha' => 'fecha', 'tecnico' => 'técnicos',
         'estatus' => 'estatus', 'falla' => 'falla', 'accion' => 'trabajo realizado', 'notas' => 'notas',
         'numero_serie' => 'número de serie', 'numero_incidente' => 'folio',
     ];
