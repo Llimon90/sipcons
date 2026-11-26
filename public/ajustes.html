@@ -215,6 +215,99 @@
         <span id="mensaje-sla" style="margin-left:10px;"></span>
       </div>
     </section>
+
+    <!-- ============================================================ -->
+    <!-- Automatización: solo Administrador / Programador -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias" id="seccion-automatizacion" style="display:none;">
+      <h2>Reglas de automatización</h2>
+      <p style="color:#7f8c8d; margin-top:-10px;">
+        Al crear una incidencia (no al editar), si categoría/sucursal/prioridad coincide exactamente
+        con el valor de la condición, se asigna el técnico o se cambia la prioridad automáticamente.
+        Si varias reglas coinciden, gana la de orden más alto.
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table id="tabla-automatizacion">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Si...</th>
+              <th>Es igual a</th>
+              <th>Entonces...</th>
+              <th>Valor</th>
+              <th>Orden</th>
+              <th>Activa</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-automatizacion">
+            <tr><td colspan="8">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px;">
+        <button type="button" id="btn-agregar-regla-automatizacion">Agregar regla</button>
+        <button type="button" id="btn-guardar-automatizacion">Guardar reglas de automatización</button>
+        <span id="mensaje-automatizacion" style="margin-left:10px;"></span>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Plantillas de respuesta rápida: solo Administrador / Programador -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias" id="seccion-plantillas" style="display:none;">
+      <h2>Plantillas de respuesta rápida</h2>
+      <p style="color:#7f8c8d; margin-top:-10px;">
+        Textos que los técnicos pueden insertar en las notas de una incidencia desde su detalle.
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table id="tabla-plantillas">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Contenido</th>
+              <th>Categoría (opcional)</th>
+              <th>Activa</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-plantillas">
+            <tr><td colspan="5">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px;">
+        <button type="button" id="btn-agregar-plantilla">Agregar plantilla</button>
+        <button type="button" id="btn-guardar-plantillas">Guardar plantillas</button>
+        <span id="mensaje-plantillas" style="margin-left:10px;"></span>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- Etiquetas: solo Administrador / Programador -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias" id="seccion-etiquetas" style="display:none;">
+      <h2>Etiquetas de incidencias</h2>
+      <div style="overflow-x:auto;">
+        <table id="tabla-etiquetas">
+          <thead>
+            <tr><th>Nombre</th><th>Color</th><th></th></tr>
+          </thead>
+          <tbody id="cuerpo-etiquetas">
+            <tr><td colspan="3">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:15px;">
+        <button type="button" id="btn-agregar-etiqueta">Agregar etiqueta</button>
+        <button type="button" id="btn-guardar-etiquetas">Guardar etiquetas</button>
+        <span id="mensaje-etiquetas" style="margin-left:10px;"></span>
+      </div>
+    </section>
   </main>
 
   <script src="../scripts/sidebar-state.js?v=20261002"></script>

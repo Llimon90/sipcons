@@ -320,10 +320,377 @@
             });
     }
 
+    // --- Reglas de automatización (solo Administrador/Programador) ---
+    var automatizacionOpciones = { categorias: [], tecnicos: [], prioridades: [] };
+
+    function filaReglaAutomatizacionHTML(regla) {
+        regla = regla || { nombre: '', campo_condicion: 'categoria', valor_condicion: '', accion: 'asignar_tecnico', valor_accion: '', activo: 1, orden: 0 };
+        var tr = document.createElement('tr');
+        if (regla.id) tr.dataset.id = regla.id;
+
+        var tdNombre = document.createElement('td');
+        var inputNombre = document.createElement('input');
+        inputNombre.type = 'text';
+        inputNombre.className = 'auto-nombre';
+        inputNombre.value = regla.nombre || '';
+        inputNombre.style.width = '140px';
+        tdNombre.appendChild(inputNombre);
+        tr.appendChild(tdNombre);
+
+        var tdCampo = document.createElement('td');
+        var selectCampo = document.createElement('select');
+        selectCampo.className = 'auto-campo-condicion';
+        [['categoria', 'Categoría'], ['sucursal', 'Sucursal'], ['prioridad', 'Prioridad']].forEach(function (par) {
+            var opt = document.createElement('option');
+            opt.value = par[0];
+            opt.textContent = par[1];
+            if (par[0] === regla.campo_condicion) opt.selected = true;
+            selectCampo.appendChild(opt);
+        });
+        tdCampo.appendChild(selectCampo);
+        tr.appendChild(tdCampo);
+
+        var tdValorCondicion = document.createElement('td');
+        var inputValorCondicion = document.createElement('input');
+        inputValorCondicion.type = 'text';
+        inputValorCondicion.className = 'auto-valor-condicion';
+        inputValorCondicion.value = regla.valor_condicion || '';
+        inputValorCondicion.setAttribute('list', 'auto-categorias-datalist');
+        inputValorCondicion.style.width = '130px';
+        tdValorCondicion.appendChild(inputValorCondicion);
+        tr.appendChild(tdValorCondicion);
+
+        var tdAccion = document.createElement('td');
+        var selectAccion = document.createElement('select');
+        selectAccion.className = 'auto-accion';
+        [['asignar_tecnico', 'Asignar técnico'], ['cambiar_prioridad', 'Cambiar prioridad']].forEach(function (par) {
+            var opt = document.createElement('option');
+            opt.value = par[0];
+            opt.textContent = par[1];
+            if (par[0] === regla.accion) opt.selected = true;
+            selectAccion.appendChild(opt);
+        });
+        tdAccion.appendChild(selectAccion);
+        tr.appendChild(tdAccion);
+
+        var tdValorAccion = document.createElement('td');
+        var inputValorAccion = document.createElement('input');
+        inputValorAccion.type = 'text';
+        inputValorAccion.className = 'auto-valor-accion';
+        inputValorAccion.value = regla.valor_accion || '';
+        inputValorAccion.setAttribute('list', 'auto-tecnicos-datalist');
+        inputValorAccion.style.width = '130px';
+        tdValorAccion.appendChild(inputValorAccion);
+        tr.appendChild(tdValorAccion);
+
+        var tdOrden = document.createElement('td');
+        var inputOrden = document.createElement('input');
+        inputOrden.type = 'number';
+        inputOrden.className = 'auto-orden';
+        inputOrden.value = regla.orden || 0;
+        inputOrden.style.width = '60px';
+        tdOrden.appendChild(inputOrden);
+        tr.appendChild(tdOrden);
+
+        var tdActivo = document.createElement('td');
+        tdActivo.style.textAlign = 'center';
+        var checkboxActivo = document.createElement('input');
+        checkboxActivo.type = 'checkbox';
+        checkboxActivo.className = 'auto-activo';
+        checkboxActivo.checked = !!Number(regla.activo);
+        tdActivo.appendChild(checkboxActivo);
+        tr.appendChild(tdActivo);
+
+        var tdQuitar = document.createElement('td');
+        var btnQuitar = document.createElement('button');
+        btnQuitar.type = 'button';
+        btnQuitar.textContent = 'Quitar';
+        btnQuitar.addEventListener('click', function () { tr.remove(); });
+        tdQuitar.appendChild(btnQuitar);
+        tr.appendChild(tdQuitar);
+
+        return tr;
+    }
+
+    function renderTablaAutomatizacion(reglas) {
+        ['auto-categorias-datalist', 'auto-tecnicos-datalist'].forEach(function (id, i) {
+            var datalist = document.getElementById(id);
+            if (!datalist) {
+                datalist = document.createElement('datalist');
+                datalist.id = id;
+                document.body.appendChild(datalist);
+            }
+            datalist.innerHTML = '';
+            var fuente = i === 0 ? automatizacionOpciones.categorias : automatizacionOpciones.tecnicos;
+            (fuente || []).forEach(function (valor) {
+                var opt = document.createElement('option');
+                opt.value = valor;
+                datalist.appendChild(opt);
+            });
+        });
+
+        var cuerpo = document.getElementById('cuerpo-automatizacion');
+        cuerpo.innerHTML = '';
+        if (!reglas.length) {
+            cuerpo.appendChild(filaReglaAutomatizacionHTML());
+            return;
+        }
+        reglas.forEach(function (regla) { cuerpo.appendChild(filaReglaAutomatizacionHTML(regla)); });
+    }
+
+    function guardarReglasAutomatizacion() {
+        var reglas = [];
+        document.querySelectorAll('#cuerpo-automatizacion tr').forEach(function (tr) {
+            var nombre = tr.querySelector('.auto-nombre');
+            var campo = tr.querySelector('.auto-campo-condicion');
+            var valorCondicion = tr.querySelector('.auto-valor-condicion');
+            var accion = tr.querySelector('.auto-accion');
+            var valorAccion = tr.querySelector('.auto-valor-accion');
+            var orden = tr.querySelector('.auto-orden');
+            var activo = tr.querySelector('.auto-activo');
+            if (!nombre || !campo) return;
+            reglas.push({
+                id: tr.dataset.id ? parseInt(tr.dataset.id, 10) : undefined,
+                nombre: nombre.value.trim(),
+                campo_condicion: campo.value,
+                valor_condicion: valorCondicion.value.trim(),
+                accion: accion.value,
+                valor_accion: valorAccion.value.trim(),
+                orden: parseInt(orden.value, 10) || 0,
+                activo: activo.checked ? 1 : 0,
+            });
+        });
+
+        fetch('../backend/guardar-reglas-automatizacion.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reglas: reglas }),
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    mostrarMensaje('mensaje-automatizacion', 'Reglas de automatización guardadas.', 'ok');
+                    initAutomatizacion();
+                } else {
+                    mostrarMensaje('mensaje-automatizacion', data.message || 'No se pudieron guardar.', 'error');
+                }
+            })
+            .catch(function () { mostrarMensaje('mensaje-automatizacion', 'Error de red al guardar.', 'error'); });
+    }
+
+    function initAutomatizacion() {
+        fetch('../backend/obtener-reglas-automatizacion.php')
+            .then(function (r) { return r.status === 403 ? null : r.json(); })
+            .then(function (data) {
+                if (!data || !data.success) return;
+                automatizacionOpciones = { categorias: data.categorias, tecnicos: data.tecnicos, prioridades: data.prioridades };
+
+                document.getElementById('seccion-automatizacion').style.display = 'block';
+                renderTablaAutomatizacion(data.reglas);
+
+                document.getElementById('btn-guardar-automatizacion').addEventListener('click', guardarReglasAutomatizacion);
+                document.getElementById('btn-agregar-regla-automatizacion').addEventListener('click', function () {
+                    document.getElementById('cuerpo-automatizacion').appendChild(filaReglaAutomatizacionHTML());
+                });
+            })
+            .catch(function () { /* sin acceso: la sección queda oculta */ });
+    }
+
+    // --- Plantillas de respuesta rápida (solo Administrador/Programador) ---
+    function filaPlantillaHTML(plantilla) {
+        plantilla = plantilla || { titulo: '', contenido: '', categoria: '', activo: 1 };
+        var tr = document.createElement('tr');
+        if (plantilla.id) tr.dataset.id = plantilla.id;
+
+        var tdTitulo = document.createElement('td');
+        var inputTitulo = document.createElement('input');
+        inputTitulo.type = 'text';
+        inputTitulo.className = 'plantilla-titulo';
+        inputTitulo.value = plantilla.titulo || '';
+        inputTitulo.style.width = '150px';
+        tdTitulo.appendChild(inputTitulo);
+        tr.appendChild(tdTitulo);
+
+        var tdContenido = document.createElement('td');
+        var textareaContenido = document.createElement('textarea');
+        textareaContenido.className = 'plantilla-contenido';
+        textareaContenido.value = plantilla.contenido || '';
+        textareaContenido.rows = 2;
+        textareaContenido.style.width = '280px';
+        tdContenido.appendChild(textareaContenido);
+        tr.appendChild(tdContenido);
+
+        var tdCategoria = document.createElement('td');
+        var inputCategoria = document.createElement('input');
+        inputCategoria.type = 'text';
+        inputCategoria.className = 'plantilla-categoria';
+        inputCategoria.value = plantilla.categoria || '';
+        tdCategoria.appendChild(inputCategoria);
+        tr.appendChild(tdCategoria);
+
+        var tdActivo = document.createElement('td');
+        tdActivo.style.textAlign = 'center';
+        var checkboxActivo = document.createElement('input');
+        checkboxActivo.type = 'checkbox';
+        checkboxActivo.className = 'plantilla-activo';
+        checkboxActivo.checked = !!Number(plantilla.activo);
+        tdActivo.appendChild(checkboxActivo);
+        tr.appendChild(tdActivo);
+
+        var tdQuitar = document.createElement('td');
+        var btnQuitar = document.createElement('button');
+        btnQuitar.type = 'button';
+        btnQuitar.textContent = 'Quitar';
+        btnQuitar.addEventListener('click', function () { tr.remove(); });
+        tdQuitar.appendChild(btnQuitar);
+        tr.appendChild(tdQuitar);
+
+        return tr;
+    }
+
+    function guardarPlantillas() {
+        var plantillas = [];
+        document.querySelectorAll('#cuerpo-plantillas tr').forEach(function (tr) {
+            var titulo = tr.querySelector('.plantilla-titulo');
+            var contenido = tr.querySelector('.plantilla-contenido');
+            if (!titulo || !contenido) return;
+            plantillas.push({
+                id: tr.dataset.id ? parseInt(tr.dataset.id, 10) : undefined,
+                titulo: titulo.value.trim(),
+                contenido: contenido.value.trim(),
+                categoria: tr.querySelector('.plantilla-categoria').value.trim(),
+                activo: tr.querySelector('.plantilla-activo').checked ? 1 : 0,
+            });
+        });
+
+        fetch('../backend/guardar-plantillas-respuesta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plantillas: plantillas }),
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    mostrarMensaje('mensaje-plantillas', 'Plantillas guardadas.', 'ok');
+                    initPlantillas();
+                } else {
+                    mostrarMensaje('mensaje-plantillas', data.message || 'No se pudieron guardar.', 'error');
+                }
+            })
+            .catch(function () { mostrarMensaje('mensaje-plantillas', 'Error de red al guardar.', 'error'); });
+    }
+
+    function initPlantillas() {
+        fetch('../backend/obtener-plantillas-respuesta.php')
+            .then(function (r) { return r.status === 403 ? null : r.json(); })
+            .then(function (data) {
+                if (!data || !data.success) return;
+
+                document.getElementById('seccion-plantillas').style.display = 'block';
+                var cuerpo = document.getElementById('cuerpo-plantillas');
+                cuerpo.innerHTML = '';
+                (data.plantillas.length ? data.plantillas : [null]).forEach(function (p) {
+                    cuerpo.appendChild(filaPlantillaHTML(p));
+                });
+
+                document.getElementById('btn-guardar-plantillas').addEventListener('click', guardarPlantillas);
+                document.getElementById('btn-agregar-plantilla').addEventListener('click', function () {
+                    document.getElementById('cuerpo-plantillas').appendChild(filaPlantillaHTML());
+                });
+            })
+            .catch(function () { /* sin acceso: la sección queda oculta */ });
+    }
+
+    // --- Etiquetas (solo Administrador/Programador) ---
+    function filaEtiquetaHTML(etiqueta) {
+        etiqueta = etiqueta || { nombre: '', color: '#888888' };
+        var tr = document.createElement('tr');
+        if (etiqueta.id) tr.dataset.id = etiqueta.id;
+
+        var tdNombre = document.createElement('td');
+        var inputNombre = document.createElement('input');
+        inputNombre.type = 'text';
+        inputNombre.className = 'etiqueta-nombre';
+        inputNombre.value = etiqueta.nombre || '';
+        tdNombre.appendChild(inputNombre);
+        tr.appendChild(tdNombre);
+
+        var tdColor = document.createElement('td');
+        var inputColor = document.createElement('input');
+        inputColor.type = 'color';
+        inputColor.className = 'etiqueta-color';
+        inputColor.value = etiqueta.color || '#888888';
+        tdColor.appendChild(inputColor);
+        tr.appendChild(tdColor);
+
+        var tdQuitar = document.createElement('td');
+        var btnQuitar = document.createElement('button');
+        btnQuitar.type = 'button';
+        btnQuitar.textContent = 'Quitar';
+        btnQuitar.addEventListener('click', function () { tr.remove(); });
+        tdQuitar.appendChild(btnQuitar);
+        tr.appendChild(tdQuitar);
+
+        return tr;
+    }
+
+    function guardarEtiquetas() {
+        var etiquetas = [];
+        document.querySelectorAll('#cuerpo-etiquetas tr').forEach(function (tr) {
+            var nombre = tr.querySelector('.etiqueta-nombre');
+            if (!nombre) return;
+            etiquetas.push({
+                id: tr.dataset.id ? parseInt(tr.dataset.id, 10) : undefined,
+                nombre: nombre.value.trim(),
+                color: tr.querySelector('.etiqueta-color').value,
+            });
+        });
+
+        fetch('../backend/guardar-etiquetas.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ etiquetas: etiquetas }),
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    mostrarMensaje('mensaje-etiquetas', 'Etiquetas guardadas.', 'ok');
+                    initEtiquetas();
+                } else {
+                    mostrarMensaje('mensaje-etiquetas', data.message || 'No se pudieron guardar.', 'error');
+                }
+            })
+            .catch(function () { mostrarMensaje('mensaje-etiquetas', 'Error de red al guardar.', 'error'); });
+    }
+
+    function initEtiquetas() {
+        fetch('../backend/obtener-etiquetas.php')
+            .then(function (r) { return r.status === 403 ? null : r.json(); })
+            .then(function (data) {
+                if (!data || !data.success) return;
+
+                document.getElementById('seccion-etiquetas').style.display = 'block';
+                var cuerpo = document.getElementById('cuerpo-etiquetas');
+                cuerpo.innerHTML = '';
+                (data.etiquetas.length ? data.etiquetas : [null]).forEach(function (e) {
+                    cuerpo.appendChild(filaEtiquetaHTML(e));
+                });
+
+                document.getElementById('btn-guardar-etiquetas').addEventListener('click', guardarEtiquetas);
+                document.getElementById('btn-agregar-etiqueta').addEventListener('click', function () {
+                    document.getElementById('cuerpo-etiquetas').appendChild(filaEtiquetaHTML());
+                });
+            })
+            .catch(function () { /* sin acceso: la sección queda oculta */ });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initCambioPassword();
         initTema();
         initPrivilegios();
         initSla();
+        initAutomatizacion();
+        initPlantillas();
+        initEtiquetas();
     });
 })();

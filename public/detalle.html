@@ -95,6 +95,38 @@
             <h2>Archivos de la Incidencia</h2>
             <div id="contenedor-archivos"></div>
         </section>
+
+        <!-- ============================================================ -->
+        <!-- Extras de esta incidencia: etiquetas, bitácora de tiempo y
+             plantillas de respuesta rápida. Sección independiente del
+             formulario principal (no comparte estado con detalle.js). -->
+        <!-- ============================================================ -->
+        <section class="archivos-incidencia" id="seccion-extras-incidencia">
+            <h2>Etiquetas</h2>
+            <div id="etiquetas-asignadas" class="etiquetas-chips"></div>
+            <div style="margin-top:8px;">
+                <select id="selector-etiqueta"><option value="">Agregar etiqueta...</option></select>
+            </div>
+
+            <h2 style="margin-top:20px;">Plantilla de respuesta rápida</h2>
+            <p style="color:#7f8c8d; margin-top:-6px;">Inserta un texto predefinido en las notas adicionales.</p>
+            <select id="selector-plantilla"><option value="">Selecciona una plantilla...</option></select>
+
+            <h2 style="margin-top:20px;">Bitácora de tiempo</h2>
+            <div id="bitacora-tiempo-lista"></div>
+            <div class="form-row" style="margin-top:8px;">
+                <div>
+                    <label for="bitacora-minutos">Minutos invertidos</label>
+                    <input type="number" id="bitacora-minutos" min="1" max="1440" style="width:100px;">
+                </div>
+                <div>
+                    <label for="bitacora-descripcion">Descripción (opcional)</label>
+                    <input type="text" id="bitacora-descripcion" maxlength="255">
+                </div>
+            </div>
+            <button type="button" id="btn-agregar-tiempo">Registrar tiempo</button>
+            <span id="mensaje-bitacora" style="margin-left:10px;"></span>
+        </section>
     </main>
 
     <script src="../scripts/sidebar-state.js?v=20261002"></script>
@@ -105,5 +137,6 @@
     <script src="../scripts/dialogo.js?v=2"></script>
     <script src="../scripts/selector-archivos.js?v=2"></script>
     <script src="../scripts/detalle.js?v=20"></script>
+    <script src="../scripts/detalle-extras.js?v=1"></script>
 </body>
 </html>
