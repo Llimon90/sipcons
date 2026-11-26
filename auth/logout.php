@@ -1,12 +1,11 @@
 <?php
-// Escribe en la sesión (la destruye): modo escritura, ver config/auth.php
-define('SESION_ESCRITURA', true);
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/login_log.php';
 
 if (!empty($_SESSION['usuario'])) {
     logLoginEvent('LOGOUT', $_SESSION['usuario']);
 }
+$eraDemo = !empty($_SESSION['en_demo']);
 
 $_SESSION = [];
 
@@ -23,13 +22,11 @@ if (ini_get('session.use_cookies')) {
     );
 }
 
-if (session_status() === PHP_SESSION_ACTIVE) {
-    session_destroy();
-}
+session_destroy();
 
 // Ruta relativa (sin "/" inicial): se resuelve contra la carpeta actual
 // (auth/), donde vive login.html. Usar una ruta absoluta desde la raíz del
 // dominio rompía el redirect cuando el sitio está desplegado en una
 // subcarpeta (p. ej. /apptest), como ocurre en el entorno de pruebas.
-header('Location: login.html');
+header('Location: login.html' . ($eraDemo ? '?demo' : ''));
 exit;

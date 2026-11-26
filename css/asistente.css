@@ -1,0 +1,18 @@
+/* Asistente guiado por rol (D-20, scripts/asistente.js) */
+.asis-capa { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 9000; }
+.asis-marco { position: fixed; z-index: 9001; border-radius: 10px; pointer-events: none;
+  box-shadow: 0 0 0 3px var(--primary, #3498db), 0 0 0 9999px rgba(15, 23, 42, 0.35); transition: all .2s ease; }
+.asis-tarjeta { position: fixed; z-index: 9002; width: min(360px, calc(100vw - 24px)); background: #fff; color: #1f2937;
+  border-radius: 12px; padding: 16px 18px 14px; box-shadow: 0 12px 36px rgba(0, 0, 0, .25); font-size: .95rem; line-height: 1.45; }
+.asis-tarjeta.asis-centro { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%); }
+.asis-tarjeta h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.asis-texto { margin: 0 0 14px; }
+.asis-contador { margin: 0 0 4px; font-size: .78rem; color: #6b7280; text-transform: uppercase; letter-spacing: .03em; }
+.asis-botones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.asis-botones button { border-radius: 8px; padding: 7px 14px; font: inherit; cursor: pointer; border: 1px solid transparent; }
+.asis-pri { background: var(--primary, #3498db); color: #fff; margin-left: auto; }
+.asis-sec { background: #f3f4f6; color: #1f2937; border-color: #e5e7eb; }
+.asis-cerrar { background: none; color: #6b7280; padding-left: 0 !important; text-decoration: underline; }
+html[data-theme="dark"] .asis-tarjeta { background: #1b2836; color: #e5e7eb; }
+html[data-theme="dark"] .asis-sec { background: #273548; color: #e5e7eb; border-color: #3a4d63; }
+html[data-theme="dark"] .asis-contador, html[data-theme="dark"] .asis-cerrar { color: #9ca3af; }

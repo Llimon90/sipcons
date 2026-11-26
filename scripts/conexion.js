@@ -15,7 +15,7 @@
  */
 (function () {
     'use strict';
-    if (window.SipconsConexion) return;
+    if (window.AppConexion) return;
 
     var enPublic = /\/public\//.test(location.pathname);
     var RAIZ = enPublic ? '../' : '';
@@ -73,27 +73,9 @@
         return barra;
     }
 
-    var ocultarServidorTimer = null;
-    function mostrarBarra(estado, codigo) {
+    function mostrarBarra(estado) {
         var b = crearBarra();
-        clearTimeout(ocultarServidorTimer);
-        b.classList.remove('aviso-conexion--ok', 'aviso-conexion--servidor', 'visible');
-        if (estado === 'servidor') {
-            // El servidor respondió con 502/503/504: hay internet, pero está saturado
-            b.querySelector('.aviso-conexion-texto').textContent =
-                'El servidor tardó demasiado en responder (' + codigo + '). Tu sesión sigue abierta: ' +
-                'espera unos segundos y vuelve a intentarlo.';
-            b.querySelector('.aviso-conexion-btn').hidden = true;
-            b.classList.add('aviso-conexion--servidor', 'visible');
-            document.body.classList.add('con-aviso-conexion');
-            ocultarServidorTimer = setTimeout(function () {
-                if (!sinConexion) {
-                    b.classList.remove('visible', 'aviso-conexion--servidor');
-                    document.body.classList.remove('con-aviso-conexion');
-                }
-            }, 8000);
-            return;
-        }
+        b.classList.remove('aviso-conexion--ok', 'visible');
         if (estado === 'sin') {
             b.querySelector('.aviso-conexion-texto').textContent =
                 'Estás sin conexión a internet. No podrás guardar ni registrar hasta que vuelva.';
@@ -136,23 +118,23 @@
             mostrarBarra('ok');
             registrar('Conexión restablecida');
         }
-        try { window.dispatchEvent(new CustomEvent('sipcons-conexion', { detail: { conectado: !sinConexion } })); } catch (e) { /* nada */ }
+        try { window.dispatchEvent(new CustomEvent('app-conexion', { detail: { conectado: !sinConexion } })); } catch (e) { /* nada */ }
     }
 
     function registrar(texto) {
         try {
             // Al volver la conexión se envía junto con lo demás que estaba en cola
-            if (window.sipconsTrack) window.sipconsTrack('error_js', texto, 'conexion');
+            if (window.appTrack) window.appTrack('error_js', texto, 'conexion');
         } catch (e) { /* nada */ }
     }
 
     // ---------- modal al intentar enviar sin conexión ----------
     function cargarDialogo() {
-        if (window.SipconsDialogo) return Promise.resolve(window.SipconsDialogo);
+        if (window.AppDialogo) return Promise.resolve(window.AppDialogo);
         return new Promise(function (resolver) {
             var s = document.createElement('script');
             s.src = RAIZ + 'scripts/dialogo.js?v=2';
-            s.onload = function () { resolver(window.SipconsDialogo || null); };
+            s.onload = function () { resolver(window.AppDialogo || null); };
             s.onerror = function () { resolver(null); };
             document.head.appendChild(s);
         });
@@ -201,70 +183,6 @@
         });
     }
 
-    // ---------- respuestas del servidor: 401 vs. 5xx ----------
-    // Solo un 401 (o que el servidor nos mande al login) significa que la
-    // sesión se cerró. Aun así NO se redirige solo: se avisa y el usuario
-    // decide, para que no pierda lo que tiene capturado en pantalla.
-    // Un 502/503/504 es saturación temporal: aviso breve, nada más.
-    var ES_API = /(^|\/)(backend|auth)\//;
-    var EXCLUIDOS = /login\.php|session_check\.php|analytics_registrar/; // los maneja auth-guard / son silenciosos
-    var avisoSesionMostrado = false;
-    var ultimoAvisoServidor = 0;
-
-    function revisarRespuesta(url, r) {
-        try {
-            if (!r || EXCLUIDOS.test(url)) return;
-            var aLogin = r.redirected && /\/auth\/login\.html/.test(r.url || '');
-            if (!aLogin && !ES_API.test(url)) return;
-            if (r.status === 401 || aLogin) {
-                avisarSesionCerrada();
-            } else if (r.status === 502 || r.status === 503 || r.status === 504) {
-                var ahora = Date.now();
-                if (!sinConexion && ahora - ultimoAvisoServidor > 3000) {
-                    ultimoAvisoServidor = ahora;
-                    alDom(function () { mostrarBarra('servidor', r.status); });
-                }
-                registrar('Servidor ' + r.status);
-            }
-        } catch (e) { /* nada */ }
-    }
-
-    function alDom(fn) {
-        if (document.body) fn();
-        else document.addEventListener('DOMContentLoaded', fn, { once: true });
-    }
-
-    function avisarSesionCerrada() {
-        if (avisoSesionMostrado) return;
-        avisoSesionMostrado = true;
-        if (window.SipconsAuth) window.SipconsAuth.borrarCache();
-        var irLogin = function () {
-            if (window.SipconsAuth) window.SipconsAuth.irAlLogin();
-            else location.replace(RAIZ + 'auth/login.html');
-        };
-        var mensaje = 'Tu sesión se cerró en el servidor. Lo que tengas capturado sigue en pantalla; ' +
-            'si necesitas, cópialo antes de volver a iniciar sesión.';
-        cargarDialogo().then(function (dialogo) {
-            if (!dialogo) {
-                if (confirm('Tu sesión se cerró.\n\n' + mensaje + '\n\n¿Ir a iniciar sesión ahora?')) irLogin();
-                else avisoSesionMostrado = false;
-                return;
-            }
-            return dialogo.mostrar({
-                tipo: 'aviso',
-                titulo: 'Tu sesión se cerró',
-                mensaje: mensaje,
-                botones: [
-                    { texto: 'Quedarme aquí', valor: 'quedar', estilo: 'secundario' },
-                    { texto: 'Iniciar sesión', valor: 'login', estilo: 'primario' }
-                ]
-            }).then(function (eleccion) {
-                if (eleccion === 'login') irLogin();
-                else avisoSesionMostrado = false;
-            });
-        });
-    }
-
     // Formularios: se detiene el envío antes de que lo procese la página
     document.addEventListener('submit', function (e) {
         if (!sinConexion && navigator.onLine !== false) return;
@@ -289,9 +207,8 @@
             }
 
             var promesa = fetchOriginal.apply(window, arguments);
-            promesa.then(function (r) {
+            promesa.then(function () {
                 if (sinConexion) establecer(false);
-                revisarRespuesta(url, r);
             }, function (error) {
                 // Cancelaciones a propósito (AbortController) no son falta de conexión
                 if (error && error.name === 'AbortError') return;
@@ -316,7 +233,7 @@
     if (document.body) iniciar();
     else document.addEventListener('DOMContentLoaded', iniciar);
 
-    window.SipconsConexion = {
+    window.AppConexion = {
         conectado: function () { return !sinConexion && navigator.onLine !== false; },
         revisar: revisarAhora
     };

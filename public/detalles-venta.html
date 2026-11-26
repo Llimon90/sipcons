@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIPCONS - Detalle de Venta</title>
+    <title>Detalle de Venta</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js" crossorigin="anonymous"></script>
@@ -24,8 +26,11 @@
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
         .eliminando { opacity: 0.5; pointer-events: none; }
     </style>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -47,12 +52,12 @@
     <main id="mainContent">
         <section class="encabezado">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2><i class="fas fa-edit"></i> Detalles de la Venta <span id="txt-folio" style="color: #3498db;"></span></h2>
+                <h2><i class="fas fa-edit"></i> Detalles de la Venta <span id="txt-folio" style="color: var(--brand-primary);"></span></h2>
                 <div>
-                    <button type="button" onclick="window.location.href='admin-ventas.html'" style="padding: 10px 15px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                    <button type="button" onclick="window.location.href='admin-ventas.html'" class="btn-secundario">
                         <i class="fas fa-arrow-left"></i> Regresar
                     </button>
-                    <button type="button" id="btn-eliminar-venta" style="padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    <button type="button" id="btn-eliminar-venta" class="btn-rojo">
                         <i class="fas fa-trash-alt"></i> Eliminar Venta
                     </button>
                 </div>
@@ -73,6 +78,15 @@
                     <div class="form-group">
                         <label for="sucursal">SUCURSAL:</label>
                         <input type="text" id="sucursal" name="sucursal">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1 1 100%;">
+                        <label for="articulo_id">ARTÍCULO DE INVENTARIO (OPCIONAL):</label>
+                        <select id="articulo_id" name="articulo_id">
+                            <option value="">— Sin vincular al inventario —</option>
+                        </select>
                     </div>
                 </div>
 
@@ -101,12 +115,12 @@
                         <input type="number" id="garantia" name="garantia" min="0">
                     </div>
                     <div class="form-group">
-                        <label>MANTENIMIENTO / CALIBRACIÓN CADA (MESES):</label>
+                        <label>MANTENIMIENTO CADA (MESES):</label>
                         <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0 = no aplica">
                     </div>
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 10px;">
-                            <input type="checkbox" id="servicio" name="servicio" style="width: 20px; height: 20px;">
+                            <input type="checkbox" id="servicio" name="servicio" class="f-switch">
                             <strong>CLIENTE CON PÓLIZA / ACUERDO DE MANTENIMIENTO</strong>
                         </label>
                     </div>
@@ -136,7 +150,7 @@
                         <label><strong>AGREGAR NUEVOS ARCHIVOS:</strong></label><br><br>
                         <input type="file" id="nuevos_facturas" name="nuevos_facturas[]" multiple form="form-editar-venta"
                                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx"
-                               style="width: 100%; max-width: 500px; padding: 10px; border: 1px dashed #ccc; border-radius: 5px; background: #fafafa;">
+                               data-selector data-texto="Toca para elegir facturas o documentos" data-ayuda="PDF, imágenes, Word o Excel">
                         <p style="font-size: 12px; color: #e74c3c; margin-top: 8px;">
                             <i class="fas fa-info-circle"></i> Selecciona los archivos y da clic en "Guardar Cambios" para subirlos.
                         </p>
@@ -144,7 +158,7 @@
                 </section>
 
                 <div style="margin-bottom: 30px;">
-                    <button type="button" id="btn-guardar-cambios" style="padding: 12px 25px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.3s;">
+                    <button type="button" id="btn-guardar-cambios" class="btn-primary">
                         <i class="fas fa-save"></i> Guardar Cambios
                     </button>
                 </div>
@@ -152,11 +166,14 @@
         </section>
     </main>
 
-    <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-    <script src="../scripts/clientes-datalist.js?v=1"></script>
-    <script>SipconsClientes.enlazar(document.getElementById('cliente'));</script>
-    <script src="../scripts/periodicidad.js?v=1"></script>
-    <script src="../scripts/detalles-venta.js?v=14"></script>
+    <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+    <script src="../scripts/alta-rapida.js?v=20261101b"></script>
+    <script src="../scripts/clientes-datalist.js?v=20261101"></script>
+    <script>AppClientes.enlazar(document.getElementById('cliente'));</script>
+    <script src="../scripts/articulo-inventario.js?v=20261005"></script>
+    <script src="../scripts/periodicidad.js?v=20261030c"></script>
+    <script src="../scripts/selector-archivos.js?v=20261101"></script>
+    <script src="../scripts/detalles-venta.js?v=20261101"></script>
 </body>
 </html>

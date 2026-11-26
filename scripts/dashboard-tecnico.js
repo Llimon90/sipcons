@@ -32,8 +32,10 @@ function inicializarFiltros() {
     const hoy = new Date();
     const hace30Dias = new Date();
     hace30Dias.setDate(hoy.getDate() - 30);
-    if (fechaInicio) fechaInicio.value = hace30Dias.toISOString().split('T')[0];
-    if (fechaFin) fechaFin.value = hoy.toISOString().split('T')[0];
+    // S-H07: fechas de la empresa, no las de UTC ni las del navegador
+    const enEmpresa = window.appFechaEmpresa;
+    if (fechaInicio) fechaInicio.value = enEmpresa ? enEmpresa(-30) : hace30Dias.toISOString().split('T')[0];
+    if (fechaFin) fechaFin.value = enEmpresa ? enEmpresa(0) : hoy.toISOString().split('T')[0];
 }
 
 function construirParametros() {
@@ -124,7 +126,7 @@ function crearGraficoEvolucion(evolucion) {
         if (contenedor && !vacio) {
             vacio = document.createElement('div');
             vacio.className = 'chart-empty-state';
-            vacio.innerHTML = '<i class="fas fa-chart-line"></i><span>Aún no hay incidencias cerradas en los últimos 12 meses</span>';
+            vacio.innerHTML = '<i class="fas fa-chart-line"></i><span>Aún no hay órdenes de servicio cerradas en los últimos 12 meses</span>';
             contenedor.appendChild(vacio);
         }
         return;
@@ -133,15 +135,16 @@ function crearGraficoEvolucion(evolucion) {
     if (canvas) canvas.style.display = '';
     if (vacio) vacio.remove();
 
+    const colorMarca = (window.APP_BRAND && APP_BRAND.colores.primario) || '#3498db';
     chartEvolucion = new Chart(canvas, {
         type: 'line',
         data: {
             labels: evolucion.map(item => formatearMes(item.mes)),
             datasets: [{
-                label: 'Incidencias cerradas',
+                label: 'Órdenes de servicio cerradas',
                 data: evolucion.map(item => item.cantidad),
-                backgroundColor: 'rgba(52, 152, 219, 0.12)',
-                borderColor: '#3498db',
+                backgroundColor: colorMarca + '1f', // ~12 % de opacidad
+                borderColor: colorMarca,
                 borderWidth: 2,
                 tension: 0.4,
                 fill: true
@@ -216,7 +219,7 @@ async function cargarMiDesempeno() {
         actualizarElementoSiExiste('miAsignadas', r.asignadas ?? 0);
         actualizarElementoSiExiste('miCompletadas', r.completadas ?? 0);
         actualizarElementoSiExiste('miPendientes', r.pendientes_actual ?? 0);
-        actualizarElementoSiExiste('miVencidasDetalle', `${r.vencidas ?? 0} con más de 7 días abiertas`);
+        actualizarElementoSiExiste('miVencidasDetalle', `${r.vencidas ?? 0} con más de ${r.sla_dias ?? 7} días abiertas`);
 
         const tendencia = r.tendencia_incidencias ?? 0;
         const elTendencia = document.getElementById('miTendencia');
@@ -227,12 +230,12 @@ async function cargarMiDesempeno() {
 
         const respuestaHoras = r.respuesta_mediana_horas;
         actualizarElementoSiExiste('miRespuesta', respuestaHoras !== null && respuestaHoras !== undefined ? `${respuestaHoras.toFixed(1)} h` : 'N/D');
-        actualizarElementoSiExiste('miRespuestaMuestras', `Basado en ${r.muestras_respuesta ?? 0} incidencias con historial`);
+        actualizarElementoSiExiste('miRespuestaMuestras', `Basado en ${r.muestras_respuesta ?? 0} órdenes de servicio con historial`);
 
         const cierreHoras = r.cierre_mediana_horas;
         const cierreDias = cierreHoras !== null && cierreHoras !== undefined ? cierreHoras / 24 : null;
         actualizarElementoSiExiste('miCierre', cierreDias !== null ? `${cierreDias.toFixed(1)} d` : 'N/D');
-        actualizarElementoSiExiste('miCierreMuestras', `Basado en ${r.muestras_cierre ?? 0} incidencias con historial`);
+        actualizarElementoSiExiste('miCierreMuestras', `Basado en ${r.muestras_cierre ?? 0} órdenes de servicio con historial`);
 
         actualizarElementoSiExiste('miSla', r.sla_cierre_pct !== null && r.sla_cierre_pct !== undefined ? `${r.sla_cierre_pct}%` : 'N/D');
         const badge = badgeSla(r.sla_cierre_pct ?? null);
@@ -264,7 +267,7 @@ function aplicarTemaGraficos() {
     Chart.defaults.borderColor = oscuro ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.1)';
 }
 aplicarTemaGraficos();
-window.addEventListener('sipcons-tema', function() {
+window.addEventListener('app-tema', function() {
     aplicarTemaGraficos();
     if (typeof cargarMiDesempeno === 'function') cargarMiDesempeno();
 });

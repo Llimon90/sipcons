@@ -1,9 +1,9 @@
-// Periodicidad de mantenimiento/calibración + check de póliza.
+// Periodicidad de mantenimiento + check de póliza.
 // Un solo campo de meses; el check decide qué ticket automático se genera:
 //   sin póliza -> ticket para contactar al cliente y recomendar el servicio
 //   con póliza -> ticket de servicio programado
 // Debajo del check se muestra en lenguaje claro qué va a pasar.
-window.SipconsPeriodicidad = {
+window.AppPeriodicidad = {
   // Meses guardados de un equipo, venga de póliza o de recomendación.
   mesesDe(eq) {
     if (!eq) return 0;
@@ -26,7 +26,7 @@ window.SipconsPeriodicidad = {
       const poliza = check.checked;
 
       inputMeses.setCustomValidity(poliza && meses <= 0
-        ? 'Con póliza, indica cada cuántos meses se da el mantenimiento/calibración.'
+        ? 'Con póliza, indica cada cuántos meses se da el mantenimiento.'
         : '');
 
       if (!aviso) return;
@@ -38,10 +38,10 @@ window.SipconsPeriodicidad = {
           : 'Sin periodicidad: no se generarán tickets automáticos.';
       } else if (poliza) {
         icono = 'fa-calendar-check'; color = '#1e8449';
-        texto = `Con póliza: cada ${meses} mes(es) se abrirá un ticket de <strong>servicio programado</strong> (mantenimiento/calibración).`;
+        texto = `Con póliza: cada ${meses} mes(es) se abrirá un ticket de <strong>mantenimiento programado</strong>.`;
       } else {
         icono = 'fa-phone-alt'; color = '#b9770e';
-        texto = `Sin póliza: cada ${meses} mes(es) se abrirá un ticket para <strong>contactar al cliente</strong> y recomendar mantenimiento/calibración.`;
+        texto = `Sin póliza: cada ${meses} mes(es) se abrirá un ticket para <strong>contactar al cliente</strong> y recomendar mantenimiento.`;
       }
       aviso.style.color = color;
       aviso.innerHTML = `<i class="fas ${icono}"></i> ${texto}`;

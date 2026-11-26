@@ -3,18 +3,22 @@ let charts = {};
 let currentTab = 'direccion'; // pestaña "Global"
 let filtrosPoblados = false;
 
-// Paleta de gráficos alineada con la identidad visual del panel (css informes.html)
-const COLOR_ACCENT = '#3498db';
-const COLOR_ACCENT_DARK = '#2c3e50';
+// Paleta de gráficos alineada con la identidad de la instancia (branding/marca.js.php)
+const COLOR_ACCENT = (window.APP_BRAND && APP_BRAND.colores.primario) || '#3498db';
+const COLOR_ACCENT_DARK = (window.APP_BRAND && APP_BRAND.colores.sidebar) || '#2c3e50';
 const PALETA_GRAFICOS = [
-    '#3498db', '#2c3e50', '#16a34a', '#d97706', '#8e44ad',
+    COLOR_ACCENT, COLOR_ACCENT_DARK, '#16a34a', '#d97706', '#8e44ad',
     '#0891b2', '#dc2626', '#64748b', '#0d9488', '#c026d3',
     '#ea580c', '#2563eb', '#65a30d', '#e11d48', '#0369a1'
 ];
 
 // Umbrales de SLA (deben coincidir con backend/estadisticas.php)
 const SLA_RESPUESTA_HORAS = 4;
-const SLA_CIERRE_DIAS = 7;
+// Meta de cumplimiento de la empresa (Mi empresa); la respuesta del servidor manda
+const SLA_CIERRE_DIAS = (window.APP_BRAND && APP_BRAND.sla_dias) || 7;
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-sla-meta]').forEach(el => { el.textContent = `Meta: cierre en ${SLA_CIERRE_DIAS} días o menos`; });
+});
 
 // Colores de ejes, leyendas y cuadrícula de Chart.js según el tema (claro/oscuro)
 function aplicarTemaGraficos() {
@@ -25,7 +29,7 @@ function aplicarTemaGraficos() {
 }
 
 // El tema de la cuenta puede llegar después de cargar la página: se repinta todo
-window.addEventListener('sipcons-tema', function() {
+window.addEventListener('app-tema', function() {
     aplicarTemaGraficos();
     cargarEstadisticas();
 });
@@ -83,8 +87,10 @@ function inicializarInterfaz() {
     const hace30Dias = new Date();
     hace30Dias.setDate(hoy.getDate() - 30);
 
-    if (fechaInicio) fechaInicio.value = hace30Dias.toISOString().split('T')[0];
-    if (fechaFin) fechaFin.value = hoy.toISOString().split('T')[0];
+    // S-H07: fechas de la empresa, no las de UTC ni las del navegador
+    const enEmpresa = window.appFechaEmpresa;
+    if (fechaInicio) fechaInicio.value = enEmpresa ? enEmpresa(-30) : hace30Dias.toISOString().split('T')[0];
+    if (fechaFin) fechaFin.value = enEmpresa ? enEmpresa(0) : hoy.toISOString().split('T')[0];
 }
 
 async function poblarFiltros() {
@@ -186,7 +192,7 @@ async function cargarEstadisticas() {
         const responseIncidencias = await fetch(urlIncidencias);
         if (!responseIncidencias.ok) throw new Error('Error en la respuesta del servidor: ' + responseIncidencias.status);
         const dataIncidencias = await responseIncidencias.json();
-        if (!dataIncidencias.success) throw new Error(dataIncidencias.error || 'Error en los datos de incidencias');
+        if (!dataIncidencias.success) throw new Error(dataIncidencias.error || 'Error en los datos de órdenes de servicio');
         crearGraficos(dataIncidencias.data);
 
         if (currentTab === 'tecnicos') {
@@ -239,6 +245,8 @@ function actualizarEstadisticasGenerales(data) {
     actualizarElementoSiExiste('incidenciasAbiertas', data.incidencias_abiertas ?? 0);
     actualizarElementoSiExiste('incidenciasPendientes', data.incidencias_pendientes ?? 0);
     actualizarElementoSiExiste('incidenciasAsignadas', data.incidencias_asignadas ?? 0);
+    actualizarElementoSiExiste('incidenciasEnProceso', data.incidencias_en_proceso ?? 0);
+    actualizarElementoSiExiste('incidenciasCanceladas', data.incidencias_canceladas ?? 0);
     actualizarElementoSiExiste('incidenciasCompletadas', data.incidencias_completadas ?? 0);
     actualizarElementoSiExiste('incidenciasFacturadas', data.incidencias_cerradas_factura ?? 0);
 
@@ -247,14 +255,14 @@ function actualizarEstadisticasGenerales(data) {
     // Tiempo de respuesta (mediana, horas)
     const respuestaHoras = tiempos.respuesta_mediana_horas;
     actualizarElementoSiExiste('tiempoRespuesta', respuestaHoras !== null && respuestaHoras !== undefined ? `${respuestaHoras.toFixed(1)} h` : 'N/D');
-    actualizarElementoSiExiste('tiempoRespuestaMuestras', `Basado en ${tiempos.muestras_respuesta ?? 0} de ${tiempos.total_incidencias ?? 0} incidencias con historial`);
+    actualizarElementoSiExiste('tiempoRespuestaMuestras', `Basado en ${tiempos.muestras_respuesta ?? 0} de ${tiempos.total_incidencias ?? 0} órdenes de servicio con historial`);
     aplicarBadge('tiempoRespuestaBadge', badgeSla(tiempos.sla_respuesta_pct ?? null));
 
     // Tiempo de cierre (mediana, días)
     const cierreHoras = tiempos.cierre_mediana_horas;
     const cierreDias = cierreHoras !== null && cierreHoras !== undefined ? cierreHoras / 24 : null;
     actualizarElementoSiExiste('tiempoPromedio', cierreDias !== null ? `${cierreDias.toFixed(1)} d` : 'N/D');
-    actualizarElementoSiExiste('tiempoPromedioMuestras', `Basado en ${tiempos.muestras_cierre ?? 0} de ${tiempos.total_incidencias ?? 0} incidencias con historial`);
+    actualizarElementoSiExiste('tiempoPromedioMuestras', `Basado en ${tiempos.muestras_cierre ?? 0} de ${tiempos.total_incidencias ?? 0} órdenes de servicio con historial`);
     aplicarBadge('tiempoPromedioBadge', badgeSla(tiempos.sla_cierre_pct ?? null));
 
     // SLA de cierre (tarjeta dedicada)
@@ -264,7 +272,7 @@ function actualizarEstadisticasGenerales(data) {
 
     actualizarElementoSiExiste('incidenciasReabiertas', data.reincidencias ?? 0);
     actualizarElementoSiExiste('incidenciasReincidenciasNota', data.reincidencias_serie_disponible === false
-        ? 'Aún no hay columna de número de serie en incidencias'
+        ? 'Aún no hay columna de número de serie en órdenes de servicio'
         : 'Mismo equipo (n° de serie) que volvió a fallar de lo mismo');
 
     const tendencia = data.tendencia_incidencias ?? 0;
@@ -342,7 +350,7 @@ function crearGraficoSlaSucursal(items) {
                     callbacks: {
                         label: (ctx) => {
                             const item = items[ctx.dataIndex];
-                            return `${item.sla_pct}% atendidas a tiempo · ${item.muestras} incidencias cerradas · mediana ${item.cierre_mediana_dias} días`;
+                            return `${item.sla_pct}% atendidas a tiempo · ${item.muestras} órdenes de servicio cerradas · mediana ${item.cierre_mediana_dias} días`;
                         }
                     }
                 }
@@ -458,7 +466,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.por_tecnico.map(item => item.tecnico || 'Sin técnico'),
                 datasets: [{
-                    label: 'Incidencias Asignadas',
+                    label: 'Órdenes de servicio asignadas',
                     data: data.por_tecnico.map(item => item.cantidad),
                     backgroundColor: COLOR_ACCENT,
                     borderColor: COLOR_ACCENT_DARK,
@@ -495,7 +503,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.mensuales.map(item => formatearMes(item.mes)),
                 datasets: [{
-                    label: 'Incidencias',
+                    label: 'Órdenes de servicio',
                     data: data.mensuales.map(item => item.cantidad),
                     backgroundColor: 'rgba(52, 152, 219, 0.12)',
                     borderColor: COLOR_ACCENT,
@@ -516,7 +524,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.top_clientes.map(item => item.cliente || 'Sin cliente'),
                 datasets: [{
-                    label: 'Número de Incidencias',
+                    label: 'Número de órdenes de servicio',
                     data: data.top_clientes.map(item => item.cantidad),
                     backgroundColor: PALETA_GRAFICOS,
                     borderWidth: 1
@@ -534,7 +542,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.por_categoria.map(item => item.categoria || 'Sin categoría'),
                 datasets: [{
-                    label: 'Incidencias',
+                    label: 'Órdenes de servicio',
                     data: data.por_categoria.map(item => item.cantidad),
                     backgroundColor: '#0891b2',
                     borderColor: '#0e7490',
@@ -545,7 +553,7 @@ function crearGraficos(data) {
         });
     }
 
-    // Tipos de falla más comunes (dato real, antes nunca se graficaba)
+    // Motivos del servicio más comunes (D-6: antes "tipos de falla")
     mostrarVacio('chartFallasComunes', !data.top_fallas || data.top_fallas.length === 0);
     if (data.top_fallas && data.top_fallas.length > 0) {
         charts.fallas = new Chart(document.getElementById('chartFallasComunes'), {
@@ -553,7 +561,7 @@ function crearGraficos(data) {
             data: {
                 labels: data.top_fallas.map(item => item.falla || 'Sin especificar'),
                 datasets: [{
-                    label: 'Incidencias',
+                    label: 'Órdenes de servicio',
                     data: data.top_fallas.map(item => item.cantidad),
                     backgroundColor: '#d97706',
                     borderColor: '#b45309',
@@ -574,9 +582,9 @@ function crearGraficos(data) {
             data: {
                 labels: buckets.map(b => b.label),
                 datasets: [{
-                    label: 'Incidencias cerradas',
+                    label: 'Órdenes de servicio cerradas',
                     data: buckets.map(b => b.cantidad),
-                    backgroundColor: ['#16a34a', '#3498db', '#d97706', '#dc2626'],
+                    backgroundColor: ['#16a34a', COLOR_ACCENT, '#d97706', '#dc2626'],
                     borderWidth: 1
                 }]
             },
@@ -599,8 +607,8 @@ function crearGraficosTecnicos(data) {
             data: {
                 labels: data.graficos.rendimiento.labels,
                 datasets: [
-                    { label: 'Incidencias Asignadas', data: data.graficos.rendimiento.datos_asignadas, backgroundColor: COLOR_ACCENT, borderColor: COLOR_ACCENT_DARK, borderWidth: 1 },
-                    { label: 'Incidencias Completadas', data: data.graficos.rendimiento.datos_completadas, backgroundColor: '#16a34a', borderColor: '#15803d', borderWidth: 1 }
+                    { label: 'Órdenes de servicio asignadas', data: data.graficos.rendimiento.datos_asignadas, backgroundColor: COLOR_ACCENT, borderColor: COLOR_ACCENT_DARK, borderWidth: 1 },
+                    { label: 'Órdenes de servicio completadas', data: data.graficos.rendimiento.datos_completadas, backgroundColor: '#16a34a', borderColor: '#15803d', borderWidth: 1 }
                 ]
             },
             options: { responsive: true, scales: { y: { beginAtZero: true } } }
@@ -740,9 +748,9 @@ function cerrarModalDrilldown() {
 
 function abrirModalPorEstatus(estatusClic) {
     const titulos = {
-        'Abierto,Pendiente': 'Incidencias abiertas o pendientes',
+        'Abierto,Pendiente': 'Órdenes de servicio abiertas o pendientes',
     };
-    const titulo = titulos[estatusClic] || `Incidencias: ${estatusClic}`;
+    const titulo = titulos[estatusClic] || `Órdenes de servicio: ${estatusClic}`;
     mostrarModalDrilldown(true);
     cargarModalDrilldown({ estatusClic }, titulo);
 }
@@ -759,7 +767,7 @@ async function cargarModalDrilldown(extra, titulo) {
     const aviso = document.getElementById('modalDrilldownAviso');
     const tabla = document.getElementById('modalDrilldownTabla');
 
-    if (tituloEl) tituloEl.textContent = titulo || 'Incidencias';
+    if (tituloEl) tituloEl.textContent = titulo || 'Órdenes de servicio';
     if (cuerpo) cuerpo.innerHTML = '';
     if (vacio) vacio.style.display = 'none';
     if (aviso) aviso.style.display = 'none';
@@ -847,16 +855,5 @@ window.abrirModalPorEstatus = abrirModalPorEstatus;
 window.abrirModalReabiertas = abrirModalReabiertas;
 window.cerrarModalDrilldown = cerrarModalDrilldown;
 
-// Actualizar cada 5 minutos, pero solo con la pestaña a la vista: en segundo
-// plano no se lanzan las consultas pesadas. Al volver a la pestaña, si ya
-// pasaron 5 minutos desde la última actualización, se refresca una vez.
-const ESTADISTICAS_REFRESCO_MS = 300000;
-let estadisticasUltimaCarga = Date.now();
-function refrescarEstadisticasSiToca() {
-    if (document.visibilityState !== 'visible') return;
-    if (Date.now() - estadisticasUltimaCarga < ESTADISTICAS_REFRESCO_MS) return;
-    estadisticasUltimaCarga = Date.now();
-    cargarEstadisticas();
-}
-setInterval(refrescarEstadisticasSiToca, 60000);
-document.addEventListener('visibilitychange', refrescarEstadisticasSiToca);
+// Actualizar cada 5 minutos
+setInterval(cargarEstadisticas, 300000);

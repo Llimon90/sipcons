@@ -8,8 +8,10 @@
 // técnico reconoce sus incidencias (migraciones 008/009), así que las
 // incidencias históricas siguen coincidiendo.
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('incidencias', 'reportes', 'informes', 'usuarios');
 
-const ROLES_TECNICO_ASIGNABLE = ['Técnico', 'Técnico/Administrador', 'Supervisor', 'Administrador'];
+if (!defined('ROLES_TECNICO_ASIGNABLE')) define('ROLES_TECNICO_ASIGNABLE', ['Técnico', 'Supervisor', 'Administrador']);
 
 try {
     // alias_tecnico (migración 008) es opcional; sin la columna se usa el nombre.
@@ -20,10 +22,10 @@ try {
     $stmt = $pdo->prepare(
         "SELECT id, TRIM(nombre) AS nombre, {$exprValor} AS valor
          FROM usuarios
-         WHERE rol IN ($placeholders) AND TRIM(COALESCE(nombre, '')) <> ''
+         WHERE empresa_id = ? AND rol IN ($placeholders) AND TRIM(COALESCE(nombre, '')) <> ''
          ORDER BY nombre"
     );
-    $stmt->execute(ROLES_TECNICO_ASIGNABLE);
+    $stmt->execute([(int)$_SESSION['empresa_id'], ...ROLES_TECNICO_ASIGNABLE]);
 
     // El valor se guarda unido con "/" en incidencias.tecnico: no puede repetirse.
     $tecnicos = [];

@@ -7,7 +7,7 @@
  * los demás formatos ofrece abrir o descargar. Siempre deja a la vista la
  * opción "Abrir en pestaña nueva".
  *
- *   SipconsVisor.abrir([{ url, nombre }, ...], indiceInicial)
+ *   AppVisor.abrir([{ url, nombre }, ...], indiceInicial)
  *
  * Teclado: Esc cierra, ← → cambian de archivo. En móvil se desliza el dedo
  * para cambiar de archivo y el botón "atrás" del teléfono cierra el visor.
@@ -170,7 +170,7 @@
     // que la miniatura o el visor no tengan que esperarlo.
     function precalentarPdf() {
         if (!trabajadorPdf && window.pdfjsLib && pdfjsLib.PDFWorker) {
-            try { trabajadorPdf = new pdfjsLib.PDFWorker({ name: 'sipcons-pdf' }); } catch (e) { trabajadorPdf = null; }
+            try { trabajadorPdf = new pdfjsLib.PDFWorker({ name: 'app-pdf' }); } catch (e) { trabajadorPdf = null; }
         }
         return trabajadorPdf;
     }
@@ -280,7 +280,7 @@
         const archivo = archivos[indice];
         const url = archivo.url;
         const nombre = archivo.nombre || nombreDe(url);
-        const tipo = tipoDe(url);
+        const tipo = archivo.tipo || tipoDe(url);  // tipo explícito: URL de un endpoint (vista previa de cotización)
 
         el.querySelector('.visor-nombre').textContent = nombre;
         el.querySelector('.visor-nombre').title = nombre;
@@ -396,7 +396,7 @@
             focoPrevio = document.activeElement;
             el.classList.add('abierto');
             document.body.classList.add('visor-abierto');
-            history.pushState({ sipconsVisor: true }, '');
+            history.pushState({ appVisor: true }, '');
             enHistorial = true;
         }
         mostrar();
@@ -421,5 +421,5 @@
         }
     }
 
-    window.SipconsVisor = { abrir, cerrar, tipoDe, iconoDe, nombreDe, cargarPdf, precalentarPdf };
+    window.AppVisor = { abrir, cerrar, tipoDe, iconoDe, nombreDe, cargarPdf, precalentarPdf };
 })();

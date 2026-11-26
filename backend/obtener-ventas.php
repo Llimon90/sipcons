@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('ventas');
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET");
 
 
 try {
@@ -13,5 +13,5 @@ try {
     
     echo json_encode(['exito' => true, 'ventas' => $ventas]);
 } catch (PDOException $e) {
-    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener ventas: ' . $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => 'Error al obtener ventas: ' . mensajeErrorPublico($e)]);
 }

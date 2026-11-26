@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('soporte');
 // backend/descargar_documento.php - VERSIÓN COMPLETA
-header('Access-Control-Allow-Origin: *');
 
 // Incluir conexión para verificar permisos
 
@@ -15,19 +16,15 @@ try {
         die('Archivo no especificado');
     }
 
-    // Validar que el archivo esté dentro de la carpeta manuales
-    if (strpos($archivo, 'manuales/') !== 0) {
-        http_response_code(403);
-        die('Acceso denegado');
-    }
-
-    // Ruta completa al archivo
-    $ruta_completa = '../' . $archivo;
-    
-    // Verificar que el archivo existe
-    if (!file_exists($ruta_completa)) {
+    // El archivo debe estar realmente dentro de manuales/: realpath resuelve
+    // cualquier "../" antes de comparar (evita salir de la carpeta)
+    // y en concreto dentro de la carpeta de la empresa del usuario (manuales/e7)
+    $baseManuales = realpath(__DIR__ . '/../' . carpetaEmpresa('manuales'));
+    $ruta_completa = realpath(__DIR__ . '/../' . $archivo);
+    if (strpos($archivo, carpetaEmpresa('manuales') . '/') !== 0 || !$baseManuales || !$ruta_completa
+        || strpos($ruta_completa, $baseManuales . DIRECTORY_SEPARATOR) !== 0) {
         http_response_code(404);
-        die('Archivo no encontrado: ' . $ruta_completa);
+        die('Archivo no encontrado');
     }
 
     // Verificar que es un PDF
@@ -72,6 +69,6 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
-    die('Error del servidor: ' . $e->getMessage());
+    die('Error del servidor: ' . mensajeErrorPublico($e));
 }
 ?>

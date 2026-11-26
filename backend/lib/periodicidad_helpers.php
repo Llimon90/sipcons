@@ -5,7 +5,7 @@
 // en meses) y un check de póliza (campo "servicio"):
 //   - servicio = 0: el cliente NO tiene póliza/acuerdo formal. Se guarda en
 //     "calibracion" y el generador crea un ticket para CONTACTAR al cliente y
-//     recomendar mantenimiento/calibración.
+//     recomendar mantenimiento.
 //   - servicio = 1: el cliente aceptó póliza/acuerdo formal. Se guarda en
 //     "frecuencia_servicio" y el generador crea el ticket de SERVICIO programado.
 // Así nunca se generan ambos tickets para el mismo equipo.
@@ -27,15 +27,18 @@ function normalizarPeriodicidad(array $datos): array {
     return $poliza ? [0, 1, $meses] : [$meses, 0, 0];
 }
 
-// Candado/marca de tiempo del generador de tickets (generador_tickets.php).
-const RUTA_CANDADO_GENERADOR = __DIR__ . '/../../storage/logs/.generador_tickets';
+// Candado/marca de tiempo del generador de tickets (generador_tickets.php),
+// uno por empresa: cada una revisa su padrón sin esperar a las demás.
+function rutaCandadoGenerador(): string {
+    return __DIR__ . '/../../storage/logs/.generador_tickets_' . prefijoEmpresa((int)($_SESSION['empresa_id'] ?? 0)) . 'lock';
+}
 
 /**
  * Tras un cambio en el padrón, hace que el generador de tickets revise en la
  * siguiente consulta en vez de esperar su intervalo normal.
  */
 function solicitarRevisionTickets(): void {
-    if (is_file(RUTA_CANDADO_GENERADOR)) {
-        @file_put_contents(RUTA_CANDADO_GENERADOR, '0', LOCK_EX);
+    if (is_file(rutaCandadoGenerador())) {
+        @file_put_contents(rutaCandadoGenerador(), '0', LOCK_EX);
     }
 }

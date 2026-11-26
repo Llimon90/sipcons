@@ -1,0 +1,180 @@
+/* Manual de usuario (public/manual.html). Pantalla y PDF (@media print). */
+.manual {
+  --mn-fondo: #f4f6f9;
+  --mn-tarjeta: #ffffff;
+  --mn-borde: #e5eaf0;
+  --mn-texto: #1e293b;
+  --mn-suave: #5f6f82;
+  --mn-acento: var(--brand-primary, #3498db);
+  --mn-acento-rgb: var(--brand-primary-rgb, 52, 152, 219);
+  --mn-nota: #eef5fd;
+  color: var(--mn-texto);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+html[data-theme="dark"] .manual {
+  --mn-tarjeta: #16212d;
+  --mn-borde: #263546;
+  --mn-texto: #e6edf3;
+  --mn-suave: #9fb0c1;
+  --mn-acento: var(--brand-dm-accent, #4aa8ee);
+  --mn-acento-rgb: var(--brand-dm-accent-rgb, 74, 168, 238);
+  --mn-nota: #13283f;
+}
+.mn-portada { display: none; }
+
+/* ----- cabecera y buscador ----- */
+.mn-cabecera { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+.mn-eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mn-acento); }
+.mn-cabecera h1 { margin: 4px 0 6px; font-size: 1.85rem; letter-spacing: -0.01em; line-height: 1.2; color: var(--mn-texto); }
+.mn-cabecera p { margin: 0; color: var(--mn-suave); max-width: 62ch; }
+.mn-btn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 18px; margin: 0;
+  border: 1.5px solid var(--mn-borde); border-radius: 10px; background: var(--mn-tarjeta); color: var(--mn-texto);
+  font: inherit; font-size: 0.92rem; font-weight: 600; cursor: pointer; box-shadow: none;
+}
+.mn-btn:hover { border-color: var(--mn-acento); color: var(--mn-acento); background: var(--mn-tarjeta); transform: none; box-shadow: none; }
+.mn-btn i { color: #dc2626; }
+.mn-buscador {
+  position: relative; display: flex; align-items: center; margin-bottom: 22px;
+}
+.mn-buscador i { position: absolute; left: 16px; color: var(--mn-suave); }
+.mn-buscador input {
+  width: 100%; box-sizing: border-box; height: 50px; padding: 0 16px 0 46px; margin: 0;
+  border: 1.5px solid var(--mn-borde); border-radius: 12px; background: var(--mn-tarjeta); color: var(--mn-texto);
+  font: inherit; font-size: 1rem; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.mn-buscador input:focus { outline: none; border-color: var(--mn-acento); box-shadow: 0 0 0 4px rgba(var(--mn-acento-rgb), 0.16); }
+.mn-sin-resultados { padding: 14px 16px; border-radius: 10px; background: var(--mn-nota); }
+
+/* ----- índice + contenido ----- */
+.mn-cuerpo { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
+.mn-indice { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; padding: 16px 10px; border: 1px solid var(--mn-borde); border-radius: 14px; background: var(--mn-tarjeta); }
+.mn-indice-titulo { margin: 0 8px 8px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mn-suave); }
+.mn-indice ol { list-style: none; margin: 0; padding: 0; }
+.mn-indice a { display: flex; gap: 10px; padding: 6px 8px; border-radius: 8px; color: var(--mn-texto); text-decoration: none; font-size: 0.87rem; line-height: 1.35; }
+.mn-indice a span { min-width: 18px; color: var(--mn-suave); font-variant-numeric: tabular-nums; }
+.mn-indice a:hover { background: rgba(var(--mn-acento-rgb), 0.08); }
+.mn-indice a.activo { background: rgba(var(--mn-acento-rgb), 0.12); color: var(--mn-acento); font-weight: 600; }
+.mn-indice a.activo span { color: var(--mn-acento); }
+
+.mn-contenido { min-width: 0; max-width: 860px; }
+.mn-contenido > section {
+  background: var(--mn-tarjeta); border: 1px solid var(--mn-borde); border-radius: 14px;
+  padding: 28px 34px; margin-bottom: 18px; scroll-margin-top: 20px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px rgba(15, 23, 42, 0.05);
+}
+.mn-contenido h2 { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font-size: 1.4rem; letter-spacing: -0.01em; color: var(--mn-texto); text-align: left; }
+.mn-num {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: none;
+  border-radius: 9px; background: rgba(var(--mn-acento-rgb), 0.12); color: var(--mn-acento); font-size: 0.95rem; font-weight: 700;
+}
+.mn-contenido h3 { margin: 22px 0 8px; font-size: 1.05rem; color: var(--mn-texto); }
+.mn-contenido p { margin: 0 0 12px; }
+.mn-contenido ul { margin: 0 0 14px; padding-left: 22px; }
+.mn-contenido li { margin-bottom: 6px; }
+.mn-contenido a { color: var(--mn-acento); font-weight: 500; }
+
+/* Pasos numerados */
+.mn-pasos { list-style: none; counter-reset: paso; margin: 0 0 16px; padding: 0; }
+.mn-pasos li { counter-increment: paso; position: relative; padding: 2px 0 10px 40px; margin: 0; }
+.mn-pasos li::before {
+  content: counter(paso); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--mn-acento); color: #fff; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+}
+.mn-pasos li::after { content: ""; position: absolute; left: 12px; top: 30px; bottom: 0; width: 2px; background: var(--mn-borde); }
+.mn-pasos li:last-child::after { display: none; }
+
+/* Elementos de la interfaz mencionados en el texto */
+.mn-ui { display: inline-block; padding: 0 7px; border-radius: 6px; background: rgba(var(--mn-acento-rgb), 0.1); color: var(--mn-acento); font-weight: 600; font-size: 0.92em; white-space: nowrap; }
+.mn-ui.mn-peligro { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
+.mn-req { color: #dc2626; }
+kbd { display: inline-block; padding: 1px 7px; border: 1px solid var(--mn-borde); border-bottom-width: 2px; border-radius: 6px; background: var(--mn-fondo); font: 600 0.8em Consolas, monospace; color: var(--mn-texto); }
+html[data-theme="dark"] .manual kbd { background: #22303f; }
+
+/* Notas */
+.mn-nota { display: flex; gap: 12px; padding: 14px 16px; margin: 14px 0; border-radius: 10px; background: var(--mn-nota); border-left: 4px solid var(--mn-acento); font-size: 0.94rem; }
+.mn-nota > i { color: var(--mn-acento); margin-top: 4px; }
+
+/* Tarjetas de módulos */
+.mn-tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.mn-tarjetas div { display: grid; grid-template-columns: 36px 1fr; column-gap: 12px; padding: 14px; border: 1px solid var(--mn-borde); border-radius: 12px; }
+.mn-tarjetas i { grid-row: span 2; width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(var(--mn-acento-rgb), 0.12); color: var(--mn-acento); }
+.mn-tarjetas b { font-size: 0.95rem; }
+.mn-tarjetas span { font-size: 0.85rem; color: var(--mn-suave); line-height: 1.4; }
+
+/* Tablas */
+.mn-tabla-wrap { overflow-x: auto; margin: 0 0 14px; }
+.mn-tabla { width: 100%; border-collapse: collapse; margin: 6px 0 16px; font-size: 0.92rem; background: transparent; box-shadow: none; border: none; }
+.mn-tabla th { text-align: left; padding: 9px 12px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mn-suave); background: none; border-bottom: 1.5px solid var(--mn-borde); }
+.mn-tabla td { padding: 9px 12px; border-bottom: 1px solid var(--mn-borde); color: var(--mn-texto); background: none; vertical-align: top; }
+.mn-matriz td:not(:first-child), .mn-matriz th:not(:first-child) { text-align: center; }
+.mn-matriz td:not(:first-child) { color: var(--mn-acento); font-weight: 700; }
+.mn-chip { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+.mn-chip.azul { background: #e3effc; color: #1d5fae; }
+.mn-chip.violeta { background: #efe8fb; color: #6435b5; }
+.mn-chip.ambar { background: #fdf1df; color: #a35a00; }
+.mn-chip.verde { background: #e2f6ea; color: #1e7b45; }
+.mn-chip.gris { background: #eef1f5; color: #4a5968; }
+
+/* Preguntas frecuentes */
+.mn-faq { border: 1px solid var(--mn-borde); border-radius: 10px; margin-bottom: 8px; padding: 0 16px; }
+.mn-faq summary { padding: 12px 0; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.mn-faq summary::-webkit-details-marker { display: none; }
+.mn-faq summary::after { content: "+"; color: var(--mn-acento); font-size: 1.2rem; line-height: 1; }
+.mn-faq[open] summary::after { content: "–"; }
+.mn-faq p { margin: 0 0 14px; color: var(--mn-suave); }
+
+/* Glosario */
+.mn-glosario { display: grid; grid-template-columns: 190px 1fr; gap: 8px 20px; margin: 0; }
+.mn-glosario dt { font-weight: 700; }
+.mn-glosario dd { margin: 0; color: var(--mn-suave); }
+
+/* ----- responsivo ----- */
+@media (max-width: 1100px) {
+  .mn-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .mn-indice { position: static; max-height: none; }
+  .mn-indice ol { columns: 2; column-gap: 12px; }
+}
+@media (max-width: 640px) {
+  .mn-cabecera h1 { font-size: 1.45rem; }
+  .mn-contenido > section { padding: 20px 16px; }
+  .mn-indice ol { columns: 1; }
+  .mn-glosario { grid-template-columns: 1fr; }
+  .mn-glosario dd { margin-bottom: 8px; }
+  .mn-cabecera-acciones, .mn-btn { width: 100%; justify-content: center; }
+}
+
+/* =====================================================================
+   PDF (Descargar PDF = imprimir y "Guardar como PDF")
+   ===================================================================== */
+@page { size: letter; margin: 16mm 15mm 18mm; }
+@media print {
+  html, body { background: #fff !important; }
+  .sidebar, .barra-movil, .nav-inferior, .sidebar-fondo, .aviso-demo, .aviso-empresa, #aviso-soporte, .buscador-global,
+  .mn-cabecera, .mn-buscador, .mn-sin-resultados, .mn-indice, .mobile-home-btn { display: none !important; }
+  main.manual, main.manual.contraido { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; background: #fff !important; }
+  .mn-contenido > section, .mn-portada { background: #fff !important; }
+  .manual { --mn-tarjeta: #fff; --mn-borde: #d9e0e8; --mn-texto: #1e293b; --mn-suave: #4b5b6d; --mn-nota: #f1f6fc; font-size: 11pt; line-height: 1.5; color: #1e293b; }
+  .mn-cuerpo { display: block; }
+  .mn-contenido { max-width: none; }
+  .mn-contenido > section { box-shadow: none; border: none; border-radius: 0; padding: 0; margin: 0 0 8mm; }
+  .mn-contenido > section + section { break-before: page; }
+  .mn-contenido h2 { font-size: 17pt; margin-bottom: 4mm; padding-bottom: 3mm; border-bottom: 2px solid var(--mn-acento); }
+  .mn-contenido h3 { font-size: 12.5pt; break-after: avoid; }
+  .mn-nota, .mn-tabla tr, .mn-pasos li, .mn-faq, .mn-tarjetas div { break-inside: avoid; }
+  .mn-faq summary::after { display: none; }
+  .mn-contenido a { color: inherit; text-decoration: none; }
+  .mn-ui { background: none; padding: 0; color: inherit; border-bottom: 1px solid currentColor; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .mn-portada {
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    min-height: 235mm; break-after: page; padding: 0 6mm;
+    border-left: 6px solid var(--mn-acento);
+  }
+  .mn-portada img { max-height: 22mm; max-width: 80mm; margin-bottom: 18mm; }
+  .mn-portada h1 { font-size: 32pt; margin: 0 0 4mm; letter-spacing: -0.02em; color: #1e293b; }
+  .mn-portada p { font-size: 13pt; color: #4b5b6d; margin: 0 0 2mm; }
+  .mn-portada .mn-portada-fecha { margin-top: 14mm; font-size: 10pt; }
+}

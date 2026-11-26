@@ -1,0 +1,127 @@
+/* Finanzas (public/finanzas.html y estado-cuenta.html). Reutiliza la base de
+   inventario.css (tarjetas, filtros, tablas y modales); aquí solo lo propio. */
+
+.fin-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+/* El estilo global de botones les fija display: el atributo hidden debe ganar */
+.finanzas [hidden], .inv-modal [hidden] { display: none !important; }
+
+/* Pestañas */
+.fin-tabs { display: flex; gap: 4px; border-bottom: 2px solid #e3e8ef; margin: 4px 0 18px; overflow-x: auto; }
+.fin-tabs button {
+  background: none !important; border: 0; border-bottom: 3px solid transparent; border-radius: 0;
+  color: #6c7a89 !important; font-weight: 600; padding: 10px 14px; margin-bottom: -2px; width: auto !important;
+  white-space: nowrap; cursor: pointer; box-shadow: none !important;
+}
+.fin-tabs button.activo { color: var(--brand-primary) !important; border-bottom-color: var(--brand-primary); }
+.fin-panel[hidden] { display: none !important; }
+
+.fin-kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.fin-negativo { color: #dc2626 !important; }
+.fin-rojo { color: #dc2626; }
+.fin-nota { color: #6c7a89; font-size: 0.88rem; margin: 6px 0 12px; }
+.fin-subtitulo { margin: 22px 0 8px; font-size: 1.05rem; }
+.fin-paneles-iguales { grid-template-columns: 1fr 1fr; }
+.fin-contador { background: var(--brand-primary); color: #fff; border-radius: 10px; padding: 1px 8px; font-size: 0.8rem; margin-left: 6px; }
+.fin-contador:empty { display: none; }
+
+/* Antigüedad del saldo */
+.fin-antiguedad { list-style: none; margin: 0; padding: 0; }
+.fin-antiguedad li {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: "etq monto" "barra barra";
+  align-items: center; gap: 4px 10px; padding: 6px 0; font-size: 0.9rem;
+}
+.fin-ant-etq { grid-area: etq; }
+.fin-antiguedad b { grid-area: monto; text-align: right; white-space: nowrap; }
+.fin-ant-barra { grid-area: barra; }
+.fin-ant-barra { background: #eef2f7; border-radius: 6px; height: 10px; overflow: hidden; }
+.fin-ant-barra i { display: block; height: 100%; border-radius: 6px; }
+.fin-ant-ok { background: #16a34a; }
+.fin-ant-alerta { background: #f59e0b; }
+.fin-ant-error { background: #dc2626; }
+
+/* Listas del resumen */
+.fin-lista { list-style: none; margin: 0; padding: 0; }
+.fin-lista li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef2f7; }
+.fin-lista li > div { flex: 1; min-width: 0; }
+.fin-lista small { display: block; color: #6c7a89; margin-top: 2px; }
+.fin-lista .btn-secundario, .fin-lista .btn-primary { width: auto !important; padding: 6px 10px; font-size: 0.85rem; white-space: nowrap; }
+.fin-monto { font-weight: 700; white-space: nowrap; }
+.fin-mas { color: #6c7a89; font-size: 0.85rem; }
+
+/* Tablas */
+.fin-tabla td .btn-primary, .fin-tabla td .btn-secundario { width: auto !important; padding: 6px 10px; font-size: 0.85rem; }
+.fin-tabla tbody tr[data-cuenta] { cursor: pointer; }
+.fin-cancelado td { text-decoration: line-through; color: #94a3b8; }
+.fin-cancelado td .inv-sub { text-decoration: none; }
+.fin-perdida td { background: #fef2f2; }
+
+/* Modales */
+.fin-modal-ancho { max-width: 860px !important; }
+.fin-origen { background: #f1f5f9; border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; margin: 0 0 10px; }
+.fin-total { font-size: 1.4rem; font-weight: 700; padding: 6px 0; }
+.fin-check { display: flex; align-items: flex-end; }
+.fin-check label { font-weight: 400; display: flex; gap: 6px; align-items: center; }
+.fin-check input { width: auto; }
+.fin-atajos { display: inline-flex; gap: 4px; margin-left: 6px; }
+.fin-atajos button {
+  width: auto !important; padding: 1px 7px !important; font-size: 0.75rem !important; border-radius: 6px;
+  background: #eef2f7 !important; color: #334155 !important; border: 1px solid #d5dde8; box-shadow: none !important; min-height: 0 !important;
+}
+.fin-detalle-resumen dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.fin-detalle-resumen dt { color: #6c7a89; }
+.fin-detalle-resumen dd { margin: 0; }
+.fin-saldo { font-size: 1.1rem; }
+.fin-form-cobro, #form-editar { border-top: 1px solid #e3e8ef; margin-top: 16px; padding-top: 4px; }
+.fin-form-cobro[hidden], #form-editar[hidden] { display: none; }
+.fin-dialogo textarea { width: 100%; margin-top: 6px; }
+
+@media (max-width: 900px) {
+  .fin-paneles-iguales { grid-template-columns: 1fr; }
+}
+
+html[data-theme="dark"] .fin-tabs { border-bottom-color: #2c3d50; }
+html[data-theme="dark"] .fin-tabs button { color: #94a3b8 !important; }
+html[data-theme="dark"] .fin-tabs button.activo { color: var(--brand-dm-accent) !important; border-bottom-color: var(--brand-dm-accent); }
+html[data-theme="dark"] .fin-ant-barra { background: #24364a; }
+html[data-theme="dark"] .fin-lista li { border-bottom-color: #2c3d50; }
+html[data-theme="dark"] .fin-origen { background: #1b2836; color: #e6edf3; }
+html[data-theme="dark"] .fin-perdida td { background: #3a1d22; }
+html[data-theme="dark"] .fin-atajos button { background: #24364a !important; color: #e6edf3 !important; border-color: #2c3d50; }
+html[data-theme="dark"] .fin-form-cobro, html[data-theme="dark"] #form-editar { border-top-color: #2c3d50; }
+html[data-theme="dark"] .fin-nota, html[data-theme="dark"] .fin-lista small, html[data-theme="dark"] .fin-detalle-resumen dt { color: #94a3b8; }
+
+/* Estado de cuenta (imprimible) */
+.ec-pagina { max-width: 900px; margin: 0 auto; padding: 72px 16px 24px; background: #fff; color: #1f2937; font-family: inherit; }
+.ec-barra { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 16px; }
+.ec-barra button, .ec-barra a { width: auto !important; }
+.ec-encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid var(--brand-primary); padding-bottom: 12px; }
+.ec-encabezado img { max-height: 60px; max-width: 200px; }
+.ec-encabezado h1 { margin: 0; font-size: 1.4rem; }
+.ec-cliente { margin: 16px 0; }
+.ec-cliente p { margin: 2px 0; }
+.ec-totales { display: flex; gap: 24px; margin: 12px 0 18px; }
+.ec-totales div { background: #f7f9fc; border: 1px solid #e3e8ef; border-radius: 8px; padding: 10px 14px; }
+.ec-totales b { display: block; font-size: 1.3rem; }
+.ec-tabla { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 18px; }
+.ec-tabla th, .ec-tabla td { border-bottom: 1px solid #e3e8ef; padding: 7px 6px; text-align: left; }
+.ec-tabla th { background: #f1f5f9; }
+.ec-tabla .num { text-align: right; white-space: nowrap; }
+.ec-vencida { color: #dc2626; font-weight: 600; }
+.ec-pie { color: #6c7a89; font-size: 0.8rem; margin-top: 24px; }
+@media print {
+  .ec-barra, #user-top-bar { display: none !important; }
+  .ec-pagina { padding: 0; }
+  body { background: #fff !important; }
+}
+
+/* O-1: adjuntar o reemplazar el comprobante de un cobro */
+.fin-link { background: none; border: 0; padding: 0 2px; color: var(--primary, #3498db); cursor: pointer; font: inherit; font-size: 0.85em; white-space: nowrap; }
+.fin-link:hover { text-decoration: underline; }
+.fin-link:disabled { opacity: 0.5; cursor: wait; }
+
+/* O-3: en las tablas de Finanzas la celda de acciones sigue siendo celda (con display:grid
+   se salía del modelo de tabla y el botón "Cobrar" quedaba encimado en la columna de al lado) */
+.fin-tabla td.inv-acciones { display: table-cell; white-space: nowrap; text-align: right; }
+.fin-tabla td.inv-acciones button + button { margin-left: 6px; }
+.fin-acciones-cobro { white-space: nowrap; text-align: right; }
+.fin-acciones-cobro button + button { margin-left: 6px; }

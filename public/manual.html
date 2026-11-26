@@ -7,210 +7,717 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css?v=20261126a">
-  <link rel="stylesheet" href="../css/dark.css?v=20261126a">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
-  <style>
-    .mn-cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-    .mn-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; min-height: 44px; border: 1px solid #3498db; border-radius: 8px; background: #fff; color: #3498db; cursor: pointer; font: inherit; }
-    .mn-btn:hover { background: #3498db; color: #fff; }
-    .mn-buscador { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid #dfe6ec; border-radius: 8px; margin: 16px 0; }
-    .mn-buscador input { border: none; outline: none; flex: 1; font: inherit; min-height: 24px; }
-    .mn-cuerpo { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
-    .mn-indice { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 4px; }
-    .mn-indice a { padding: 8px 10px; border-radius: 6px; color: inherit; text-decoration: none; font-size: 0.9rem; }
-    .mn-indice a:hover, .mn-indice a.activo { background: rgba(52, 152, 219, 0.1); color: #3498db; }
-    .mn-tema { background: #fff; border: 1px solid #dfe6ec; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; }
-    .mn-tema h2 { margin-top: 0; }
-    .mn-tema[hidden] { display: none; }
-    .mn-sin-resultados { color: #6c7a89; }
-    html[data-theme="dark"] .mn-btn { background: #16212d; border-color: #4aa8ee; color: #6ab7f5; }
-    html[data-theme="dark"] .mn-btn:hover { background: #4aa8ee; color: #0e1620; }
-    html[data-theme="dark"] .mn-buscador { background: #16212d; border-color: #2c3d50; }
-    html[data-theme="dark"] .mn-indice a:hover, html[data-theme="dark"] .mn-indice a.activo { background: rgba(74, 168, 238, 0.15); color: #6ab7f5; }
-    html[data-theme="dark"] .mn-tema { background: #16212d; border-color: #2c3d50; }
-    @media print {
-      .sidebar, .mobile-home-btn, .mn-cabecera-acciones, .mn-buscador, .mn-indice, .nav-inferior { display: none !important; }
-      .mn-cuerpo { grid-template-columns: 1fr; }
-      main#mainContent { margin-left: 0 !important; }
-    }
-    @media (max-width: 900px) { .mn-cuerpo { grid-template-columns: 1fr; } .mn-indice { position: static; } }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <link rel="stylesheet" href="../css/manual.css?v=20261030b">
+  <script src="../branding/marca.js.php"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
 </head>
 <body>
 
-  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
-    <i class="fas fa-home"></i>
-    <span>Volver al Inicio</span>
-  </button>
-
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
-      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+      <h2 class="sidebar-title">
+        <i class="fas fa-tools"></i>
+        Panel
+      </h2>
+      <button id="toggleSidebar" class="toggle-sidebar" aria-label="Contraer menú">
+        <i class="fas fa-chevron-left"></i>
+      </button>
     </div>
     <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
     <div class="sidebar-footer">
-      <div class="user-info"><i class="fas fa-user-circle"></i><span class="user-name">Usuario</span></div>
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
     </div>
   </aside>
 
-  <main id="mainContent">
-    <section class="encabezado mn-cabecera">
+  <main id="mainContent" class="manual">
+
+    <!-- Portada (solo en el PDF) -->
+    <section class="mn-portada" aria-hidden="true">
+      <img src="../img/logo.svg" alt="Servidesk">
+      <h1>Manual de usuario</h1>
+      <p>Servidesk · Órdenes de servicio, clientes, cotizaciones, ventas, inventario y finanzas</p>
+      <p class="mn-portada-fecha">Versión 2.22 · <span id="mn-fecha-impresion"></span></p>
+    </section>
+
+    <header class="mn-cabecera">
       <div>
-        <h2>Manual de usuario</h2>
-        <p>Todo lo que necesitas para usar SIPCONS, explicado por módulo. Busca un tema o recorre el índice.</p>
+        <span class="mn-eyebrow">Centro de ayuda</span>
+        <h1>Manual de usuario de Servidesk</h1>
+        <p>Todo lo que necesitas para usar el sistema, explicado paso a paso. Busca un tema o recorre las secciones.</p>
       </div>
       <div class="mn-cabecera-acciones">
         <button type="button" class="mn-btn" id="mn-pdf"><i class="fas fa-file-pdf"></i> Descargar PDF</button>
       </div>
-    </section>
+    </header>
 
     <div class="mn-buscador">
       <i class="fas fa-magnifying-glass"></i>
-      <input type="search" id="mn-buscar" placeholder="Busca un tema: prioridad, SLA, cerrar incidencia, cuentas por cobrar, portal del cliente…" autocomplete="off">
+      <input type="search" id="mn-buscar" placeholder="Busca un tema: cerrar orden, cobro, póliza, importar, contraseña…" autocomplete="off" aria-label="Buscar en el manual">
     </div>
-    <p class="mn-sin-resultados" id="mn-sin-resultados" hidden>No encontramos ese tema. Prueba con otra palabra.</p>
+    <p class="mn-sin-resultados" id="mn-sin-resultados" hidden>No encontramos ese tema. Prueba con otra palabra o revisa las <a href="#preguntas">preguntas frecuentes</a>.</p>
 
     <div class="mn-cuerpo">
-      <nav class="mn-indice" id="mn-indice"></nav>
+      <nav class="mn-indice" aria-label="Contenido del manual">
+        <p class="mn-indice-titulo">Contenido</p>
+        <ol id="mn-indice"></ol>
+      </nav>
 
-      <div id="mn-temas">
-        <article class="mn-tema" id="t-incidencias" data-titulo="Incidencias">
-          <h2>Incidencias</h2>
-          <p>Da de alta un ticket desde <strong>Incidencias</strong>: cliente, sucursal, categoría, prioridad (Baja/Media/Alta/Crítica) y la falla reportada. La prioridad y la categoría determinan el SLA de respuesta y cierre de esa incidencia (configurable en Ajustes → Reglas de SLA).</p>
-          <p>En el detalle de cada ticket puedes: cambiar estatus (Abierto, Asignado, Pendiente, Completado, Cerrado con/sin factura), registrar las refacciones usadas (descuenta inventario), llevar una bitácora de tiempo invertido, agregar etiquetas y comentarios internos. Un comentario marcado "visible para el cliente" aparece también en su portal.</p>
-          <p>Cerrar con o sin factura requiere permiso; algunos usuarios pueden tenerlo restringido desde el <code>.env</code> del sistema.</p>
-        </article>
+      <article class="mn-contenido" id="mn-contenido">
 
-        <article class="mn-tema" id="t-buscar" data-titulo="Buscar incidencias e Historial">
-          <h2>Buscar incidencias e Historial</h2>
-          <p><strong>Buscar incidencias</strong> filtra por folio, cliente, sucursal, estatus, técnico o rango de fechas. El buscador global (<kbd>Ctrl</kbd>+<kbd>K</kbd> en cualquier pantalla) busca a la vez en incidencias, clientes y equipos del padrón.</p>
-          <p><strong>Historial</strong> muestra la bitácora de auditoría: quién cambió qué y cuándo, en cualquier módulo del sistema.</p>
-        </article>
+        <!-- =========================================================== -->
+        <section id="introduccion" data-titulo="Introducción">
+          <h2><span class="mn-num">1</span> Introducción</h2>
+          <p>Servidesk es el sistema para administrar el servicio técnico de tu empresa. Recibes los reportes de tus clientes como <b>órdenes de servicio</b>, las asignas a tus técnicos y das seguimiento hasta cerrarlas. También llevas el control de clientes, equipos instalados, cotizaciones, ventas, inventario y cobranza. Todo queda registrado y se puede consultar desde la computadora o el celular.</p>
+          <div class="mn-tarjetas">
+            <div><i class="fas fa-tasks"></i><b>Órdenes de servicio</b><span>Del reporte al cierre, con lo que se aplicó en cada una.</span></div>
+            <div><i class="fas fa-address-book"></i><b>Clientes y equipos</b><span>Directorio y padrón de equipos por cliente.</span></div>
+            <div><i class="fas fa-file-invoice-dollar"></i><b>Cotizaciones</b><span>Presupuestos en PDF, antes o después del trabajo.</span></div>
+            <div><i class="fas fa-shop"></i><b>Ventas</b><span>Equipos vendidos con sus series, garantía y póliza.</span></div>
+            <div><i class="fas fa-boxes"></i><b>Inventario</b><span>Catálogo de productos y servicios, con su kárdex.</span></div>
+            <div><i class="fas fa-wallet"></i><b>Finanzas</b><span>Cuentas por cobrar, cobros, gastos y rentabilidad.</span></div>
+            <div><i class="fas fa-chart-bar"></i><b>Estadísticas</b><span>Tiempos de atención y desempeño del equipo.</span></div>
+            <div><i class="fas fa-calendar-check"></i><b>Mantenimiento programado</b><span>Órdenes automáticas de pólizas y mantenimientos.</span></div>
+          </div>
+          <div class="mn-nota"><i class="fas fa-lightbulb"></i><div><b>Cómo usar este manual.</b> Cada sección explica un módulo. Lo que ves en tu menú depende de tu rol: si un módulo no aparece, tu administrador no lo tiene habilitado para ti (ver <a href="#roles">Roles y permisos</a>). Si es tu primera vez, el <a href="#primeros-pasos">recorrido guiado</a> te muestra lo esencial en un minuto.</div></div>
+        </section>
 
-        <article class="mn-tema" id="t-problemas" data-titulo="Problemas">
-          <h2>Problemas</h2>
-          <p>Cuando varias incidencias comparten la misma causa raíz, agrúpalas en un <strong>Problema</strong> (folio PRB-#####). Documenta la causa raíz y vincula los folios de incidencia relacionados; el problema se cierra cuando la causa ya se resolvió de fondo.</p>
-        </article>
+        <!-- =========================================================== -->
+        <section id="primeros-pasos" data-titulo="Primeros pasos">
+          <h2><span class="mn-num">2</span> Primeros pasos</h2>
 
-        <article class="mn-tema" id="t-cambios" data-titulo="Cambios">
-          <h2>Cambios</h2>
-          <p>Una solicitud de <strong>Cambio</strong> (folio CAM-#####) documenta algo que se va a modificar (equipo, configuración, proceso) con su tipo, riesgo y fecha planeada. Requiere aprobación formal de un Administrador antes de poder marcarse como implementado.</p>
-        </article>
+          <h3>Iniciar sesión</h3>
+          <ol class="mn-pasos">
+            <li>Abre la dirección del sistema que te dio tu empresa.</li>
+            <li>Escribe tu <b>correo electrónico</b> (es tu usuario) y tu <b>contraseña</b>.</li>
+            <li>Pulsa <span class="mn-ui">Iniciar sesión</span>. Entrarás a la pantalla de <a href="#inicio">Inicio</a>.</li>
+          </ol>
+          <ul>
+            <li>El ícono del ojo junto a la contraseña te deja ver lo que escribiste.</li>
+            <li>La sesión se mantiene abierta en ese equipo hasta que pulses <span class="mn-ui">Cerrar sesión</span>, al final del menú.</li>
+            <li>¿Olvidaste tu contraseña? Pulsa <span class="mn-ui">¿Olvidaste tu contraseña?</span>. Si eres usuario, el administrador de tu empresa te asigna una nueva desde <a href="#usuarios">Usuarios</a> y después tú la cambias en <a href="#ajustes">Ajustes</a>. Si eres el administrador, ahí mismo tienes el WhatsApp de soporte.</li>
+            <li>Por seguridad, después de 5 intentos fallidos el acceso con ese correo se bloquea 15 minutos.</li>
+          </ul>
 
-        <article class="mn-tema" id="t-clientes" data-titulo="Clientes">
-          <h2>Clientes</h2>
-          <p>Directorio de clientes con sus contactos y su <strong>padrón de equipos</strong> instalados: marca, modelo, número de serie, y si tienen póliza de servicio o garantía/calibración. Diez días antes de que venza una póliza, el sistema genera solo un ticket de mantenimiento preventivo.</p>
-          <p>Desde el perfil del cliente también se da de alta el acceso al <strong>portal de autoservicio</strong> (ver siguiente tema).</p>
-        </article>
+          <h3>Recorrido guiado</h3>
+          <p>La primera vez que entras, el sistema te muestra un recorrido corto por las partes de la pantalla que usarás. Es distinto para cada rol: el técnico ve sus órdenes y los conceptos aplicados; la oficina ve la bandeja de trabajo, las cotizaciones y las finanzas. Puedes cerrarlo en cualquier paso con <span class="mn-ui">Cerrar recorrido</span> y volver a verlo cuando quieras en <span class="mn-ui">Ayuda → Recorrido guiado</span>. Tu avance se guarda en tu cuenta, así que no se repite en otro equipo.</p>
 
-        <article class="mn-tema" id="t-portal" data-titulo="Portal de clientes">
-          <h2>Portal de clientes (autoservicio)</h2>
-          <p>Cada cliente puede tener su propio acceso (correo + contraseña, independiente del login de personal) para entrar a <code>/public/portal/</code> y: ver el estatus de sus tickets, abrir uno nuevo, pedir un servicio del catálogo, consultar la base de conocimiento pública, y calificar el servicio al cerrar un ticket (encuesta CSAT).</p>
-          <p>Un cliente nunca ve tickets de otro cliente ni puede acceder a ninguna pantalla de personal, y viceversa.</p>
-        </article>
+          <h3>El menú lateral</h3>
+          <p>Está a la izquierda en todas las pantallas y agrupa los módulos por área:</p>
+          <table class="mn-tabla">
+            <thead><tr><th>Área</th><th>Módulos</th></tr></thead>
+            <tbody>
+              <tr><td><b>Operación</b></td><td>Órdenes de servicio · Buscar órdenes de servicio · Mis métricas</td></tr>
+              <tr><td><b>Comercial</b></td><td>Clientes · Cotizaciones · Ventas · Inventario · Finanzas</td></tr>
+              <tr><td><b>Análisis</b></td><td>Estadísticas</td></tr>
+              <tr><td><b>Administración</b></td><td>Usuarios · Historial · Importar datos · Mi empresa · Ajustes</td></tr>
+              <tr><td><b>Ayuda</b></td><td>Soporte técnico (manuales de equipos) · Manual de usuario · Recorrido guiado</td></tr>
+            </tbody>
+          </table>
+          <ul>
+            <li>El número junto a <span class="mn-ui">Órdenes de servicio</span> indica cuántas siguen activas.</li>
+            <li>Con la flecha <i class="fas fa-chevron-left"></i> junto al nombre contraes el menú y queda solo con íconos; si no caben, desplázate dentro del menú.</li>
+          </ul>
 
-        <article class="mn-tema" id="t-ventas" data-titulo="Ventas">
-          <h2>Ventas</h2>
-          <p>Registra la venta de un equipo con su número de serie: queda en el historial de ventas y se agrega automáticamente al padrón de equipos del cliente.</p>
-        </article>
+          <h3>Buscador global</h3>
+          <p>Desde cualquier pantalla presiona <kbd>Ctrl</kbd> + <kbd>K</kbd> (en Mac <kbd>⌘</kbd> + <kbd>K</kbd>) o pulsa <span class="mn-ui">Buscar…</span> en el menú. Escribe un folio (SD-0045), un folio de cotización, un cliente, una sucursal, un número de serie o el nombre de un módulo. Los resultados se agrupan en órdenes de servicio, cotizaciones, clientes y equipos. Muévete con las flechas y abre con <kbd>Enter</kbd>.</p>
 
-        <article class="mn-tema" id="t-cotizaciones" data-titulo="Cotizaciones">
-          <h2>Cotizaciones</h2>
-          <p>Cotiza antes de vender (folio COT-#####) con líneas de producto o servicio e IVA calculado. Una cotización aprobada se puede "Convertir a venta" con un clic.</p>
-        </article>
+          <h3>Avisos en la parte superior</h3>
+          <p>Una franja de color te avisa de la situación de la cuenta de tu empresa: días restantes de prueba, pago vencido, modo solo lectura o pago en verificación. El administrador ve ahí mismo el botón para contratar o pagar (ver <a href="#plan">Plan, pagos y estado de la cuenta</a>).</p>
 
-        <article class="mn-tema" id="t-cxc" data-titulo="Cuentas por cobrar">
-          <h2>Cuentas por cobrar</h2>
-          <p>Lleva el saldo pendiente de cada cliente, con pagos parciales y marca automática de "Vencida" cuando pasa la fecha límite sin saldar.</p>
-        </article>
+          <h3>Modo claro u oscuro</h3>
+          <p>En <a href="#ajustes">Ajustes → Apariencia</a> eliges el tema. Se guarda en tu cuenta, así que lo verás igual en cualquier equipo.</p>
+        </section>
 
-        <article class="mn-tema" id="t-catalogo" data-titulo="Catálogo de servicios">
-          <h2>Catálogo de servicios</h2>
-          <p>Lista de servicios que un cliente puede solicitar (instalaciones, capacitaciones, visitas) sin necesidad de reportar una falla. Las solicitudes llegan a una bandeja para asignarles técnico, igual que una incidencia.</p>
-        </article>
+        <!-- =========================================================== -->
+        <section id="roles" data-titulo="Roles y permisos">
+          <h2><span class="mn-num">3</span> Roles y permisos</h2>
+          <p>Cada usuario tiene un rol, y el rol decide qué módulos ve. Estos son los permisos iniciales; el administrador puede cambiarlos en <a href="#ajustes">Ajustes → Privilegios por rol</a>.</p>
+          <div class="mn-tabla-wrap">
+          <table class="mn-tabla mn-matriz">
+            <thead><tr><th>Módulo</th><th>Administrador</th><th>Supervisor</th><th>Administrativo</th><th>Técnico</th></tr></thead>
+            <tbody>
+              <tr><td>Órdenes de servicio</td><td>✔</td><td>✔</td><td>✔</td><td>✔ (solo las suyas)</td></tr>
+              <tr><td>Buscar órdenes de servicio</td><td>✔</td><td>✔</td><td>✔</td><td>✔ (solo las suyas)</td></tr>
+              <tr><td>Clientes</td><td>✔</td><td>✔</td><td>✔</td><td>—</td></tr>
+              <tr><td>Cotizaciones</td><td>✔</td><td>✔</td><td>✔</td><td>— (*)</td></tr>
+              <tr><td>Ventas</td><td>✔</td><td>✔</td><td>✔</td><td>—</td></tr>
+              <tr><td>Inventario</td><td>✔</td><td>✔</td><td>✔</td><td>—</td></tr>
+              <tr><td>Finanzas</td><td>✔</td><td>—</td><td>✔</td><td>—</td></tr>
+              <tr><td>Estadísticas</td><td>✔</td><td>✔</td><td>✔</td><td>—</td></tr>
+              <tr><td>Soporte técnico</td><td>✔</td><td>✔</td><td>—</td><td>✔ (consulta)</td></tr>
+              <tr><td>Usuarios</td><td>✔</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td>Historial</td><td>✔</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td>Importar datos</td><td>✔</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td>Mi empresa</td><td>✔</td><td>—</td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p><b>Reglas fijas</b> (no dependen de la tabla):</p>
+          <ul>
+            <li><b>El Técnico ve y edita solo las órdenes donde está asignado</b>: en la lista, la búsqueda, el detalle, el Inicio, el buscador global y las alertas. Si registra una orden y no se asigna, deja de verla.</li>
+            <li><b>Cerrar, cancelar y reabrir órdenes</b>: el rol Técnico nunca puede. A cualquier otro usuario el administrador le puede quitar ese permiso desde <a href="#usuarios">Usuarios → Editar</a>.</li>
+            <li><b>Eliminar órdenes de servicio</b>: solo el Administrador.</li>
+            <li>(*) <b>Cotizaciones del técnico</b>: sin acceso al módulo, el Técnico puede crear y editar un borrador desde el detalle de su orden. Enviarlo, aprobarlo o convertirlo le corresponde a la oficina.</li>
+            <li><b>Eliminar cotizaciones</b>: solo el Administrador, y solo en borrador.</li>
+            <li><b>Costos y márgenes de cotizaciones</b>: solo Administrador y Administrativo.</li>
+            <li><b>Descuentos arriba del máximo</b>: el Administrador o quien tenga «Puede autorizar descuentos».</li>
+            <li><b>Finanzas</b>: corregir o cancelar un cobro lo hacen el Administrador y el Administrativo. Cancelar una cuenta por cobrar o un gasto, solo el Administrador.</li>
+            <li><b>Marcas, modelos y manuales</b> (Soporte técnico): el Técnico solo consulta. Crean, editan y borran el Administrador y el Supervisor.</li>
+            <li><b>Mi empresa, plan y pagos, Usuarios, privilegios e Importar datos</b>: solo el Administrador.</li>
+            <li><b>Mis métricas, Ajustes, este manual y el recorrido guiado</b>: todos los usuarios.</li>
+          </ul>
+        </section>
 
-        <article class="mn-tema" id="t-inventario" data-titulo="Inventario">
-          <h2>Inventario</h2>
-          <p>Kárdex de refacciones, equipos, consumibles y herramientas: entradas, salidas y ajustes de stock, con alerta cuando algo llega a su mínimo. Al usar una refacción en una incidencia, el stock se descuenta solo (y se puede devolver si no se usó).</p>
-        </article>
+        <!-- =========================================================== -->
+        <section id="inicio" data-titulo="Inicio">
+          <h2><span class="mn-num">4</span> Inicio</h2>
+          <p>Es tu centro de operaciones: muestra lo que necesita atención hoy sin entrar módulo por módulo.</p>
+          <h3>Para administración y supervisión</h3>
+          <ul>
+            <li><b>Indicadores</b>: Abiertas, Asignadas, Pendientes, <b>Más de N días</b> (en rojo; N es la meta de cumplimiento de tu empresa, 7 por defecto) y <b>Por cerrar</b> (completadas). Cada indicador es un botón: al pulsarlo, la bandeja muestra exactamente esas órdenes.</li>
+            <li><b>Bandeja de trabajo</b>: las órdenes activas, primero las que no tienen técnico y las más antiguas. Filtra con <span class="mn-ui">Urgentes</span>, <span class="mn-ui">Sin técnico</span> o <span class="mn-ui">Todas</span>. Pulsa una fila para abrirla.</li>
+            <li><b>Requiere atención</b>: avisos de órdenes atrasadas, órdenes sin técnico y equipos del padrón con mantenimiento por vencer.</li>
+            <li><b>Por cerrar hace más de 5 días</b>: trabajos que el técnico ya completó pero que nadie ha cerrado administrativamente.</li>
+            <li><b>Carga por técnico</b>: cuántas órdenes activas tiene cada técnico.</li>
+            <li><b>Últimos cambios</b>: lo más reciente que se registró o editó.</li>
+          </ul>
+          <h3>Para técnicos: «Mi día»</h3>
+          <p>El técnico ve solo sus órdenes, ordenadas de la más antigua a la más reciente, con sus indicadores: asignadas, pendientes, atrasadas y por cerrar. Pulsa <span class="mn-ui">Abrir</span> para trabajar en cada una.</p>
+          <h3>Atajos</h3>
+          <p>Arriba están siempre los botones <span class="mn-ui">Nueva orden de servicio</span>, <span class="mn-ui">Nueva cotización</span>, <span class="mn-ui">Registrar venta</span> y <span class="mn-ui">Nuevo artículo</span>. Cada usuario ve solo los de los módulos que tiene permitidos.</p>
+          <h3>Cuándo una orden está atrasada</h3>
+          <p>Una orden activa está atrasada cuando han pasado <b>más</b> días completos que la meta desde su fecha de reporte. Por ejemplo, con meta de 7 días, una orden reportada el 1 de noviembre todavía está a tiempo el 8 y está atrasada desde el 9. Las órdenes en <b>Completado</b> no cuentan como atrasadas, porque el trabajo ya se hizo; aparecen en «Por cerrar». Este mismo cálculo se usa en Inicio, las alertas y el panel del técnico.</p>
+        </section>
 
-        <article class="mn-tema" id="t-finanzas" data-titulo="Finanzas">
-          <h2>Finanzas</h2>
-          <p>Panel ejecutivo (solo Administrador) con ventas, cobrado vs. por cobrar, cotizaciones pendientes vs. convertidas, y valor de inventario, desglosado por cliente y sucursal.</p>
-        </article>
+        <!-- =========================================================== -->
+        <section id="incidencias" data-titulo="Órdenes de servicio">
+          <h2><span class="mn-num">5</span> Órdenes de servicio</h2>
+          <p>Una orden de servicio es un trabajo que hay que atender en un cliente: una falla, una instalación, un mantenimiento o un diagnóstico.</p>
 
-        <article class="mn-tema" id="t-kb" data-titulo="Base de conocimiento">
-          <h2>Base de conocimiento</h2>
-          <p>Artículos de solución por categoría, para que los técnicos no repitan el mismo diagnóstico dos veces. Un artículo puede marcarse "Público" para que también aparezca en el portal de clientes.</p>
-        </article>
+          <h3>Registrar una orden de servicio</h3>
+          <ol class="mn-pasos">
+            <li>Entra a <span class="mn-ui">Órdenes de servicio</span>, o pulsa <span class="mn-ui">Nueva orden de servicio</span> en el Inicio.</li>
+            <li>Escribe el <b>Cliente</b>: el sistema te sugiere los registrados mientras escribes. El cliente <b>debe estar en tu catálogo</b>. Si es nuevo, pulsa <span class="mn-ui">Crear cliente</span> debajo del campo, captura el nombre y el contacto principal (el teléfono y el correo son opcionales) y queda seleccionado sin salir del formulario. Los demás datos se completan después en <a href="#clientes">Clientes</a>. Lo mismo funciona en Ventas.</li>
+            <li>Captura <b>Reporta</b> (quién reporta) y, si aplica, la <b>Sucursal</b> y el folio que usa tu cliente en <b># Reporte del cliente</b>. La sucursal te sugiere las del cliente; si escribes una nueva, se agrega a sus sucursales al registrar.</li>
+            <li>Elige la <b>Categoría</b>, la <b>Fecha de reporte</b> y, si la conoces, el <b>Número de serie</b> del equipo (lo puedes elegir del padrón del cliente). Si eliges una <b>fecha futura</b>, la orden queda <b>programada</b> (ver abajo).</li>
+            <li>Escribe el <b>Motivo del servicio</b>: es obligatorio y explica qué hay que hacer (una falla, un mantenimiento, una instalación…).</li>
+            <li>Asigna un <b>Técnico</b> y elige el <b>Estatus</b>. Solo aparecen usuarios reales de tu empresa con rol Técnico, Supervisor o Administrador.</li>
+            <li>Si capturas un servicio que ya se hizo, elige <b>Completado</b> o un estatus de cierre: aparece el campo <b>Trabajo realizado</b> para anotar lo que se hizo.</li>
+            <li>Si el cliente envió fotos, videos o documentos, agrégalos en <b>Imágenes o archivos del cliente</b> (puedes arrastrarlos; hasta 40 MB cada uno).</li>
+            <li>Pulsa <span class="mn-ui">Registrar orden de servicio</span>. El sistema le asigna un <b>folio</b> consecutivo (por ejemplo SD-0046). Si pulsas dos veces por error, se crea una sola orden.</li>
+          </ol>
+          <div class="mn-nota"><i class="fas fa-asterisk"></i><div>Los campos con <b class="mn-req">*</b> son obligatorios. Si falta alguno, el sistema lo marca en rojo con el motivo y te lleva a él.</div></div>
 
-        <article class="mn-tema" id="t-estadisticas" data-titulo="Estadísticas y Métricas">
-          <h2>Estadísticas y Métricas</h2>
-          <p><strong>Estadísticas e informes</strong>: cumplimiento de SLA, tiempos de respuesta y cierre, carga por técnico y reincidencias, con filtros de fecha, técnico y sucursal. <strong>Mis métricas</strong> es la misma información, pero solo de tus propias incidencias (para el rol Técnico).</p>
-        </article>
+          <h3>Órdenes programadas</h3>
+          <p>Una orden con <b>fecha futura</b> queda programada para ese día: no aparece en la bandeja, los contadores, las alertas ni el atraso hasta que llega su fecha, y ese día se vuelve activa sola. El cumplimiento se mide desde la fecha programada.</p>
+          <ul>
+            <li>En <span class="mn-ui">Órdenes de servicio</span>, el botón <span class="mn-ui">Programadas</span> muestra las que vienen, de la más próxima a la más lejana. En el Inicio aparecen en la tarjeta <b>Programadas</b>.</li>
+            <li>Para <b>posponer</b> una orden, cambia su fecha en el detalle. El cambio queda en el historial.</li>
+            <li>Programa quien puede registrar órdenes. Las ven todos; el técnico, solo las suyas.</li>
+          </ul>
 
-        <article class="mn-tema" id="t-usuarios" data-titulo="Usuarios y Ajustes">
-          <h2>Usuarios y Ajustes</h2>
-          <p><strong>Usuarios</strong> da de alta al personal con su rol (Técnico, Administrativo, Supervisor, Administrador, Programador). <strong>Ajustes</strong> controla qué módulo ve cada rol (checklist de privilegios), las reglas de SLA por categoría/prioridad, las reglas de automatización (asignar técnico o cambiar prioridad según categoría/sucursal), plantillas de respuesta rápida y etiquetas, además del tema claro/oscuro.</p>
-        </article>
+          <h3>Estatus de una orden de servicio</h3>
+          <table class="mn-tabla">
+            <thead><tr><th>Estatus</th><th>Significa</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mn-chip azul">Abierto</span></td><td>Registrada, sin técnico asignado.</td></tr>
+              <tr><td><span class="mn-chip violeta">Asignado</span></td><td>Ya tiene técnico responsable, pero el trabajo no ha empezado. Exige al menos un técnico.</td></tr>
+              <tr><td><span class="mn-chip violeta">En proceso</span></td><td>El técnico está trabajando en el servicio (en sitio o en taller). Exige al menos un técnico.</td></tr>
+              <tr><td><span class="mn-chip ambar">Pendiente</span></td><td>En espera de algo. Pide el <b>motivo</b>: refacción, aprobación de cotización, cliente o acceso, u otro con su descripción. El tiempo sigue contando para la meta.</td></tr>
+              <tr><td><span class="mn-chip verde">Completado</span></td><td>El técnico terminó el trabajo; falta el cierre administrativo.</td></tr>
+              <tr><td><span class="mn-chip gris">Cerrado con factura</span></td><td>Terminada y facturada.</td></tr>
+              <tr><td><span class="mn-chip gris">Cerrado sin factura</span></td><td>Terminada sin factura (garantía, cortesía, póliza).</td></tr>
+              <tr><td><span class="mn-chip gris">Cancelado</span></td><td>No se realizará (duplicada, el cliente desistió…). Pide el <b>motivo</b> y queda fuera de la medición de cumplimiento.</td></tr>
+            </tbody>
+          </table>
+          <ul>
+            <li><b>El estatus sigue a la asignación.</b> Al asignar un técnico a una orden Abierta, pasa sola a Asignado. Si una orden Asignada o En proceso se queda sin técnicos, regresa a Abierto.</li>
+            <li><b>No hay un orden obligatorio.</b> Una orden puede registrarse directamente como Completado o Cerrado, por ejemplo para un servicio que se captura después de hacerse.</li>
+            <li><b>Cerrar, cancelar y reabrir</b> lo hace solo quien tiene permiso de cierre. Reabrir es sacar una orden de Cerrado o Cancelado; pide un motivo, que queda en el historial.</li>
+            <li>Una orden es <b>activa</b> mientras no esté cerrada (con o sin factura) ni cancelada. Completado sigue siendo activa porque falta el cierre.</li>
+          </ul>
 
-        <article class="mn-tema" id="t-soporte" data-titulo="Soporte">
-          <h2>Soporte</h2>
-          <p>Manuales y documentación técnica por marca y modelo de equipo, para consulta rápida de los técnicos en campo.</p>
-        </article>
+          <h3>Consultar y editar (detalle de la orden)</h3>
+          <p>En la lista <b>Órdenes de servicio activas</b> pulsa una fila para abrir su detalle. Ahí puedes:</p>
+          <ul>
+            <li>Corregir cualquier dato, incluida la fecha de reporte, y registrar el <b>Trabajo realizado</b> y las <b>Notas</b>.</li>
+            <li>Asignar <b>varios técnicos</b> con <span class="mn-ui">Agregar técnico</span>, o quitar uno con el bote de basura. Si falta un técnico y eres administrador, pulsa <span class="mn-ui">Nuevo técnico</span>: capturas nombre, correo y una contraseña temporal, y se crea su cuenta con rol Técnico sin salir de la orden.</li>
+            <li>Si la persona que reporta todavía no está entre los contactos del cliente, pulsa <span class="mn-ui">Guardar como contacto del cliente</span> para agregarla.</li>
+            <li>Cambiar el <b>Estatus</b>. Las opciones de cierre aparecen deshabilitadas si tu usuario no tiene permiso de cierre.</li>
+            <li>Ver los <b>archivos</b> en miniatura, abrirlos en grande y agregar nuevos.</li>
+            <li>Registrar los <b>Equipos atendidos</b>, los <b>Conceptos aplicados</b> y preparar <b>cotizaciones</b> (ver abajo).</li>
+          </ul>
+          <p>Pulsa <span class="mn-ui">Guardar cambios</span>; el botón queda fijo al pie mientras bajas. El sistema confirma cuando el cambio quedó guardado.</p>
+          <div class="mn-nota"><i class="fas fa-shield-alt"></i><div><b>No pierdes lo que escribes.</b> Mientras editas, el sistema guarda un borrador en tu navegador. Si se cierra la página o se cae la conexión, al volver te ofrece recuperarlo. Y si otra persona modificó la misma orden mientras tú la editabas, te avisa antes de guardar para no sobrescribir su trabajo.</div></div>
 
-        <article class="mn-tema" id="t-preguntas" data-titulo="Preguntas frecuentes">
-          <h2>Preguntas frecuentes</h2>
-          <p><strong>¿Por qué no puedo cerrar una incidencia?</strong> Tu rol o tu usuario puede tener restringido el cierre con/sin factura; pídele a un Administrador que la cierre o te dé el permiso.</p>
-          <p><strong>¿Por qué no veo un módulo en el menú?</strong> Tu rol no tiene permiso para ese módulo; un Administrador puede activarlo en Ajustes → Privilegios.</p>
-          <p><strong>¿Cómo recupero mi contraseña del portal de clientes?</strong> Usa "Olvidé mi contraseña" en el login del portal; el enlace lo genera el sistema para que el administrador te lo comparta.</p>
-        </article>
-      </div>
+          <h3>Equipos atendidos</h3>
+          <p>Una orden puede atender <b>varios equipos</b>. En <b>Equipos atendidos</b> escribe o elige el número de serie y pulsa <span class="mn-ui">Agregar equipo</span>:</p>
+          <ul>
+            <li>Si la serie ya está en el padrón del cliente, se liga a la orden.</li>
+            <li>Si es nueva, se abre una ventana para capturar <b>modelo, marca y tipo de equipo</b>. Si escribes un modelo que el sistema ya conoce, el tipo y la marca se llenan solos. El equipo se da de alta en el padrón del cliente, en la sucursal de la orden. El técnico también puede hacerlo, pero solo desde la orden.</li>
+            <li>Una serie que pertenece a otro cliente no se acepta: revisa que esté bien escrita.</li>
+            <li><span class="mn-ui">Quitar</span> la saca de la orden, pero el equipo sigue en el padrón.</li>
+          </ul>
+
+          <h3>Conceptos aplicados</h3>
+          <p>Aquí se registra todo lo que se usó o se hizo en la orden. Elige el <b>Concepto</b> del catálogo, la <b>Cantidad</b> y pulsa <span class="mn-ui">Aplicar</span>. Hay tres tipos:</p>
+          <table class="mn-tabla">
+            <thead><tr><th>Tipo</th><th>Qué pasa al aplicarlo</th></tr></thead>
+            <tbody>
+              <tr><td><b>Refacción o consumible</b></td><td>Se descuenta de la existencia del inventario. Si el artículo <b>controla número de serie</b>, se pide el N/S de cada pieza y queda en el movimiento. Si al final no se usó, pulsa <span class="mn-ui">Devolver</span> y regresa al almacén.</td></tr>
+              <tr><td><b>Servicio o mano de obra</b></td><td>Se registra con el precio del catálogo. No toca existencias. La <b>mano de obra</b> se cobra por hora con la tarifa de tu empresa y admite fracciones (1.5 h); el <b>servicio</b> es un precio cerrado. Si se aplicó por error, pulsa <span class="mn-ui">Quitar</span>.</td></tr>
+              <tr><td><b>Equipo de reemplazo</b></td><td>Marca la casilla <b>Es un equipo de reemplazo</b> y captura el <b>Número de serie</b> y, si aplica, la <b>Garantía</b>. Sale del inventario y se da de alta en el <a href="#clientes">padrón del cliente</a> con origen «Reemplazo», ligado a esta orden. Se registra de uno en uno, y la serie no puede estar ya en el padrón.</td></tr>
+            </tbody>
+          </table>
+          <p>Abajo se muestra el <b>Total a precio de venta</b> de lo aplicado. Se pueden registrar o devolver conceptos aunque la orden ya esté cerrada, para corregir.</p>
+          <ul>
+            <li><b>¿No está en la lista?</b> Si tienes acceso a Inventario, pulsa <span class="mn-ui">Nuevo artículo</span>: lo das de alta en el catálogo y lo aplicas de inmediato. Si no tienes acceso, pulsa <span class="mn-ui">Solicitar alta</span>: la solicitud queda en las notas de la orden para que la atienda quien administra el inventario.</li>
+            <li>Un equipo de reemplazo no se puede devolver al almacén mientras siga en el padrón del cliente.</li>
+          </ul>
+
+          <h3>Cotizar desde la orden</h3>
+          <p>En la sección <b>Cotizaciones</b> del detalle hay dos botones:</p>
+          <ul>
+            <li><span class="mn-ui">Cotizar</span>: para preparar refacciones y mano de obra <b>antes</b> del trabajo. Mientras el cliente decide, pon la orden en Pendiente con el motivo «Aprobación de cotización». Al aprobarse la cotización, el sistema te ofrece sacar la orden de Pendiente para continuar el servicio.</li>
+            <li><span class="mn-ui">Cotizar lo aplicado</span>: cuando el trabajo <b>ya se hizo</b> y el cliente pide la cotización para autorizarla. El número entre paréntesis indica cuántos conceptos se traerán. Crea un borrador con las refacciones, los equipos y los servicios aplicados, que <b>no se vuelven a descontar</b> del inventario.</li>
+          </ul>
+          <p>Si la orden ya tiene cotizaciones, el sistema te lo avisa antes de crear otra.</p>
+
+          <h3>Eliminar una orden de servicio</h3>
+          <p>En la operación diaria usa <b>Cancelado</b>, que conserva la orden y su motivo. Eliminar es para registros hechos por error. Solo el Administrador ve el botón <span class="mn-ui mn-peligro">Eliminar orden de servicio</span> en el detalle. Pide confirmación y no se puede deshacer:</p>
+          <ul>
+            <li>Las refacciones y los equipos de reemplazo de la orden regresan al inventario.</li>
+            <li>Se quitan sus servicios y los equipos de reemplazo que dio de alta en el padrón.</li>
+            <li>Queda registrado en el <a href="#historial">Historial</a>.</li>
+          </ul>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="mantenimiento" data-titulo="Mantenimiento programado">
+          <h2><span class="mn-num">6</span> Mantenimiento programado (órdenes automáticas)</h2>
+          <p>El sistema crea órdenes de servicio por sí solo para que ningún mantenimiento se olvide. Se basa en el <a href="#clientes">padrón de equipos</a> de cada cliente:</p>
+          <ul>
+            <li><b>Equipos con póliza</b> (cliente con acuerdo de mantenimiento): se abre una orden de <b>servicio programado</b> cada vez que toca, según los meses configurados.</li>
+            <li><b>Equipos sin póliza</b> con periodicidad configurada: se abre una orden para <b>contactar al cliente</b> y recomendarle el mantenimiento.</li>
+          </ul>
+          <p>Las órdenes se generan con <b>10 días de anticipación</b>, con categoría de mantenimiento preventivo, y aparecen en la lista como cualquier otra. En el historial quedan como creadas por «Sistema». Para verlas juntas usa <span class="mn-ui">Programadas</span> en <a href="#buscar">Buscar órdenes de servicio</a>.</p>
+          <div class="mn-nota"><i class="fas fa-info-circle"></i><div>La periodicidad, la póliza y la garantía se capturan al <a href="#ventas">registrar una venta</a> o al añadir un equipo en el <a href="#clientes">perfil del cliente</a>.</div></div>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="buscar" data-titulo="Buscar órdenes de servicio">
+          <h2><span class="mn-num">7</span> Buscar órdenes de servicio</h2>
+          <p>Aquí consultas el historial completo, incluidas las órdenes cerradas y canceladas. El Técnico ve solo las suyas.</p>
+          <ul>
+            <li><b>Botones de categoría</b> (Mantenimiento correctivo, preventivo, Instalación…): filtran al instante.</li>
+            <li><span class="mn-ui">Programadas</span>: solo las órdenes automáticas de mantenimiento.</li>
+            <li><b>Filtros avanzados</b>: cliente, categoría, rango de fechas, estatus, técnico, sucursal, «solo activas» y «solo programadas». Pulsa <span class="mn-ui">Buscar</span>; <span class="mn-ui">Limpiar filtros</span> los quita.</li>
+            <li>Elige cuántos resultados ver por página y pulsa una fila para abrir el detalle.</li>
+          </ul>
+          <p>Para algo puntual (un folio, una serie) es más rápido el <a href="#primeros-pasos">buscador global</a> con <kbd>Ctrl</kbd> + <kbd>K</kbd>.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="clientes" data-titulo="Clientes y padrón de equipos">
+          <h2><span class="mn-num">8</span> Clientes y padrón de equipos</h2>
+          <h3>Registrar un cliente</h3>
+          <p>En <span class="mn-ui">Clientes</span> captura el nombre o razón social, RFC, dirección, teléfono, correo y contactos, y pulsa <span class="mn-ui">Guardar cliente</span>. Aparecerá en el <b>Directorio de clientes</b>. También puedes darlo de alta rápido desde una orden de servicio o una venta, o cargar muchos a la vez con <a href="#importar">Importar datos</a>.</p>
+          <h3>Perfil del cliente</h3>
+          <p>Pulsa el nombre de un cliente en el directorio para abrir su perfil:</p>
+          <ul>
+            <li><b>Datos generales</b>: edítalos y pulsa <span class="mn-ui">Guardar cambios</span>.</li>
+            <li><b>Contactos</b>: agrega varias personas con su teléfono y correo (<span class="mn-ui">Agregar contacto</span>). Al registrar órdenes, el campo «Reporta» te las sugiere.</li>
+            <li><b>Finanzas</b> (solo con el permiso de Finanzas): saldo por cobrar, vencido, días y <b>límite de crédito</b>, cuentas abiertas y notas de crédito. <span class="mn-ui">Crédito</span> cambia los días y el límite; si el saldo lo rebasa, el sistema avisa al crear cuentas y cotizaciones, pero no las bloquea.</li>
+            <li><b>Sucursales</b>: las plantas o sedes del cliente, con dirección, contacto, teléfono, sus equipos y sus órdenes activas. Agrégalas con <span class="mn-ui">Nueva sucursal</span>, o se agregan solas al escribir una nueva en una orden, venta o cotización. Si cambias el nombre, se actualiza en el padrón y en las órdenes activas; las cerradas, las ventas y las cotizaciones conservan el de entonces.</li>
+            <li><b>Padrón de equipos</b>: todos los equipos instalados en el cliente, con serie, sucursal, origen, periodicidad y garantía. Usa el buscador de la tabla para encontrar uno.</li>
+          </ul>
+          <h3>Añadir un equipo al padrón</h3>
+          <ol class="mn-pasos">
+            <li>En el perfil, pulsa <span class="mn-ui">Añadir equipo</span>.</li>
+            <li>Captura sucursal, fecha de alta, tipo de equipo, marca, modelo y <b>número de serie</b>.</li>
+            <li>En <b>Configuración de mantenimiento</b> indica cada cuántos meses necesita mantenimiento, si el cliente tiene <b>póliza</b> y los meses de <b>garantía</b>.</li>
+            <li>Pulsa <span class="mn-ui">Guardar</span>.</li>
+          </ol>
+          <p>El <b>origen</b> de cada equipo indica cómo llegó al padrón:</p>
+          <ul>
+            <li><b>Venta propia</b>: entró solo al <a href="#ventas">registrar la venta</a>.</li>
+            <li><b>Reemplazo</b>: se instaló como equipo de reemplazo en una <a href="#incidencias">orden de servicio</a>.</li>
+            <li><b>Externo</b>: de otro proveedor, agregado a mano en el perfil o desde una orden de servicio (<a href="#incidencias">Equipos atendidos</a>).</li>
+          </ul>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="cotizaciones" data-titulo="Cotizaciones">
+          <h2><span class="mn-num">9</span> Cotizaciones</h2>
+          <p>Prepara presupuestos profesionales con los productos y servicios de tu catálogo, descárgalos en PDF con tu logo y da seguimiento hasta convertirlos en venta y en cuenta por cobrar.</p>
+          <div class="mn-nota"><i class="fas fa-info-circle"></i><div>Todo lo que cotizas sale del <a href="#inventario">catálogo</a> (equipos, refacciones, consumibles, servicios y mano de obra), con su precio y su costo. Al cotizar, el precio y el costo se copian a la cotización: si después cambias el catálogo, las cotizaciones ya hechas no cambian. <b>Cotizar nunca descuenta inventario.</b></div></div>
+          <div class="mn-nota"><i class="fab fa-whatsapp"></i><div><b>Compartir por WhatsApp</b>: en una cotización enviada o aprobada, el botón <span class="mn-ui">Compartir por WhatsApp</span> abre WhatsApp con un mensaje y un enlace para que tu cliente vea el PDF sin entrar al sistema. El enlace es de solo lectura y vence en 7 días. Lo mismo hay en el estado de cuenta del cliente.</div></div>
+          <h3>Crear una cotización</h3>
+          <ol class="mn-pasos">
+            <li>Entra a <span class="mn-ui">Cotizaciones</span> y pulsa <span class="mn-ui">Nueva cotización</span>. También puedes empezar desde el Inicio, desde el perfil del cliente o con <span class="mn-ui">Cotizar</span> en el detalle de una <a href="#incidencias">orden de servicio</a>.</li>
+            <li>Elige el <b>cliente</b> de la lista; la sucursal te sugiere las que ya usaste con él y el contacto sale de sus contactos.</li>
+            <li>Revisa la <b>vigencia</b>, la <b>moneda</b> y si los <b>precios incluyen IVA</b>. Para cotizar en dólares, captura primero el tipo de cambio. Si cambias la moneda de una cotización que ya tiene partidas, el sistema te ofrece convertir sus precios al tipo de cambio.</li>
+            <li>Agrega partidas con <span class="mn-ui">Agregar del inventario</span> (te muestra precio y existencia, y avisa si está bajo mínimo) o <span class="mn-ui">Agregar servicio</span>.</li>
+            <li>En cada partida ajusta cantidad, precio, descuento e IVA (16%, 8%, 0% o exento). Usa las flechas para ordenarlas.</li>
+            <li>Revisa el <b>Resumen</b>: subtotal, descuento, IVA desglosado y total. Escribe condiciones y notas.</li>
+            <li>Pulsa <span class="mn-ui">Guardar</span>. Mientras escribes, el sistema respalda tus cambios en el navegador por si cierras la página. Si otra persona la modificó mientras tanto, puedes ver la versión actual o guardar encima.</li>
+          </ol>
+          <h3>Seguimiento</h3>
+          <table class="mn-tabla">
+            <thead><tr><th>Estatus</th><th>Qué significa y qué puedes hacer</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mn-chip gris">Borrador</span></td><td>Se puede editar. Pulsa <span class="mn-ui">Marcar como enviada</span> cuando la compartas con el cliente. La primera vez, el sistema te recuerda que después ya no se podrá editar; marca «Entendido, no volver a mostrar» para no verlo de nuevo.</td></tr>
+              <tr><td><span class="mn-chip azul">Enviada</span></td><td>Ya no se edita: si el cliente pide cambios, crea una <span class="mn-ui">Nueva versión</span> (COT-0001-v2) y la anterior queda de consulta. Si pasa la vigencia, se marca sola como <b>vencida</b>.</td></tr>
+              <tr><td><span class="mn-chip verde">Aprobada</span></td><td>Escribe quién aprueba y marca las partidas que el cliente aceptó (por ejemplo, sí a los equipos y no a la mano de obra): queda como <b>aprobación parcial</b> con su total aprobado.</td></tr>
+              <tr><td><span class="mn-chip ambar">Rechazada / Vencida</span></td><td>Se guarda el motivo del rechazo. Puedes crear una nueva versión para renegociar.</td></tr>
+              <tr><td><span class="mn-chip violeta">Convertida</span></td><td>Todas sus ventas se registraron.</td></tr>
+            </tbody>
+          </table>
+          <h3>Nueva versión o Duplicar</h3>
+          <table class="mn-tabla">
+            <thead><tr><th></th><th>Nueva versión</th><th>Duplicar</th></tr></thead>
+            <tbody>
+              <tr><td><b>Cuándo</b></td><td>El mismo cliente pide cambios a lo que ya le enviaste</td><td>Quieres reutilizar una cotización para otro trabajo u otro cliente</td></tr>
+              <tr><td><b>Desde</b></td><td>Una cotización enviada, vencida o rechazada</td><td>Cualquier cotización</td></tr>
+              <tr><td><b>Folio</b></td><td>El mismo con sufijo: COT-0001-v2</td><td>Uno nuevo: COT-0002</td></tr>
+              <tr><td><b>La anterior</b></td><td>Queda «reemplazada», solo de consulta</td><td>No cambia</td></tr>
+              <tr><td><b>Orden de servicio</b></td><td>Sigue ligada</td><td>No se copia: es un trabajo nuevo</td></tr>
+            </tbody>
+          </table>
+          <p>Las dos copian las partidas con sus precios de entonces y quedan en borrador con fecha de hoy y vigencia nueva.</p>
+
+          <h3>De cotización a venta</h3>
+          <p>Al aprobarla, el sistema prepara <b>ventas por registrar</b>: una por cada modelo de equipo aceptado (los equipos iguales van juntos en una sola venta con su cantidad). Las ves en la cotización, en la lista de cotizaciones y en <span class="mn-ui">Ventas</span>. Al pulsar <span class="mn-ui">Registrar venta</span> se abre el formulario ya lleno con cliente, sucursal, equipo y cantidad; tú capturas las series, la garantía y la póliza. La venta es la que descuenta el inventario. Si el cliente canceló un equipo, usa <span class="mn-ui">Descartar</span>.</p>
+          <p>Si la cotización viene de una <a href="#incidencias">orden de servicio</a> que está en Pendiente, al aprobarla el sistema te ofrece continuar el servicio: la orden pasa a Asignado, o a Abierto si no tiene técnico. También te ofrece registrar en la orden las refacciones aceptadas, lo que sí descuenta inventario. Las cotizaciones hechas con <b>Cotizar lo aplicado</b> no se vuelven a descontar, ni sus equipos de reemplazo generan ventas por registrar. Si la orden ya tiene aplicadas algunas de las refacciones cotizadas, el sistema te avisa para que no las registres dos veces.</p>
+          <h3>De cotización a cuenta por cobrar</h3>
+          <p>En una cotización aprobada, pulsa <span class="mn-ui">Crear cuenta por cobrar</span> para llevarla a <a href="#finanzas">Finanzas</a> con el cliente, el concepto y el importe aprobado ya llenos. Si la aprobación fue parcial, el IVA se calcula sobre lo aprobado.</p>
+          <h3>PDF</h3>
+          <p><span class="mn-ui">Vista previa</span> muestra el PDF dentro del sistema, también en el celular, sin descargarlo; un borrador lleva la marca «BORRADOR». <span class="mn-ui">Descargar PDF</span> genera la cotización en tamaño carta con tu logo, folio, vigencia, partidas, IVA desglosado, condiciones y espacio para la firma de aceptación. El archivo se llama, por ejemplo, <b>COT-0001_v1_Cliente.pdf</b>. Nunca muestra costos ni márgenes.</p>
+          <h3>Margen y descuentos</h3>
+          <ul>
+            <li>El <b>margen interno</b> (costo y margen por partida y total) solo lo ven el Administrador y el rol Administrativo, y avisa si queda por debajo de 15%.</li>
+            <li>Si un descuento rebasa el <b>máximo</b> de tu empresa, solo lo puede guardar el Administrador o quien tenga la casilla <b>Puede autorizar descuentos</b> en <a href="#usuarios">Usuarios</a>.</li>
+          </ul>
+          <h3>Servicios</h3>
+          <p>La pestaña <span class="mn-ui">Servicios</span> reúne tus visitas, mantenimientos y mano de obra con su precio, para agregarlos con un clic. Son parte del mismo catálogo de Inventario, pero no llevan existencias. Los precios y lo que incluye cada servicio se definen en <a href="#mi-empresa">Mi empresa → Tarifas de servicio</a>; lo que incluye aparece en el PDF debajo del servicio.</p>
+          <p>Si el cliente tiene <b>límite de crédito</b> y su saldo más la cotización lo rebasa, quien tiene Finanzas ve el aviso <b>Rebasa el límite de crédito</b> junto al estatus.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="ventas" data-titulo="Ventas">
+          <h2><span class="mn-num">10</span> Ventas</h2>
+          <h3>Registrar una venta</h3>
+          <ol class="mn-pasos">
+            <li>Entra a <span class="mn-ui">Ventas</span> y captura fecha, cliente y sucursal.</li>
+            <li>Opcional: vincula un <b>artículo de inventario</b>; cada número de serie descontará una unidad de la existencia.</li>
+            <li>Captura equipo, marca, modelo y <b>cantidad</b>. Aparecerá un campo de serie por cada equipo.</li>
+            <li>Indica la <b>garantía</b> (meses) y cada cuántos meses lleva <b>mantenimiento</b>.</li>
+            <li>Activa el interruptor <b>Cliente con póliza</b> si tiene acuerdo de mantenimiento. Debajo verás qué órdenes automáticas se generarán.</li>
+            <li>Agrega notas y adjunta facturas o archivos si quieres.</li>
+            <li>Pulsa <span class="mn-ui">Procesar y registrar venta</span>.</li>
+          </ol>
+          <p>Cada equipo vendido entra al <a href="#clientes">padrón del cliente</a> con su serie, garantía y periodicidad, y comienza el <a href="#mantenimiento">mantenimiento programado</a>.</p>
+          <p>Si tienes <b>ventas por registrar</b> de cotizaciones aprobadas, el sistema te avisa arriba del formulario; al elegir una, se llena sola con los datos de la <a href="#cotizaciones">cotización</a>.</p>
+          <h3>Administrar ventas</h3>
+          <p>Con <span class="mn-ui">Administrar ventas</span> ves todas las ventas y las filtras por texto, rango de fechas y si tienen cláusula de servicio. Pulsa una venta para abrir su detalle, donde puedes corregir datos y series, agregar archivos (se suben al pulsar <span class="mn-ui">Guardar cambios</span>) o eliminarla.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="inventario" data-titulo="Inventario">
+          <h2><span class="mn-num">11</span> Inventario</h2>
+          <p>Es el <b>catálogo de productos y servicios</b> de tu empresa: equipos, refacciones, consumibles y herramientas del almacén, y también tus <b>servicios</b> y tu <b>mano de obra</b>. Los servicios no llevan existencias: no aparecen en el kárdex, los mínimos ni el valor del inventario. Usa el filtro «Solo productos» o «Solo servicios y mano de obra».</p>
+          <ul>
+            <li><b>Indicadores</b>: artículos activos, valor del inventario a costo, artículos en o por debajo del mínimo y movimientos de los últimos 30 días.</li>
+            <li><b>Gráfica y «Más utilizados»</b>: consumo de los últimos meses para planear compras.</li>
+            <li><b>Tabla</b>: busca por SKU, nombre, marca, modelo o ubicación; filtra por categoría, «solo bajo mínimo» o «incluir inactivos».</li>
+          </ul>
+          <h3>Dar de alta un artículo</h3>
+          <p>Pulsa <span class="mn-ui">Nuevo artículo</span> (aquí o en el Inicio) y captura SKU, categoría y nombre, que son obligatorios. Si quieres, agrega marca, modelo, unidad, ubicación, stock mínimo, existencia inicial, costo y precio de venta. También se puede dar de alta desde una orden de servicio, en <a href="#incidencias">Conceptos aplicados</a>, o en bloque con <a href="#importar">Importar datos</a>.</p>
+          <p>Marca <b>Controla número de serie</b> en piezas que se rastrean una por una (tarjetas, celdas de carga, displays): al aplicarlas en una orden se pide el N/S de cada pieza. No hace falta para consumibles.</p>
+          <p>Puedes agregar una <b>foto del producto</b> (JPG o PNG de hasta 3 MB): aparece en la tabla y junto al producto en el PDF de las <a href="#cotizaciones">cotizaciones</a>.</p>
+          <h3>Registrar movimientos</h3>
+          <p>Con los botones de cada fila registras un movimiento:</p>
+          <table class="mn-tabla">
+            <thead><tr><th>Tipo</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr><td><b>Entrada</b></td><td>Compras o recepción de mercancía.</td></tr>
+              <tr><td><b>Salida</b></td><td>Consumo interno que no es de una orden de servicio.</td></tr>
+              <tr><td><b>Ajuste por conteo físico</b></td><td>Corregir la existencia después de contar.</td></tr>
+            </tbody>
+          </table>
+          <p>Las piezas y los equipos de reemplazo usados en servicios se descuentan desde el <a href="#incidencias">detalle de la orden</a> (Conceptos aplicados), y los equipos vendidos al vincular el artículo en la venta. El <b>Kárdex</b> de cada artículo muestra todos sus movimientos con fecha, cantidad, existencia resultante, motivo y usuario.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="finanzas" data-titulo="Finanzas">
+          <h2><span class="mn-num">12</span> Finanzas</h2>
+          <p>Lleva lo que te deben tus clientes, lo que cobras y lo que gastas, y te dice cuánto deja cada servicio. Todo en pesos. Por defecto lo usan el Administrador y el Administrativo.</p>
+          <div class="mn-nota"><i class="fas fa-info-circle"></i><div><b>Finanzas no emite facturas.</b> La factura la timbras con tu sistema de facturación de siempre; aquí anotas su folio o UUID para tenerla ligada a la cuenta. <b>Nada se borra</b>: las cuentas, los cobros y los gastos se cancelan con motivo y quedan en el historial.</div></div>
+
+          <h3>Resumen</h3>
+          <ul>
+            <li><b>Indicadores</b>: Por cobrar, Vencido, Cobrado este mes, Gastos este mes y Flujo del mes (cobrado menos gastos).</li>
+            <li><b>Cobrado contra gastos</b> de los últimos 6 meses.</li>
+            <li><b>Antigüedad del saldo</b>: cuánto está al corriente y cuánto lleva de 1 a 30, de 31 a 60, de 61 a 90 y más de 90 días vencido. Debajo, lo que vence en los próximos 7 días.</li>
+            <li><b>Trabajo sin cuenta por cobrar</b>: cotizaciones aprobadas y órdenes cerradas con factura que todavía no tienen su cuenta. Pulsa <span class="mn-ui">Crear cuenta</span> en cada una para que no se quede nada sin cobrar.</li>
+            <li><b>Clientes que más deben</b>, con su saldo y lo vencido. El ícono de documento abre su estado de cuenta.</li>
+          </ul>
+
+          <h3>Crear una cuenta por cobrar</h3>
+          <ol class="mn-pasos">
+            <li>Pulsa <span class="mn-ui">Nueva cuenta por cobrar</span>, o <span class="mn-ui">Crear cuenta</span> desde el trabajo pendiente o desde una cotización aprobada. En esos dos casos los datos ya vienen llenos.</li>
+            <li>Elige el <b>Cliente</b> de tu catálogo y escribe el <b>Concepto</b> (por ejemplo, «Mantenimiento preventivo de noviembre»).</li>
+            <li>Revisa la <b>Fecha</b> y los <b>Días de crédito</b>: el vencimiento se calcula solo. Marca «Usar estos días para este cliente en adelante» si siempre le das ese plazo.</li>
+            <li>Captura el <b>Subtotal (sin IVA)</b>, el <b>IVA</b> (16% u 8%) y, si el cliente te retiene impuestos, las <b>Retenciones</b>. El sistema calcula el <b>Total a cobrar</b>.</li>
+            <li>Si ya emitiste la factura, anota su folio o UUID en <b>Factura</b>; si no, la agregas después.</li>
+            <li>Pulsa <span class="mn-ui">Guardar cuenta</span>.</li>
+          </ol>
+
+          <div class="mn-nota"><i class="fas fa-link"></i><div><b>Cobrar una orden de servicio.</b> Una orden se cobra por un solo camino. Si tiene una <b>cotización aprobada</b>, la cuenta sale de la cotización: aunque pulses «Crear cuenta» desde la orden, el sistema usa la cotización. Si <b>no tiene cotización</b>, la cuenta se llena con el importe de sus <b>conceptos aplicados</b> (refacciones, equipos y servicios) más el IVA, y el detalle queda en las notas; puedes ajustarlo antes de guardar. Si ya se cobró por un camino, el otro se bloquea para no cobrar dos veces.</div></div>
+
+          <h3>Registrar un cobro</h3>
+          <ol class="mn-pasos">
+            <li>En la pestaña <span class="mn-ui">Cuentas por cobrar</span>, abre la cuenta.</li>
+            <li>Pulsa <span class="mn-ui">Registrar cobro</span> y captura fecha, monto, <b>forma de pago</b> y <b>referencia</b> (por ejemplo, el número de SPEI o de cheque).</li>
+            <li>Adjunta el comprobante si lo tienes y guarda. El cobro no puede ser mayor al saldo; puedes registrar varios abonos hasta liquidarla.</li>
+          </ol>
+          <ul>
+            <li><b>Comprobante después</b>: en un cobro ya registrado, pulsa <span class="mn-ui">Adjuntar el comprobante</span> o <span class="mn-ui">Reemplazar el comprobante</span>. El anterior, si había, queda en el historial.</li>
+            <li><b>Cobro registrado por error</b>: pulsa <span class="mn-ui">Corregir</span>. El cobro se cancela con motivo (queda en el historial) y se abre el formulario con sus datos para registrarlo bien. Un cobro nunca se edita.</li>
+            <li><b>Cancelar un cobro</b>: el monto vuelve al saldo de la cuenta. Lo hacen el Administrador y el Administrativo.</li>
+            <li><b>Cancelar una cuenta</b>: deja de contar como saldo por cobrar. Solo el Administrador.</li>
+            <li><b>Nota de crédito</b> (descuento, devolución o ajuste): en la cuenta pulsa <span class="mn-ui">Nota de crédito</span>, captura monto, motivo y, si lo tienes, el folio o UUID del CFDI de egreso. Reduce el saldo como un cobro, pero no cuenta como dinero recibido ni en el flujo del mes, y en Rentabilidad descuenta el ingreso. No se borra: si se registró por error, se cancela. La registran el Administrador y el Administrativo; el tratamiento fiscal lo valida tu contador.</li>
+          </ul>
+          <p>Filtra la lista por <b>Por cobrar</b>, <b>Vencidas</b>, <b>Pagadas</b>, <b>Canceladas</b> o <b>Todas</b>, busca por folio, cliente, concepto o factura, y cambia entre la vista de <b>Cuentas</b> y la de <b>Cobros</b>.</p>
+
+          <h3>Gastos</h3>
+          <p>Pulsa <span class="mn-ui">Registrar gasto</span> y captura fecha, categoría, concepto, proveedor, forma de pago, <b>Total pagado (con IVA)</b>, el IVA incluido y una referencia. Si el gasto es costo de un servicio, escribe el folio en <b>Orden de servicio</b>: así cuenta en la rentabilidad de esa orden. Puedes adjuntar el comprobante. Los gastos se pueden editar; cancelarlos lo hace solo el Administrador.</p>
+
+          <h3>Rentabilidad</h3>
+          <p>Elige un periodo y verás, por cada orden de servicio:</p>
+          <ul>
+            <li>El <b>Ingreso (sin IVA)</b>.</li>
+            <li>Lo que costó: las <b>Refacciones a costo</b> y los <b>Gastos directos</b>.</li>
+            <li>El resultado: la <b>Utilidad</b> y el <b>Margen</b>.</li>
+          </ul>
+          <p>Cambia a <b>Por cliente</b> para ver qué clientes dejan más.</p>
+
+          <h3>Estado de cuenta y exportación</h3>
+          <ul>
+            <li><b>Estado de cuenta del cliente</b>: desde una cuenta o desde «Clientes que más deben». Muestra sus cuentas, cobros y saldo, y se puede imprimir o guardar en PDF para enviárselo.</li>
+            <li><span class="mn-ui">Exportar</span> descarga en CSV (se abre en Excel) las cuentas, los cobros o los gastos del periodo, para tu contador.</li>
+          </ul>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="estadisticas" data-titulo="Estadísticas y métricas">
+          <h2><span class="mn-num">13</span> Estadísticas y Mis métricas</h2>
+          <h3>Estadísticas</h3>
+          <p>Panel de análisis con pestañas: <b>Global</b>, <b>Resumen general</b>, <b>Análisis de órdenes de servicio</b> y <b>Rendimiento de técnicos</b>. Filtra por rango de fechas, técnico, sucursal y estatus, y pulsa <span class="mn-ui">Actualizar</span>.</p>
+          <ul>
+            <li><b>Cumplimiento de atención</b>: porcentaje de órdenes atendidas dentro de la meta de cumplimiento de tu empresa (Mi empresa). La atención termina cuando la orden se completa o se cierra; si se reabrió, cuenta la última vez. No cuentan las canceladas, ni las que se registraron ya completadas o cerradas (capturas posteriores).</li>
+            <li><b>Por técnico</b>, cada orden se atribuye a quien la completó o la cerró.</li>
+            <li><b>Tiempo de respuesta y de cierre</b>: cuánto se tarda en atender y en cerrar.</li>
+            <li><b>Reincidencias</b>: el mismo equipo (por número de serie) que volvió a fallar de lo mismo.</li>
+            <li><span class="mn-ui">Exportar CSV</span> descarga los datos para trabajarlos en Excel.</li>
+          </ul>
+          <h3>Mis métricas</h3>
+          <p>Cada usuario ve sus propios números en el periodo que elija: órdenes asignadas, completadas y pendientes, tiempos y cumplimiento.</p>
+          <h3>Mi perfil</h3>
+          <p>En <span class="mn-ui">Mi perfil</span> ves tus datos, tus indicadores (órdenes activas, atrasadas, completadas por cerrar, programadas y cerradas en 30 días) y tus órdenes activas. Ahí subes <b>tu foto</b>: JPG, PNG o WEBP de hasta 1 MB; el sistema la ajusta y le quita los datos de ubicación. Cada quien cambia solo la suya. El administrador abre el perfil de cualquier usuario desde <a href="#usuarios">Usuarios</a>.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="soporte" data-titulo="Soporte técnico (documentación)">
+          <h2><span class="mn-num">14</span> Soporte técnico (documentación de equipos)</h2>
+          <p>Biblioteca de manuales técnicos organizada por <b>marca</b> y <b>modelo</b>. Entra a una marca, elige el modelo y abre su manual o su lista de partes en PDF. Usa el buscador para encontrar un modelo o número de parte.</p>
+          <p>Para agregar documentación, pulsa <span class="mn-ui">Agregar nuevo modelo</span>, elige la marca, captura el modelo y el tipo de equipo, sube el manual y la lista de partes (PDF) y pulsa <span class="mn-ui">Guardar modelo</span>. Crear, editar y borrar marcas, modelos y manuales lo hacen el Administrador y el Supervisor, y queda en el historial. El Técnico solo consulta.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="usuarios" data-titulo="Usuarios">
+          <h2><span class="mn-num">15</span> Usuarios</h2>
+          <h3>Dar de alta un usuario</h3>
+          <ol class="mn-pasos">
+            <li>Entra a <span class="mn-ui">Usuarios</span>.</li>
+            <li>Captura el nombre completo y el <b>correo electrónico</b>. El correo será su usuario para iniciar sesión y no puede estar registrado en otra cuenta. El nombre no se puede repetir dentro de tu empresa ni llevar «/».</li>
+            <li>Escribe una contraseña de al menos 8 caracteres (dos veces) y elige el <a href="#roles">rol</a>.</li>
+            <li>Pulsa <span class="mn-ui">Registrar usuario</span> y comparte el correo y la contraseña con la persona.</li>
+          </ol>
+          <p>Un técnico también se puede dar de alta sin salir de una orden de servicio, con <span class="mn-ui">Nuevo técnico</span> (ver <a href="#incidencias">Órdenes de servicio</a>).</p>
+          <h3>Editar o eliminar</h3>
+          <ul>
+            <li>Con el lápiz editas nombre, correo, teléfono, rol y contraseña (déjala en blanco para no cambiarla).</li>
+            <li>Si cambias el correo, desde ese momento la persona entra con el nuevo; el sistema te lo confirma.</li>
+            <li>Si corriges el nombre de un técnico, se actualiza en sus órdenes activas. Las cerradas conservan el nombre con el que se cerraron.</li>
+            <li>La casilla <b>Puede cerrar órdenes de servicio</b> decide si esa persona puede cerrar, cancelar y reabrir órdenes.</li>
+            <li>La casilla <b>Puede autorizar descuentos</b> permite que esa persona guarde cotizaciones con un descuento mayor al máximo de la empresa.</li>
+            <li>Con el bote de basura eliminas al usuario. Al eliminarlo, cambiarle el rol o la contraseña, el cambio aplica al instante aunque tenga la sesión abierta.</li>
+            <li>Al eliminar a un técnico, sus órdenes en Abierto, Asignado, En proceso o Pendiente quedan sin él para reasignarlas. Las <b>Completado</b>, las cerradas y las canceladas conservan su nombre y su estatus, porque ese trabajo sí lo hizo él.</li>
+            <li>Con el botón de credencial abres el <b>perfil</b> del usuario: sus indicadores y sus órdenes activas.</li>
+            <li>Las cuentas de <b>Administrador</b> solo las crea, modifica o elimina otro Administrador, y la empresa siempre conserva al menos uno.</li>
+          </ul>
+          <div class="mn-nota"><i class="fas fa-user-minus"></i><div><b>Al dar de baja a un técnico</b> (eliminarlo o pasarlo a un rol que no recibe órdenes, como Administrativo), su nombre se quita de las órdenes activas. Las que se quedan sin técnico regresan a Abierto para reasignarlas. Las órdenes cerradas conservan su nombre, porque son historial.</div></div>
+          <p>Durante la prueba gratuita no hay límite de usuarios. Con un plan contratado, el número de usuarios depende del plan; si llegas al límite, el sistema te lo indica (los usuarios que ya tenías se conservan).</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="importar" data-titulo="Importar datos">
+          <h2><span class="mn-num">16</span> Importar datos</h2>
+          <p>Carga de una sola vez tus clientes, sus equipos y tu catálogo desde Excel, para empezar sin capturar uno por uno. Solo el Administrador puede importar.</p>
+          <ol class="mn-pasos">
+            <li>Entra a <span class="mn-ui">Importar datos</span> y elige qué vas a cargar: <b>Clientes</b>, <b>Equipos de clientes</b> o <b>Catálogo de inventario</b>.</li>
+            <li>Pulsa <span class="mn-ui">Descargar plantilla</span> y llénala en Excel.</li>
+            <li>Guárdala como CSV: en Excel, <b>Archivo &gt; Guardar como &gt; CSV UTF-8 (delimitado por comas)</b>.</li>
+            <li>Súbela y revisa la <b>Vista previa</b>. Cada renglón muestra si se va a dar de alta, si tiene un aviso o un error. Usa «Ver solo renglones con error o aviso» para corregir rápido.</li>
+            <li>Cuando no haya errores, pulsa <span class="mn-ui">Importar</span> y confirma.</li>
+          </ol>
+          <table class="mn-tabla">
+            <thead><tr><th>Qué importas</th><th>Reglas</th></tr></thead>
+            <tbody>
+              <tr><td><b>Clientes</b></td><td>Obligatorio: Nombre. Si ya existe un cliente con el mismo nombre, se deja como está.</td></tr>
+              <tr><td><b>Equipos de clientes</b></td><td>Obligatorios: Cliente y Equipo. El cliente ya debe existir, así que importa primero tus clientes. La serie no se puede repetir; deja la columna vacía si el equipo no tiene.</td></tr>
+              <tr><td><b>Catálogo de inventario</b></td><td>Obligatorios: SKU, Nombre y Categoría (Equipo, Refacción, Consumible, Herramienta, Servicio o Mano de obra). La existencia inicial entra al kárdex. Si el SKU ya existe, se deja como está.</td></tr>
+            </tbody>
+          </table>
+          <div class="mn-nota"><i class="fas fa-info-circle"></i><div>Importar solo agrega registros nuevos: nunca modifica ni borra lo que ya tienes. Las columnas que no reconoce se ignoran y el sistema te dice cuáles fueron.</div></div>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="historial" data-titulo="Historial de cambios">
+          <h2><span class="mn-num">17</span> Historial de cambios</h2>
+          <p>Registro de auditoría: quién creó, editó, canceló o eliminó qué y cuándo. Cubre órdenes de servicio (incluidos cambios de estatus, motivos y reaperturas), conceptos aplicados, cotizaciones, cuentas por cobrar, cobros, gastos, clientes, ventas, usuarios, padrón, inventario, documentación técnica, privilegios y marca de la empresa. Las órdenes automáticas aparecen como creadas por «Sistema». Filtra por tabla, tipo de acción, registro y fechas, y pulsa <span class="mn-ui">Detalle</span> para comparar los datos anteriores con los nuevos.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="ajustes" data-titulo="Ajustes">
+          <h2><span class="mn-num">18</span> Ajustes</h2>
+          <ul>
+            <li><b>Mi cuenta</b>: cambia tu contraseña escribiendo la actual y la nueva dos veces.</li>
+            <li><b>Apariencia</b>: tema claro u oscuro.</li>
+            <li><b>Plan y pagos</b> (administradores): acceso a contratar, renovar o cambiar el plan.</li>
+            <li><b>Privilegios por rol</b> (administradores): marca qué módulos ve cada rol y pulsa <span class="mn-ui">Guardar privilegios</span>. Aplica de inmediato y queda en el historial.</li>
+          </ul>
+          <p>Tus preferencias personales, como el tema, el avance del recorrido guiado o los avisos que pediste no volver a mostrar, se guardan en tu cuenta y te siguen en cualquier equipo.</p>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="mi-empresa" data-titulo="Mi empresa">
+          <h2><span class="mn-num">19</span> Mi empresa</h2>
+          <p>Para el administrador de la cuenta. Tiene tres pestañas:</p>
+          <p><b>Exportar mis datos</b> (en Plan y facturación): descarga un ZIP con un archivo CSV por módulo, que se abre en Excel. Los adjuntos se descargan desde cada registro y las contraseñas no se exportan.</p>
+          <ul>
+            <li><b>Plan y facturación</b>: tu plan, precio, vigencia con días restantes, usuarios usados contra el límite, historial de pagos, solicitudes y datos fiscales.</li>
+            <li><b>Uso del sistema</b>: totales de órdenes de servicio, clientes, equipos, ventas e inventario; gráficas de 6 meses; actividad diaria y por usuario; espacio usado.</li>
+            <li><b>Personalización</b> (incluida en todos los planes): sube el logo de tu empresa (PNG, JPG o WEBP de hasta 1 MB), cambia los colores (con vista previa), el prefijo de los folios y las categorías de las órdenes. <span class="mn-ui">Restablecer apariencia original</span> deshace los cambios visuales.</li>
+          </ul>
+          <p>En <b>Personalización</b> también está <b>Cumplimiento y horario</b>:</p>
+          <ul>
+            <li>La <b>meta de cumplimiento</b>: los días naturales para atender una orden. Después se marca como atrasada en Inicio, Estadísticas y el panel del técnico.</li>
+            <li>La <b>zona horaria</b> de tu operación, elegida de la lista (México, Latinoamérica, España y el resto del mundo). Las fechas y horas del sistema siguen esta zona.</li>
+          </ul>
+          <p>En <b>Personalización</b> también están las <b>Tarifas de servicio</b>:</p>
+          <ul>
+            <li><b>Mano de obra por hora</b>: es el precio del concepto «Mano de obra (por hora)». Se cobra por tiempo y admite fracciones (1.5 h), así sabes cuántas horas dedica cada técnico.</li>
+            <li><b>Servicios</b>: precio cerrado (mantenimiento, visita, calibración) y lo que <b>incluye</b>, un concepto por línea. Lo que incluye aparece en el PDF de la cotización. Quitar un servicio de la lista lo desactiva; no se borra de las órdenes y cotizaciones donde ya se usó.</li>
+          </ul>
+          <p>En <b>Personalización</b> también está <b>Cotizaciones</b> (disponible en todos los planes): prefijo de folio (por defecto COT), vigencia por defecto (15 días), IVA por defecto (16% u 8%), descuento máximo sin autorización y términos y condiciones que se copian a cada cotización nueva.</p>
+          <div class="mn-nota"><i class="fas fa-info-circle"></i><div>Cambiar el prefijo de folio afecta solo a las órdenes o cotizaciones nuevas; las anteriores conservan el suyo.</div></div>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="plan" data-titulo="Plan, pagos y estado de la cuenta">
+          <h2><span class="mn-num">20</span> Plan, pagos y estado de la cuenta</h2>
+          <h3>Contratar o renovar</h3>
+          <p>La contratación, los pagos y las renovaciones los lleva nuestro equipo comercial. Escríbenos por el WhatsApp o el correo que aparecen en el aviso superior o en <a href="#mi-empresa">Mi empresa</a>: te decimos el monto, cómo pagar y, al confirmarse el pago, tu cuenta se activa sin que tengas que hacer nada en el sistema.</p>
+          <p>En <a href="#mi-empresa">Mi empresa</a> ves tu plan, la fecha de vencimiento y cuántos usuarios puedes tener.</p>
+          <h3>Estados de la cuenta</h3>
+          <table class="mn-tabla">
+            <thead><tr><th>Situación</th><th>Qué puedes hacer</th></tr></thead>
+            <tbody>
+              <tr><td>En prueba</td><td>Todo el sistema, con el límite de usuarios de tu prueba. El aviso muestra los días restantes.</td></tr>
+              <tr><td>Activa</td><td>Todo. Unos días antes del vencimiento verás un aviso para renovar.</td></tr>
+              <tr><td>Prueba o pago vencido</td><td>Solo lectura: puedes consultar y exportar tu información, pero no capturar ni modificar, hasta que se registre tu pago.</td></tr>
+              <tr><td>Suspendida o cancelada</td><td>Nadie entra; ponte en contacto con nosotros para reactivarla o recuperar tu información.</td></tr>
+            </tbody>
+          </table>
+          <h3>Contraseña temporal</h3>
+          <p>Si recibiste una contraseña temporal (al abrir tu cuenta o al pedir que te restablezcan el acceso), el sistema te lleva a <a href="#ajustes">Ajustes</a> para cambiarla antes de continuar.</p>
+          <div class="mn-nota"><i class="fas fa-lock"></i><div>En ningún caso se borra tu información: al regularizar el pago todo sigue como lo dejaste.</div></div>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="celular" data-titulo="Uso en el celular">
+          <h2><span class="mn-num">21</span> Uso en el celular</h2>
+          <p>El sistema se adapta a la pantalla del celular o la tableta:</p>
+          <ul>
+            <li>Arriba: el botón <i class="fas fa-bars"></i> abre el menú completo y la casita te lleva al inicio.</li>
+            <li>Abajo: una barra fija con <b>Inicio</b>, <b>Órdenes</b>, el botón central <b>+ Nueva</b> (nueva orden de servicio), <b>Buscar</b> y <b>Menú</b>.</li>
+            <li>Las tablas se muestran como tarjetas para leerse sin desplazarse de lado.</li>
+            <li>Al adjuntar archivos puedes tomar la foto directamente con la cámara.</li>
+          </ul>
+          <div class="mn-nota"><i class="fas fa-mobile-alt"></i><div><b>Tip:</b> en el navegador de tu celular elige «Agregar a la pantalla de inicio» para abrir el sistema como una aplicación.</div></div>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="preguntas" data-titulo="Preguntas frecuentes">
+          <h2><span class="mn-num">22</span> Preguntas frecuentes y solución de problemas</h2>
+          <details class="mn-faq"><summary>No veo un módulo en mi menú</summary><p>Tu rol no lo tiene habilitado. Pide al administrador que lo active en <a href="#ajustes">Ajustes → Privilegios por rol</a> o que cambie tu rol.</p></details>
+          <details class="mn-faq"><summary>Soy técnico y no veo una orden de servicio</summary><p>El técnico ve solo las órdenes donde está asignado. Pide a la oficina que te asigne; en cuanto lo hagan, la verás en tu Inicio y en la lista.</p></details>
+          <details class="mn-faq"><summary>No puedo cerrar, cancelar ni reabrir una orden</summary><p>El rol Técnico no puede, y a otros usuarios se les puede quitar ese permiso. Déjala en <b>Completado</b> para que la cierre quien tenga permiso.</p></details>
+          <details class="mn-faq"><summary>No me deja poner Asignado o En proceso</summary><p>Esos estatus exigen al menos un técnico. Asigna uno primero; si dejas la orden sin técnicos, regresa sola a Abierto.</p></details>
+          <details class="mn-faq"><summary>No me deja poner Pendiente o Cancelado</summary><p>Los dos piden un motivo. Elígelo de la lista o escribe uno en «Otro».</p></details>
+          <details class="mn-faq"><summary>El cliente no aparece al registrar una orden</summary><p>La orden debe ser de un cliente de tu catálogo. Pulsa <span class="mn-ui">Crear cliente</span> debajo del campo para darlo de alta en ese momento.</p></details>
+          <details class="mn-faq"><summary>La refacción que usé no está en la lista</summary><p>Si tienes acceso a Inventario, dala de alta con <span class="mn-ui">Nuevo artículo</span> en Conceptos aplicados. Si no, usa <span class="mn-ui">Solicitar alta</span> y la oficina la agregará.</p></details>
+          <details class="mn-faq"><summary>Registré un cobro con un dato equivocado</summary><p>Abre la cuenta y pulsa <span class="mn-ui">Corregir</span> en ese cobro: se cancela con motivo y se abre el formulario con sus datos para registrarlo bien.</p></details>
+          <details class="mn-faq"><summary>Guardé y no veo el cambio</summary><p>Espera el mensaje de confirmación antes de salir. Si se perdió la conexión, vuelve a abrir la orden: el sistema te ofrecerá recuperar el borrador. Si el problema sigue, avisa a tu administrador.</p></details>
+          <details class="mn-faq"><summary>El sistema dice que otra persona modificó la orden</summary><p>Alguien guardó cambios mientras tú la editabas. Recarga para ver la versión actual y vuelve a aplicar tus cambios; así nadie pierde su trabajo.</p></details>
+          <details class="mn-faq"><summary>Un archivo no se sube</summary><p>Revisa que pese menos de 40 MB y que sea imagen, video, PDF o documento de Office. Los archivos ejecutables no se aceptan por seguridad.</p></details>
+          <details class="mn-faq"><summary>Olvidé mi contraseña</summary><p>Pide al administrador que te asigne una nueva en <a href="#usuarios">Usuarios</a>; después cámbiala en <a href="#ajustes">Ajustes</a>.</p></details>
+          <details class="mn-faq"><summary>La cuenta está en «solo lectura»</summary><p>Hay un pago pendiente. Puedes consultar todo pero no capturar. El administrador debe regularizar el pago desde el aviso superior.</p></details>
+          <details class="mn-faq"><summary>La pantalla se ve desacomodada</summary><p>Recarga la página con <kbd>Ctrl</kbd> + <kbd>F5</kbd> para que el navegador cargue la versión más reciente.</p></details>
+        </section>
+
+        <!-- =========================================================== -->
+        <section id="glosario" data-titulo="Glosario">
+          <h2><span class="mn-num">23</span> Glosario</h2>
+          <dl class="mn-glosario">
+            <dt>Orden de servicio</dt><dd>Un trabajo por atender en un cliente, del reporte al cierre.</dd>
+            <dt>Folio</dt><dd>Número consecutivo que el sistema asigna a cada orden de servicio (por ejemplo SD-0046).</dd>
+            <dt># Reporte del cliente</dt><dd>El folio o número de reporte que usa tu cliente.</dd>
+            <dt>Motivo del servicio</dt><dd>Qué hay que hacer en la orden: una falla, un mantenimiento, una instalación…</dd>
+            <dt>Activa</dt><dd>Orden que no está cerrada (con o sin factura) ni cancelada. Completado sigue activa.</dd>
+            <dt>Atrasada</dt><dd>Orden activa, no completada, con más días desde su reporte que la meta de cumplimiento.</dd>
+            <dt>Meta de cumplimiento</dt><dd>Días naturales que tu empresa se da para atender una orden.</dd>
+            <dt>Concepto aplicado</dt><dd>Refacción, servicio o equipo de reemplazo registrado en una orden de servicio.</dd>
+            <dt>Equipo de reemplazo</dt><dd>Equipo que sale del inventario para instalarse en el cliente en lugar de otro; entra a su padrón.</dd>
+            <dt>Padrón de equipos</dt><dd>Lista de equipos instalados en un cliente, con su número de serie.</dd>
+            <dt>Póliza</dt><dd>Acuerdo de mantenimiento con el cliente; genera órdenes de servicio programado.</dd>
+            <dt>Periodicidad</dt><dd>Cada cuántos meses un equipo necesita mantenimiento.</dd>
+            <dt>Reincidencia</dt><dd>Un mismo equipo que vuelve a fallar de lo mismo.</dd>
+            <dt>Cuenta por cobrar</dt><dd>Lo que un cliente debe por un trabajo o una venta, con su vencimiento.</dd>
+            <dt>Antigüedad del saldo</dt><dd>Cuánto tiempo llevan vencidas las cuentas por cobrar.</dd>
+            <dt>Rentabilidad</dt><dd>Lo que deja una orden o un cliente: ingreso menos refacciones a costo y gastos directos.</dd>
+            <dt>Kárdex</dt><dd>Historial de entradas, salidas y ajustes de un artículo del inventario.</dd>
+            <dt>SKU</dt><dd>Código único de un artículo del inventario.</dd>
+            <dt>CSV</dt><dd>Archivo de texto separado por comas que se abre en Excel; se usa para exportar e importar datos.</dd>
+          </dl>
+        </section>
+
+      </article>
     </div>
   </main>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script>
-    (function () {
-      'use strict';
-      var temas = Array.prototype.slice.call(document.querySelectorAll('.mn-tema'));
-      var indice = document.getElementById('mn-indice');
-      var pTitulo = document.createElement('p');
-      pTitulo.className = 'mn-indice-titulo';
-      pTitulo.textContent = 'Contenido';
-      pTitulo.style.fontWeight = '600';
-      pTitulo.style.margin = '0 0 4px';
-      indice.appendChild(pTitulo);
-
-      temas.forEach(function (tema) {
-        var a = document.createElement('a');
-        a.href = '#' + tema.id;
-        a.textContent = tema.dataset.titulo;
-        a.addEventListener('click', function () {
-          indice.querySelectorAll('a').forEach(function (el) { el.classList.remove('activo'); });
-          a.classList.add('activo');
-        });
-        indice.appendChild(a);
-      });
-
-      document.getElementById('mn-buscar').addEventListener('input', function (e) {
-        var q = e.target.value.trim().toLowerCase();
-        var algunaVisible = false;
-        temas.forEach(function (tema) {
-          var visible = !q || tema.textContent.toLowerCase().indexOf(q) !== -1;
-          tema.hidden = !visible;
-          if (visible) algunaVisible = true;
-        });
-        indice.querySelectorAll('a').forEach(function (a, i) { a.parentElement.hidden = false; a.style.display = temas[i].hidden ? 'none' : ''; });
-        document.getElementById('mn-sin-resultados').hidden = algunaVisible;
-      });
-
-      document.getElementById('mn-pdf').addEventListener('click', function () { window.print(); });
-    })();
-  </script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/manual.js?v=20261030d" defer></script>
 </body>
 </html>

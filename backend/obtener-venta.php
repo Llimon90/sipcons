@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('ventas');
 header('Content-Type: application/json');
 
 $id = $_GET['id'] ?? null;
@@ -21,6 +23,6 @@ try {
     
     echo json_encode(['exito' => true, 'venta' => $venta]);
 } catch (PDOException $e) {
-    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . mensajeErrorPublico($e)]);
 }
 ?>

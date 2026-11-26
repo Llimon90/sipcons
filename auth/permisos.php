@@ -3,21 +3,28 @@
 // config/auth.php ya haya corrido (sesión activa) y config/database.php
 // (expone $pdo).
 
-// Programador: modo mantenimiento/desarrollador, siempre con acceso total.
-// No pasa por la tabla permisos_rol ni por el checklist de Ajustes.
-const ROL_ACCESO_TOTAL = 'Programador';
+// Soporte de plataforma: acceso total, fijo en el código. No es un rol que se
+// asigne a usuarios: lo toma la cuenta de plataforma al entrar a una empresa
+// en modo soporte (config/plataforma.php). No pasa por permisos_rol.
+const ROL_ACCESO_TOTAL = 'Soporte de plataforma';
 
 // Módulos válidos que puede configurar el checklist de privilegios.
-const MODULOS_PERMISOS = ['incidencias', 'reportes', 'clientes', 'ventas', 'usuarios', 'soporte', 'informes', 'historial', 'inventario', 'cotizaciones', 'cuentas_por_cobrar', 'finanzas', 'problemas', 'cambios', 'catalogo_servicios', 'base_conocimiento'];
+const MODULOS_PERMISOS = ['incidencias', 'reportes', 'clientes', 'cotizaciones', 'ventas', 'inventario', 'finanzas', 'usuarios', 'soporte', 'informes', 'historial'];
 
-// Roles que se pueden asignar a un usuario. "Programador" está incluido
-// (es un rol asignable, para quien da mantenimiento al sistema) pero NO
-// aparece en el checklist de privilegios: su acceso total es fijo en el
-// código (ver tienePermiso), no depende de la tabla permisos_rol.
-const ROLES_ASIGNABLES = ['Técnico', 'Administrativo', 'Supervisor', 'Técnico/Administrador', 'Administrador', ROL_ACCESO_TOTAL];
+// Roles que se pueden asignar a un usuario (migración 006: los antiguos
+// Técnico/Administrador y Programador pasaron a Administrador).
+const ROLES_ASIGNABLES = ['Administrador', 'Supervisor', 'Administrativo', 'Técnico'];
 
-// Roles que sí se configuran desde el checklist de Ajustes → Privilegios.
-const ROLES_CONFIGURABLES = ['Técnico', 'Administrativo', 'Supervisor', 'Técnico/Administrador', 'Administrador'];
+// Roles que se configuran desde el checklist de Ajustes → Privilegios.
+const ROLES_CONFIGURABLES = ROLES_ASIGNABLES;
+
+// Roles que administran la empresa: usuarios, privilegios, Mi empresa,
+// eliminar registros. Chequeo fijo, no depende de permisos_rol.
+const ROLES_ADMINISTRACION = ['Administrador', ROL_ACCESO_TOTAL];
+
+function esAdministracion(): bool {
+    return in_array($_SESSION['rol'] ?? '', ROLES_ADMINISTRACION, true);
+}
 
 function tienePermiso(string $modulo): bool {
     global $pdo;
@@ -76,14 +83,25 @@ function requirePermiso(string $modulo): void {
     }
 }
 
-// Solo Administrador, Técnico/Administrador o Programador pueden editar el checklist de privilegios.
+// Exige al menos uno de los módulos: para endpoints compartidos por varias
+// pantallas (p. ej. el catálogo de clientes lo usan incidencias, ventas y búsquedas).
+function requirePermisoAlguno(string ...$modulos): void {
+    requireAuth();
+    foreach ($modulos as $modulo) {
+        if (tienePermiso($modulo)) return;
+    }
+    http_response_code(403);
+    header('Content-Type: application/json');
+    die(json_encode(['error' => 'Acceso denegado', 'exito' => false, 'success' => false, 'mensaje' => 'Tu rol no tiene acceso a este módulo.']));
+}
+
+// Solo el Administrador (o soporte de plataforma) edita el checklist de privilegios.
 // A propósito NO usa requirePermiso() (que consulta la misma tabla que se
 // va a editar): mantenerlo como chequeo de rol fijo evita que un rol mal
 // configurado pueda auto-otorgarse permisos.
 function requireGestionPrivilegios(): void {
     requireAuth();
-    $rol = $_SESSION['rol'] ?? '';
-    if ($rol !== 'Administrador' && $rol !== 'Técnico/Administrador' && $rol !== ROL_ACCESO_TOTAL) {
+    if (!esAdministracion()) {
         http_response_code(403);
         header('Content-Type: application/json');
         die(json_encode(['error' => 'Acceso denegado']));

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('clientes');
 require_once __DIR__ . '/../auth/audit.php';
 require_once __DIR__ . '/../config/contactos_cliente.php';
 // Conexión a la base de datos
@@ -10,10 +12,7 @@ if ($conn->connect_error) {
 
 
 // Permitir solicitudes desde el frontend
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 
 // Asegurar que el contenido devuelto sea JSON
 header('Content-Type: application/json');
@@ -26,11 +25,11 @@ ini_set('display_errors', 0);
 
 
 // Recibe datos del formulario
-$nombre = $_POST['nombre'] ?? '';
-$rfc = $_POST['rfc'] ?? '';
-$direccion = $_POST['direccion'] ?? '';
-$telefono = $_POST['telefono'] ?? '';
-$email = $_POST['email'] ?? '';
+$nombre = trim((string)($_POST['nombre'] ?? ''));
+$rfc = strtoupper(trim((string)($_POST['rfc'] ?? '')));
+$direccion = trim((string)($_POST['direccion'] ?? ''));
+$telefono = trim((string)($_POST['telefono'] ?? ''));
+$email = trim((string)($_POST['email'] ?? ''));
 
 // Contactos: lista JSON [{nombre, telefono, email}] (o, por compatibilidad,
 // el texto "Juan; Pedro"). clientes.contactos guarda solo los nombres.
@@ -39,18 +38,37 @@ $listaContactos = isset($_POST['contactos_json'])
     : normalizarContactos(array_map(fn($n) => ['nombre' => $n], array_filter(array_map('trim', explode(';', $_POST['contactos'] ?? '')))));
 $contactos = contactosComoTexto($listaContactos);
 
-if (empty($nombre) || empty($contactos) ) {
-    echo json_encode(['success' => false, 'message' => 'Nombre y contacto son obligatorios']);
+if ($nombre === '' || empty($contactos)) {
+    echo json_encode(['success' => false, 'message' => 'Nombre y contacto son obligatorios'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+// D-53 · L-33: nombre (hasta 100) y correo únicos en la empresa; el candado evita dos altas iguales a la vez
+require_once __DIR__ . '/lib/clientes_helpers.php';
+$nombre = cliNormalizarNombre($nombre);
+$candado = cliCandado($pdo);
+if ($error = cliErrorDatos($pdo, $nombre, $email)) {
+    cliSoltarCandado($pdo, $candado);
+    // Un nombre repetido devuelve el id del cliente que ya existe (las altas rápidas lo eligen)
+    $dup = $pdo->prepare('SELECT id FROM clientes WHERE LOWER(TRIM(nombre)) = LOWER(?) LIMIT 1');
+    $dup->execute([$nombre]);
+    $existente = (int)$dup->fetchColumn();
+    echo json_encode(['success' => false, 'message' => $error] + ($existente ? ['id' => $existente] : []), JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Inserta en la base de datos (parametrizado: ver AGENTS.md, regla 1)
-$sql = "INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('ssssss', $nombre, $rfc, $direccion, $telefono, $contactos, $email);
+// Inserta en la base de datos
+$stmt = $pdo->prepare('INSERT INTO clientes (nombre, rfc, direccion, telefono, contactos, email) VALUES (?, ?, ?, ?, ?, ?)');
 
-if ($stmt->execute()) {
-    $nuevoId = $conn->insert_id;
+try {
+    $guardado = $stmt->execute([$nombre, $rfc, $direccion, $telefono, $contactos, $email]);
+} catch (PDOException $e) {
+    cliSoltarCandado($pdo, $candado);
+    echo json_encode(['success' => false, 'message' => mensajeErrorPublico($e, 'No se pudo guardar el cliente. Inténtalo de nuevo.')], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+cliSoltarCandado($pdo, $candado);
+if ($guardado) {
+    $nuevoId = (int)$pdo->lastInsertId();
     sincronizarContactosCliente($nuevoId, $listaContactos);
     registrarAuditoria('clientes', $nuevoId, 'CREATE', null, [
         'nombre'    => $nombre,
@@ -61,9 +79,9 @@ if ($stmt->execute()) {
         'contactos_detalle' => $listaContactos,
         'email'     => $email,
     ]);
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true, 'id' => $nuevoId, 'nombre' => $nombre], JSON_UNESCAPED_UNICODE);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $conn->error]);
+    echo json_encode(['success' => false, 'message' => 'No se pudo completar la operación. Inténtalo de nuevo.']);
 }
 
 $conn->close();

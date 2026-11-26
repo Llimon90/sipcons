@@ -7,11 +7,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 
 <body>
@@ -76,11 +81,17 @@
           <input type="hidden" id="contactos" name="contactos_json">
         </div>
         
-        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar Cliente</button>
+        <button type="submit" class="btn-primary">Guardar Cliente</button>
       </form>
 
       <section class="lista-incidencias" style="margin-top: 40px;">
-        <h2>Directorio de Clientes</h2>     
+        <div class="clientes-cabecera" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+          <h2>Directorio de Clientes</h2>
+          <span class="clientes-importar" data-solo-administra hidden style="gap:8px; flex-wrap:wrap;">
+            <a href="importar.html?tipo=clientes" class="btn-secundario"><i class="fas fa-file-import"></i> Importar clientes</a>
+            <a href="importar.html?tipo=equipos" class="btn-secundario"><i class="fas fa-file-import"></i> Importar equipos</a>
+          </span>
+        </div>     
         <p style="color: #7f8c8d; font-size: 0.9rem;">Haz clic en el nombre de un cliente para ver su perfil completo y su padrón de equipos.</p>
         
         <div class="form-row">
@@ -106,12 +117,12 @@
     </section>
   </main>
   
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
   <!-- ACTUALIZA ESTE SCRIPT PARA QUE HAGA REDIRECCIÓN EN LUGAR DE ABRIR MODAL -->
-  <script src="../scripts/contactos-widget.js?v=3"></script>
-  <script>SipconsContactos.init(document.getElementById('contactos-editor'), document.getElementById('contactos'));</script>
-  <script src="../scripts/carga-clientes.js?v=20261002"></script> 
-  <script src="../scripts/script-clientes.js?v=7"></script>
+  <script src="../scripts/contactos-widget.js?v=20261005"></script>
+  <script>AppContactos.init(document.getElementById('contactos-editor'), document.getElementById('contactos'));</script>
+  <script src="../scripts/carga-clientes.js?v=20261101"></script> 
+  <script src="../scripts/script-clientes.js?v=20261101"></script>
 </body>
 </html>

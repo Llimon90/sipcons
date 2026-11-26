@@ -1,9 +1,9 @@
 // Contactos de un cliente: cada uno con nombre, teléfono y email.
 //
-// - SipconsContactos.parsear(texto): nombres de un texto "Juan; Pedro"
+// - AppContactos.parsear(texto): nombres de un texto "Juan; Pedro"
 //   (columna clientes.contactos, que el servidor mantiene sincronizada con los
 //   nombres). La usan los desplegables de "Reporta".
-// - SipconsContactos.init(contenedor, oculto): editor de filas. El <input
+// - AppContactos.init(contenedor, oculto): editor de filas. El <input
 //   type="hidden"> recibe la lista como JSON: [{nombre, telefono, email}].
 (function () {
   const SEP = ';';
@@ -27,13 +27,13 @@
       '.ctc-fila input{margin:0;}' +
       '.ctc-quitar{background:none !important;box-shadow:none !important;transform:none !important;color:#c0392b;font-size:1.5rem;line-height:1;padding:0 !important;width:40px;height:40px;border-radius:50% !important;}' +
       '.ctc-quitar:hover{background:#fdecea !important;}' +
-      '.ctc-add{background:#eaf2f8 !important;color:#2980b9 !important;border:1px dashed #2980b9 !important;box-shadow:none !important;transform:none !important;padding:10px 18px !important;font-size:0.95rem !important;}' +
+      '.ctc-add{background:#eaf2f8 !important;color:var(--brand-primary-hover) !important;border:1px dashed var(--brand-primary-hover) !important;box-shadow:none !important;transform:none !important;padding:10px 18px !important;font-size:0.95rem !important;}' +
       '.ctc-add:hover{background:#d6eaf8 !important;}' +
       '@media (max-width:700px){.ctc-cab{display:none;}.ctc-fila{grid-template-columns:1fr 40px;padding-bottom:10px;border-bottom:1px solid #e5e8eb;}.ctc-fila>*:nth-child(1),.ctc-fila>*:nth-child(2),.ctc-fila>*:nth-child(3){grid-column:1;}.ctc-fila>.ctc-quitar{grid-column:2;grid-row:1;}}';
     document.head.appendChild(st);
   }
 
-  window.SipconsContactos = {
+  window.AppContactos = {
     parsear,
 
     init(contenedor, oculto) {

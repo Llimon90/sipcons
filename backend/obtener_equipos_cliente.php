@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('clientes', 'incidencias');
 header('Content-Type: application/json');
 
 $cliente = $_GET['cliente'] ?? '';
@@ -23,6 +25,6 @@ try {
     
     echo json_encode($equipos);
 } catch (Exception $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => mensajeErrorPublico($e)]);
 }
 ?>

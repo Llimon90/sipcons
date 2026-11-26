@@ -17,7 +17,7 @@ async function cargarClientesEnSelect() {
       });
     } catch (error) {
       console.error('Error al cargar clientes:', error);
-      alert('Error al cargar clientes en el select');
+      AppAviso.alerta('Error al cargar clientes en el select');
     }
   }
   
@@ -38,7 +38,7 @@ async function cargarClientesEnSelect() {
     });
   } catch (error) {
     console.error('Error al cargar clientes:', error);
-    alert('Error al cargar clientes en el select');
+    AppAviso.alerta('Error al cargar clientes en el select');
   }
 }
 
@@ -47,20 +47,29 @@ document.addEventListener('DOMContentLoaded', cargarClientesEnSelect);
 
 // --- Cargar incidencias ---
 document.addEventListener("DOMContentLoaded", function () {
+  // D-42: "Programadas" muestra las órdenes con fecha futura (no salen en activas hasta su día)
+  let vista = '';
+  document.querySelectorAll('.lista-vistas [data-vista]').forEach(boton => boton.addEventListener('click', () => {
+    vista = boton.dataset.vista;
+    document.querySelectorAll('.lista-vistas [data-vista]').forEach(b => b.setAttribute('aria-pressed', String(b === boton)));
+    document.getElementById('titulo-lista').textContent = vista ? 'Órdenes de servicio programadas' : 'Órdenes de servicio activas';
+    cargarIncidencias();
+  }));
+
   async function cargarIncidencias() {
     try {
-      const response = await fetch(`../backend/server.php?t=${Date.now()}`, { cache: "no-store" });
+      const response = await fetch(`../backend/server.php?t=${Date.now()}${vista ? '&programadas=1' : ''}`, { cache: "no-store" });
       const data = await response.json();
       const tbody = document.getElementById("tabla-body");
       tbody.innerHTML = "";
 
       if (data.error) {
-        tbody.innerHTML = `<tr><td colspan="10">${data.error}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">${escHTML(data.error)}</td></tr>`;
         return;
       }
 
       if (data.message) {
-        tbody.innerHTML = `<tr><td colspan="10">${data.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10">${escHTML(data.message)}</td></tr>`;
         return;
       }
 
@@ -80,22 +89,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const celdaNumeroIncidente = document.createElement("td");
         const enlace = document.createElement("a");
-        enlace.href = `detalle.html?id=${incidencia.id}`;
+        enlace.href = `detalle.html?id=${escHTML(incidencia.id)}`;
         enlace.textContent = incidencia.numero_incidente;
 
         celdaNumeroIncidente.appendChild(enlace);
 
-        const estatus = window.SipconsTablas
-          ? SipconsTablas.estatusHTML(incidencia.estatus)
+        const estatus = window.AppTablas
+          ? AppTablas.estatusHTML(incidencia.estatus)
           : incidencia.estatus;
 
         fila.innerHTML = `
           <td></td>
-          <td>${incidencia.reporte_cliente ?? ''}</td>
-          <td>${incidencia.cliente}</td>
-          <td>${incidencia.sucursal}</td>
-          <td>${incidencia.falla}</td>
-          <td>${incidencia.fecha}</td>
+          <td>${escHTML(incidencia.reporte_cliente ?? '')}</td>
+          <td>${escHTML(incidencia.cliente)}</td>
+          <td>${escHTML(incidencia.sucursal)}</td>
+          <td>${escHTML(incidencia.falla)}</td>
+          <td>${escHTML(incidencia.fecha)}</td>
           <td>${estatus}</td>
         `;
 
@@ -103,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
         tbody.appendChild(fila);
       });
     } catch (error) {
-      console.error("Error al cargar incidencias:", error);
+      console.error("Error al cargar órdenes de servicio:", error);
     }
   }
 

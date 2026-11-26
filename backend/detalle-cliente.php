@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('clientes');
 require_once __DIR__ . '/../config/contactos_cliente.php';
 header('Content-Type: application/json');
 

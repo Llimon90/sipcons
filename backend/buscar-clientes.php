@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('clientes');
 // backend/buscar-clientes.php
-header("Access-Control-Allow-Origin: *");
 header('Content-Type: application/json');
 
 // Desactivar la impresión de errores HTML de PHP para no romper el JSON
@@ -55,6 +56,6 @@ try {
     $conn->close();
 
 } catch (Exception $e) {
-    echo json_encode(['error' => 'Excepción atrapada: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Excepción atrapada: ' . mensajeErrorPublico($e)]);
 }
 ?>

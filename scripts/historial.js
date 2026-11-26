@@ -12,8 +12,25 @@
     }
 
     function etiquetaAccion(accion) {
-        var mapa = { CREATE: 'Creación', UPDATE: 'Edición', DELETE: 'Eliminación', ARCHIVO_ELIMINADO: 'Archivo eliminado' };
+        var mapa = {
+            CREATE: 'Creación', UPDATE: 'Edición', DELETE: 'Eliminación', ARCHIVO_ELIMINADO: 'Archivo eliminado',
+            ENTRADA: 'Entrada de inventario', SALIDA: 'Salida de inventario', AJUSTE: 'Ajuste de inventario',
+            INVENTARIO: 'Movimiento de inventario',
+            ESTATUS: 'Cambio de estatus', VERSION: 'Nueva versión', CONVERSION: 'Conversión en venta',
+            CANCELAR: 'Cancelación'
+        };
         return mapa[accion] || accion;
+    }
+
+    function etiquetaTabla(tabla) {
+        var mapa = {
+            incidencias: 'Órdenes de servicio', usuarios: 'Usuarios', clientes: 'Clientes', ventas: 'Ventas',
+            padron_equipos: 'Padrón de equipos', permisos_rol: 'Privilegios por rol', inventario_articulos: 'Inventario',
+            empresa_marca: 'Marca de la empresa', cotizaciones: 'Cotizaciones',
+            cuentas_cobrar: 'Cuentas por cobrar', cobros: 'Cobros', gastos: 'Gastos',
+            marcas: 'Marcas', modelos: 'Modelos', documentos: 'Manuales'
+        };
+        return mapa[tabla] || tabla;
     }
 
     // "numero_incidente" -> "Numero incidente" (los nombres de columna no
@@ -33,10 +50,10 @@
     // no se muestra en ninguno de los dos paneles.
     var CLAVES_OCULTAS = ['id'];
 
-    // Identificadores que el propio sistema genera (SIP-0001, VT-00005) y que
+    // Identificadores que el propio sistema genera (SD-0001, VT-00005) y que
     // nadie puede editar a mano: sí se muestran (para saber de qué registro se
     // trata), pero nunca se sombrean como "modificado".
-    var CLAVES_SIN_RESALTAR = ['numero_incidente', 'folio'];
+    var CLAVES_SIN_RESALTAR = ['numero_incidente', 'folio', 'sku', 'articulo'];
 
     function formatearFecha(valor) {
         if (!valor) return '';
@@ -112,7 +129,7 @@
 
         contenedor.innerHTML =
             '<p><strong>Usuario:</strong> ' + escapeHtml(registro.usuario_nombre || '—') + ' (' + escapeHtml(registro.usuario_rol || '—') + ')</p>' +
-            '<p><strong>Acción:</strong> ' + escapeHtml(etiquetaAccion(registro.accion)) + ' sobre ' + escapeHtml(registro.tabla) + ' #' + escapeHtml(identificadorRegistro(registro)) + '</p>' +
+            '<p><strong>Acción:</strong> ' + escapeHtml(etiquetaAccion(registro.accion)) + ' sobre ' + escapeHtml(etiquetaTabla(registro.tabla)) + ' #' + escapeHtml(identificadorRegistro(registro)) + '</p>' +
             '<p><strong>Fecha:</strong> ' + escapeHtml(formatearFecha(registro.creado_en)) + '</p>' +
             '<p><strong>IP:</strong> ' + escapeHtml(registro.ip_address || '—') + '</p>' +
             '<div class="form-row">' +
@@ -174,7 +191,7 @@
                         '<td>' + escapeHtml(registro.usuario_nombre || '—') + '</td>' +
                         '<td>' + escapeHtml(registro.usuario_rol || '—') + '</td>' +
                         '<td>' + escapeHtml(etiquetaAccion(registro.accion)) + '</td>' +
-                        '<td>' + escapeHtml(registro.tabla) + '</td>' +
+                        '<td>' + escapeHtml(etiquetaTabla(registro.tabla)) + '</td>' +
                         '<td>' + escapeHtml(identificadorRegistro(registro)) + '</td>' +
                         '<td><button type="button" class="ver-detalle" data-fila-accion data-id="' + escapeHtml(registro.id) + '">Ver</button></td>' +
                         '</tr>';

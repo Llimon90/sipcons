@@ -78,7 +78,7 @@ main {
 }
 
 .breadcrumb a {
-    color: #3498db;
+    color: var(--brand-primary);
     text-decoration: none;
 }
 
@@ -108,7 +108,7 @@ main {
 }
 
 .search-container button {
-    background: #3498db;
+    background: var(--brand-primary);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -184,7 +184,7 @@ main {
 
 .model-icon {
     font-size: 2em;
-    color: #3498db;
+    color: var(--brand-primary);
     margin-bottom: 10px;
     text-align: center;
 }
@@ -392,7 +392,7 @@ main {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: var(--brand-primary);
 }
 
 .form-actions {
@@ -458,7 +458,7 @@ main {
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
-    border-left: 4px solid #3498db;
+    border-left: 4px solid var(--brand-primary);
 }
 
 .search-results-header h3 {
@@ -487,14 +487,14 @@ main {
 }
 
 .search-section h4 i {
-    color: #3498db;
+    color: var(--brand-primary);
 }
 
 .search-badge {
     position: absolute;
     top: 10px;
     left: 10px;
-    background: #3498db;
+    background: var(--brand-primary);
     color: white;
     padding: 2px 8px;
     border-radius: 12px;
@@ -540,12 +540,12 @@ main {
 
 .search-container input:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.1);
 }
 
 .search-container button {
-    background: #3498db;
+    background: var(--brand-primary);
     color: white;
     border: none;
     padding: 12px 20px;
@@ -556,7 +556,7 @@ main {
 }
 
 .search-container button:hover {
-    background: #2980b9;
+    background: var(--brand-primary-hover);
 }
 
 /* Loading para búsqueda */
@@ -637,12 +637,12 @@ main {
     font-size: 1.5em;
 }
 
-.fa-book { color: #3498db; }
+.fa-book { color: var(--brand-primary); }
 .fa-list { color: #27ae60; }
 .fa-video { color: #e74c3c; }
 .fa-image { color: #9b59b6; }
 .fa-project-diagram { color: #f39c12; }
 .fa-sitemap { color: #1abc9c; }
 .fa-microchip { color: #34495e; }
-.fa-desktop { color: #2980b9; }
+.fa-desktop { color: var(--brand-primary-hover); }
 .fa-file { color: #7f8c8d; }

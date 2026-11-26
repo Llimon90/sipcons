@@ -2,14 +2,19 @@
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/permisos.php';
 requirePermiso('usuarios');
+// S-H13: este endpoint solo entrega el detalle de un usuario. Las acciones de
+// estadísticas que tenía no las usaba la interfaz (usa estadisticas.php), solo
+// pedían el permiso de usuarios y calculaban mal el tiempo de resolución.
+if (isset($_GET['action'])) {
+    http_response_code(404);
+    header('Content-Type: application/json');
+    die(json_encode(['success' => false, 'error' => 'Acción no válida']));
+}
 require_once __DIR__ . '/../config/database.php'; // <-- ESTA LÍNEA ES LA QUE FALTA
 
 header('Content-Type: application/json');
 ini_set('display_errors', 0);// Configuración de conexión
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 
 // Incluir el archivo de conexión
 
@@ -18,9 +23,11 @@ try {
     if (isset($_GET['id']) && !isset($_GET['action'])) {
         $id = (int)$_GET['id'];
         $stmt = $pdo->prepare(
-            "SELECT id, nombre, correo, telefono, usuario, rol FROM usuarios WHERE id = ? LIMIT 1"
+            "SELECT id, nombre, correo, telefono, usuario, rol" . (usuariosTienePuedeCerrar() ? ', puede_cerrar' : '') .
+            (usuariosTieneAutorizaDescuentos() ? ', puede_autorizar_descuentos' : '') .
+            " FROM usuarios WHERE id = ? AND empresa_id = ? LIMIT 1"
         );
-        $stmt->execute([$id]);
+        $stmt->execute([$id, (int)$_SESSION['empresa_id']]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario) {
@@ -128,7 +135,8 @@ try {
         $stats['total_clientes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
         // Total de usuarios
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM usuarios");
+        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa_id = ?");
+        $stmt->execute([(int)$_SESSION['empresa_id']]);
         $stats['total_usuarios'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
         
         // Total de incidencias
@@ -234,7 +242,7 @@ try {
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'error' => 'Error de base de datos: ' . $e->getMessage()
+        'error' => 'Error de base de datos: ' . mensajeErrorPublico($e)
     ]);
 }
 ?>

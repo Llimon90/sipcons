@@ -5,9 +5,6 @@ requirePermiso('historial');
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -37,7 +34,7 @@ try {
         $params[] = $accion;
     }
     if ($registroId !== '') {
-        // Acepta tanto el id numérico interno como el folio/número visible (VT-00005, SIP-0001)
+        // Acepta tanto el id numérico interno como el folio/número visible (VT-00005, SD-0001)
         $condiciones[] = '(registro_id = ? OR registro_folio = ?)';
         $params[] = $registroId;
         $params[] = $registroId;
@@ -83,5 +80,5 @@ try {
     ]);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error al obtener historial: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al obtener historial: ' . mensajeErrorPublico($e)]);
 }

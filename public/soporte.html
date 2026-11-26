@@ -8,11 +8,16 @@
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/soporte.css">
-  <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-  <link rel="stylesheet" href="../css/dark.css?v=20261009b">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <link rel="stylesheet" href="../css/soporte.css?v=20261029">
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
   
@@ -90,7 +95,7 @@
     <!-- Modal para vista previa -->
     <div id="previewModal" class="modal">
       <div class="modal-content">
-        <span class="close-modal">&times;</span>
+        <button type="button" class="close-modal" aria-label="Cerrar">&times;</button>
         <h3>Vista Previa del Documento</h3>
         <iframe id="pdfViewer" src="" frameborder="0"></iframe>
       </div>
@@ -99,7 +104,7 @@
     <!-- Modal para agregar nuevo modelo -->
     <div id="addModelModal" class="modal" style="display:none;">
       <div class="modal-content">
-        <span class="close-modal">&times;</span>
+        <button type="button" class="close-modal" aria-label="Cerrar">&times;</button>
         <h3>Agregar Nuevo Modelo</h3>
         <form id="modelForm" enctype="multipart/form-data">
           <div class="form-group">
@@ -118,11 +123,11 @@
           </div>
           <div class="form-group">
             <label for="manual_file">Manual (PDF):</label>
-            <input type="file" id="manual_file" name="manual_file" accept=".pdf">
+            <input type="file" id="manual_file" name="manual_file" accept=".pdf" data-selector data-texto="Toca para elegir el manual" data-ayuda="Un archivo PDF">
           </div>
           <div class="form-group">
             <label for="partes_file">Lista de Partes (PDF):</label>
-            <input type="file" id="partes_file" name="partes_file" accept=".pdf">
+            <input type="file" id="partes_file" name="partes_file" accept=".pdf" data-selector data-texto="Toca para elegir la lista de partes" data-ayuda="Un archivo PDF">
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Guardar Modelo</button>
@@ -133,8 +138,9 @@
     </div>
   </main>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/soporte.js?v=2"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/selector-archivos.js?v=20261101"></script>
+  <script src="../scripts/soporte.js?v=20261101"></script>
 </body>
 </html>

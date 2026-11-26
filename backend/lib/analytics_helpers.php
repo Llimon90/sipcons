@@ -1,7 +1,7 @@
 <?php
 // Analíticas de uso del portal: utilidades de registro y de cálculo.
 // Lo usan backend/analytics_registrar.php (escritura) y
-// backend/analytics_panel.php (lectura, solo rol Programador).
+// backend/analytics_panel.php (lectura; acceso por token, ver auth/analytics_acceso.php).
 //
 // El SQL es deliberadamente portable (sin funciones exclusivas de MySQL) y las
 // horas/días de la semana se calculan en PHP.
@@ -23,10 +23,9 @@ const ANALYTICS_SQL_ES_ERROR = "(tipo = 'error_js' OR (tipo = 'api' AND (extra >
 function analyticsCatalogoPaginas(): array {
     return [
         'index.html'              => ['Inicio', 'Menú principal'],
-        'incidencias.html'        => ['Incidencias', 'Registrar incidencia'],
-        'incidencias_general.html'=> ['Incidencias', 'Incidencias (vista general)'],
-        'detalle.html'            => ['Incidencias', 'Detalle / edición de incidencia'],
-        'reportes.html'           => ['Buscar incidencias', 'Búsqueda de incidencias'],
+        'incidencias.html'        => ['Órdenes de servicio', 'Registrar orden de servicio'],
+        'detalle.html'            => ['Órdenes de servicio', 'Detalle / edición de orden de servicio'],
+        'reportes.html'           => ['Buscar órdenes de servicio', 'Búsqueda de órdenes de servicio'],
         'clientes.html'           => ['Clientes', 'Listado de clientes'],
         'perfil-cliente.html'     => ['Clientes', 'Perfil de cliente'],
         'usuarios.html'           => ['Usuarios', 'Gestión de usuarios'],
@@ -34,13 +33,11 @@ function analyticsCatalogoPaginas(): array {
         'ventas.html'             => ['Ventas', 'Registro de venta'],
         'admin-ventas.html'       => ['Ventas', 'Administración de ventas'],
         'consulta_ventas.html'    => ['Ventas', 'Consulta de ventas'],
-        'detalle-venta.html'      => ['Ventas', 'Detalle de venta'],
         'detalles-venta.html'     => ['Ventas', 'Detalles de venta'],
         'informes.html'           => ['Estadísticas', 'Panel de estadísticas'],
         'dashboard-tecnico.html'  => ['Métricas', 'Métricas personales'],
         'ajustes.html'            => ['Ajustes', 'Ajustes y privilegios'],
         'soporte.html'            => ['Soporte', 'Soporte y FAQs'],
-        'adm_bd.html'             => ['Administración BD', 'Administración de base de datos'],
     ];
 }
 
@@ -132,7 +129,8 @@ function analyticsFiltro(array $o): array {
     $params = [$o['desde'] . ' 00:00:00', date('Y-m-d', strtotime($o['hasta'] . ' +1 day')) . ' 00:00:00'];
 
     if (empty($o['incluir_programador'])) {
-        $sql .= " AND COALESCE(rol, '') <> ?";
+        // Actividad de soporte (antes se registraba con el rol "Programador")
+        $sql .= " AND COALESCE(rol, '') NOT IN (?, 'Programador')";
         $params[] = ROL_ACCESO_TOTAL;
     }
     if (!empty($o['rol'])) {
@@ -590,17 +588,17 @@ function analyticsFlujos(PDO $pdo, array $get): array {
 
 function analyticsEmbudos(PDO $pdo, array $f): array {
     $defs = [
-        ['id' => 'alta_incidencia', 'nombre' => 'Alta de incidencia', 'pasos' => [
-            ['etiqueta' => 'Abre "Registrar incidencia"', 'tipo' => 'pageview', 'pagina' => 'incidencias.html'],
+        ['id' => 'alta_incidencia', 'nombre' => 'Alta de orden de servicio', 'pasos' => [
+            ['etiqueta' => 'Abre "Registrar orden de servicio"', 'tipo' => 'pageview', 'pagina' => 'incidencias.html'],
             ['etiqueta' => 'Envía el formulario', 'tipo' => 'submit', 'pagina' => 'incidencias.html', 'elemento' => 'new-incidencia-form'],
         ]],
-        ['id' => 'edicion_incidencia', 'nombre' => 'Edición de incidencia', 'pasos' => [
-            ['etiqueta' => 'Abre el detalle de una incidencia', 'tipo' => 'pageview', 'pagina' => 'detalle.html'],
+        ['id' => 'edicion_incidencia', 'nombre' => 'Edición de orden de servicio', 'pasos' => [
+            ['etiqueta' => 'Abre el detalle de una orden de servicio', 'tipo' => 'pageview', 'pagina' => 'detalle.html'],
             ['etiqueta' => 'Guarda cambios', 'tipo' => 'submit', 'pagina' => 'detalle.html', 'elemento' => 'form-editar'],
         ]],
         ['id' => 'busqueda_detalle', 'nombre' => 'Búsqueda → detalle', 'pasos' => [
-            ['etiqueta' => 'Abre "Buscar incidencias"', 'tipo' => 'pageview', 'pagina' => 'reportes.html'],
-            ['etiqueta' => 'Abre el detalle de una incidencia', 'tipo' => 'pageview', 'pagina' => 'detalle.html'],
+            ['etiqueta' => 'Abre "Buscar órdenes de servicio"', 'tipo' => 'pageview', 'pagina' => 'reportes.html'],
+            ['etiqueta' => 'Abre el detalle de una orden de servicio', 'tipo' => 'pageview', 'pagina' => 'detalle.html'],
         ]],
         ['id' => 'estadisticas', 'nombre' => 'Consulta de estadísticas', 'pasos' => [
             ['etiqueta' => 'Abre el panel de estadísticas', 'tipo' => 'pageview', 'pagina' => 'informes.html'],
@@ -700,7 +698,7 @@ function analyticsUsuarios(PDO $pdo, array $get): array {
     try {
         $todos = analyticsSql($pdo, "SELECT id, usuario, nombre, rol FROM usuarios ORDER BY nombre", []);
         foreach ($todos as $u) {
-            if (!isset($activosIds[(int)$u['id']]) && $u['rol'] !== ROL_ACCESO_TOTAL) {
+            if (!isset($activosIds[(int)$u['id']]) && !in_array($u['rol'], [ROL_ACCESO_TOTAL, 'Superadmin'], true)) {
                 $inactivos[] = ['usuario_id' => (int)$u['id'], 'usuario' => $u['usuario'], 'nombre' => $u['nombre'], 'rol' => $u['rol']];
             }
         }

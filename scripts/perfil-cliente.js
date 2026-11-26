@@ -3,7 +3,7 @@ let equiposPadron = [];
 let refrescarPeriodicidadExt = () => {};
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const editorContactos = SipconsContactos.init(
+    const editorContactos = AppContactos.init(
         document.getElementById('edit-contactos-editor'),
         document.getElementById('edit-contactos')
     );
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const clientId = params.get('id');
 
     if (!clientId) {
-        alert("No se especificó un cliente.");
+        AppAviso.alerta("No se especificó un cliente.");
         window.location.href = 'clientes.html';
         return;
     }
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const cliente = await resp.json();
 
         if (cliente.error) {
-            alert("Cliente no encontrado.");
+            AppAviso.alerta("Cliente no encontrado.");
             window.location.href = 'clientes.html';
             return;
         }
@@ -43,6 +43,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 : cliente.contactos
         );
         document.getElementById('edit-email').value = cliente.email || '';
+        // D-52: días y límite de crédito, visibles con el permiso de clientes (el saldo sigue en Finanzas, D-48)
+        const infoCredito = document.getElementById('info-credito');
+        if (infoCredito) {
+            const dias = parseInt(cliente.dias_credito, 10) || 0;
+            const limite = cliente.limite_credito != null && cliente.limite_credito !== '' ? Number(cliente.limite_credito) : null;
+            infoCredito.textContent = (dias ? dias + ' días' : 'De contado') + ' · ' +
+                (limite !== null ? 'límite ' + limite.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) : 'sin límite');
+        }
 
         cargarEquipos(cliente.nombre);
 
@@ -58,19 +66,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             const response = await fetch('../backend/actualiza-cliente.php', { method: 'POST', body: formData });
             const result = await response.json();
             if (result.success) {
-                alert('Datos del cliente actualizados correctamente.');
+                // L-4: al renombrar, sus órdenes, equipos y ventas siguen al cliente
+                const arr = result.actualizados || {};
+                const partes = Object.keys(arr).map(k => arr[k] + ' ' + k);
+                AppAviso.alerta('Datos del cliente actualizados correctamente.' + (partes.length ? ' También se actualizaron ' + partes.join(', ') + ' con el nombre nuevo.' : '')
+                    + (result.aviso ? ' ' + result.aviso : ''));
                 document.getElementById('titulo-nombre-cliente').textContent = document.getElementById('edit-nombre').value;
                 document.getElementById('ext-cliente').value = document.getElementById('edit-nombre').value;
             } else {
-                alert(`Error: ${result.error}`);
+                AppAviso.alerta(result.error || result.message || 'No se pudo actualizar el cliente.');
             }
         } catch (error) {
             console.error("Error al actualizar:", error);
+            AppAviso.alerta('No se pudo actualizar el cliente. Revisa tu conexión e inténtalo de nuevo.');
         }
     });
 
-    // Periodicidad de mantenimiento/calibración + check de póliza
-    refrescarPeriodicidadExt = SipconsPeriodicidad.enlazar(
+    // Periodicidad de mantenimiento + check de póliza
+    refrescarPeriodicidadExt = AppPeriodicidad.enlazar(
         document.getElementById('ext-calibracion'),
         document.getElementById('ext-servicio'),
         document.getElementById('ext-aviso-periodicidad')
@@ -89,16 +102,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             const result = await response.json();
 
             if (result.exito) {
-                alert(idEquipo ? 'Equipo actualizado con éxito.' : 'Equipo registrado con éxito.');
+                AppAviso.alerta(idEquipo ? 'Equipo actualizado con éxito.' : 'Equipo registrado con éxito.');
                 cerrarModalEquipo();
                 cargarEquipos(document.getElementById('edit-nombre').value);
                 document.getElementById('buscador-padron').value = '';
             } else {
-                alert(`Error: ${result.mensaje}`);
+                AppAviso.alerta(result.mensaje || 'No se pudo eliminar el equipo.');
             }
         } catch (error) {
             console.error("Error al guardar equipo:", error);
-            alert("Hubo un error de conexión.");
+            AppAviso.alerta("Hubo un error de conexión.");
         }
     });
 
@@ -150,11 +163,11 @@ function renderizarTablaEquipos(equipos) {
 
     equipos.forEach(eq => {
         // 1. Textos de Periodicidad
-        let txtPeriodo = SipconsPeriodicidad.etiqueta(eq);
+        let txtPeriodo = AppPeriodicidad.etiqueta(eq);
 
         // 2. Badge de Origen
-        let badgeOrigen = eq.origen === 'Venta SIPCONS'
-            ? `<span class="etiqueta etiqueta-info">Venta #${eq.venta_folio || eq.venta_id}</span>`
+        let badgeOrigen = eq.origen === 'Venta propia'
+            ? `<span class="etiqueta etiqueta-info">Venta #${escHTML(eq.venta_folio || eq.venta_id)}</span>`
             : `<span class="etiqueta etiqueta-alerta">Externo</span>`;
 
         // 3. CALCULADORA DE GARANTÍA
@@ -186,11 +199,11 @@ function renderizarTablaEquipos(equipos) {
         tr.onclick = () => abrirModalEdicionEquipo(eq);
 
         tr.innerHTML = `
-            <td><strong>${eq.marca || ''} ${eq.modelo || ''}</strong><br><small class="texto-suave">${eq.equipo}</small></td>
-            <td>${eq.numero_serie || 'S/N'}</td>
-            <td>${eq.sucursal || '-'}</td>
+            <td><strong>${escHTML(eq.marca || '')} ${escHTML(eq.modelo || '')}</strong><br><small class="texto-suave">${escHTML(eq.equipo)}</small></td>
+            <td>${escHTML(eq.numero_serie || 'S/N')}</td>
+            <td>${escHTML(eq.sucursal || '-')}</td>
             <td>${badgeOrigen}</td>
-            <td><strong>${txtPeriodo}</strong></td>
+            <td><strong>${escHTML(txtPeriodo)}</strong></td>
             <td>${badgeGarantia}</td>
         `;
         tbody.appendChild(tr);
@@ -222,12 +235,12 @@ window.abrirModalEdicionEquipo = function(eq) {
     document.getElementById('ext-modelo').value = eq.modelo || '';
     document.getElementById('ext-serie').value = eq.numero_serie || '';
     
-    document.getElementById('ext-calibracion').value = SipconsPeriodicidad.mesesDe(eq) || '';
+    document.getElementById('ext-calibracion').value = AppPeriodicidad.mesesDe(eq) || '';
     document.getElementById('ext-servicio').checked = eq.servicio == 1;
     refrescarPeriodicidadExt();
     document.getElementById('ext-garantia').value = eq.garantia || '';
 
-    document.getElementById('titulo-modal-equipo').innerHTML = `<i class="fas fa-edit"></i> Editar Equipo: ${eq.equipo}`;
+    document.getElementById('titulo-modal-equipo').innerHTML = `<i class="fas fa-edit"></i> Editar Equipo: ${escHTML(eq.equipo)}`;
     document.getElementById('btn-eliminar-equipo').style.display = 'inline-block';
     
     document.getElementById('modalEquipoExterno').style.display = 'flex';
@@ -241,21 +254,21 @@ window.eliminarEquipoPadron = async function() {
     const idEquipo = document.getElementById('ext-id').value;
     if (!idEquipo) return;
 
-    if(confirm("¿Estás seguro de que deseas eliminar este equipo del padrón? Perderá su programación automática.")) {
+    if (await AppAviso.confirmar('Perderá su programación automática de mantenimientos.', { peligro: true, boton: 'Sí, eliminar', titulo: '¿Eliminar este equipo del padrón?' })) {
         try {
             const resp = await fetch(`../backend/elimina_equipo_padron.php?id=${idEquipo}`, { method: 'DELETE' });
             const result = await resp.json();
             
             if (result.exito) {
-                alert("Equipo eliminado del padrón.");
+                AppAviso.alerta("Equipo eliminado del padrón.");
                 cerrarModalEquipo();
                 cargarEquipos(document.getElementById('edit-nombre').value);
             } else {
-                alert(`Error: ${result.mensaje}`);
+                AppAviso.alerta(result.mensaje || 'No se pudo eliminar el equipo.');
             }
         } catch (e) {
             console.error(e);
-            alert("Error al intentar eliminar el equipo.");
+            AppAviso.alerta("Error al intentar eliminar el equipo.");
         }
     }
 };

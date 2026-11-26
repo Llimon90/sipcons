@@ -5,7 +5,9 @@ requirePermiso('usuarios');
 header('Content-Type: application/json');
 
 try {
-    $stmt = $conn->prepare("SELECT id, nombre, usuario, rol FROM usuarios ORDER BY nombre");
+    $empresaId = (int)$_SESSION['empresa_id'];
+    $stmt = $conn->prepare("SELECT id, nombre, usuario, rol FROM usuarios WHERE empresa_id = ? ORDER BY nombre");
+    $stmt->bind_param("i", $empresaId);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -16,6 +18,6 @@ try {
 
     echo json_encode(['success' => true, 'data' => $usuarios]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error al obtener los usuarios: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al obtener los usuarios: ' . mensajeErrorPublico($e)]);
 }
 ?>

@@ -1,16 +1,14 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('informes');
 
 // --- DEBUG (COMENTAR EN PRODUCCIÓN PARA NO ROMPER EL JSON) ---
-// ini_set('display_errors', 1);
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);
 // ---------------------------------
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 // --- 1. CONEXIÓN DE BASE DE DATOS ---
 // $conn (mysqli) y $pdo (PDO) ya los provee auth/middleware.php (config/database.php)
@@ -38,7 +36,7 @@ require_once __DIR__ . '/lib/estadisticas_helpers.php';
  * la ejecución.
  */
 function exportarCsv($conn, $pdo, $filtros_where) {
-    $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, prioridad, falla, estatus, fecha
+    $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha
             FROM incidencias i {$filtros_where}
             ORDER BY fecha DESC";
     $filas = ejecutarConsulta($conn, $sql);
@@ -47,16 +45,17 @@ function exportarCsv($conn, $pdo, $filtros_where) {
     $porIncidencia = $analisis['por_incidencia'];
     $idsReincidentes = array_flip(calcularReincidencias($conn, $filtros_where)['ids']);
 
+    require_once __DIR__ . '/../config/csv.php';
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="estadisticas_incidencias_' . date('Y-m-d_His') . '.csv"');
 
     $salida = fopen('php://output', 'w');
     fwrite($salida, "\xEF\xBB\xBF"); // BOM para que Excel abra los acentos bien
-    fputcsv($salida, ['Folio', 'Cliente', 'Sucursal', 'Técnico', 'Categoría', 'Falla', 'Estatus', 'Fecha', 'Tiempo de respuesta (h)', 'Tiempo de cierre (días)', 'Reincidencia']);
+    fputcsv($salida, ['Folio', 'Cliente', 'Sucursal', 'Técnico', 'Categoría', 'Motivo del servicio', 'Estatus', 'Fecha', 'Tiempo de respuesta (h)', 'Tiempo de cierre (días)', 'Reincidencia']);
 
     foreach ($filas as $fila) {
         $tiempos = $porIncidencia[(string)$fila['id']] ?? ['respuesta_horas' => null, 'cierre_horas' => null];
-        fputcsv($salida, [
+        fputcsv($salida, csvFilaSegura([  // S-5
             $fila['numero_incidente'],
             $fila['cliente'],
             $fila['sucursal'],
@@ -68,7 +67,7 @@ function exportarCsv($conn, $pdo, $filtros_where) {
             $tiempos['respuesta_horas'] !== null ? round($tiempos['respuesta_horas'], 1) : '',
             $tiempos['cierre_horas'] !== null ? round($tiempos['cierre_horas'] / 24, 1) : '',
             isset($idsReincidentes[(string)$fila['id']]) ? 'Sí' : 'No',
-        ]);
+        ]));
     }
 
     fclose($salida);
@@ -136,7 +135,7 @@ switch ($action) {
 
             $placeholders = implode(',', array_fill(0, count($idsReincidentes), '?'));
             $stmt = $pdo->prepare("
-                SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, prioridad, falla, estatus, fecha, numero_serie
+                SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha, numero_serie
                 FROM {$tabla_incidencias}
                 WHERE id IN ($placeholders)
                 ORDER BY numero_serie ASC, fecha DESC
@@ -168,7 +167,7 @@ switch ($action) {
         $conector = empty($filtros_where) ? "WHERE" : "AND";
         $sqlWhereEstatus = "(" . implode(" OR ", $condicionesEstatus) . ")";
 
-        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, prioridad, falla, estatus, fecha
+        $sql = "SELECT id, numero_incidente, cliente, sucursal, tecnico, categoria, falla, estatus, fecha
                 FROM {$tabla_incidencias} i {$filtros_where} {$conector} {$sqlWhereEstatus}
                 ORDER BY fecha DESC
                 LIMIT 300";
@@ -203,6 +202,10 @@ switch ($action) {
         $sql_cerradas_sin_factura = "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'cerrado sin factura'";
         $cerradas_sin_factura = ejecutarConsulta($conn, $sql_cerradas_sin_factura)[0]['count'] ?? 0;
 
+        // H-02: los estatus nuevos de la lista cerrada (0.1)
+        $en_proceso = ejecutarConsulta($conn, "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'en proceso'")[0]['count'] ?? 0;
+        $canceladas = ejecutarConsulta($conn, "SELECT COUNT(id) AS count FROM {$tabla_incidencias} i {$filtros_where} AND LOWER(estatus) = 'cancelado'")[0]['count'] ?? 0;
+
         // 3. Total de resueltas (CON filtros)
         $resueltas_totales = $completadas + $cerradas_factura + $cerradas_sin_factura;
 
@@ -210,8 +213,9 @@ switch ($action) {
         $sql_clientes = "SELECT COUNT(DISTINCT cliente) AS total_clientes FROM {$tabla_incidencias} WHERE cliente IS NOT NULL AND cliente <> ''";
         $total_clientes = ejecutarConsulta($conn, $sql_clientes)[0]['total_clientes'] ?? 0;
 
-        // 5. Eficiencia (resueltas vs total CON filtros)
-        $eficiencia_total = $total_incidencias > 0 ? round(($resueltas_totales / $total_incidencias) * 100, 1) : 0;
+        // 5. Eficiencia (resueltas vs total CON filtros); las canceladas no se realizarán y no cuentan (H-02)
+        $base_eficiencia = $total_incidencias - $canceladas;
+        $eficiencia_total = $base_eficiencia > 0 ? round(($resueltas_totales / $base_eficiencia) * 100, 1) : 0;
 
         // 6. Estadísticas de equipos (CON filtros)
         $sql_equipos = "SELECT COUNT(DISTINCT categoria) AS total_equipos FROM {$tabla_incidencias} i {$filtros_where} AND categoria IS NOT NULL AND categoria <> ''";
@@ -247,6 +251,8 @@ switch ($action) {
             'incidencias_abiertas' => (int)$abiertas,
             'incidencias_pendientes' => (int)$pendientes,
             'incidencias_asignadas' => (int)$asignadas,
+            'incidencias_en_proceso' => (int)$en_proceso,
+            'incidencias_canceladas' => (int)$canceladas,
             'incidencias_completadas' => (int)$completadas,
             'incidencias_cerradas_factura' => (int)$cerradas_factura,
             'incidencias_cerradas_sin_factura' => (int)$cerradas_sin_factura,
@@ -449,31 +455,31 @@ switch ($action) {
             }
         }
 
-        $slaCierreDias = SLA_CIERRE_HORAS / 24;
+        $slaCierreDias = slaCierreHoras() / 24;
         $insights = [];
 
         if ($total_anterior > 0) {
             $direccionTexto = $tendencia > 0 ? 'aumentaron' : ($tendencia < 0 ? 'disminuyeron' : 'se mantuvieron');
-            $insights[] = "Las incidencias {$direccionTexto} " . abs($tendencia) . "% respecto al periodo anterior ({$total_incidencias} vs {$total_anterior}).";
+            $insights[] = "Las órdenes de servicio {$direccionTexto} " . abs($tendencia) . "% respecto al periodo anterior ({$total_incidencias} vs {$total_anterior}).";
         } else {
             $insights[] = "No hay datos del periodo anterior para comparar la tendencia.";
         }
 
         if ($agregado['sla_cierre_pct'] !== null) {
             $calificacion = $agregado['sla_cierre_pct'] >= 80 ? 'saludable' : ($agregado['sla_cierre_pct'] >= 50 ? 'requiere atención' : 'crítico');
-            $insights[] = "El {$agregado['sla_cierre_pct']}% de las incidencias cerradas se atendieron dentro de los {$slaCierreDias} días esperados ({$calificacion}), con base en {$agregado['muestras_cierre']} de {$total_incidencias} incidencias con historial.";
+            $insights[] = "El {$agregado['sla_cierre_pct']}% de las órdenes de servicio cerradas se atendieron dentro de los {$slaCierreDias} días esperados ({$calificacion}), con base en {$agregado['muestras_cierre']} de {$total_incidencias} órdenes de servicio con historial.";
         } else {
-            $insights[] = "Aún no hay suficientes incidencias cerradas con historial para calcular el cumplimiento de atención en este periodo.";
+            $insights[] = "Aún no hay suficientes órdenes de servicio cerradas con historial para calcular el cumplimiento de atención en este periodo.";
         }
 
         if (!empty($top_sucursal)) {
             $pctSucursal = $total_incidencias > 0 ? round(($top_sucursal[0]['cantidad'] / $total_incidencias) * 100, 1) : 0;
-            $insights[] = "La sucursal con mayor volumen es {$top_sucursal[0]['sucursal']}, con {$top_sucursal[0]['cantidad']} incidencias ({$pctSucursal}% del total).";
+            $insights[] = "La sucursal con mayor volumen es {$top_sucursal[0]['sucursal']}, con {$top_sucursal[0]['cantidad']} órdenes de servicio ({$pctSucursal}% del total).";
         }
 
         if (!empty($slaPorSucursal) && $slaPorSucursal[0]['sla_pct'] < 80) {
             $peor = $slaPorSucursal[0];
-            $insights[] = "La sucursal con el cumplimiento de atención más bajo es {$peor['sucursal']} ({$peor['sla_pct']}%, sobre {$peor['muestras']} incidencias cerradas).";
+            $insights[] = "La sucursal con el cumplimiento de atención más bajo es {$peor['sucursal']} ({$peor['sla_pct']}%, sobre {$peor['muestras']} órdenes de servicio cerradas).";
         }
 
         if (!empty($top_falla)) {
@@ -486,7 +492,7 @@ switch ($action) {
 
         if ($reincidencias_periodo['total'] > 0 && $total_incidencias > 0) {
             $pctReincidencias = round(($reincidencias_periodo['total'] / $total_incidencias) * 100, 1);
-            $insights[] = "{$reincidencias_periodo['total']} incidencias fueron reincidencias: el mismo equipo (número de serie) volvió a fallar de algo parecido en menos de " . REINCIDENCIA_VENTANA_DIAS . " días ({$pctReincidencias}% del total). Vale la pena revisarlas.";
+            $insights[] = "{$reincidencias_periodo['total']} órdenes de servicio fueron reincidencias: el mismo equipo (número de serie) volvió a fallar de algo parecido en menos de " . REINCIDENCIA_VENTANA_DIAS . " días ({$pctReincidencias}% del total). Vale la pena revisarlas.";
         }
 
         $response['success'] = true;
@@ -501,6 +507,7 @@ switch ($action) {
                 'reincidencias_serie_disponible' => $reincidencias_periodo['serie_disponible'],
                 'muestras_cierre' => $agregado['muestras_cierre'],
                 'incidencias_cerradas_factura' => (int)$facturadas,
+                'sla_dias' => slaDiasEmpresa(),
             ],
             'sla_por_sucursal' => $slaPorSucursal,
             'insights' => $insights,

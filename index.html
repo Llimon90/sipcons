@@ -7,11 +7,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
   <link rel="icon" href="img/favicon.ico" />
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20261126a">
-  <link rel="stylesheet" href="css/dark.css?v=20261126a">
-  <script src="scripts/auth-guard.js?v=20261009c"></script>
-  <script src="scripts/menu-lateral.js?v=20261126"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css?v=20261125">
+  <link rel="stylesheet" href="css/dark.css?v=20261101">
+  <link rel="stylesheet" href="branding/tema.css.php">
+  <link rel="stylesheet" href="css/inicio.css?v=20261112">
+  <link rel="stylesheet" href="css/asistente.css?v=20261111">
+  <script src="branding/marca.js.php"></script>
+  <script src="scripts/auth-guard.js?v=20261124"></script>
+  <script src="scripts/dialogo.js?v=20261101"></script>
+  <script src="scripts/menu-lateral.js?v=20261125"></script>
 </head>
 <body>
 
@@ -21,13 +26,12 @@
         <i class="fas fa-tools"></i>
         Panel
       </h2>
-      <button id="toggleSidebar" class="toggle-sidebar">
+      <button id="toggleSidebar" class="toggle-sidebar" aria-label="Contraer menú">
         <i class="fas fa-chevron-left"></i>
       </button>
     </div>
 
     <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
-
     <div class="sidebar-footer">
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
@@ -36,331 +40,33 @@
     </div>
   </aside>
 
-  <main id="mainContent">
-    <section class="encabezado">
-      <h2 id="inicio-saludo">Hola</h2>
-      <p id="inicio-subtitulo" class="inicio-subtitulo"></p>
-    </section>
+  <main id="mainContent" class="ini">
+    <header class="ini-cabecera">
+      <div class="ini-saludo">
+        <h1 id="ini-saludo">Hola</h1>
+        <p id="ini-fecha"></p>
+      </div>
+      <div class="ini-acciones">
+        <button type="button" class="ini-buscar" data-abrir-buscador>
+          <i class="fas fa-magnifying-glass"></i>
+          <span>Buscar folio, cliente o serie…</span>
+          <kbd id="ini-atajo">Ctrl K</kbd>
+        </button>
+        <a class="ini-btn sec" id="ini-venta" href="public/ventas.html" hidden><i class="fas fa-shop"></i> Registrar venta</a>
+        <!-- O-10: atajos según el permiso de cada módulo -->
+        <a class="ini-btn sec" id="ini-cotizacion" href="public/cotizacion.html" hidden><i class="fas fa-file-invoice-dollar"></i> Nueva cotización</a>
+        <a class="ini-btn sec" id="ini-articulo" href="public/inventario.html?nuevo=1" hidden><i class="fas fa-box"></i> Nuevo artículo</a>
+        <a class="ini-btn" id="ini-nueva" href="public/incidencias.html" hidden><i class="fas fa-plus"></i> Nueva orden de servicio</a>
+      </div>
+    </header>
 
-    <section id="inicio-indicadores" class="inicio-indicadores" aria-live="polite"></section>
-
-    <section id="inicio-avisos" class="inicio-avisos"></section>
-
-    <div class="inicio-columnas">
-      <section class="inicio-bandeja">
-        <h2 id="inicio-bandeja-titulo">Bandeja de trabajo</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Folio</th>
-              <th>Cliente</th>
-              <th>Falla</th>
-              <th>Técnico</th>
-              <th>Estatus</th>
-              <th>Días</th>
-            </tr>
-          </thead>
-          <tbody id="inicio-bandeja-body">
-            <tr><td colspan="6">Cargando…</td></tr>
-          </tbody>
-        </table>
-      </section>
-
-      <aside class="inicio-lateral">
-        <section id="inicio-carga-wrap" class="inicio-carga-wrap">
-          <h3>Carga por técnico</h3>
-          <ul id="inicio-carga"></ul>
-        </section>
-
-        <section id="inicio-cambios-wrap" class="inicio-cambios-wrap">
-          <h3>Últimos cambios</h3>
-          <ul id="inicio-cambios"></ul>
-        </section>
-      </aside>
-    </div>
-
-    <section class="encabezado inicio-modulos-encabezado">
-      <h2>Todos los módulos</h2>
-    </section>
-    <div class="options-container">
-      <a href="public/incidencias.html" class="option-box">
-        <i class="fas fa-exclamation-circle"></i>
-        <h3>Incidencias</h3>
-        <p>Registra nuevas incidencias para su seguimiento</p>
-      </a>
-
-      <a href="public/reportes.html" class="option-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <h3>Buscar incidencias</h3>
-        <p>Aplica filtros y consulta historial de incidencias</p>
-      </a>
-
-      <a href="public/problemas.html" class="option-box">
-        <i class="fas fa-bug"></i>
-        <h3>Problemas</h3>
-        <p>Agrupa incidencias recurrentes por su causa raíz</p>
-      </a>
-
-      <a href="public/cambios.html" class="option-box">
-        <i class="fas fa-exchange-alt"></i>
-        <h3>Cambios</h3>
-        <p>Solicitudes de cambio con aprobación formal</p>
-      </a>
-
-      <a href="public/clientes.html" class="option-box">
-        <i class="fas fa-address-book"></i>
-        <h3>Clientes</h3>
-        <p>Visualiza y gestiona la información de clientes</p>
-      </a>
-
-      <a href="public/usuarios.html" class="option-box">
-        <i class="fas fa-users"></i>
-        <h3>Usuarios</h3>
-        <p>Administra y controla los usuarios del sistema</p>
-      </a>
-
-      <a href="public/historial.html" class="option-box">
-        <i class="fas fa-history"></i>
-        <h3>Historial</h3>
-        <p>Consulta quién hizo cada cambio en el sistema</p>
-      </a>
-
-      <a href="public/ventas.html" class="option-box">
-        <i class="fa-solid fa-shop"></i>
-        <h3>Venta</h3>
-        <p>Registro de venta de equipos</p>
-      </a>
-
-      <a href="public/cotizaciones.html" class="option-box">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <h3>Cotizaciones</h3>
-        <p>Cotiza antes de vender y conviértelo en venta</p>
-      </a>
-
-      <a href="public/cuentas-por-cobrar.html" class="option-box">
-        <i class="fas fa-hand-holding-usd"></i>
-        <h3>Cuentas por Cobrar</h3>
-        <p>Saldos pendientes por cliente y registro de pagos</p>
-      </a>
-
-      <a href="public/inventario.html" class="option-box">
-        <i class="fas fa-boxes"></i>
-        <h3>Inventario</h3>
-        <p>Kárdex de refacciones y productos, con su stock</p>
-      </a>
-
-      <a href="public/finanzas.html" class="option-box">
-        <i class="fas fa-chart-pie"></i>
-        <h3>Finanzas</h3>
-        <p>Resumen ejecutivo por cliente y sucursal</p>
-      </a>
-
-      <a href="public/informes.html" class="option-box">
-        <i class="fa-solid fa-chart-bar"></i>
-        <h3>Estadísticas</h3>
-        <p>Consulta estadísticas de servicios realizados</p>
-      </a>
-
-      <a href="public/catalogo-servicios.html" class="option-box">
-        <i class="fas fa-concierge-bell"></i>
-        <h3>Catálogo de Servicios</h3>
-        <p>Servicios que el cliente puede solicitar, y su bandeja de solicitudes</p>
-      </a>
-
-      <a href="public/base-conocimiento.html" class="option-box">
-        <i class="fas fa-book"></i>
-        <h3>Base de Conocimiento</h3>
-        <p>Artículos de solución, internos o públicos para el portal</p>
-      </a>
-
-      <a href="public/ajustes.html" class="option-box">
-        <i class="fas fa-cog"></i>
-        <h3>Ajustes</h3>
-        <p>Configura preferencias y ajustes del sistema</p>
-      </a>
-
-      <a href="public/soporte.html" class="option-box">
-        <i class="fas fa-question-circle"></i>
-        <h3>Soporte</h3>
-        <p>Acceso a FAQs y asistencia técnica</p>
-      </a>
-
-      <a href="public/manual.html" class="option-box">
-        <i class="fas fa-book-open"></i>
-        <h3>Manual de usuario</h3>
-        <p>Guía de uso de cada módulo, descargable en PDF</p>
-      </a>
-
-      <a href="public/dashboard-tecnico.html" class="option-box">
-        <i class="fas fa-chart-line"></i>
-        <h3>Métricas</h3>
-        <p>Tus propias incidencias, tiempos y pendientes</p>
-      </a>
+    <div id="ini-contenido" aria-live="polite">
+      <div class="ini-cargando"><span></span><span></span><span></span><span></span><span></span></div>
     </div>
   </main>
 
-  <script src="scripts/sidebar-state.js?v=20261002"></script>
-  <script src="scripts/ui-tablas.js?v=2"></script>
-  <script>
-    (function () {
-      'use strict';
-
-      var ICONOS_AVISO = { peligro: 'fa-circle-exclamation', alerta: 'fa-triangle-exclamation', info: 'fa-circle-info' };
-      var ETIQUETAS_INDICADOR = {
-        abiertas: 'Abiertas', asignadas: 'Asignadas', pendientes: 'Pendientes', en_proceso: 'En proceso',
-        completadas: 'Completadas', atrasadas: 'Con SLA vencido', sin_tecnico: 'Sin técnico', hoy: 'Reportadas hoy'
-      };
-      var filtroActivo = null;
-      var bandejaCompleta = [];
-
-      function escapar(texto) {
-        var d = document.createElement('div');
-        d.textContent = texto == null ? '' : String(texto);
-        return d.innerHTML;
-      }
-
-      function pintarIndicadores(indicadores) {
-        var cont = document.getElementById('inicio-indicadores');
-        cont.innerHTML = '';
-        Object.keys(indicadores).forEach(function (clave) {
-          if (!(clave in ETIQUETAS_INDICADOR)) return;
-          var valor = indicadores[clave];
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'inicio-chip' + (clave === filtroActivo ? ' activo' : '') + (clave === 'atrasadas' && valor > 0 ? ' peligro' : '');
-          btn.innerHTML = '<span class="inicio-chip-num">' + valor + '</span><span class="inicio-chip-etiqueta">' + ETIQUETAS_INDICADOR[clave] + '</span>';
-          btn.addEventListener('click', function () {
-            filtroActivo = filtroActivo === clave ? null : clave;
-            pintarIndicadores(indicadores);
-            pintarBandeja();
-          });
-          cont.appendChild(btn);
-        });
-      }
-
-      function pasaFiltro(fila) {
-        if (!filtroActivo) return true;
-        switch (filtroActivo) {
-          case 'abiertas': return fila.estatus === 'Abierto';
-          case 'asignadas': return fila.estatus === 'Asignado';
-          case 'pendientes': return fila.estatus === 'Pendiente';
-          case 'completadas': return fila.estatus === 'Completado';
-          case 'atrasadas': return !!fila.atrasada;
-          case 'sin_tecnico': return !!fila.sin_tecnico;
-          case 'hoy': return fila.fecha === new Date().toISOString().slice(0, 10);
-          default: return true;
-        }
-      }
-
-      function pintarBandeja() {
-        var cuerpo = document.getElementById('inicio-bandeja-body');
-        var filas = bandejaCompleta.filter(pasaFiltro);
-        if (!filas.length) {
-          cuerpo.innerHTML = '<tr><td colspan="6">Sin incidencias para mostrar.</td></tr>';
-          return;
-        }
-        cuerpo.innerHTML = filas.map(function (f) {
-          var clase = f.atrasada ? ' class="fila-atrasada"' : '';
-          return '<tr' + clase + ' onclick="location.href=\'public/detalle.html?id=' + f.id + '\'" style="cursor:pointer">' +
-            '<td>' + escapar(f.numero_incidente) + '</td>' +
-            '<td>' + escapar(f.cliente) + '</td>' +
-            '<td>' + escapar(f.falla) + '</td>' +
-            '<td>' + escapar(f.tecnico || '—') + '</td>' +
-            '<td>' + escapar(f.estatus) + '</td>' +
-            '<td>' + f.dias + '</td></tr>';
-        }).join('');
-      }
-
-      function pintarAvisos(avisos) {
-        var cont = document.getElementById('inicio-avisos');
-        cont.innerHTML = '';
-        (avisos || []).forEach(function (a) {
-          var div = document.createElement('div');
-          div.className = 'inicio-aviso inicio-aviso-' + (a.tipo || 'info');
-          var icono = ICONOS_AVISO[a.tipo] || 'fa-circle-info';
-          div.innerHTML = '<i class="fas ' + icono + '"></i><div><strong>' + escapar(a.titulo) + '</strong><span>' + escapar(a.detalle || '') + '</span></div>';
-          if (a.filtro) {
-            div.style.cursor = 'pointer';
-            div.addEventListener('click', function () { filtroActivo = a.filtro; pintarBandeja(); document.getElementById('inicio-indicadores').scrollIntoView({ behavior: 'smooth' }); });
-          } else if (a.enlace) {
-            div.style.cursor = 'pointer';
-            div.addEventListener('click', function () { location.href = a.enlace; });
-          }
-          cont.appendChild(div);
-        });
-      }
-
-      function pintarCarga(carga, sinTecnico) {
-        var lista = document.getElementById('inicio-carga');
-        lista.innerHTML = '';
-        (carga || []).forEach(function (c) {
-          var li = document.createElement('li');
-          li.innerHTML = '<span>' + escapar(c.tecnico) + '</span><span class="inicio-carga-total">' + c.total + '</span>';
-          lista.appendChild(li);
-        });
-        if (sinTecnico) {
-          var li2 = document.createElement('li');
-          li2.className = 'inicio-carga-sin-tecnico';
-          li2.innerHTML = '<span>Sin técnico</span><span class="inicio-carga-total">' + sinTecnico + '</span>';
-          lista.appendChild(li2);
-        }
-        if (!lista.children.length) lista.innerHTML = '<li class="inicio-vacio">Sin incidencias activas.</li>';
-      }
-
-      function pintarCambios(cambios) {
-        var lista = document.getElementById('inicio-cambios');
-        lista.innerHTML = '';
-        (cambios || []).forEach(function (c) {
-          var li = document.createElement('li');
-          var minutos = Number(c.hace_min) || 0;
-          var cuando = minutos < 60 ? minutos + ' min' : Math.round(minutos / 60) + ' h';
-          li.innerHTML = '<span>' + escapar(c.usuario_nombre) + ' ' + escapar((c.accion || '').toLowerCase()) + ' ' +
-            escapar(c.registro_folio || c.tabla) + '</span><span class="inicio-cambio-hace">hace ' + cuando + '</span>';
-          lista.appendChild(li);
-        });
-        if (!lista.children.length) lista.innerHTML = '<li class="inicio-vacio">Sin cambios recientes.</li>';
-      }
-
-      function cargarPanel() {
-        fetch('backend/inicio.php?accion=panel', { credentials: 'same-origin' })
-          .then(function (r) { return r.json(); })
-          .then(function (datos) {
-            if (!datos.exito) throw new Error(datos.mensaje || 'Error');
-
-            document.getElementById('inicio-saludo').textContent = 'Hola, ' + (datos.usuario.nombre || '');
-            document.getElementById('inicio-subtitulo').textContent = datos.vista === 'tecnico'
-              ? 'Tu día: esto es lo que tienes asignado.'
-              : 'Esto es lo que necesita tu atención hoy.';
-
-            if (!datos.permisos.incidencias) {
-              document.querySelectorAll('.inicio-indicadores, .inicio-avisos, .inicio-columnas').forEach(function (el) { el.style.display = 'none'; });
-              return;
-            }
-
-            document.getElementById('inicio-bandeja-titulo').textContent = datos.vista === 'tecnico' ? 'Mi día' : 'Bandeja de trabajo';
-            bandejaCompleta = datos.bandeja || [];
-            pintarIndicadores(datos.indicadores || {});
-            pintarBandeja();
-            pintarAvisos(datos.avisos);
-
-            var wrapCarga = document.getElementById('inicio-carga-wrap');
-            var wrapCambios = document.getElementById('inicio-cambios-wrap');
-            if (datos.vista === 'tecnico') {
-              wrapCarga.style.display = 'none';
-              wrapCambios.style.display = 'none';
-            } else {
-              pintarCarga(datos.carga, datos.carga_sin_tecnico);
-              if (datos.permisos.historial) pintarCambios(datos.cambios); else wrapCambios.style.display = 'none';
-            }
-          })
-          .catch(function (e) {
-            console.error('inicio.php:', e);
-            document.getElementById('inicio-bandeja-body').innerHTML = '<tr><td colspan="6">No se pudo cargar el panel.</td></tr>';
-          });
-      }
-
-      document.addEventListener('DOMContentLoaded', cargarPanel);
-    })();
-  </script>
+  <script src="scripts/sidebar-state.js?v=20261125"></script>
+  <script src="scripts/inicio.js?v=20261112" defer></script>
+  <script src="scripts/asistente.js?v=20261125" defer></script>
 </body>
 </html>

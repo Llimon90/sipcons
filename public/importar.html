@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importar datos</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../css/inventario.css?v=20261111">
+  <link rel="stylesheet" href="../css/finanzas.css?v=20261104">
+  <link rel="stylesheet" href="../css/importar.css?v=20261104">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+</head>
+
+<body>
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+    <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado inventario finanzas importar">
+      <div class="inv-cabecera">
+        <div>
+          <h2><i class="fas fa-file-import"></i> Importar datos</h2>
+          <p>Carga de una sola vez tus clientes, sus equipos y tu catálogo desde Excel.</p>
+        </div>
+      </div>
+
+      <p class="imp-aviso" id="sin-permiso" hidden><i class="fas fa-lock"></i> Solo el Administrador puede importar datos.</p>
+
+      <div id="imp-contenido" hidden>
+        <nav class="fin-tabs" role="tablist" aria-label="Qué importar">
+          <button type="button" role="tab" data-tipo="clientes" data-modulo="clientes"><i class="fas fa-address-book"></i> Clientes</button>
+          <button type="button" role="tab" data-tipo="equipos" data-modulo="clientes"><i class="fas fa-server"></i> Equipos de clientes</button>
+          <button type="button" role="tab" data-tipo="articulos" data-modulo="inventario"><i class="fas fa-boxes"></i> Catálogo de inventario</button>
+        </nav>
+
+        <ol class="imp-pasos">
+          <li>
+            <b>Descarga la plantilla</b> y llénala en Excel. Deja los encabezados como están; puedes borrar el renglón de ejemplo.
+            <div><a class="btn-secundario" id="btn-plantilla" href="#" download><i class="fas fa-download"></i> Descargar plantilla</a></div>
+            <p class="fin-nota" id="nota-tipo"></p>
+          </li>
+          <li>
+            <b>Guárdala como CSV:</b> en Excel, Archivo &gt; Guardar como &gt; <i>CSV UTF-8 (delimitado por comas)</i>.
+          </li>
+          <li>
+            <b>Súbela y revisa</b> la vista previa. Nada se guarda hasta que confirmes.
+            <div class="imp-subida">
+              <input type="file" id="archivo" accept=".csv,text/csv" data-selector data-texto="Toca para elegir el archivo CSV" data-ayuda="CSV, hasta 2 MB y 2,000 renglones">
+            </div>
+          </li>
+        </ol>
+
+        <div id="vista-previa" hidden>
+          <h3 class="fin-subtitulo">Vista previa</h3>
+          <div class="imp-resumen" id="resumen"></div>
+          <p class="fin-nota" id="ignoradas" hidden></p>
+          <label class="imp-filtro"><input type="checkbox" id="solo-problemas"> Ver solo renglones con error o aviso</label>
+          <div class="inv-tabla-wrap">
+            <table class="tabla-ventas imp-tabla" style="width:100%;">
+              <thead id="previa-cabeza"></thead>
+              <tbody id="previa-cuerpo"></tbody>
+            </table>
+          </div>
+          <div class="imp-acciones">
+            <button type="button" class="btn-secundario" id="btn-otro"><i class="fas fa-rotate-left"></i> Elegir otro archivo</button>
+            <button type="button" class="btn-primary" id="btn-importar"><i class="fas fa-check"></i> Importar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/selector-archivos.js?v=20261101"></script>
+  <script src="../scripts/importar.js?v=20261104b"></script>
+</body>
+</html>

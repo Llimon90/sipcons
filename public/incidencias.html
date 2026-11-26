@@ -3,20 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Incidencias</title>
+  <title>Órdenes de servicio</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-  <link rel="stylesheet" href="../css/dark.css?v=20261009b">
-  <script src="../scripts/contactos-widget.js?v=3"></script>
-  <script src="../scripts/tecnicos.js?v=2"></script>
-  <script src="../scripts/dialogo.js?v=2" defer></script>
-  <script src="../scripts/selector-archivos.js?v=2" defer></script>
-  <script src="../scripts/script.js?v=12" defer></script>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <script src="../scripts/contactos-widget.js?v=20261029"></script>
+  <script src="../scripts/alta-rapida.js?v=20261101b" defer></script>
+  <script src="../scripts/tecnicos.js?v=20261029"></script>
+  <script src="../scripts/dialogo.js?v=20261101" defer></script>
+  <script src="../scripts/selector-archivos.js?v=20261101" defer></script>
+  <script src="../scripts/estatus-orden.js?v=20261110"></script>
+  <script src="../scripts/script.js?v=20261111" defer></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
   
@@ -48,7 +54,7 @@
 
   <main id="mainContent">
     <section class="encabezado">
-      <h2>Registrar nueva incidencia</h2>
+      <h2>Registrar nueva orden de servicio</h2>
       
       <form id="new-incidencia-form">
         <div class="form-row">
@@ -59,7 +65,7 @@
           </div>    
 
           <div>
-            <label for="reporte_cliente"># Incidencia Cliente</label>
+            <label for="reporte_cliente"># Reporte del cliente</label>
             <input type="text" id="reporte_cliente" name="reporte_cliente" placeholder="Ejemplo: ST-66477">
           </div>
         </div>
@@ -82,27 +88,13 @@
             <label for="categoria">Categoría</label>
             <select id="categoria" name="categoria">
               <option value="">Seleccione una categoría</option>
-              <option value="Mr. Tienda/Mr. Chef">Mr. Tienda/Mr. Chef</option>
-              <option value="Distribuidora el Florido">Distribuidora el Florido</option>
-              <option value="Calimax">Calimax</option>
-              <option value="Recolección">Recolección</option>      
-              <option value="Otros">Otros</option>
             </select>
           </div>
 
           <div>
             <label for="fecha">Fecha de Reporte</label>
             <input type="date" id="fecha" name="fecha" required>
-          </div>
-
-          <div>
-            <label for="prioridad">Prioridad</label>
-            <select id="prioridad" name="prioridad">
-              <option value="Baja">Baja</option>
-              <option value="Media" selected>Media</option>
-              <option value="Alta">Alta</option>
-              <option value="Crítica">Crítica</option>
-            </select>
+            <small id="aviso-programada" class="texto-suave" hidden><i class="fas fa-calendar-alt"></i> Fecha futura: la orden queda <b>programada</b> y aparece en la bandeja ese día.</small>
           </div>
         </div>
 
@@ -116,8 +108,8 @@
 
         <div class="form-row">
           <div>
-            <label for="falla">Falla Reportada</label>
-            <input type="text" id="falla" name="falla" maxlength="500">
+            <label for="falla">Motivo del servicio</label>
+            <input type="text" id="falla" name="falla" maxlength="500" required placeholder="Ej. mantenimiento preventivo, instalación, no enfría">
           </div>
 
           <div>
@@ -128,16 +120,18 @@
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" id="fila-estatus">
           <div>
             <label for="estatus">Estatus</label>
             <select id="estatus" name="estatus" required>
               <option value="Abierto">Abierto</option>
               <option value="Asignado">Asignado</option>
+              <option value="En proceso">En proceso</option>
               <option value="Pendiente">Pendiente</option>
               <option value="Completado">Completado</option>
               <option value="Cerrado sin factura">Cerrado sin factura</option>
               <option value="Cerrado con factura">Cerrado con factura</option>
+              <option value="Cancelado">Cancelado</option>
             </select>
           </div>
 
@@ -147,6 +141,14 @@
           </div>
         </div>  
 
+        <!-- D-26: en una captura posterior (ya completada o cerrada) se registra lo que se hizo -->
+        <div class="form-row" id="fila-accion" hidden>
+          <div>
+            <label for="accion">Trabajo realizado</label>
+            <textarea id="accion" name="accion" maxlength="2000" rows="3" placeholder="Qué se hizo en el servicio"></textarea>
+          </div>
+        </div>
+
         <div class="form-row">
           <div>
             <label for="archivos-nuevos">Imágenes o archivos del cliente (opcional)</label>
@@ -155,24 +157,28 @@
           </div>
         </div>
 
-        <button type="submit" id="btn-registrar">Registrar Incidencia</button>
+        <button type="submit" id="btn-registrar">Registrar orden de servicio</button>
         <button type="button" id="btn-actualizar" style="display: none;">Actualizar</button>
         <button type="button" id="btn-eliminar" style="display: none;" class="btn-rojo">Eliminar</button>
         <input type="hidden" id="incidencia-id">
       </form>
     </section>
 
-    <section class="lista-incidencias">
-      <h2>Incidencias Activas <a href="incidencias.html"><i class="fas fa-sync-alt" style="cursor: pointer; color: #1637cc"></i></a></h2>
+    <section class="lista-incidencias" id="lista">
+      <h2><span id="titulo-lista">Órdenes de servicio activas</span> <a href="incidencias.html"><i class="fas fa-sync-alt" style="cursor: pointer; color: var(--tabla-enlace)"></i></a></h2>
+      <div class="ini-chips lista-vistas" role="group" aria-label="Qué órdenes ver">
+        <button type="button" class="btn-link-mini" data-vista="" aria-pressed="true"><i class="fas fa-list"></i> Activas</button>
+        <button type="button" class="btn-link-mini" data-vista="programadas" aria-pressed="false"><i class="fas fa-calendar-alt"></i> Programadas</button>
+      </div>
       
       <table>
         <thead>
           <tr>
-            <th># Reporte interno</th>
-            <th># Incidencia cliente</th>
+            <th>Folio</th>
+            <th># Reporte del cliente</th>
             <th>Cliente</th>
             <th>Sucursal</th>
-            <th>Falla</th>
+            <th>Motivo del servicio</th>
             <th>Fecha</th>
             <th>Estatus</th>
           </tr>
@@ -220,7 +226,7 @@
                   
                   // Indexamos el nombre en mayúsculas para la validación estricta posterior
                   clientesValidos.push(cliente.nombre.trim().toUpperCase());
-                  contactosPorCliente[cliente.nombre.trim().toUpperCase()] = SipconsContactos.parsear(cliente.contactos);
+                  contactosPorCliente[cliente.nombre.trim().toUpperCase()] = AppContactos.parsear(cliente.contactos);
               });
           }
       } catch (error) {
@@ -234,28 +240,35 @@
 
     // Cargar la lista asíncrona de clientes en el Datalist
     cargarClientesEnDatalist();
-    SipconsSerie.vincular(document.getElementById("cliente"), document.getElementById("lista-series"));
+
+    // Cliente que no existe: se crea aquí mismo y queda seleccionado
+    AppAltaRapida.cliente(document.getElementById("cliente"), {
+      existe: (nombre) => clientesValidos.includes(nombre.trim().toUpperCase()),
+      alCrear: (c) => {
+        const clave = c.nombre.trim().toUpperCase();
+        const option = document.createElement('option');
+        option.value = c.nombre;
+        document.getElementById('lista-clientes').appendChild(option);
+        clientesValidos.push(clave);
+        contactosPorCliente[clave] = [c.contacto];
+        document.getElementById('contacto').value = c.contacto;
+      }
+    });
+    AppSerie.vincular(document.getElementById("cliente"), document.getElementById("lista-series"));
+    AppSucursales.vincular(document.getElementById("cliente"), document.getElementById("sucursal"));  // D-44
 
     // Técnicos desde la BD (usuarios con rol técnico/supervisor/administrador)
-    SipconsTecnicos.llenarSelect(document.getElementById("tecnico"), { placeholder: "Seleccione una opción" });
+    AppTecnicos.llenarSelect(document.getElementById("tecnico"), { placeholder: "Seleccione una opción" });
 
     // El rol Técnico no puede cerrar incidencias con/sin factura
-    window.sipconsAplicarRestriccionEstatus(document.getElementById("estatus"));
+    window.appAplicarRestriccionEstatus(document.getElementById("estatus"));
+    if (window.AppEstatus) AppEstatus.conectar(document.getElementById("estatus"), { ancla: 'fila-estatus' });
 
     const selectCliente = document.getElementById("cliente");
     const selectCategoria = document.getElementById("categoria");
 
-    // 2. Lógica de automatización de Categoría (Adaptada para el evento input/change del text field)
-    selectCliente.addEventListener("change", function() {
-      const clienteSeleccionado = this.value.toUpperCase().trim();
-
-      if (clienteSeleccionado === "CENTRAL DETALLISTA") {
-        selectCategoria.value = "Calimax";
-      } 
-      else if (clienteSeleccionado === "DISTRIBUIDORA EL FLORIDO") {
-        selectCategoria.value = "Distribuidora el Florido";
-      }
-    });
+    // Categorías configurables por instancia (INCIDENCIA_CATEGORIAS en .env)
+    window.APP_BRAND && APP_BRAND.llenarCategorias(selectCategoria, '');
 
     selectCliente.addEventListener('input', actualizarContactos);
     // Al cambiar de cliente, un contacto que no pertenece al nuevo cliente se limpia
@@ -288,9 +301,20 @@
   });
 </script>
 
-  <script src="../scripts/serie-equipo.js"></script>
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/script_cargas.js?v=22"></script>
+  <script src="../scripts/serie-equipo.js?v=20261029"></script>
+  <script src="../scripts/sucursales-campo.js?v=20261112"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/script_cargas.js?v=20261112"></script>
+  <script>
+    // D-42: aviso de orden programada al elegir una fecha futura
+    (function () {
+      var f = document.getElementById('fecha'), a = document.getElementById('aviso-programada');
+      if (!f || !a) return;
+      var d = new Date(), hoy = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      var pintar = function () { a.hidden = !(f.value && f.value > hoy); };
+      f.addEventListener('input', pintar); f.addEventListener('change', pintar);
+    })();
+  </script>
 </body>
 </html>

@@ -3,17 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIPCONS - Registro de Ventas</title>
+  <title>Registro de Ventas</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-  <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-  <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/cotizaciones.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/periodicidad.js?v=1" defer></script>
-  <script src="../scripts/ventas.js?v=8" defer></script>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <script src="../scripts/periodicidad.js?v=20261030c" defer></script>
+  <script src="../scripts/articulo-inventario.js?v=20261005" defer></script>
+  <script src="../scripts/selector-archivos.js?v=20261101" defer></script>
+  <script src="../scripts/alta-rapida.js?v=20261101b" defer></script>
+  <script src="../scripts/ventas.js?v=20261101" defer></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 
 <body>
@@ -52,6 +61,9 @@
           </a>
       </div>
       
+      <!-- Ventas que vienen de cotizaciones aprobadas (scripts/ventas.js) -->
+      <div id="aviso-cotizacion" class="cot-aviso-venta" hidden></div>
+
       <form id="form-venta" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div class="form-row">
           <div>
@@ -66,6 +78,16 @@
           <div>
             <label for="sucursal"><i class="fas fa-store"></i> Sucursal:</label>
             <input type="text" id="sucursal" name="sucursal" placeholder="Nombre de la sucursal">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="full-width">
+            <label for="articulo_id"><i class="fas fa-boxes"></i> Artículo de inventario (opcional):</label>
+            <select id="articulo_id" name="articulo_id">
+              <option value="">— Sin vincular al inventario —</option>
+            </select>
+            <small style="color:#7f8c8d;">Si lo vinculas, cada número de serie descuenta una unidad de la existencia.</small>
           </div>
         </div>
 
@@ -97,7 +119,7 @@
             <input type="number" id="garantia" name="garantia" min="0" placeholder="0">
           </div>
           <div>
-            <label for="calibracion"><i class="fas fa-tools"></i> Mantenimiento / Calibración cada (meses):</label>
+            <label for="calibracion"><i class="fas fa-tools"></i> Mantenimiento cada (meses):</label>
             <input type="number" id="calibracion" name="calibracion" min="0" placeholder="0 = no aplica">
           </div>
 
@@ -105,8 +127,8 @@
             <label style="visibility: hidden; margin-bottom: 5px;">Póliza</label>
 
             <div style="display: flex; align-items: center; padding: 8px 0;">
-              <input type="checkbox" id="servicio" name="servicio" style="width: 20px !important; height: 20px !important; margin: 0 10px 0 0 !important; cursor: pointer !important; display: inline-block !important; opacity: 1 !important; visibility: visible !important;">
-              <label for="servicio" style="margin: 0; cursor: pointer; font-weight: bold; color: #2c3e50; font-size: 1rem;">
+              <input type="checkbox" id="servicio" name="servicio" class="f-switch">
+              <label for="servicio" class="f-switch-label">
                 <i class="fas fa-file-signature"></i> Cliente con póliza / acuerdo de mantenimiento
               </label>
             </div>
@@ -126,12 +148,12 @@
 
         <div class="filtro-item" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
             <label for="facturas"><i class="fas fa-file-upload"></i> Adjuntar Facturas/Archivos (Opcional):</label>
-            <input type="file" id="facturas" name="facturas[]" accept=".pdf, .jpg, .png, .docx" multiple class="form-control" style="margin-top: 10px;">
+            <input type="file" id="facturas" name="facturas[]" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" multiple data-selector data-texto="Toca para elegir facturas o documentos" data-ayuda="PDF, imágenes o Word">
             <small style="color: #7f8c8d; display: block; margin-top: 5px;">Puedes seleccionar varios archivos a la vez.</small>
         </div>
         
         <div class="form-row">
-          <button type="button" id="btn-registrar-venta" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+          <button type="button" id="btn-registrar-venta" class="btn-primary">
             <i class="fas fa-save"></i> Procesar y Registrar Venta
           </button>
         </div>
@@ -167,7 +189,7 @@
             }
         } catch (error) {
             console.error('Error al cargar clientes:', error);
-            alert('Error al cargar clientes en el listado');
+            AppAviso.alerta('Error al cargar clientes en el listado');
         }
     }
     
@@ -178,6 +200,16 @@
         const inputCliente = document.getElementById('cliente');
         
         if (inputCliente) {
+            // Cliente que no existe: se crea aquí mismo y queda seleccionado
+            AppAltaRapida.cliente(inputCliente, {
+                existe: (nombre) => clientesValidos.includes(nombre.trim().toUpperCase()),
+                alCrear: (c) => {
+                    const option = document.createElement('option');
+                    option.value = c.nombre;
+                    document.getElementById('lista-clientes').appendChild(option);
+                    clientesValidos.push(c.nombre.trim().toUpperCase());
+                }
+            });
             inputCliente.addEventListener('input', function() {
                 const valorDigitado = this.value.trim().toUpperCase();
                 
@@ -192,6 +224,8 @@
 
   </script>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/sucursales-campo.js?v=20261112"></script>
+  <script>document.addEventListener('DOMContentLoaded', function () { AppSucursales.vincular(document.getElementById('cliente'), document.getElementById('sucursal')); });  // D-44</script>
 </body>
 </html>

@@ -5,7 +5,7 @@
  * conflicto). A diferencia del aviso flotante, no desaparece solo: el
  * usuario tiene que leerlo y elegir. Estilos: "DIÁLOGOS" en styles.css.
  *
- *   SipconsDialogo.mostrar({
+ *   AppDialogo.mostrar({
  *       tipo: 'ok' | 'error' | 'aviso' | 'info',
  *       titulo: 'Cambios guardados',
  *       mensaje: 'Texto principal',
@@ -108,9 +108,7 @@
         caja.appendChild(acciones);
 
         fondo.appendChild(caja);
-        if (o.cerrable) {
-            fondo.addEventListener('click', (e) => { if (e.target === fondo) cerrar(null); });
-        }
+        // Un clic fuera no cierra: solo Esc o los botones (no se pierde lo capturado)
 
         const alTeclado = (e) => {
             if (e.key === 'Escape' && o.cerrable) { e.preventDefault(); cerrar(null); return; }
@@ -133,5 +131,100 @@
         });
     }
 
-    window.SipconsDialogo = { mostrar, cerrar };
+    window.AppDialogo = { mostrar, cerrar };
+
+    // ------------------------------------------------------------------
+    // AppAviso: el único estilo de notificación del sistema.
+    //   AppAviso.mostrar('Cliente guardado', 'ok' | 'error' | 'aviso' | 'info')
+    //       aviso flotante que se cierra solo (los errores duran más)
+    //   AppAviso.alerta('texto')   igual, deduce el tipo del texto (reemplaza alert())
+    //   AppAviso.confirmar('¿Eliminar…?', { titulo, boton, peligro }) -> Promise<boolean>
+    //       (reemplaza confirm(): mismo diálogo en todo el sistema)
+    // Si la página navega justo después (guardar y redirigir), el aviso se
+    // muestra en la página siguiente.
+    // ------------------------------------------------------------------
+    const CLAVE_PENDIENTE = 'app_aviso_pendiente';
+    let pila = null;
+
+    function contenedor() {
+        if (pila && document.body.contains(pila)) return pila;
+        pila = document.createElement('div');
+        pila.className = 'avisos';
+        pila.setAttribute('aria-live', 'polite');
+        pila.setAttribute('role', 'status');
+        document.body.appendChild(pila);
+        return pila;
+    }
+
+    function tipoDeTexto(texto) {
+        const t = String(texto || '').toLowerCase();
+        if (/error|no se pudo|no fue posible|fall[oó]|inv[aá]lid|incorrect|denegad|no tienes|no puedes|no existe|no se encontr/.test(t)) return 'error';
+        if (/obligatori|debes|debe |selecciona|completa|falta|ingresa|escribe|duplicad|ya existe|atenci[oó]n/.test(t)) return 'aviso';
+        if (/correctamente|guardad|eliminad|registrad|actualizad|cread|agregad|subid|[eé]xito|listo/.test(t)) return 'ok';
+        return 'info';
+    }
+
+    // Avisos recién mostrados: si la página se va antes de que se alcancen a
+    // leer (guardar y redirigir), se vuelven a mostrar en la siguiente.
+    let ultimo = null;
+    window.addEventListener('pagehide', () => {
+        if (!ultimo || Date.now() - ultimo.t > 1500) return;
+        try { sessionStorage.setItem(CLAVE_PENDIENTE, JSON.stringify(ultimo)); } catch (e) { /* sin storage */ }
+    });
+
+    function mostrarAviso(texto, tipo) {
+        tipo = ICONOS[tipo] ? tipo : (tipo === 'success' ? 'ok' : tipo === 'warning' ? 'aviso' : 'info');
+        ultimo = { texto: String(texto), tipo, t: Date.now() };
+        const pintar = () => {
+            const a = document.createElement('div');
+            a.className = 'aviso aviso--' + tipo;
+            const icono = document.createElement('i');
+            icono.className = 'fas ' + ICONOS[tipo];
+            icono.setAttribute('aria-hidden', 'true');
+            const cuerpo = document.createElement('div');
+            cuerpo.className = 'aviso-texto';
+            cuerpo.textContent = String(texto);
+            const x = document.createElement('button');
+            x.type = 'button';
+            x.className = 'aviso-cerrar';
+            x.setAttribute('aria-label', 'Cerrar aviso');
+            x.innerHTML = '&times;';
+            a.append(icono, cuerpo, x);
+            const quitar = () => {
+                a.classList.add('saliendo');
+                setTimeout(() => a.remove(), 200);
+            };
+            x.addEventListener('click', quitar);
+            setTimeout(quitar, tipo === 'error' ? 7000 : tipo === 'aviso' ? 5500 : 4000);
+            contenedor().appendChild(a);
+        };
+        if (document.body) pintar(); else document.addEventListener('DOMContentLoaded', pintar);
+    }
+
+    function confirmarAviso(texto, o = {}) {
+        return mostrar({
+            tipo: o.peligro ? 'aviso' : 'info',
+            titulo: o.titulo || (o.peligro ? '¿Seguro que quieres continuar?' : 'Confirmar'),
+            mensaje: texto,
+            nota: o.nota || '',
+            botones: [
+                { texto: o.cancelar || 'Cancelar', valor: false, estilo: 'secundario' },
+                { texto: o.boton || 'Aceptar', valor: true, estilo: o.peligro ? 'peligro' : 'primario' }
+            ]
+        }).then(v => v === true);
+    }
+
+    window.AppAviso = {
+        mostrar: mostrarAviso,
+        alerta: (texto) => mostrarAviso(texto, tipoDeTexto(texto)),
+        confirmar: confirmarAviso
+    };
+
+    // Aviso que quedó pendiente porque la página anterior navegó enseguida
+    try {
+        const p = JSON.parse(sessionStorage.getItem(CLAVE_PENDIENTE) || 'null');
+        sessionStorage.removeItem(CLAVE_PENDIENTE);
+        if (p && Date.now() - p.t < 15000) mostrarAviso(p.texto, p.tipo);
+        ultimo = null;
+    } catch (e) { /* sin storage */ }
 })();

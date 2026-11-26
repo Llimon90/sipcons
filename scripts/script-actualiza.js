@@ -13,14 +13,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     const fila = document.createElement("tr");
 
                     fila.innerHTML = `
-                        <td>${incidencia.reporte_cliente ?? ''}</td>
-                        <td>${incidencia.numero_incidente}</td>
-                        <td>${incidencia.cliente}</td>
-                        <td>${incidencia.sucursal}</td>
-                        <td>${incidencia.falla}</td>
-                        <td>${incidencia.fecha}</td>
+                        <td>${escHTML(incidencia.reporte_cliente ?? '')}</td>
+                        <td>${escHTML(incidencia.numero_incidente)}</td>
+                        <td>${escHTML(incidencia.cliente)}</td>
+                        <td>${escHTML(incidencia.sucursal)}</td>
+                        <td>${escHTML(incidencia.falla)}</td>
+                        <td>${escHTML(incidencia.fecha)}</td>
                         <td>
-                            <select class="estatus-select" data-id="${incidencia.id}">
+                            <select class="estatus-select" data-id="${escHTML(incidencia.id)}">
                                 <option value="Abierta" ${incidencia.estatus === "Abierta" ? "selected" : ""}>Abierta</option>
                                 <option value="Pendiente" ${incidencia.estatus === "Pendiente" ? "selected" : ""}>Pendiente</option>
                                 <option value="En seguimiento" ${incidencia.estatus === "En seguimiento" ? "selected" : ""}>En Seguimiento</option>
@@ -46,16 +46,16 @@ document.addEventListener("DOMContentLoaded", function () {
                         })
                         .then(response => response.json())
                         .then(data => {
-                            alert(data.message || data.error);
+                            AppAviso.alerta(data.message || data.error);
                         })
                         .catch(error => {
                             console.error("Error al actualizar estatus:", error);
-                            alert("Hubo un error al actualizar el estatus");
+                            AppAviso.alerta("Hubo un error al actualizar el estatus");
                         });
                     });
                 });
             })
-            .catch(error => console.error("Error al cargar incidencias:", error));
+            .catch(error => console.error("Error al cargar órdenes de servicio:", error));
     }
 
     // Cargar incidencias al cargar la página
@@ -70,7 +70,7 @@ async function cargarArchivos(numeroIncidente) {
     contenedor.innerHTML = ''; // Limpiar antes de cargar nuevos archivos
 
     if (archivos.length === 0) {
-        contenedor.innerHTML = '<p>No hay archivos para esta incidencia.</p>';
+        contenedor.innerHTML = '<p>No hay archivos para esta orden de servicio.</p>';
         return;
     }
 
@@ -85,7 +85,7 @@ async function cargarArchivos(numeroIncidente) {
             // Si es imagen, mostrarla
             const imgElement = document.createElement('img');
             imgElement.src = rutaAjustada;
-            imgElement.alt = 'Archivo de incidencia';
+            imgElement.alt = 'Archivo de orden de servicio';
             imgElement.style.width = '150px';
             imgElement.style.cursor = 'pointer';
             imgElement.addEventListener('click', () => {

@@ -18,7 +18,7 @@ async function buscarVentas() {
     } catch (error) {
         console.error('Error al buscar ventas:', error);
         mostrarVentas([]); // Mostrar tabla vacía
-        alert('Error al buscar ventas: ' + error.message);
+        AppAviso.alerta('Error al buscar ventas: ' + error.message);
     }
 }
 
@@ -43,19 +43,19 @@ function mostrarVentas(ventas) {
         fila.dataset.id = venta.vid;
         
         fila.innerHTML = `
-            <td>${venta.vid}</td>
-            <td>${venta.cliente || 'N/A'}</td>
-            <td>${venta.sucursal || 'N/A'}</td>
-            <td>${venta.equipo || 'N/A'}</td>
-            <td>${venta.marca || 'N/A'}</td>
-            <td>${venta.modelo || 'N/A'}</td>
-            <td>${venta.numero_series ? venta.numero_series.join(', ') : 'N/A'}</td>
-            <td>${venta.garantia || '0'} meses</td>
+            <td>${escHTML(venta.vid)}</td>
+            <td>${escHTML(venta.cliente || 'N/A')}</td>
+            <td>${escHTML(venta.sucursal || 'N/A')}</td>
+            <td>${escHTML(venta.equipo || 'N/A')}</td>
+            <td>${escHTML(venta.marca || 'N/A')}</td>
+            <td>${escHTML(venta.modelo || 'N/A')}</td>
+            <td>${venta.numero_series ? escHTML(venta.numero_series.join(', ')) : 'N/A'}</td>
+            <td>${escHTML(venta.garantia || '0')} meses</td>
             <td>${venta.servicio ? 'Sí' : 'No'}</td>
             <td>${venta.fecha_registro ? new Date(venta.fecha_registro).toLocaleDateString() : 'N/A'}</td>
             <td>
-                <button class="btn-editar" data-id="${venta.vid}">Editar</button>
-                <button class="btn-eliminar" data-id="${venta.vid}">Eliminar</button>
+                <button class="btn-editar" data-id="${escHTML(venta.vid)}">Editar</button>
+                <button class="btn-eliminar" data-id="${escHTML(venta.vid)}">Eliminar</button>
             </td>
         `;
         

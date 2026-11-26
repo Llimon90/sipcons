@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('clientes');
 require_once __DIR__ . '/../auth/audit.php';
 require_once __DIR__ . '/lib/periodicidad_helpers.php';
 header('Content-Type: application/json');
@@ -44,8 +46,11 @@ try {
         $mesesCalibracion, $tieneServicio, $mesesServicio, $mesesGarantia,
         $fechaProximaCalibracion, $fechaProximoServicio, $fecha_registro
     ]);
+    $nuevoEquipo = (int)$pdo->lastInsertId();
+    require_once __DIR__ . '/lib/sucursales_helpers.php';
+    sucLigarRegistro($pdo, 'padron_equipos', $nuevoEquipo);  // D-44
 
-    registrarAuditoria('padron_equipos', $pdo->lastInsertId(), 'CREATE', null, [
+    registrarAuditoria('padron_equipos', $nuevoEquipo, 'CREATE', null, [
         'cliente'             => $cliente,
         'sucursal'            => $sucursal,
         'equipo'              => $equipo,
@@ -63,6 +68,6 @@ try {
     echo json_encode(['exito' => true, 'mensaje' => 'Equipo externo registrado en el Padrón con éxito.']);
 
 } catch (Exception $e) {
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => mensajeErrorPublico($e)]);
 }
 ?>

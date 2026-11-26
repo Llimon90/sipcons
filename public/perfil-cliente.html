@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil del Cliente - SIPCONS</title>
+    <title>Perfil del Cliente</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../css/cotizaciones.css?v=20261125">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Eliminamos el grid de 2 columnas y usamos Flexbox en columna con separación */
@@ -22,8 +25,11 @@
         /* Grid para que el formulario se vea compacto a lo ancho */
         .form-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px; }
     </style>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -62,7 +68,7 @@
         <div class="lista-incidencias" style="padding: 20px;">
             <div class="card-header">
                 <h3 style="margin:0; font-size:1.2rem; color:#34495e;"><i class="fas fa-address-card"></i> Datos Generales</h3>
-                <button type="submit" form="form-editar-cliente" style="background:#2980b9; color:white; padding:8px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">
+                <button type="submit" form="form-editar-cliente" class="btn-primary">
                     <i class="fas fa-save"></i> Guardar Cambios
                 </button>
             </div>
@@ -94,6 +100,10 @@
                         <label>Email</label>
                         <input type="email" id="edit-email" name="email" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                     </div>
+                    <div>
+                        <span class="etiqueta-campo" id="lbl-credito">Crédito</span>
+                        <p id="info-credito" aria-labelledby="lbl-credito" style="margin:8px 0 0;">—</p>
+                    </div>
                 </div>
 
                 <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #f1f5f9;">
@@ -104,41 +114,41 @@
             </form>
         </div>
 
-        <!-- SECCIÓN: Acceso al portal de autoservicio -->
-        <div class="lista-incidencias" id="seccion-portal-cliente" style="padding: 20px; display:none;">
+        <!-- Cotizaciones del cliente (scripts/cotizaciones-cliente.js) -->
+        <div class="lista-incidencias cot-seccion-externa" id="seccion-cotizaciones" style="padding: 20px;" hidden>
             <div class="card-header">
-                <h3 style="margin:0; font-size:1.2rem; color:#34495e;"><i class="fas fa-user-lock"></i> Acceso al portal de clientes</h3>
+                <h3 style="margin:0; font-size:1.2rem; color:#34495e;"><i class="fas fa-file-invoice-dollar"></i> Cotizaciones</h3>
+                <a id="btn-cotizar-cliente" href="cotizacion.html" class="btn-primary"><i class="fas fa-plus"></i> Nueva cotización</a>
             </div>
-            <p style="color:#7f8c8d; font-size:0.9rem;">Cuentas con las que este cliente puede entrar al portal (<code>public/portal/login.html</code>) a ver y abrir sus propios tickets.</p>
+            <div id="cotizaciones-cliente"></div>
+        </div>
 
-            <table class="tabla-ventas" style="width:100%; margin-top:10px;">
-                <thead>
-                    <tr><th>Correo</th><th>Activo</th><th>Último acceso</th><th></th></tr>
-                </thead>
-                <tbody id="tabla-portal-usuarios"><tr><td colspan="4">Cargando...</td></tr></tbody>
-            </table>
+        <!-- Finanzas del cliente (D-48; scripts/finanzas-cliente.js): solo con el permiso de Finanzas -->
+        <div class="lista-incidencias" id="seccion-finanzas" style="padding: 20px;" hidden>
+            <div class="card-header">
+                <h3 style="margin:0; font-size:1.2rem; color:#34495e;"><i class="fas fa-wallet"></i> Finanzas</h3>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                    <button type="button" id="btn-credito-cliente" class="btn-secundario"><i class="fas fa-sliders-h"></i> Crédito</button>
+                    <a id="btn-estado-cuenta-cliente" href="estado-cuenta.html" class="btn-primary"><i class="fas fa-file-alt"></i> Estado de cuenta</a>
+                </div>
+            </div>
+            <div id="finanzas-cliente"><p class="texto-suave">Cargando…</p></div>
+        </div>
 
-            <form id="form-portal-usuario" class="form-row" style="margin-top:15px; align-items:flex-end;">
-                <div>
-                    <label for="portal-email">Correo nuevo acceso</label>
-                    <input type="email" id="portal-email" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                </div>
-                <div>
-                    <label for="portal-password">Contraseña inicial (mínimo 8)</label>
-                    <input type="password" id="portal-password" minlength="8" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                </div>
-                <div>
-                    <button type="submit" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Dar acceso</button>
-                </div>
-            </form>
-            <div id="mensaje-portal-usuario" style="margin-top:8px;"></div>
+        <!-- Sucursales del cliente (D-44; scripts/sucursales-cliente.js) -->
+        <div class="lista-incidencias" id="seccion-sucursales" style="padding: 20px;">
+            <div class="card-header">
+                <h3 style="margin:0; font-size:1.2rem; color:#34495e;"><i class="fas fa-map-marker-alt"></i> Sucursales</h3>
+                <button type="button" id="btn-nueva-sucursal" class="btn-primary" hidden><i class="fas fa-plus"></i> Nueva sucursal</button>
+            </div>
+            <div id="sucursales-cliente"><p class="texto-suave">Cargando…</p></div>
         </div>
 
         <!-- SECCIÓN INFERIOR: Padrón de Equipos -->
         <div class="lista-incidencias" style="padding: 20px;">
             <div class="card-header">
                 <h3 style="margin:0; font-size:1.2rem; color:#34495e;"><i class="fas fa-boxes"></i> Padrón de Equipos</h3>
-                <button onclick="abrirModalEquipo()" style="background:#27ae60; color:white; padding:8px 15px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">
+                <button onclick="abrirModalEquipo()" class="btn-primary">
                     <i class="fas fa-plus"></i> Añadir Equipo
                 </button>
             </div>
@@ -174,7 +184,7 @@
  <!-- MODAL NATIVO: REGISTRO/EDICIÓN DE EQUIPO EXTERNO -->
   <div id="modalEquipoExterno" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
     <div class="modal-content" style="background:#fff; width:90%; max-width:700px; margin:0; border-radius:10px; padding:20px; position:relative; max-height:90vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <span onclick="cerrarModalEquipo()" style="position:absolute; right:20px; top:15px; cursor:pointer; font-size:1.5rem; font-weight:bold; color:#7f8c8d;">&times;</span>
+        <button type="button" aria-label="Cerrar" onclick="cerrarModalEquipo()" style="background:none; border:0; position:absolute; right:20px; top:15px; cursor:pointer; font-size:1.5rem; font-weight:bold; color:#7f8c8d;">&times;</button>
         <h3 id="titulo-modal-equipo" style="margin-top:0; color:#2c3e50;"><i class="fas fa-tools"></i> Registrar Equipo</h3>
         <hr>
         
@@ -216,16 +226,16 @@
                 </div>
             </div>
 
-            <div style="background:#f1f5f9; padding:15px; border-radius:8px; border-left:4px solid #3498db; margin-bottom:20px; margin-top:10px;">
-                <h4 style="margin-top:0; font-size:0.95rem; color:#2980b9;">Configuración de Mantenimiento</h4>
+            <div style="background:#f1f5f9; padding:15px; border-radius:8px; border-left:4px solid var(--brand-primary); margin-bottom:20px; margin-top:10px;">
+                <h4 style="margin-top:0; font-size:0.95rem; color:var(--brand-primary-hover);">Configuración de Mantenimiento</h4>
                 <div class="form-row">
                     <div>
-                        <label style="font-size:0.85rem;">Mantenimiento / Calibración cada (meses):</label>
+                        <label style="font-size:0.85rem;">Mantenimiento cada (meses):</label>
                         <input type="number" id="ext-calibracion" name="calibracion" min="0" placeholder="0 = No aplica" style="width:100%;">
                     </div>
                     <div>
                         <label style="font-size:0.85rem; display:block; margin-top:22px; cursor:pointer;">
-                            <input type="checkbox" id="ext-servicio" name="servicio" value="1"> Cliente con póliza / acuerdo de mantenimiento
+                            <input type="checkbox" id="ext-servicio" name="servicio" value="1" class="f-switch"> Cliente con póliza / acuerdo de mantenimiento
                         </label>
                     </div>
                     <div>
@@ -238,24 +248,30 @@
 
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <!-- BOTÓN ELIMINAR (Oculto por defecto) -->
-                <button type="button" id="btn-eliminar-equipo" onclick="eliminarEquipoPadron()" style="display:none; background:#e74c3c; color:white; padding:10px 15px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">
+                <button type="button" id="btn-eliminar-equipo" onclick="eliminarEquipoPadron()" style="display:none" class="btn-rojo">
                     <i class="fas fa-trash-alt"></i> Eliminar
                 </button>
                 
                 <div style="text-align:right; flex-grow:1;">
-                    <button type="button" onclick="cerrarModalEquipo()" style="background:#95a5a6; color:white; padding:10px 15px; border:none; border-radius:4px; margin-right:10px; cursor:pointer;">Cancelar</button>
-                    <button type="submit" id="btn-guardar-equipo" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;"><i class="fas fa-save"></i> Guardar</button>
+                    <button type="button" onclick="cerrarModalEquipo()" class="btn-secundario">Cancelar</button>
+                    <button type="submit" id="btn-guardar-equipo" class="btn-primary"><i class="fas fa-save"></i> Guardar</button>
                 </div>
             </div>
         </form>
     </div>
   </div>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/contactos-widget.js?v=3"></script>
-  <script src="../scripts/periodicidad.js?v=1"></script>
-  <script src="../scripts/perfil-cliente.js?v=20261012"></script>
-  <script src="../scripts/portal-cliente-admin.js?v=1"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/contactos-widget.js?v=20261029"></script>
+  <script src="../scripts/periodicidad.js?v=20261030c"></script>
+  <script src="../scripts/perfil-cliente.js?v=20261125"></script>
+  <script src="../scripts/cotizaciones-comun.js?v=20261125"></script>
+  <script src="../scripts/cotizaciones-cliente.js?v=20261031"></script>
+  <script src="../scripts/sucursales-campo.js?v=20261112"></script>
+  <script src="../scripts/red.js?v=20261113"></script>
+  <script src="../scripts/sugerencias-equipo.js?v=20261113"></script>
+  <script src="../scripts/sucursales-cliente.js?v=20261113"></script>
+  <script src="../scripts/finanzas-cliente.js?v=20261113"></script>
 </body>
 </html>

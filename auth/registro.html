@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prueba gratis 15 días</title>
+  <script>
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('app_tema') === 'oscuro' ? 'dark' : 'light'); } catch (e) {}
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+  <link rel="stylesheet" href="../branding/tema.css.php" />
+  <script src="../branding/marca.js.php"></script>
+  <script src="../scripts/zonas-horarias.js?v=20261110"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/acceso.css?v=20261125" />
+</head>
+<body>
+
+<main class="login-card registro-card">
+  <img class="logo" data-brand-logo src="../img/logo.svg" alt="Servidesk" />
+  <h1 class="registro-titulo">Prueba gratis 15 días</h1>
+  <p class="tagline">Sin tarjeta. Tu información es tuya y se conserva si decides contratar.</p>
+
+  <div class="error-msg" id="errorMsg" role="alert">
+    <i class="fas fa-circle-exclamation"></i>
+    <span id="errorText"></span>
+  </div>
+
+  <form id="registroForm" autocomplete="on" novalidate>
+    <div class="form-group">
+      <label for="empresa">Nombre de tu empresa</label>
+      <input type="text" id="empresa" name="empresa" maxlength="150" autocomplete="organization" required autofocus />
+    </div>
+    <div class="form-group">
+      <label for="nombre">Tu nombre</label>
+      <input type="text" id="nombre" name="nombre" maxlength="100" autocomplete="name" required />
+    </div>
+    <div class="form-group">
+      <label for="correo">Correo (será tu usuario)</label>
+      <input type="email" id="correo" name="correo" maxlength="100" autocomplete="email" required />
+    </div>
+    <div class="form-group">
+      <label for="telefono">Teléfono <span class="opcional">(opcional)</span></label>
+      <input type="tel" id="telefono" name="telefono" maxlength="20" autocomplete="tel" />
+    </div>
+    <div class="form-group">
+      <label for="zona_horaria">Zona horaria de tu empresa</label>
+      <select id="zona_horaria" name="zona_horaria"></select>
+      <small class="ayuda">Con ella se calculan fechas, atrasos y metas de cumplimiento. Se puede cambiar después en Mi empresa.</small>
+    </div>
+    <div class="form-group">
+      <label for="password">Contraseña</label>
+      <div class="input-wrapper">
+        <input type="password" id="password" name="password" minlength="8" autocomplete="new-password" required />
+        <button type="button" class="toggle-password" id="togglePwd" aria-label="Mostrar contraseña" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button>
+      </div>
+      <small class="ayuda">Mínimo 8 caracteres.</small>
+    </div>
+
+    <!-- Campo trampa para bots: oculto a las personas -->
+    <div class="campo-trampa" aria-hidden="true">
+      <label for="sitio_web">Sitio web</label>
+      <input type="text" id="sitio_web" name="sitio_web" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <label class="acepto">
+      <input type="checkbox" id="acepto" name="acepto" required />
+      <span>Acepto el <a id="linkAvisoRegistro" target="_blank" rel="noopener">aviso de privacidad</a> y los <a id="linkTerminosRegistro" target="_blank" rel="noopener">términos del servicio</a>.</span>
+    </label>
+
+    <button type="submit" class="btn-login" id="btnRegistro">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">Crear mi cuenta de prueba</span>
+    </button>
+  </form>
+
+  <p class="cambio-pagina">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+</main>
+
+<footer class="page-footer">&copy; <span id="year"></span> <span data-brand="empresa">Servidesk</span>.</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  var cargadoEn = Date.now();
+
+  // D-29: zona horaria prellenada con la del navegador
+  (function () {
+    var sel = document.getElementById('zona_horaria');
+    var zona = 'America/Mexico_City';
+    try { zona = Intl.DateTimeFormat().resolvedOptions().timeZone || zona; } catch (e) { /* navegador antiguo */ }
+    sel.innerHTML = window.AppZonas ? AppZonas.opciones(zona) : '<option value="' + zona + '">' + zona + '</option>';
+  })();
+
+  (function () {
+    var marca = window.APP_BRAND || {};
+    var aviso = document.getElementById('linkAvisoRegistro');
+    if (marca.aviso_privacidad) {
+      aviso.href = marca.aviso_privacidad;
+    } else {
+      aviso.removeAttribute('href');
+    }
+    var terminos = document.getElementById('linkTerminosRegistro');
+    if (marca.terminos) terminos.href = marca.terminos; else terminos.removeAttribute('href');
+    if (marca.registro === false) {
+      document.getElementById('registroForm').hidden = true;
+      mostrarError('El registro de nuevas cuentas está cerrado por el momento.');
+    }
+  })();
+
+  function mostrarError(texto) {
+    document.getElementById('errorText').textContent = texto;
+    document.getElementById('errorMsg').classList.add('visible');
+  }
+
+  document.getElementById('togglePwd').addEventListener('click', function () {
+    var pwd = document.getElementById('password');
+    var esTexto = pwd.type === 'text';
+    pwd.type = esTexto ? 'password' : 'text';
+    const icono = this.querySelector('i');  // U-8
+    icono.classList.toggle('fa-eye', esTexto);
+    icono.classList.toggle('fa-eye-slash', !esTexto);
+    this.setAttribute('aria-pressed', esTexto ? 'false' : 'true');
+    this.setAttribute('aria-label', esTexto ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  });
+
+  document.getElementById('registroForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    document.getElementById('errorMsg').classList.remove('visible');
+    if (!this.checkValidity()) {
+      var invalido = this.querySelector(':invalid');
+      mostrarError(invalido && invalido.id === 'acepto'
+        ? 'Debes aceptar el aviso de privacidad y los términos para continuar.'
+        : 'Revisa los campos marcados: ' + (invalido ? invalido.labels[0].textContent.trim() : ''));
+      if (invalido) invalido.focus();
+      return;
+    }
+
+    var btn = document.getElementById('btnRegistro');
+    var spinner = document.getElementById('spinner');
+    var btnText = document.getElementById('btnText');
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Creando tu cuenta...';
+
+    var datos = {
+      empresa: this.empresa.value, nombre: this.nombre.value, correo: this.correo.value,
+      telefono: this.telefono.value, password: this.password.value, zona_horaria: this.zona_horaria.value,
+      acepto: this.acepto.checked, sitio_web: this.sitio_web.value, t: cargadoEn
+    };
+    try {
+      var res = await fetch('registro.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      });
+      var j = await res.json();
+      if (j.success) {
+        btnText.textContent = '¡Listo! Entrando...';
+        window.location.href = j.redirect || '../index.html';
+        return;
+      }
+      mostrarError(j.message || 'No se pudo crear la cuenta.');
+    } catch (_) {
+      mostrarError('Error de conexión. Intenta de nuevo.');
+    }
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = 'Crear mi cuenta de prueba';
+  });
+</script>
+
+</body>
+</html>

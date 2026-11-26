@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alta de Usuarios Técnicos</title>
+    <title>Usuarios · Servidesk</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <!-- Agregamos Font Awesome  para los íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
-    <script src="../scripts/script-user.js?v=8" defer></script>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+    <script src="../scripts/script-user.js?v=20261125" defer></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -59,7 +64,8 @@
           </div>
           <div>
             <label for="correo">Correo electrónico</label>
-            <input type="text" id="correo" name="correo"  placeholder="Correo del técnico">
+            <input type="email" id="correo" name="correo" required maxlength="100" autocomplete="off" placeholder="nombre@empresa.com">
+            <small class="ayuda-campo">Será su usuario para iniciar sesión.</small>
           </div>
         </div>
         <div class="form-row">
@@ -67,19 +73,15 @@
             <label for="telefono">Teléfono</label>
             <input type="text" id="telefono" name="telefono"  placeholder="Número de teléfono">
           </div>
-          <div>
-            <label for="usuario">Usuario</label>
-            <input type="text" id="usuario" name="usuario" required placeholder="Nombre de usuario">
-          </div>
         </div>
         <div class="form-row">
           <div>
             <label for="password">Contraseña</label>
-            <input type="text" id="password" name="password"  placeholder="Contraseña">
+            <input type="text" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
           </div>
           <div>
             <label for="confirm-password">Confirmar Contraseña</label>
-            <input type="text" id="confirm-password" name="confirm_password"  placeholder="Confirmar contraseña">
+            <input type="text" id="confirm-password" name="confirm_password" required minlength="8" autocomplete="new-password" placeholder="Confirmar contraseña">
           </div>
         </div>
         <div class="form-row">
@@ -89,9 +91,7 @@
               <option value="Técnico">Técnico</option>
               <option value="Administrativo">Administrativo</option>
               <option value="Supervisor">Supervisor</option>
-              <option value="Técnico/Administrador">Técnico/Administrador</option>
               <option value="Administrador">Administrador</option>
-              <!-- <option value="Programador">Programador</option> -->
             </select>
           </div>
         </div>
@@ -106,7 +106,7 @@
     <thead>
       <tr>
         <th>Nombre</th>
-        <th>Usuario</th>
+        <th>Correo (usuario)</th>
         <th>Rol</th>
         <th>Acciones</th>
       </tr>
@@ -131,7 +131,7 @@
     </div>
   </div>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
 </body>
 </html>

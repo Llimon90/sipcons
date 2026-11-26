@@ -63,7 +63,7 @@ async function cargarMarcas() {
         }
         
         if (data.success) {
-            console.log(`Marcas cargadas: ${data.count}`);
+            console.log(`Marcas cargadas: ${escHTML(data.count)}`);
             mostrarMarcas(data.marcas);
         } else {
             throw new Error(data.message || 'Error desconocido al cargar marcas');
@@ -74,7 +74,7 @@ async function cargarMarcas() {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error al cargar las marcas</p>
-                <small>${error.message}</small>
+                <small>${escHTML(error.message)}</small>
                 <button class="btn-primary" onclick="cargarMarcas()">
                     <i class="fas fa-redo"></i> Reintentar
                 </button>
@@ -101,17 +101,17 @@ function mostrarMarcas(marcas) {
     }
     
     container.innerHTML = marcas.map(marca => `
-        <div class="model-card" onclick="abrirCarpetaMarca(${marca.id}, '${marca.nombre.replace(/'/g, "\\'")}', event)">
+        <div class="model-card" onclick="abrirCarpetaMarca(${escHTML(marca.id)}, ${escHTML(JSON.stringify(marca.nombre))}, event)">
             <div class="model-icon">
                 <i class="fas fa-industry"></i>
             </div>
-            <h3>${marca.nombre}</h3>
+            <h3>${escHTML(marca.nombre)}</h3>
             <p>Ver modelos</p>
             <div class="model-actions">
-                <button class="btn-small btn-primary" onclick="cargarModelos(${marca.id}, '${marca.nombre.replace(/'/g, "\\'")}')">
+                <button class="btn-small btn-primary" onclick="cargarModelos(${escHTML(marca.id)}, ${escHTML(JSON.stringify(marca.nombre))})">
                     <i class="fas fa-folder-open"></i>
                 </button>
-                <button class="btn-small btn-danger" onclick="eliminarMarca(${marca.id}, '${marca.nombre.replace(/'/g, "\\'")}')">
+                <button class="btn-small btn-danger" onclick="eliminarMarca(${escHTML(marca.id)}, ${escHTML(JSON.stringify(marca.nombre))})">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -150,7 +150,7 @@ async function cargarModelos(marcaId, marcaNombre) {
         const data = await response.json();
         
         if (data.success) {
-            console.log(`Modelos cargados: ${data.count}`);
+            console.log(`Modelos cargados: ${escHTML(data.count)}`);
             mostrarModelos(data.modelos, marcaNombre);
             actualizarBreadcrumb(marcaNombre);
         } else {
@@ -162,7 +162,7 @@ async function cargarModelos(marcaId, marcaNombre) {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error al cargar los modelos</p>
-                <small>${error.message}</small>
+                <small>${escHTML(error.message)}</small>
                 <button class="btn-secondary" onclick="volverAMarcas()">
                     <i class="fas fa-arrow-left"></i> Volver a Marcas
                 </button>
@@ -183,7 +183,7 @@ function mostrarModelos(modelos, marcaNombre) {
         modelosContainer.innerHTML = `
             <div class="no-data">
                 <i class="fas fa-tools fa-3x"></i>
-                <p>No hay modelos registrados para ${marcaNombre}</p>
+                <p>No hay modelos registrados para ${escHTML(marcaNombre)}</p>
                 <button class="btn-primary" onclick="mostrarModalAgregarModelo()">
                     <i class="fas fa-plus"></i> Agregar Primer Modelo
                 </button>
@@ -200,27 +200,27 @@ function mostrarModelos(modelos, marcaNombre) {
             <button class="back-button" onclick="volverAMarcas()">
                 <i class="fas fa-arrow-left"></i> Volver a Marcas
             </button>
-            <h3>Modelos de ${marcaNombre} (${modelos.length})</h3>
+            <h3>Modelos de ${escHTML(marcaNombre)} (${modelos.length})</h3>
             <button class="btn-primary" onclick="mostrarModalAgregarModelo()">
                 <i class="fas fa-plus"></i> Agregar Modelo
             </button>
         </div>
         <div class="model-grid-content">
             ${modelos.map(modelo => `
-                <div class="model-card" onclick="abrirCarpetaModelo(${modelo.id}, '${modelo.nombre.replace(/'/g, "\\'")}', event)">
+                <div class="model-card" onclick="abrirCarpetaModelo(${escHTML(modelo.id)}, ${escHTML(JSON.stringify(modelo.nombre))}, event)">
                     <div class="model-icon">
                         <i class="fas fa-laptop"></i>
                     </div>
-                    <h3>${modelo.nombre}</h3>
-                    <p>${modelo.tipo_equipo}</p>
+                    <h3>${escHTML(modelo.nombre)}</h3>
+                    <p>${escHTML(modelo.tipo_equipo)}</p>
                     <div class="model-actions">
-                        <button class="btn-small btn-primary" onclick="cargarDocumentos(${modelo.id}, '${modelo.nombre.replace(/'/g, "\\'")}')">
+                        <button class="btn-small btn-primary" onclick="cargarDocumentos(${escHTML(modelo.id)}, ${escHTML(JSON.stringify(modelo.nombre))})">
                             <i class="fas fa-folder-open"></i>
                         </button>
-                        <button class="btn-small btn-warning" onclick="editarModelo(${modelo.id})">
+                        <button class="btn-small btn-warning" onclick="editarModelo(${escHTML(modelo.id)})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-small btn-danger" onclick="eliminarModelo(${modelo.id}, '${modelo.nombre.replace(/'/g, "\\'")}')">
+                        <button class="btn-small btn-danger" onclick="eliminarModelo(${escHTML(modelo.id)}, ${escHTML(JSON.stringify(modelo.nombre))})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -259,7 +259,7 @@ async function cargarDocumentos(modeloId, modeloNombre) {
         const data = await response.json();
         
         if (data.success) {
-            console.log(`Documentos cargados: ${data.count}`);
+            console.log(`Documentos cargados: ${escHTML(data.count)}`);
             mostrarDocumentos(data.documentos, modeloNombre);
             actualizarBreadcrumbDocumentos(modeloNombre);
         } else {
@@ -271,7 +271,7 @@ async function cargarDocumentos(modeloId, modeloNombre) {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error al cargar los documentos</p>
-                <small>${error.message}</small>
+                <small>${escHTML(error.message)}</small>
             </div>
         `;
     }
@@ -308,24 +308,24 @@ function mostrarDocumentos(documentos, modeloNombre) {
                 </button>
             </div>
             ${documentos.map(doc => `
-                <div class="doc-item" id="doc-${doc.id}">
+                <div class="doc-item" id="doc-${escHTML(doc.id)}">
                     <div class="doc-icon">
                         ${obtenerIconoTipoDocumento(doc.tipo_documento)}
                     </div>
                     <div class="doc-info">
-                        <h4>${doc.nombre_archivo}</h4>
+                        <h4>${escHTML(doc.nombre_archivo)}</h4>
                         <p>Tipo: ${doc.tipo_documento.replace('_', ' ')}</p>
-                        ${doc.descripcion ? `<p>Descripción: ${doc.descripcion}</p>` : ''}
+                        ${doc.descripcion ? `<p>Descripción: ${escHTML(doc.descripcion)}</p>` : ''}
                         <small>Subido: ${new Date(doc.fecha_subida).toLocaleDateString()}</small>
                     </div>
                     <div class="doc-actions">
-                        <button class="btn-primary" onclick="verDocumento('${doc.ruta_publica || doc.ruta_archivo}')">
+                        <button class="btn-primary" onclick="verDocumento(${escHTML(JSON.stringify(doc.ruta_publica || doc.ruta_archivo))})">
                             <i class="fas fa-eye"></i> Ver
                         </button>
-                        <button class="btn-secondary" onclick="descargarDocumento('${doc.ruta_publica || doc.ruta_archivo}', '${doc.nombre_archivo}')">
+                        <button class="btn-secondary" onclick="descargarDocumento(${escHTML(JSON.stringify(doc.ruta_publica || doc.ruta_archivo))}, ${escHTML(JSON.stringify(doc.nombre_archivo))})">
                             <i class="fas fa-download"></i> Descargar
                         </button>
-                        <button class="btn-danger" onclick="eliminarDocumento(${doc.id}, '${doc.nombre_archivo}')">
+                        <button class="btn-danger" onclick="eliminarDocumento(${escHTML(doc.id)}, ${escHTML(JSON.stringify(doc.nombre_archivo))})">
                             <i class="fas fa-trash"></i> Eliminar
                         </button>
                     </div>
@@ -350,12 +350,12 @@ async function editarModelo(modeloId) {
         }
     } catch (error) {
         console.error('Error al editar modelo:', error);
-        alert('Error al cargar información del modelo: ' + error.message);
+        AppAviso.alerta('Error al cargar información del modelo: ' + error.message);
     }
 }
 
 async function eliminarModelo(modeloId, modeloNombre) {
-    if (!confirm(`¿Estás seguro de que deseas eliminar el modelo "${modeloNombre}"? Esta acción eliminará todos los documentos asociados y no se puede deshacer.`)) {
+    if (!(await AppAviso.confirmar('Se eliminarán todos sus documentos. No se puede deshacer.', { peligro: true, boton: 'Sí, eliminar', titulo: `¿Eliminar el modelo "${modeloNombre}"?` }))) {
         return;
     }
 
@@ -373,19 +373,19 @@ async function eliminarModelo(modeloId, modeloNombre) {
         console.log('Respuesta eliminación modelo:', data);
         
         if (data.success) {
-            alert('Modelo eliminado correctamente');
+            AppAviso.alerta('Modelo eliminado correctamente');
             cargarModelos(currentMarcaId, document.querySelector('#modelos-container h3').textContent.replace('Modelos de ', ''));
         } else {
             throw new Error(data.message || 'Error al eliminar modelo');
         }
     } catch (error) {
         console.error('Error al eliminar modelo:', error);
-        alert('Error al eliminar el modelo: ' + error.message);
+        AppAviso.alerta('Error al eliminar el modelo: ' + error.message);
     }
 }
 
 async function eliminarMarca(marcaId, marcaNombre) {
-    if (!confirm(`¿Estás seguro de que deseas eliminar la marca "${marcaNombre}"? Solo se puede eliminar si no tiene modelos activos.`)) {
+    if (!(await AppAviso.confirmar('Solo se puede eliminar si no tiene modelos activos.', { peligro: true, boton: 'Sí, eliminar', titulo: `¿Eliminar la marca "${marcaNombre}"?` }))) {
         return;
     }
 
@@ -403,19 +403,19 @@ async function eliminarMarca(marcaId, marcaNombre) {
         console.log('Respuesta eliminación marca:', data);
         
         if (data.success) {
-            alert('Marca eliminada correctamente');
+            AppAviso.alerta('Marca eliminada correctamente');
             cargarMarcas();
         } else {
             throw new Error(data.message || 'Error al eliminar marca');
         }
     } catch (error) {
         console.error('Error al eliminar marca:', error);
-        alert('Error al eliminar la marca: ' + error.message);
+        AppAviso.alerta('Error al eliminar la marca: ' + error.message);
     }
 }
 
 async function eliminarDocumento(documentoId, nombreArchivo) {
-    if (!confirm(`¿Estás seguro de que deseas eliminar el documento "${nombreArchivo}"? Esta acción no se puede deshacer.`)) {
+    if (!(await AppAviso.confirmar('No se puede deshacer.', { peligro: true, boton: 'Sí, eliminar', titulo: `¿Eliminar el documento "${nombreArchivo}"?` }))) {
         return;
     }
 
@@ -435,13 +435,13 @@ async function eliminarDocumento(documentoId, nombreArchivo) {
         if (data.success) {
             // Eliminar del DOM
             document.getElementById(`doc-${documentoId}`).remove();
-            alert('Documento eliminado correctamente');
+            AppAviso.alerta('Documento eliminado correctamente');
         } else {
             throw new Error(data.message || 'Error al eliminar documento');
         }
     } catch (error) {
         console.error('Error al eliminar documento:', error);
-        alert('Error al eliminar el documento: ' + error.message);
+        AppAviso.alerta('Error al eliminar el documento: ' + error.message);
     }
 }
 
@@ -495,7 +495,7 @@ async function ejecutarBusqueda(termino) {
             <div class="error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Error en la búsqueda</p>
-                <small>${error.message}</small>
+                <small>${escHTML(error.message)}</small>
             </div>
         `;
     }
@@ -536,7 +536,7 @@ function mostrarResultadosBusqueda(resultados, termino) {
                 <h4><i class="fas fa-industry"></i> Marcas (${marcas.length})</h4>
                 <div class="model-grid-content">
                     ${marcas.map(marca => `
-                        <div class="model-card" onclick="abrirCarpetaMarca(${marca.id}, '${(marca.nombre || '').replace(/'/g, "\\'")}', event)">
+                        <div class="model-card" onclick="abrirCarpetaMarca(${escHTML(marca.id)}, ${escHTML(JSON.stringify(marca.nombre || ''))}, event)">
                             <div class="model-icon">
                                 <i class="fas fa-industry"></i>
                             </div>
@@ -544,10 +544,10 @@ function mostrarResultadosBusqueda(resultados, termino) {
                             <p>Ver modelos de la marca</p>
                             <div class="search-badge">Marca</div>
                             <div class="model-actions">
-                                <button class="btn-small btn-primary" onclick="cargarModelos(${marca.id}, '${(marca.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-primary" onclick="cargarModelos(${escHTML(marca.id)}, ${escHTML(JSON.stringify(marca.nombre || ''))})">
                                     <i class="fas fa-folder-open"></i>
                                 </button>
-                                <button class="btn-small btn-danger" onclick="eliminarMarca(${marca.id}, '${(marca.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-danger" onclick="eliminarMarca(${escHTML(marca.id)}, ${escHTML(JSON.stringify(marca.nombre || ''))})">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -564,22 +564,22 @@ function mostrarResultadosBusqueda(resultados, termino) {
                 <h4><i class="fas fa-laptop"></i> Modelos (${modelos.length})</h4>
                 <div class="model-grid-content">
                     ${modelos.map(modelo => `
-                        <div class="model-card" onclick="abrirCarpetaModelo(${modelo.id}, '${(modelo.nombre || '').replace(/'/g, "\\'")}', event)">
+                        <div class="model-card" onclick="abrirCarpetaModelo(${escHTML(modelo.id)}, ${escHTML(JSON.stringify(modelo.nombre || ''))}, event)">
                             <div class="model-icon">
                                 <i class="fas fa-laptop"></i>
                             </div>
                             <h3>${resaltarTexto(modelo.nombre || '', termino)}</h3>
                             <p>${resaltarTexto(modelo.tipo_equipo || '', termino)}</p>
-                            <small>Marca: ${modelo.marca_nombre || 'N/A'}</small>
+                            <small>Marca: ${escHTML(modelo.marca_nombre || 'N/A')}</small>
                             <div class="search-badge">Modelo</div>
                             <div class="model-actions">
-                                <button class="btn-small btn-primary" onclick="cargarDocumentos(${modelo.id}, '${(modelo.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-primary" onclick="cargarDocumentos(${escHTML(modelo.id)}, ${escHTML(JSON.stringify(modelo.nombre || ''))})">
                                     <i class="fas fa-folder-open"></i>
                                 </button>
-                                <button class="btn-small btn-warning" onclick="editarModelo(${modelo.id})">
+                                <button class="btn-small btn-warning" onclick="editarModelo(${escHTML(modelo.id)})">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn-small btn-danger" onclick="eliminarModelo(${modelo.id}, '${(modelo.nombre || '').replace(/'/g, "\\'")}')">
+                                <button class="btn-small btn-danger" onclick="eliminarModelo(${escHTML(modelo.id)}, ${escHTML(JSON.stringify(modelo.nombre || ''))})">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -594,9 +594,11 @@ function mostrarResultadosBusqueda(resultados, termino) {
 }
 
 function resaltarTexto(texto, termino) {
-    if (!termino) return texto;
-    const regex = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return texto.replace(regex, '<mark class="search-highlight">$1</mark>');
+    // Se escapa primero: el resaltado solo agrega <mark> sobre texto ya seguro
+    const seguro = escHTML(texto);
+    if (!termino) return seguro;
+    const regex = new RegExp(`(${escHTML(termino).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return seguro.replace(regex, '<mark class="search-highlight">$1</mark>');
 }
 
 function ocultarResultadosBusqueda() {
@@ -668,14 +670,14 @@ async function agregarMarca(nombre) {
         const data = await response.json();
         
         if (data.success) {
-            alert('Marca agregada correctamente');
+            AppAviso.alerta('Marca agregada correctamente');
             cargarMarcas();
         } else {
             throw new Error(data.message || 'Error desconocido al agregar marca');
         }
     } catch (error) {
         console.error('Error al agregar marca:', error);
-        alert('Error al agregar la marca: ' + error.message);
+        AppAviso.alerta('Error al agregar la marca: ' + error.message);
     }
 }
 
@@ -695,7 +697,7 @@ async function mostrarModalAgregarModelo() {
         if (data.success) {
             const selectMarca = document.getElementById('marca');
             selectMarca.innerHTML = '<option value="">Seleccionar marca</option>' +
-                data.marcas.map(marca => `<option value="${marca.id}">${marca.nombre}</option>`).join('');
+                data.marcas.map(marca => `<option value="${escHTML(marca.id)}">${escHTML(marca.nombre)}</option>`).join('');
             
             // Agregar opción para nueva marca
             const optionNuevaMarca = document.createElement('option');
@@ -722,7 +724,7 @@ async function mostrarModalAgregarModelo() {
         }
     } catch (error) {
         console.error('Error al cargar marcas para el modal:', error);
-        alert('Error al cargar las marcas: ' + error.message);
+        AppAviso.alerta('Error al cargar las marcas: ' + error.message);
     }
 }
 
@@ -748,7 +750,7 @@ async function guardarModelo(e) {
 
     // Validar campos requeridos
     if (!marca_id || !modelo_nombre || !modelo_tipo) {
-        alert('Por favor complete todos los campos requeridos: Marca, Nombre del Modelo y Tipo de Equipo');
+        AppAviso.alerta('Por favor complete todos los campos requeridos: Marca, Nombre del Modelo y Tipo de Equipo');
         return;
     }
 
@@ -799,7 +801,7 @@ async function guardarModelo(e) {
         }
         
         if (data.success) {
-            alert('✅ Modelo agregado correctamente');
+            AppAviso.alerta('✅ Modelo agregado correctamente');
             cerrarModalAgregarModelo();
             
             // Recargar la vista actual
@@ -814,7 +816,7 @@ async function guardarModelo(e) {
         }
     } catch (error) {
         console.error('Error al agregar modelo:', error);
-        alert('❌ Error al agregar el modelo: ' + error.message);
+        AppAviso.alerta('❌ Error al agregar el modelo: ' + error.message);
     } finally {
         // Restaurar botón
         submitBtn.innerHTML = originalText;
@@ -845,7 +847,7 @@ async function mostrarModalSubirDocumentos(modeloId) {
                 <div class="modal" id="uploadDocsModal" style="display: block;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h3>Subir Documentos - ${modelo.nombre}</h3>
+                            <h3>Subir Documentos - ${escHTML(modelo.nombre)}</h3>
                             <span class="close-modal">&times;</span>
                         </div>
                         <div class="modal-body">
@@ -854,8 +856,7 @@ async function mostrarModalSubirDocumentos(modeloId) {
                                 
                                 <div class="form-group">
                                     <label for="manual_file">Manual de Usuario (opcional):</label>
-                                    <input type="file" id="manual_file" name="manual_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                    <small>Formatos aceptados: PDF, Word, JPG, PNG</small>
+                                    <input type="file" id="manual_file" name="manual_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" data-selector data-texto="Toca para elegir el manual" data-ayuda="PDF, Word, JPG o PNG">
                                 </div>
                                 
                                 <div class="form-group">
@@ -867,8 +868,7 @@ async function mostrarModalSubirDocumentos(modeloId) {
                                 
                                 <div class="form-group">
                                     <label for="partes_file">Lista de Partes (opcional):</label>
-                                    <input type="file" id="partes_file" name="partes_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                    <small>Formatos aceptados: PDF, Word, JPG, PNG</small>
+                                    <input type="file" id="partes_file" name="partes_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" data-selector data-texto="Toca para elegir la lista de partes" data-ayuda="PDF, Word, JPG o PNG">
                                 </div>
                                 
                                 <div class="form-group">
@@ -880,8 +880,7 @@ async function mostrarModalSubirDocumentos(modeloId) {
                                 
                                 <div class="form-group">
                                     <label for="otros_documentos">Otros Documentos (opcional):</label>
-                                    <input type="file" id="otros_documentos" name="otros_documentos[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.rar">
-                                    <small>Puede seleccionar múltiples archivos. Formatos: PDF, Word, imágenes, ZIP, RAR</small>
+                                    <input type="file" id="otros_documentos" name="otros_documentos[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.rar" data-selector data-texto="Toca para elegir otros documentos" data-ayuda="Varios archivos: PDF, Word, imágenes, ZIP o RAR">
                                 </div>
                                 
                                 <div class="form-group">
@@ -924,7 +923,7 @@ async function mostrarModalSubirDocumentos(modeloId) {
         }
     } catch (error) {
         console.error('Error al mostrar modal de subir documentos:', error);
-        alert('Error al cargar información del modelo: ' + error.message);
+        AppAviso.alerta('Error al cargar información del modelo: ' + error.message);
     }
 }
 
@@ -941,7 +940,7 @@ async function subirDocumentos(modeloId) {
     const otrosFiles = document.getElementById('otros_documentos').files;
     
     if (!manualFile && !partesFile && otrosFiles.length === 0) {
-        alert('Por favor seleccione al menos un documento para subir.');
+        AppAviso.alerta('Por favor seleccione al menos un documento para subir.');
         return;
     }
     
@@ -978,7 +977,7 @@ async function subirDocumentos(modeloId) {
         }
         
         if (data.success) {
-            alert('✅ Documentos subidos correctamente');
+            AppAviso.alerta('✅ Documentos subidos correctamente');
             cerrarModalSubirDocumentos();
             
             // Recargar los documentos
@@ -991,7 +990,7 @@ async function subirDocumentos(modeloId) {
         }
     } catch (error) {
         console.error('Error al subir documentos:', error);
-        alert('❌ Error al subir los documentos: ' + error.message);
+        AppAviso.alerta('❌ Error al subir los documentos: ' + error.message);
     } finally {
         // Restaurar botón
         submitBtn.innerHTML = originalText;
@@ -1016,7 +1015,7 @@ function cerrarModalSubirDocumentos() {
 function actualizarBreadcrumb(marcaNombre = '') {
     const breadcrumb = document.getElementById('breadcrumb');
     if (marcaNombre) {
-        breadcrumb.innerHTML = `<a href="javascript:volverAMarcas()">Inicio</a> > <span>${marcaNombre}</span>`;
+        breadcrumb.innerHTML = `<a href="javascript:volverAMarcas()">Inicio</a> > <span>${escHTML(marcaNombre)}</span>`;
     } else {
         breadcrumb.innerHTML = `<a href="soporte.html">Inicio</a> > <span>Marcas</span>`;
     }
@@ -1027,7 +1026,7 @@ function actualizarBreadcrumbDocumentos(modeloNombre) {
     breadcrumb.innerHTML = `
         <a href="javascript:volverAMarcas()">Inicio</a> > 
         <a href="javascript:volverAModelos()">Marcas</a> > 
-        <span>${modeloNombre}</span>
+        <span>${escHTML(modeloNombre)}</span>
     `;
 }
 
@@ -1051,22 +1050,23 @@ function descargarDocumento(ruta, nombre) {
     link.click();
 }
 
-// Cerrar modales al hacer click fuera
-window.onclick = function(event) {
+// Los modales se cierran con Esc o con su botón (un clic fuera no descarta lo capturado)
+document.addEventListener('keydown', function(event) {
+    if (event.key !== 'Escape') return;
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
-        if (event.target === modal) {
+        if (modal.style.display && modal.style.display !== 'none') {
             modal.style.display = 'none';
             if (modal.id === 'uploadDocsModal') {
                 cerrarModalSubirDocumentos();
             }
         }
     });
-}
+});
 
 // Funciones placeholder para futuras implementaciones
 function mostrarModalEditarModelo(modelo) {
-    alert('Funcionalidad de edición en desarrollo para el modelo: ' + modelo.nombre);
+    AppAviso.alerta('Funcionalidad de edición en desarrollo para el modelo: ' + modelo.nombre);
     // Aquí iría el código para mostrar un modal de edición
 }
 

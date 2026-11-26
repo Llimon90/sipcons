@@ -7,11 +7,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -51,8 +56,9 @@
     <!-- ============================================================ -->
     <!-- BÁSICO: cuenta propia -->
     <!-- ============================================================ -->
-    <section class="lista-incidencias">
+    <section class="lista-incidencias" id="seguridad">
       <h2>Mi cuenta</h2>
+      <p id="aviso-password-temporal" role="alert" hidden style="margin:0 0 12px;padding:12px 16px;border-radius:8px;background:#fff4e5;color:#7a4b00;border:1px solid #f0c27a;">Tu contraseña es temporal. Cámbiala para seguir usando el sistema.</p>
       <form id="form-cambiar-password" class="form-row" style="align-items:flex-end;">
         <div>
           <label for="password-actual">Contraseña actual</label>
@@ -60,11 +66,11 @@
         </div>
         <div>
           <label for="password-nueva">Contraseña nueva</label>
-          <input type="password" id="password-nueva" required autocomplete="new-password" minlength="6">
+          <input type="password" id="password-nueva" required autocomplete="new-password" minlength="8">
         </div>
         <div>
           <label for="password-nueva-confirmar">Confirmar contraseña nueva</label>
-          <input type="password" id="password-nueva-confirmar" required autocomplete="new-password" minlength="6">
+          <input type="password" id="password-nueva-confirmar" required autocomplete="new-password" minlength="8">
         </div>
         <div>
           <button type="submit">Cambiar contraseña</button>
@@ -98,7 +104,19 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- AVANZADO: solo Administrador / Programador -->
+    <!-- Plan y pagos: solo el administrador de la cuenta -->
+    <!-- ============================================================ -->
+    <section class="lista-incidencias" id="seccion-plan" hidden>
+      <h2>Plan y pagos</h2>
+      <p class="ajuste-descripcion">
+        Contrata, renueva o cambia el plan de tu empresa. Pagas por transferencia y tu plan se
+        activa en cuanto confirmamos el pago.
+      </p>
+      <a class="btn-plan" href="../auth/contratar.html"><i class="fas fa-credit-card"></i> Ver planes y pagar</a>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- AVANZADO: solo Administrador -->
     <!-- ============================================================ -->
     <section class="lista-incidencias" id="seccion-privilegios" style="display:none;">
       <h2>Privilegios por rol</h2>
@@ -126,138 +144,10 @@
         <span id="mensaje-privilegios" style="margin-left:10px;"></span>
       </div>
     </section>
-
-    <!-- ============================================================ -->
-    <!-- AVANZADO: solo Administrador / Programador -->
-    <!-- ============================================================ -->
-    <section class="lista-incidencias" id="seccion-sla" style="display:none;">
-      <h2>Reglas de SLA</h2>
-      <p style="color:#7f8c8d; margin-top:-10px;">
-        Horas máximas de respuesta y de cierre por prioridad. Una fila con categoría vacía es la
-        regla general de esa prioridad; agrega una fila con categoría para afinar un caso particular.
-      </p>
-
-      <div style="overflow-x:auto;">
-        <table id="tabla-sla">
-          <thead>
-            <tr>
-              <th>Categoría (vacío = general)</th>
-              <th>Prioridad</th>
-              <th>Horas de respuesta</th>
-              <th>Horas de cierre</th>
-              <th>Activa</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cuerpo-sla">
-            <tr><td colspan="6">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div style="margin-top:15px;">
-        <button type="button" id="btn-agregar-regla-sla">Agregar regla</button>
-        <button type="button" id="btn-guardar-sla">Guardar reglas de SLA</button>
-        <span id="mensaje-sla" style="margin-left:10px;"></span>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- Automatización: solo Administrador / Programador -->
-    <!-- ============================================================ -->
-    <section class="lista-incidencias" id="seccion-automatizacion" style="display:none;">
-      <h2>Reglas de automatización</h2>
-      <p style="color:#7f8c8d; margin-top:-10px;">
-        Al crear una incidencia (no al editar), si categoría/sucursal/prioridad coincide exactamente
-        con el valor de la condición, se asigna el técnico o se cambia la prioridad automáticamente.
-        Si varias reglas coinciden, gana la de orden más alto.
-      </p>
-
-      <div style="overflow-x:auto;">
-        <table id="tabla-automatizacion">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Si...</th>
-              <th>Es igual a</th>
-              <th>Entonces...</th>
-              <th>Valor</th>
-              <th>Orden</th>
-              <th>Activa</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cuerpo-automatizacion">
-            <tr><td colspan="8">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div style="margin-top:15px;">
-        <button type="button" id="btn-agregar-regla-automatizacion">Agregar regla</button>
-        <button type="button" id="btn-guardar-automatizacion">Guardar reglas de automatización</button>
-        <span id="mensaje-automatizacion" style="margin-left:10px;"></span>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- Plantillas de respuesta rápida: solo Administrador / Programador -->
-    <!-- ============================================================ -->
-    <section class="lista-incidencias" id="seccion-plantillas" style="display:none;">
-      <h2>Plantillas de respuesta rápida</h2>
-      <p style="color:#7f8c8d; margin-top:-10px;">
-        Textos que los técnicos pueden insertar en las notas de una incidencia desde su detalle.
-      </p>
-
-      <div style="overflow-x:auto;">
-        <table id="tabla-plantillas">
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Contenido</th>
-              <th>Categoría (opcional)</th>
-              <th>Activa</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="cuerpo-plantillas">
-            <tr><td colspan="5">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div style="margin-top:15px;">
-        <button type="button" id="btn-agregar-plantilla">Agregar plantilla</button>
-        <button type="button" id="btn-guardar-plantillas">Guardar plantillas</button>
-        <span id="mensaje-plantillas" style="margin-left:10px;"></span>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- Etiquetas: solo Administrador / Programador -->
-    <!-- ============================================================ -->
-    <section class="lista-incidencias" id="seccion-etiquetas" style="display:none;">
-      <h2>Etiquetas de incidencias</h2>
-      <div style="overflow-x:auto;">
-        <table id="tabla-etiquetas">
-          <thead>
-            <tr><th>Nombre</th><th>Color</th><th></th></tr>
-          </thead>
-          <tbody id="cuerpo-etiquetas">
-            <tr><td colspan="3">Cargando...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="margin-top:15px;">
-        <button type="button" id="btn-agregar-etiqueta">Agregar etiqueta</button>
-        <button type="button" id="btn-guardar-etiquetas">Guardar etiquetas</button>
-        <span id="mensaje-etiquetas" style="margin-left:10px;"></span>
-      </div>
-    </section>
   </main>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/ajustes.js?v=20260927" defer></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/ajustes.js?v=20261124" defer></script>
 </body>
 </html>

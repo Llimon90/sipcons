@@ -7,11 +7,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+    <script src="../scripts/auth-guard.js?v=20261124"></script>
+    <script src="../scripts/dialogo.js?v=20261101"></script>
+    <script src="../scripts/menu-lateral.js?v=20261125"></script>
+    <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -49,12 +54,20 @@
           <label for="f-tabla">Tabla</label>
           <select id="f-tabla" name="tabla">
             <option value="">Todas</option>
-            <option value="incidencias">Incidencias</option>
+            <option value="incidencias">Órdenes de servicio</option>
             <option value="usuarios">Usuarios</option>
             <option value="clientes">Clientes</option>
             <option value="ventas">Ventas</option>
             <option value="padron_equipos">Padrón de Equipos</option>
+            <option value="inventario_articulos">Inventario</option>
+            <option value="cotizaciones">Cotizaciones</option>
+            <option value="cuentas_cobrar">Cuentas por cobrar</option>
+            <option value="cobros">Cobros</option>
+            <option value="gastos">Gastos</option>
             <option value="permisos_rol">Privilegios por rol</option>
+            <option value="marcas">Marcas</option>
+            <option value="modelos">Modelos</option>
+            <option value="documentos">Manuales</option>
           </select>
         </div>
         <div>
@@ -65,11 +78,16 @@
             <option value="UPDATE">Edición</option>
             <option value="DELETE">Eliminación</option>
             <option value="ARCHIVO_ELIMINADO">Eliminación de archivo</option>
+            <option value="ENTRADA">Entrada de inventario</option>
+            <option value="SALIDA">Salida de inventario</option>
+            <option value="AJUSTE">Ajuste de inventario</option>
+            <option value="INVENTARIO">Refacciones en órdenes de servicio / ventas</option>
+            <option value="CANCELAR">Cancelación</option>
           </select>
         </div>
         <div>
           <label for="f-registro">Registro</label>
-          <input type="text" id="f-registro" name="registro_id" placeholder="Ej. VT-00005, SIP-0001 o 128">
+          <input type="text" id="f-registro" name="registro_id" placeholder="Ej. VT-00005, SD-0001, REF-0001 o 128">
         </div>
         <div>
           <label for="f-desde">Desde</label>
@@ -116,8 +134,8 @@
     </div>
   </div>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/historial.js?v=2" defer></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/historial.js?v=20261110" defer></script>
 </body>
 </html>

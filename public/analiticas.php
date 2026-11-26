@@ -4,6 +4,7 @@
 //   public/analiticas.php?k=TOKEN
 // Sin token ni cookie válida responde 404 (ni siquiera se entrega el HTML).
 require_once __DIR__ . '/../config/database.php'; // carga el .env
+require_once __DIR__ . '/../config/branding.php';
 require_once __DIR__ . '/../auth/analytics_acceso.php';
 
 header('Cache-Control: no-store');
@@ -35,7 +36,7 @@ try {
   document.documentElement.setAttribute('data-theme', t);
 } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
 </script>
-<title>Analíticas de uso - SIPCONS</title>
+<title>Analíticas de uso - <?= htmlspecialchars(brandConfig()['nombre']) ?></title>
 <link rel="icon" href="../img/favicon.ico" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
@@ -140,7 +141,7 @@ tr.click{cursor:pointer}tr.click:hover{background:var(--hover)}
     <label>Usuario
       <select id="fUsuario"><option value="">Todos</option></select>
     </label>
-    <label class="chk"><input type="checkbox" id="fProg"> Incluir mi actividad (Programador)</label>
+    <label class="chk"><input type="checkbox" id="fProg"> Incluir actividad de soporte</label>
     <button class="btn" id="btnAplicar"><i class="fas fa-rotate"></i> Actualizar</button>
   </div>
 
@@ -168,6 +169,6 @@ tr.click{cursor:pointer}tr.click:hover{background:var(--hover)}
 
 <div class="overlay" id="overlay"><div class="drawer" id="drawer"></div></div>
 
-<script src="../scripts/analiticas-panel.js?v=4"></script>
+<script src="../scripts/analiticas-panel.js?v=20261031"></script>
 </body>
 </html>

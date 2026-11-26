@@ -1,10 +1,14 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('ventas');
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/lib/subidas.php';
+require_once __DIR__ . '/lib/inventario_helpers.php';
 require_once __DIR__ . '/lib/periodicidad_helpers.php';
 header('Content-Type: application/json');
 
-$idVenta = $_POST['venta_id'] ?? null;
+$idVenta = (int)($_POST['venta_id'] ?? 0) ?: null;
 
 if (!$idVenta) {
     echo json_encode(['exito' => false, 'mensaje' => 'ID de venta inválido o no recibido']);
@@ -18,7 +22,7 @@ function fotografiarVenta(PDO $pdo, int $ventaId): array {
     $cabecera = $stmtCab->fetch(PDO::FETCH_ASSOC) ?: [];
 
     $stmtDet = $pdo->prepare(
-        "SELECT id, equipo, marca, modelo, numero_serie, garantia, calibracion, servicio, frecuencia_servicio, notas
+        "SELECT id, articulo_id, equipo, marca, modelo, numero_serie, garantia, calibracion, servicio, frecuencia_servicio, notas
          FROM venta_detalles WHERE venta_id = ? ORDER BY id"
     );
     $stmtDet->execute([$ventaId]);
@@ -82,7 +86,7 @@ function sincronizarPadronEquipo(
         $stmtCrear = $pdo->prepare(
             "INSERT INTO padron_equipos
                 (cliente, sucursal, equipo, marca, modelo, numero_serie, calibracion, servicio, frecuencia_servicio, garantia, proxima_calibracion, proximo_servicio, origen, venta_id, venta_detalle_id, fecha_registro)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta SIPCONS', ?, ?, ?)"
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Venta propia', ?, ?, ?)"
         );
         $stmtCrear->execute([
             $cliente, $sucursal, $equipo, $marca, $modelo, $numeroSerieNueva,
@@ -106,7 +110,7 @@ try {
 
     // COALESCE: si el formulario llega sin fecha, conservamos la que ya tenia la venta
     // en vez de dejarla en NULL (y de paso mantenemos una base de fecha valida para
-    // recalcular las proximas calibraciones/servicios del padron).
+    // recalcular los próximos mantenimientos del padrón).
     $stmtV = $pdo->prepare("UPDATE ventas SET
         cliente = ?,
         sucursal = ?,
@@ -215,6 +219,10 @@ try {
             // Antes de borrar el detalle, quitamos del Padrón el equipo correspondiente:
             // si ya no forma parte de la venta, tampoco debe seguir programado.
             // 1) Emparejamiento exacto por venta_detalle_id.
+            // H-02 · L-29: las órdenes que atendieron esos equipos conservan la serie, sin liga colgando
+            try {
+                $pdo->prepare("UPDATE incidencia_equipos ie JOIN padron_equipos p ON p.id = ie.padron_id SET ie.padron_id = NULL WHERE p.venta_detalle_id IN ($listaPlaceholders)")->execute($paramsIds);
+            } catch (PDOException $e) { /* sin D-41 */ }
             $stmtDeletePadronPorDetalle = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_detalle_id IN ($listaPlaceholders)");
             $stmtDeletePadronPorDetalle->execute($paramsIds);
 
@@ -232,6 +240,10 @@ try {
                     $paramsSeries[$clave] = $serie;
                 }
                 $listaPlaceholdersSeries = implode(',', $placeholdersSeriesNombrados);
+                try {
+                    $pdo->prepare("UPDATE incidencia_equipos ie JOIN padron_equipos p ON p.id = ie.padron_id SET ie.padron_id = NULL
+                                   WHERE p.venta_id = :venta_id_del AND p.venta_detalle_id IS NULL AND p.numero_serie IN ($listaPlaceholdersSeries)")->execute($paramsSeries);
+                } catch (PDOException $e) { /* sin D-41 */ }
                 $stmtDeletePadron = $pdo->prepare("DELETE FROM padron_equipos WHERE venta_id = :venta_id_del AND venta_detalle_id IS NULL AND numero_serie IN ($listaPlaceholdersSeries)");
                 $stmtDeletePadron->execute($paramsSeries);
             }
@@ -242,14 +254,34 @@ try {
     }
 
     // ==========================================
+    // 2b. INVENTARIO: artículo vinculado a la venta
+    // ==========================================
+    // Si el formulario manda articulo_id ('' = sin artículo) se aplica a todas las
+    // partidas; si no lo manda, las partidas nuevas heredan el que ya tenía la venta.
+    if (array_key_exists('articulo_id', $_POST)) {
+        $articuloVenta = (int)$_POST['articulo_id'] ?: null;
+        $pdo->prepare("UPDATE venta_detalles SET articulo_id = ? WHERE venta_id = ?")->execute([$articuloVenta, $idVenta]);
+    } else {
+        $pdo->prepare(
+            "UPDATE venta_detalles d
+             JOIN (SELECT MAX(articulo_id) AS art FROM venta_detalles WHERE venta_id = ?) x
+             SET d.articulo_id = x.art
+             WHERE d.venta_id = ? AND d.articulo_id IS NULL AND x.art IS NOT NULL"
+        )->execute([$idVenta, $idVenta]);
+    }
+    invSincronizarVenta($pdo, (int)$idVenta, $ventaAntes['folio'] ?? null);
+
+    // ==========================================
     // 3. SUBIR ARCHIVOS NUEVOS
     // ==========================================
     $archivosAgregadosVenta = [];
     if (isset($_FILES['nuevos_facturas']) && !empty($_FILES['nuevos_facturas']['name'][0])) {
 
-        $infoVenta = $pdo->query("SELECT folio, cliente FROM ventas WHERE id = $idVenta")->fetch(PDO::FETCH_ASSOC);
+        $stmtInfo = $pdo->prepare("SELECT folio, cliente FROM ventas WHERE id = ?");
+        $stmtInfo->execute([$idVenta]);
+        $infoVenta = $stmtInfo->fetch(PDO::FETCH_ASSOC);
         $carpetaLimpia = preg_replace('/[^A-Za-z0-9_\-]/', '_', $infoVenta['cliente']);
-        $uploadDir = "../uploads/ventas/{$carpetaLimpia}/";
+        $uploadDir = '../' . carpetaEmpresa('uploads') . "/ventas/{$carpetaLimpia}/";
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
@@ -259,7 +291,7 @@ try {
         $stmtArch = $pdo->prepare($sqlArch);
 
         foreach ($_FILES['nuevos_facturas']['name'] as $k => $nomOriginal) {
-            if ($_FILES['nuevos_facturas']['error'][$k] === UPLOAD_ERR_OK) {
+            if ($_FILES['nuevos_facturas']['error'][$k] === UPLOAD_ERR_OK && extensionAdjuntoPermitida($nomOriginal)) {
                 $ext = pathinfo($nomOriginal, PATHINFO_EXTENSION);
                 $tipo = $_FILES['nuevos_facturas']['type'][$k];
                 $nuevoNombre = "{$infoVenta['folio']}_" . time() . "_{$k}.{$ext}";
@@ -272,6 +304,13 @@ try {
             }
         }
     }
+
+    // D-44: la venta y sus equipos del padrón se ligan a la sucursal del cliente
+    require_once __DIR__ . '/lib/sucursales_helpers.php';
+    if ($idVenta) sucLigarRegistro($pdo, 'ventas', (int)$idVenta);
+    $stCli = $pdo->prepare('SELECT cliente FROM ventas WHERE id = ?');
+    $stCli->execute([(int)$idVenta]);
+    sucSincronizarPorNombre($pdo, (string)$stCli->fetchColumn());
 
     $pdo->commit();
     solicitarRevisionTickets();
@@ -286,12 +325,15 @@ try {
 
     echo json_encode(['exito' => true, 'mensaje' => 'Venta actualizada correctamente con todos sus detalles.']);
 
+} catch (InventarioException $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    echo json_encode(['exito' => false, 'mensaje' => mensajeErrorPublico($e)]);
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log("Error BD al actualizar venta: " . $e->getMessage());
-    echo json_encode(['exito' => false, 'mensaje' => 'Error de BD: ' . $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => 'Error de BD: ' . mensajeErrorPublico($e)]);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
-    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => 'Error: ' . mensajeErrorPublico($e)]);
 }
 ?>

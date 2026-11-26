@@ -1,10 +1,19 @@
 .env
 uploads/*
 !uploads/.htaccess
+manuales/*
+!manuales/.htaccess
+!manuales/e1/
 error_log
 storage/sessions/*
 !storage/sessions/.htaccess
-storage/sessions_portal/*
-!storage/sessions_portal/.htaccess
 storage/logs/*
+# Comprobantes de pago de los clientes (contratación por transferencia)
+storage/comprobantes/
 !storage/logs/.htaccess
+
+# Archivos temporales del auditor (parches de --diff)
+auditorias/.tmp/
+
+# Capturas y snapshots de Playwright (revisión de UX local)
+.playwright-mcp/

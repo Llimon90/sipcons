@@ -8,11 +8,19 @@
  * código puede seguir leyendo input.files. Estilos: "SELECTOR DE ARCHIVOS"
  * en styles.css.
  *
- *   const selector = SipconsArchivos.crear(input, { limites });
+ *   const selector = AppArchivos.crear(input, { limites });
  *   selector.archivos()   -> File[]
  *   selector.revisar()    -> null o { mensaje, lista } si algo no se puede enviar
  *   selector.limpiar()
  *   selector.establecerLimites({ archivo_mb, total_mb, max_archivos, extensiones })
+ *
+ * Opciones: texto (título de la zona), ayuda (texto de apoyo), reducir
+ * (false si la página no usa prepararParaEnvio). Un input sin "multiple"
+ * guarda un solo archivo (elegir otro lo reemplaza).
+ *
+ * Es la caja estándar de subida de todo el sistema: cualquier
+ * <input type="file" data-selector data-texto="…" data-ayuda="…"> se convierte
+ * sola al cargar la página (también si se agrega después, p. ej. en un modal).
  */
 (function () {
     const ICONOS = {
@@ -32,9 +40,11 @@
         : (bytes / MB).toLocaleString('es-MX', { maximumFractionDigits: 1 }) + ' MB';
     const claveArchivo = f => `${f.name}|${f.size}|${f.lastModified}`;
     // Fotos que el navegador puede reducir antes de enviar (ver comprimirImagen)
-    const seReduce = f => ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(extension(f.name)) && f.size >= 600 * 1024;
+    const reducible = f => ['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(extension(f.name)) && f.size >= 600 * 1024;
 
     function crear(input, opciones = {}) {
+        if (input._selector) return input._selector;
+        const seReduce = f => opciones.reducir !== false && reducible(f);
         let limites = opciones.limites || {};
         let archivos = Array.from(input.files || []);
         const urls = new Map();
@@ -66,6 +76,11 @@
         caja.appendChild(lista);
 
         function actualizarAyuda() {
+            if (opciones.ayuda) {
+                const arrastrar = window.matchMedia && window.matchMedia('(hover: hover)').matches ? ' · también puedes arrastrarlos aquí' : '';
+                zona.querySelector('.selector-archivos-ayuda').textContent = opciones.ayuda + arrastrar;
+                return;
+            }
             const partes = ['Imágenes, PDF, videos o documentos'];
             if (limites.archivo_mb) partes.push(`hasta ${limites.archivo_mb} MB cada uno`);
             if (window.matchMedia && window.matchMedia('(hover: hover)').matches) partes.push('también puedes arrastrarlos aquí');
@@ -84,6 +99,18 @@
         }
 
         function agregar(nuevos) {
+            if (!input.multiple) {
+                // Un solo archivo: el nuevo reemplaza al anterior
+                const ultimo = Array.from(nuevos).slice(-1);
+                if (!ultimo.length) return;
+                urls.forEach(url => URL.revokeObjectURL(url));
+                urls.clear();
+                archivos = ultimo;
+                sincronizarInput();
+                pintar();
+                avisarCambio();
+                return;
+            }
             const existentes = new Set(archivos.map(claveArchivo));
             Array.from(nuevos).forEach(f => {
                 if (!existentes.has(claveArchivo(f))) archivos.push(f);
@@ -198,7 +225,7 @@
         actualizarAyuda();
         pintar();
 
-        return {
+        return input._selector = {
             archivos: () => archivos.slice(),
             limpiar() {
                 urls.forEach(url => URL.revokeObjectURL(url));
@@ -325,7 +352,7 @@
                 });
             };
             const sinRed = () => {
-                if (window.SipconsConexion) window.SipconsConexion.revisar();
+                if (window.AppConexion) window.AppConexion.revisar();
                 resolver({ estado: 0, datos: null, sinConexion: true, sesionCerrada: false });
             };
             xhr.onerror = sinRed;
@@ -345,5 +372,21 @@
         return promesaLimites;
     }
 
-    window.SipconsArchivos = { crear, cargarLimites, prepararParaEnvio, enviarConAvance };
+    window.AppArchivos = { crear, cargarLimites, prepararParaEnvio, enviarConAvance };
+
+    // Caja estándar automática: <input type="file" data-selector>
+    function convertir(raiz) {
+        (raiz.querySelectorAll ? raiz.querySelectorAll('input[type="file"][data-selector]') : []).forEach(input => {
+            if (input._selector) return;
+            crear(input, { texto: input.dataset.texto, ayuda: input.dataset.ayuda, reducir: false });
+        });
+    }
+    function iniciar() {
+        convertir(document);
+        new MutationObserver(cambios => cambios.forEach(c => c.addedNodes.forEach(n => {
+            if (n.nodeType === 1) convertir(n.matches && n.matches('input[type="file"][data-selector]') ? n.parentNode : n);
+        }))).observe(document.body, { childList: true, subtree: true });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+    else iniciar();
 })();

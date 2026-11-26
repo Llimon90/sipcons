@@ -1,0 +1,46 @@
+/* Perfil del usuario (public/perfil.html; D-46). Marca vía branding/tema.css.php */
+.pf {
+  --pf-tarjeta: #ffffff; --pf-borde: #e3e8ee; --pf-texto: #1f2b3a; --pf-suave: #6c7a89;
+  --pf-acento: var(--brand-primary, #3498db);
+  --pf-rojo: #b3261e; --pf-verde: #1e7b45; --pf-azul: #1d5fae;
+  color: var(--pf-texto); max-width: 1100px; padding: 22px 16px 32px; box-sizing: border-box;
+}
+html[data-theme="dark"] .pf {
+  --pf-tarjeta: #16212d; --pf-borde: #2c3d50; --pf-texto: #e6edf3; --pf-suave: #9fb0c1;
+  --pf-acento: var(--brand-dm-accent, #4aa8ee); --pf-rojo: #ff8a80; --pf-verde: #6ee7a0; --pf-azul: #8cc4ff;
+}
+.pf-cabecera, .pf-tarjeta, .pf-kpi { background: var(--pf-tarjeta); border: 1px solid var(--pf-borde); border-radius: 12px; }
+.pf-cabecera { display: flex; gap: 22px; align-items: center; padding: 20px; flex-wrap: wrap; }
+.pf-foto { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; flex: none; display: flex; align-items: center; justify-content: center;
+  background: var(--pf-acento); color: #fff; font-size: 2.4rem; font-weight: 700; }
+.pf-foto img { width: 100%; height: 100%; object-fit: cover; }
+.pf-datos { flex: 1; min-width: 220px; }
+.pf-datos h1 { margin: 0 0 2px; font-size: 1.5rem; }
+.pf-datos p { margin: 4px 0; }
+.pf-rol { color: var(--pf-acento); font-weight: 600; }
+.pf-suave { color: var(--pf-suave); font-size: 0.85rem; }
+.pf-acciones { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.pf-subir { cursor: pointer; }
+.pf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+.pf-kpi { padding: 14px; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; }
+.pf-kpi i { grid-row: span 2; font-size: 1.3rem; color: var(--pf-suave); }
+.pf-kpi b { font-size: 1.5rem; }
+.pf-kpi span { font-size: 0.82rem; color: var(--pf-suave); }
+.pf-kpi.azul i { color: var(--pf-azul); } .pf-kpi.rojo i, .pf-kpi.rojo b { color: var(--pf-rojo); } .pf-kpi.verde i { color: var(--pf-verde); }
+.pf-tarjeta { padding: 6px 0; }
+.pf-tarjeta h2 { font-size: 1.05rem; margin: 10px 16px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pf-tarjeta h2 a { font-size: 0.85rem; font-weight: 500; color: var(--pf-acento); text-decoration: none; }
+.pf-tarjeta > p { margin: 10px 16px 16px; }
+.pf-ordenes { list-style: none; margin: 0; padding: 0; }
+.pf-ordenes li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--pf-borde); align-items: center; }
+.pf-ordenes li.tarde { border-left: 3px solid var(--pf-rojo); }
+.pf-ordenes a { color: inherit; text-decoration: none; min-width: 0; }
+.pf-ordenes a small { display: block; color: var(--pf-suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-ordenes span { display: flex; gap: 10px; align-items: center; flex: none; }
+.pf-ordenes em { font-style: normal; color: var(--pf-suave); font-size: 0.82rem; }
+.pf-error { color: var(--pf-rojo); }
+@media (max-width: 600px) {
+  .pf-cabecera { flex-direction: column; text-align: center; }
+  .pf-acciones { justify-content: center; }
+  .pf-ordenes li { flex-direction: column; align-items: flex-start; }
+}

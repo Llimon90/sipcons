@@ -6,11 +6,12 @@
  * archivo por mes, separado por tabuladores). Sirve para responder "guardé y
  * no aparece": quién, cuándo, qué registro y por qué no se guardó (sesión
  * cerrada, archivos muy pesados, otra persona lo modificó, error del
- * servidor...). No se expone en el portal: se consulta desde el
- * Administrador de archivos de cPanel. Nunca guarda el texto capturado.
+ * servidor...). No se expone en el portal (storage/ responde 404): se consulta
+ * desde el Administrador de archivos del hosting. Es de toda la plataforma;
+ * la columna empresa indica a cuál pertenece cada línea. Nunca guarda el texto capturado.
  * Un fallo al escribir el log jamás debe romper la petición.
  *
- * Columnas: fecha · motivo · usuario · rol · registro · página/endpoint ·
+ * Columnas: fecha · empresa (id) · motivo · usuario · rol · registro · página/endpoint ·
  *           tamaño del envío (bytes) · IP · navegador · detalle
  */
 function registrarFalloGuardado(string $motivo, ?string $registro = null, string $detalle = ''): void {
@@ -26,6 +27,7 @@ function registrarFalloGuardado(string $motivo, ?string $registro = null, string
 
         $linea = implode("\t", [
             date('Y-m-d H:i:s'),
+            'e' . (int)($_SESSION['empresa_id'] ?? 0),
             $limpia($motivo, 40),
             $limpia($_SESSION['usuario'] ?? '(sin sesión)', 60),
             $limpia($_SESSION['rol'] ?? '-', 40),

@@ -12,14 +12,14 @@ document.getElementById('new-incidencia-form').addEventListener('submit', async 
       const result = await response.json();
   
       if (result.success) {
-        alert('Cliente guardado exitosamente');
+        AppAviso.alerta('Cliente guardado exitosamente');
         event.target.reset(); // Limpia el formulario después de guardar
       } else {
-        alert(`Error: ${result.message}`);
+        AppAviso.alerta(`Error: ${result.message}`);
       }
     } catch (error) {
       console.error('Error al enviar datos:', error);
-      alert('Hubo un error al guardar el cliente');
+      AppAviso.alerta('Hubo un error al guardar el cliente');
     }
   });
   

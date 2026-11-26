@@ -131,11 +131,18 @@ class SidebarStateManager {
             const icon = toggleButton.querySelector('i');
             if (icon) {
                 icon.className = isContraida ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+                icon.setAttribute('aria-hidden', 'true');
             }
+            // U-6: el botón se anuncia con lo que hace, no con el glifo
+            toggleButton.setAttribute('aria-label', isContraida ? 'Expandir menú' : 'Contraer menú');
+            toggleButton.setAttribute('aria-expanded', isContraida ? 'false' : 'true');
         }
     }
 
     setActivePage() {
+        // El menú por áreas (menu-lateral.js) ya marca la página activa, incluidas
+        // las internas de cada módulo (detalle, perfil del cliente...)
+        if (document.querySelector('.sidebar .menu-lateral')) return;
         const links = document.querySelectorAll('.sidebar a');
         links.forEach(link => {
             const href = link.getAttribute('href');
@@ -171,7 +178,9 @@ class SidebarStateManager {
         const linkInicio = sidebar.querySelector('a[href$="index.html"]');
         const hrefInicio = linkInicio ? linkInicio.getAttribute('href') : '../index.html';
         const linkActivo = sidebar.querySelector('a.active .sidebar-link-text');
-        const titulo = (document.title || (linkActivo && linkActivo.textContent) || 'SIPCONS').trim();
+        // branding/marca.js.php añade " · <marca>" al <title>; aquí basta la página
+        const marca = window.APP_BRAND || {};
+        const titulo = (marca.tituloPagina || document.title || (linkActivo && linkActivo.textContent) || marca.nombre || '').trim();
 
         if (!sidebar.id) sidebar.id = 'sidebar-principal';
 

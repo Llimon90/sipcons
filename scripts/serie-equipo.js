@@ -1,6 +1,6 @@
 // Llena un <datalist> con los números de serie del padrón de equipos del
 // cliente elegido, para capturar el equipo en la incidencia (reincidencias).
-window.SipconsSerie = {
+window.AppSerie = {
     vincular(inputCliente, datalist) {
         if (!inputCliente || !datalist) return;
         let clienteCargado = null;

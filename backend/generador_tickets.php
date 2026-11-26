@@ -1,24 +1,39 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('incidencias');
+require_once __DIR__ . '/../config/branding.php';
 require_once __DIR__ . '/../config/guardados_log.php';
+require_once __DIR__ . '/../auth/audit.php';
 require_once __DIR__ . '/lib/periodicidad_helpers.php';
 // backend/generador_tickets.php
 //
-// Genera tickets automáticos de mantenimiento/calibración desde el padrón:
+// Genera tickets automáticos de mantenimiento desde el padrón:
 //   - Equipos SIN póliza (servicio = 0, meses en "calibracion"): ticket para
-//     contactar al cliente y recomendar el mantenimiento/calibración.
+//     contactar al cliente y recomendar el mantenimiento.
 //   - Equipos CON póliza (servicio = 1, meses en "frecuencia_servicio"):
 //     ticket de servicio programado.
 // Se incluye al consultar la lista de incidencias. Corre como máximo cada
 // GENERADOR_CADA_SEGUNDOS y un solo proceso a la vez (dos usuarios simultáneos
 // podían duplicar tickets); cualquier cambio en el padrón (venta o equipo
 // externo) pide una revisión inmediata con solicitarRevisionTickets().
+// Todo ocurre dentro de la empresa en sesión (tablas e<ID>_ y candado propio).
+// Una empresa en solo lectura o bloqueada no genera tickets.
 const GENERADOR_CADA_SEGUNDOS = 600;
 const GENERADOR_DIAS_ANTICIPACION = 10;
 
 $candadoGenerador = null;
-$puedeGenerar = true;
-if (is_dir(dirname(RUTA_CANDADO_GENERADOR)) && ($candadoGenerador = @fopen(RUTA_CANDADO_GENERADOR, 'c+'))) {
+$puedeGenerar = situacionEmpresa(empresaActual())['acceso'] === 'total';
+$rutaCandado = rutaCandadoGenerador();
+if ($puedeGenerar && !is_dir(dirname($rutaCandado))) @mkdir(dirname($rutaCandado), 0775, true);
+$candadoGenerador = $puedeGenerar && is_dir(dirname($rutaCandado)) ? @fopen($rutaCandado, 'c+') : null;
+if ($puedeGenerar && !$candadoGenerador) {
+    // H-15: sin candado no se sabe si otro proceso ya está generando ni cuándo corrió:
+    // falla cerrado (no genera) en vez de correr en cada consulta
+    $puedeGenerar = false;
+    error_log('Generador de tickets: no se pudo abrir el candado ' . basename($rutaCandado));
+}
+if ($puedeGenerar && $candadoGenerador) {
     if (!flock($candadoGenerador, LOCK_EX | LOCK_NB)) {
         $puedeGenerar = false; // otro usuario lo está ejecutando en este momento
     } else {
@@ -40,6 +55,15 @@ function sumarMesesFecha(string $fecha, int $meses): string {
 
 if ($puedeGenerar) {
     $limite = date('Y-m-d', strtotime('+' . GENERADOR_DIAS_ANTICIPACION . ' days'));
+    $sistema = 'Sistema ' . brandConfig()['nombre'];
+
+    // Categoría de los tickets: la de mantenimiento preventivo de la empresa
+    // (sus categorías de marca) o, si no existe, la primera de la lista.
+    $categoriasEmpresa = brandConfig()['categorias'];
+    $categoriaAuto = $categoriasEmpresa[0] ?? 'Otros';
+    foreach ($categoriasEmpresa as $cat) {
+        if (stripos($cat, 'preventiv') !== false) { $categoriaAuto = $cat; break; }
+    }
     $huboErrores = false;
 
     $tipos = [
@@ -49,8 +73,8 @@ if ($puedeGenerar) {
             'meses'    => 'calibracion',
             'proxima'  => 'proxima_calibracion',
             'filtro'   => 'COALESCE(p.servicio, 0) = 0 AND p.calibracion > 0',
-            'falla'    => 'CONTACTAR CLIENTE (SIN PÓLIZA): Recomendar Mantenimiento/Calibración (%d equipos)',
-            'notas'    => "Cliente sin póliza de mantenimiento. Contactar para recomendar mantenimiento/calibración de:\n",
+            'falla'    => 'CONTACTAR CLIENTE (SIN PÓLIZA): Recomendar Mantenimiento (%s)',
+            'notas'    => "Cliente sin póliza de mantenimiento. Contactar para recomendar mantenimiento de:\n",
         ],
         // 2. CON PÓLIZA: SERVICIO PROGRAMADO
         [
@@ -58,7 +82,7 @@ if ($puedeGenerar) {
             'meses'    => 'frecuencia_servicio',
             'proxima'  => 'proximo_servicio',
             'filtro'   => 'p.servicio = 1 AND p.frecuencia_servicio > 0',
-            'falla'    => 'PÓLIZA: Mantenimiento/Calibración Programado (%d equipos)',
+            'falla'    => 'PÓLIZA: Mantenimiento Programado (%s)',
             'notas'    => "Cliente con póliza de mantenimiento. Equipos a atender:\n",
         ],
     ];
@@ -100,25 +124,32 @@ if ($puedeGenerar) {
             try {
                 $pdo->beginTransaction();
 
-                $ultimo = $pdo->query("SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1 FOR UPDATE")->fetchColumn();
-                $num = ($ultimo && preg_match('/SIP-(\d+)/', $ultimo, $m)) ? (int)$m[1] : 0;
-                $folioNuevo = "SIP-" . str_pad($num + 1, 4, "0", STR_PAD_LEFT);
+                $folioNuevo = tomarFolioIncidencia($pdo);  // contador de la empresa (CV-12)
 
                 $primerEq = $grupo[0];
                 $cantidad = count($grupo);
                 $notas = $tipo['notas'];
                 foreach ($grupo as $eq) {
                     $serie = !empty($eq['numero_serie']) ? $eq['numero_serie'] : 'S/N';
-                    $ref = $eq['origen'] === 'Venta SIPCONS' ? "(Venta #{$eq['venta_folio']})" : "(Equipo Externo)";
+                    $ref = $eq['origen'] === 'Venta propia' ? "(Venta #{$eq['venta_folio']})" : "(Equipo Externo)";
                     $notas .= "- {$eq['marca']} {$eq['modelo']} (Serie: $serie) $ref | Vence: {$eq['proxima']}\n";
                 }
                 $notas .= "\nTicket generado automáticamente con " . GENERADOR_DIAS_ANTICIPACION . " días de anticipación.";
                 $nombreEquipo = $cantidad > 1 ? "Múltiples Equipos" : $primerEq['equipo'];
 
-                $stmtInsertIncidencia->execute([
-                    $tipo['reporte'], $folioNuevo, $primerEq['cliente'], "Sistema SIPCONS", $primerEq['sucursal'],
-                    date('Y-m-d'), "", sprintf($tipo['falla'], $cantidad), $nombreEquipo, "Abierto", "", $notas
-                ]);
+                $datosTicket = [
+                    $tipo['reporte'], $folioNuevo, $primerEq['cliente'], $sistema, $primerEq['sucursal'],
+                    date('Y-m-d'), "", sprintf($tipo['falla'], $cantidad === 1 ? '1 equipo' : "$cantidad equipos")  /* U-21 */ . " - $nombreEquipo", $categoriaAuto, "Abierto", "", $notas
+                ];
+                $stmtInsertIncidencia->execute($datosTicket);
+                $ticketId = (int)$pdo->lastInsertId();
+                require_once __DIR__ . '/lib/sucursales_helpers.php';
+                sucLigarRegistro($pdo, 'incidencias', $ticketId);  // D-44
+                // D-24: queda en el historial como creado por el sistema (y su SLA se mide desde ahí)
+                registrarAuditoriaSistema('incidencias', $ticketId, 'CREATE', null, [
+                    'numero_incidente' => $folioNuevo, 'reporte_cliente' => $tipo['reporte'], 'cliente' => $primerEq['cliente'],
+                    'sucursal' => $primerEq['sucursal'], 'falla' => $datosTicket[7], 'categoria' => $categoriaAuto, 'estatus' => 'Abierto', 'tecnico' => '',
+                ], $folioNuevo);
 
                 // La siguiente fecha queda después del límite: un equipo con
                 // fechas atrasadas genera un solo ticket, no uno por periodo vencido.

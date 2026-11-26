@@ -4,6 +4,20 @@
 
 // Nunca debe interrumpir la operación principal: si el registro de
 // auditoría falla, solo se anota en el error_log del servidor.
+/**
+ * Historial de algo que hizo el sistema, no un usuario (D-24: tickets automáticos).
+ * Queda como "Sistema" aunque la acción se dispare durante la petición de alguien.
+ */
+function registrarAuditoriaSistema(string $tabla, $registroId, string $accion, ?array $datosAnteriores, ?array $datosNuevos, ?string $registroFolio = null): void {
+    $sesion = $_SESSION ?? [];
+    $_SESSION = ['nombre' => 'Sistema', 'rol' => 'Sistema'] + array_diff_key($sesion, array_flip(['user_id', 'nombre', 'usuario', 'rol']));
+    try {
+        registrarAuditoria($tabla, $registroId, $accion, $datosAnteriores, $datosNuevos, $registroFolio);
+    } finally {
+        $_SESSION = $sesion;
+    }
+}
+
 function registrarAuditoria(
     string $tabla,
     $registroId,

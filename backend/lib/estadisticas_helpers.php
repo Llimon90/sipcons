@@ -3,18 +3,21 @@
 // (backend/estadisticas.php) y el dashboard personal del técnico
 // (backend/estadisticas_tecnico.php), para no duplicar el cálculo de
 // tiempos reales de respuesta/cierre en dos archivos.
-require_once __DIR__ . '/sla_helpers.php';
 
-// Umbrales de SLA fijos: solo de respaldo si una incidencia no trae
-// categoria/prioridad (datasets antiguos) o sla_reglas no está disponible.
-// El SLA real y configurable vive en obtenerReglaSla() (sla_helpers.php).
-const SLA_RESPUESTA_HORAS = SLA_RESPUESTA_HORAS_FALLBACK;
-const SLA_CIERRE_HORAS = SLA_CIERRE_HORAS_FALLBACK;
+// Umbrales de SLA. El de cierre es la meta de cumplimiento de la empresa
+// (Mi empresa, 7 días por defecto; ver slaDiasEmpresa en config/empresa.php).
+const SLA_RESPUESTA_HORAS = 4;
 
-// Estatus considerados "cierre" (coincide con la definición de "resueltas" ya usada en el panel)
-const ESTADOS_CERRADOS = ['completado', 'cerrado con factura', 'cerrado sin factura', 'resuelto'];
+function slaCierreHoras(): int {
+    return slaDiasEmpresa() * 24;
+}
+
+// Estatus en los que la atención ya terminó (D-15): Completado o un cierre directo
+const ESTADOS_CERRADOS = ['completado', 'cerrado con factura', 'cerrado sin factura'];
 // Estatus considerados "sin tocar todavía" (para medir primera respuesta)
 const ESTADOS_SIN_RESPUESTA = ['abierto', ''];
+// Cancelada: queda fuera del SLA (0.1, D-15)
+const ESTADO_CANCELADO = 'cancelado';
 
 /**
  * Recopila y sanea los parámetros de filtro de la URL.
@@ -28,6 +31,11 @@ const ESTADOS_SIN_RESPUESTA = ['abierto', ''];
  * SIEMPRE filtre por su propia identidad de sesión, nunca por lo que
  * venga en la URL).
  */
+function fechaValidaYmd($valor): bool {
+    $d = is_string($valor) ? DateTime::createFromFormat('!Y-m-d', $valor) : false;
+    return $d !== false && $d->format('Y-m-d') === $valor;
+}
+
 function construirFiltros($conn, $tabla_alias = 'i', $campo_fecha = 'fecha', $fechaInicioOverride = null, $fechaFinOverride = null, $tecnicoForzado = null) {
     $filtros = [];
 
@@ -48,9 +56,10 @@ function construirFiltros($conn, $tabla_alias = 'i', $campo_fecha = 'fecha', $fe
         if (preg_match('/^anio_(\d{4})$/', $rango, $mAnio)) {
             $fecha_inicio = $mAnio[1] . '-01-01';
             $fecha_fin = $mAnio[1] . '-12-31';
-        } elseif ($rango === 'custom' && !empty($_GET['fechaInicio']) && !empty($_GET['fechaFin'])) {
-            $fecha_inicio = $_GET['fechaInicio'];
-            $fecha_fin = $_GET['fechaFin'];
+        } elseif ($rango === 'custom' && fechaValidaYmd($_GET['fechaInicio'] ?? '') && fechaValidaYmd($_GET['fechaFin'] ?? '')) {
+            // N-H12: solo fechas AAAA-MM-DD válidas; si vienen invertidas se ordenan
+            $fecha_inicio = min($_GET['fechaInicio'], $_GET['fechaFin']);
+            $fecha_fin = max($_GET['fechaInicio'], $_GET['fechaFin']);
         } else {
             $dias = intval($rango);
             if ($dias <= 0) $dias = 30;
@@ -64,7 +73,7 @@ function construirFiltros($conn, $tabla_alias = 'i', $campo_fecha = 'fecha', $fe
     // en BD están capitalizados, p.ej. "Cerrado con factura", pero no hay que
     // depender de la collation de la tabla para que el filtro funcione)
     if (!empty($tecnico)) {
-        $valor = $conn->real_escape_string(trim($tecnico));
+        $valor = $conn->real_escape_string(addcslashes(trim($tecnico), '%_' . chr(92)));
         $filtros[] = sqlCoincideTecnico("{$tabla_alias}.tecnico") . " LIKE CONCAT('%/', '{$valor}', '/%')";
     }
 
@@ -143,7 +152,7 @@ function separarTecnicos($valorTecnico) {
     $tecnicos = [];
     foreach (explode('/', (string)$valorTecnico) as $t) {
         $t = trim($t);
-        if (strlen($t) > 2) {
+        if ($t !== '') {  // antes strlen > 2: un alias como "JC" no se reconocía (H-16)
             $tecnicos[] = $t;
         }
     }
@@ -237,10 +246,6 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
     $porIncidencia = [];
     $cierrePorTecnico = []; // tecnico => [horas, ...]
     $cierrePorSucursal = []; // sucursal => [horas, ...]
-    $dentroSlaRespuestaCount = 0;
-    $dentroSlaCierreCount = 0;
-    $dentroSlaPorTecnico = []; // tecnico => cantidad dentro de SLA
-    $dentroSlaPorSucursal = []; // sucursal => cantidad dentro de SLA
 
     foreach ($filas as $fila) {
         $id = (string)$fila['id'];
@@ -254,11 +259,23 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
         $tsAltaAuditada = null;
         $primerEvento = true;
         $respuestaMedible = true;
+        $tecnicosVigentes = null;   // técnicos según el historial, evento por evento (D-17)
+        $tecnicosCierre = null;     // los que tenía cuando se completó o cerró
+        $nacioTerminada = false;    // captura posterior: se dio de alta ya completada o cerrada (D-30)
+
+        // Cancelada hoy: fuera del SLA (D-15)
+        if (strtolower(trim((string)($fila['estatus'] ?? ''))) === ESTADO_CANCELADO) {
+            $porIncidencia[$id] = ['respuesta_horas' => null, 'cierre_horas' => null];
+            continue;
+        }
 
         foreach (($eventosPorId[$id] ?? []) as $ev) {
             if (($ev['accion'] ?? '') === 'DELETE') continue;
 
             $datos = json_decode($ev['datos_nuevos'] ?? '', true);
+            if (is_array($datos) && array_key_exists('tecnico', $datos)) {
+                $tecnicosVigentes = is_array($datos['tecnico']) ? implode('/', $datos['tecnico']) : (string)$datos['tecnico'];
+            }
             if (!is_array($datos) || !array_key_exists('estatus', $datos)) continue;
 
             $tsEvento = strtotime($ev['creado_en']);
@@ -277,6 +294,7 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
 
             if ($esAlta && $tsAltaAuditada === null) {
                 $tsAltaAuditada = $tsEvento;
+                if (in_array($estatusNuevo, ESTADOS_CERRADOS, true)) $nacioTerminada = true;
             }
 
             // Incidencias anteriores a la auditoría: si el primer evento
@@ -296,13 +314,33 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
                 continue;
             }
 
-            if ($respuestaMedible && $tsRespuesta === null && !in_array($estatusNuevo, ESTADOS_SIN_RESPUESTA, true)) {
+            if ($respuestaMedible && $tsRespuesta === null && !in_array($estatusNuevo, ESTADOS_SIN_RESPUESTA, true)
+                && $estatusNuevo !== ESTADO_CANCELADO) {
                 $tsRespuesta = $tsEvento;
             }
 
-            if ($tsCierre === null && in_array($estatusNuevo, ESTADOS_CERRADOS, true)) {
-                $tsCierre = $tsEvento;
+            // D-15: la atención termina al pasar de un estatus activo a Completado o Cerrado;
+            // si se reabre, cuenta la última vez. Completado -> Cerrado no la alarga.
+            $terminadaAntes = $estatusPrevio !== null && in_array($estatusPrevio, ESTADOS_CERRADOS, true);
+            if (in_array($estatusNuevo, ESTADOS_CERRADOS, true)) {
+                if ($tsCierre === null || !$terminadaAntes) {
+                    $tsCierre = $tsEvento;
+                    $tecnicosCierre = $tecnicosVigentes;
+                }
+            } else {
+                $tsCierre = null;  // reabierta o cancelada: deja de contar como terminada
+                $tecnicosCierre = null;
             }
+        }
+
+        // Una orden que hoy no está terminada no tiene tiempo de cierre (S-H03)
+        if (!in_array(strtolower(trim((string)($fila['estatus'] ?? ''))), ESTADOS_CERRADOS, true)) {
+            $tsCierre = null;
+        }
+        // D-30: las capturas posteriores no entran a las muestras de SLA
+        if ($nacioTerminada) {
+            $porIncidencia[$id] = ['respuesta_horas' => null, 'cierre_horas' => null];
+            continue;
         }
 
         // La "Fecha de Reporte" es solo una fecha (00:00). Si la incidencia se
@@ -315,26 +353,15 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
         $respuestaHoras = ($tsRespuesta !== null && $tsRespuesta >= $tsCreacion) ? ($tsRespuesta - $tsCreacion) / 3600 : null;
         $cierreHoras = ($tsCierre !== null && $tsCierre >= $tsCreacion) ? ($tsCierre - $tsCreacion) / 3600 : null;
 
-        // SLA por incidencia: depende de su categoría y prioridad (sla_reglas,
-        // ver backend/lib/sla_helpers.php), no de un umbral único para todas.
-        $regla = obtenerReglaSla($pdo, $fila['categoria'] ?? null, $fila['prioridad'] ?? null);
-
-        if ($respuestaHoras !== null) {
-            $tiemposRespuesta[] = $respuestaHoras;
-            if ($respuestaHoras <= $regla['horas_respuesta']) $dentroSlaRespuestaCount++;
-        }
+        if ($respuestaHoras !== null) $tiemposRespuesta[] = $respuestaHoras;
         if ($cierreHoras !== null) {
             $tiemposCierre[] = $cierreHoras;
-            $dentroSla = $cierreHoras <= $regla['horas_cierre'];
-            if ($dentroSla) $dentroSlaCierreCount++;
-            foreach (separarTecnicos($fila['tecnico'] ?? '') as $tecnico) {
+            // D-17: a quien la completó o cerró (según el historial); sin dato, a los actuales
+            foreach (separarTecnicos($tecnicosCierre ?? ($fila['tecnico'] ?? '')) as $tecnico) {
                 $cierrePorTecnico[$tecnico][] = $cierreHoras;
-                if ($dentroSla) $dentroSlaPorTecnico[$tecnico] = ($dentroSlaPorTecnico[$tecnico] ?? 0) + 1;
             }
             if (sucursalEsReal($fila['sucursal'] ?? '')) {
-                $sucursalNombre = trim($fila['sucursal']);
-                $cierrePorSucursal[$sucursalNombre][] = $cierreHoras;
-                if ($dentroSla) $dentroSlaPorSucursal[$sucursalNombre] = ($dentroSlaPorSucursal[$sucursalNombre] ?? 0) + 1;
+                $cierrePorSucursal[trim($fila['sucursal'])][] = $cierreHoras;
             }
         }
 
@@ -358,25 +385,28 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
         else $buckets[3]['cantidad']++;
     }
 
+    $dentroSlaRespuesta = array_filter($tiemposRespuesta, fn($h) => $h <= SLA_RESPUESTA_HORAS);
+    $dentroSlaCierre = array_filter($tiemposCierre, fn($h) => $h <= slaCierreHoras());
+
     $porTecnico = [];
     foreach ($cierrePorTecnico as $tecnico => $horas) {
-        $dentroSla = $dentroSlaPorTecnico[$tecnico] ?? 0;
+        $dentroSla = array_filter($horas, fn($h) => $h <= slaCierreHoras());
         $porTecnico[$tecnico] = [
             'muestras' => count($horas),
             'cierre_mediana_horas' => mediana($horas),
             'cierre_promedio_horas' => promedio($horas),
-            'sla_pct' => round(($dentroSla / count($horas)) * 100, 1),
+            'sla_pct' => round((count($dentroSla) / count($horas)) * 100, 1),
         ];
     }
 
     $porSucursal = [];
     foreach ($cierrePorSucursal as $sucursal => $horas) {
-        $dentroSla = $dentroSlaPorSucursal[$sucursal] ?? 0;
+        $dentroSla = array_filter($horas, fn($h) => $h <= slaCierreHoras());
         $porSucursal[$sucursal] = [
             'muestras' => count($horas),
             'cierre_mediana_horas' => mediana($horas),
             'cierre_promedio_horas' => promedio($horas),
-            'sla_pct' => round(($dentroSla / count($horas)) * 100, 1),
+            'sla_pct' => round((count($dentroSla) / count($horas)) * 100, 1),
         ];
     }
 
@@ -389,8 +419,8 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
             'cierre_promedio_horas' => promedio($tiemposCierre),
             'cierre_mediana_horas' => mediana($tiemposCierre),
             'muestras_cierre' => count($tiemposCierre),
-            'sla_respuesta_pct' => count($tiemposRespuesta) > 0 ? round(($dentroSlaRespuestaCount / count($tiemposRespuesta)) * 100, 1) : null,
-            'sla_cierre_pct' => count($tiemposCierre) > 0 ? round(($dentroSlaCierreCount / count($tiemposCierre)) * 100, 1) : null,
+            'sla_respuesta_pct' => count($tiemposRespuesta) > 0 ? round((count($dentroSlaRespuesta) / count($tiemposRespuesta)) * 100, 1) : null,
+            'sla_cierre_pct' => count($tiemposCierre) > 0 ? round((count($dentroSlaCierre) / count($tiemposCierre)) * 100, 1) : null,
             'total_incidencias' => count($filas),
             'cierre_buckets' => $buckets,
         ],
@@ -406,7 +436,9 @@ function analizarTiemposIncidencias(PDO $pdo, array $filas) {
  */
 function calcularEstadisticasTecnicos($conn, $filtros_where) {
     $conector = empty($filtros_where) ? "WHERE" : "AND";
-    $sql = "SELECT tecnico, estatus FROM incidencias i {$filtros_where} {$conector} tecnico IS NOT NULL AND tecnico != ''";
+    // Las canceladas no son trabajo del técnico (H-02)
+    $sql = "SELECT tecnico, estatus FROM incidencias i {$filtros_where} {$conector} tecnico IS NOT NULL AND tecnico != ''
+            AND (estatus IS NULL OR LOWER(estatus) <> 'cancelado')";
     $filas = ejecutarConsulta($conn, $sql);
 
     $stats = [];

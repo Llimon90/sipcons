@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotización</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../css/inventario.css?v=20261111">
+  <link rel="stylesheet" href="../css/cotizaciones.css?v=20261125">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
+</head>
+
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+    <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span class="user-name">Usuario</span>
+      </div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado inventario cot-documento">
+      <div class="cot-barra">
+        <a href="cotizaciones.html" class="cot-volver" id="cot-volver"><i class="fas fa-arrow-left"></i> Cotizaciones</a>
+        <div class="cot-titulo">
+          <h2 id="cot-titulo">Nueva cotización</h2>
+          <span id="cot-estatus"></span>
+        </div>
+        <div class="cot-acciones" id="cot-acciones"></div>
+      </div>
+      <div id="cot-avisos"></div>
+
+      <form id="form-cot" autocomplete="off">
+        <div class="cot-grid">
+          <div class="cot-campo-ancho">
+            <label for="c-cliente">Cliente</label>
+            <input id="c-cliente" list="lista-clientes" required placeholder="Escribe para buscar cliente...">
+            <datalist id="lista-clientes"></datalist>
+          </div>
+          <div>
+            <label for="c-sucursal">Sucursal</label>
+            <input id="c-sucursal" list="lista-sucursales" maxlength="255" placeholder="Sucursal o dirección">
+            <datalist id="lista-sucursales"></datalist>
+          </div>
+          <div>
+            <label for="c-contacto">Contacto</label>
+            <select id="c-contacto"><option value="">Sin contacto</option></select>
+          </div>
+          <div><label for="c-fecha">Fecha</label><input id="c-fecha" type="date" required></div>
+          <div><label for="c-vigencia">Vigencia hasta</label><input id="c-vigencia" type="date" required></div>
+          <div>
+            <label for="c-moneda">Moneda</label>
+            <select id="c-moneda"><option value="MXN">Pesos (MXN)</option><option value="USD">Dólares (USD)</option></select>
+          </div>
+          <div id="campo-tc" hidden>
+            <label for="c-tc">Tipo de cambio</label>
+            <input id="c-tc" type="number" min="0.0001" step="0.0001" placeholder="Ej. 18.50">
+          </div>
+          <div class="cot-switch">
+            <input type="checkbox" id="c-incluye-iva" class="f-switch">
+            <label for="c-incluye-iva">Precios incluyen IVA</label>
+          </div>
+        </div>
+
+        <div class="cot-seccion">
+          <h3>Partidas</h3>
+          <div class="cot-botones-partidas" id="botones-partidas">
+            <button type="button" class="btn-secundario" data-catalogo="productos"><i class="fas fa-boxes"></i> Agregar del inventario</button>
+            <button type="button" class="btn-secundario" data-catalogo="servicios"><i class="fas fa-concierge-bell"></i> Agregar servicio</button>
+          </div>
+        </div>
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas cot-partidas" style="width:100%;">
+            <thead id="cabeza-partidas"></thead>
+            <tbody id="tabla-partidas"></tbody>
+          </table>
+        </div>
+
+        <div class="cot-pie">
+          <div class="cot-textos">
+            <div><label for="c-condiciones">Condiciones (entrega, forma de pago, garantía)</label><textarea id="c-condiciones" rows="4" maxlength="3000"></textarea></div>
+            <div><label for="c-notas-cliente">Notas para el cliente</label><textarea id="c-notas-cliente" rows="2" maxlength="3000"></textarea></div>
+            <div><label for="c-notas-internas">Notas internas</label><textarea id="c-notas-internas" rows="2" maxlength="3000" placeholder="No aparecen en el PDF"></textarea></div>
+          </div>
+          <aside class="cot-totales" id="cot-totales"></aside>
+        </div>
+      </form>
+
+      <div id="cot-relacionados"></div>
+
+      <div class="detalle-acciones" id="barra-guardar" hidden>
+        <span class="cot-sin-guardar" id="aviso-sin-guardar" hidden><i class="fas fa-circle"></i> Cambios sin guardar</span>
+        <button type="button" class="btn-primary" id="btn-guardar"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Buscador del catálogo -->
+  <div id="modal-catalogo" class="modal inv-modal">
+    <div class="modal-content cot-modal-catalogo">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3>Agregar del catálogo</h3>
+      <div class="cot-catalogo-filtros">
+        <input type="search" id="cat-buscar" placeholder="Buscar por SKU, nombre, marca o modelo...">
+        <select id="cat-tipo" aria-label="Tipo">
+          <option value="">Productos y servicios</option>
+          <option value="productos">Productos</option>
+          <option value="servicios">Servicios y mano de obra</option>
+        </select>
+      </div>
+      <ul class="cot-catalogo" id="cat-resultados"></ul>
+      <p class="cot-nota" id="cat-crear">¿No está en el catálogo? <a href="inventario.html" target="_blank" rel="noopener">Créalo en Inventario</a> y vuelve a buscar.</p>
+    </div>
+  </div>
+
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/red.js?v=20261113"></script>
+  <script src="../scripts/cotizaciones-comun.js?v=20261125"></script>
+  <script src="../scripts/alta-rapida.js?v=20261101b"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js" crossorigin="anonymous"></script>
+  <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
+  <script src="../scripts/visor-archivos.js?v=20261112"></script>
+  <script src="../scripts/cotizacion.js?v=20261125b"></script>
+</body>
+</html>

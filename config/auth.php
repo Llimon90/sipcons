@@ -1,29 +1,10 @@
 <?php
-// La operación es en Tijuana (Baja California), no en el huso horario por
-// defecto del hosting (normalmente CDMX). Se fija aquí porque este archivo
-// se carga en prácticamente todas las páginas y endpoints (incluido
-// auth/logout.php, que no pasa por config/database.php), así que date()/time()
-// en PHP siempre usan la hora local. date_default_timezone_set() es seguro de
-// llamar más de una vez si config/database.php también lo hace.
-date_default_timezone_set('America/Tijuana');
+// Se carga en prácticamente todas las páginas y endpoints (incluido
+// auth/logout.php, que no pasa por config/database.php): env.php lee el .env
+// y fija la zona horaria (APP_TIMEZONE) para que date()/time() usen la hora local.
+require_once __DIR__ . '/env.php';
 
-require_once __DIR__ . '/env.php'; // SESSION_LIFETIME también aplica en logout.php
-
-// ---------------------------------------------------------------- SESIÓN
-// PHP bloquea el archivo de sesión (flock) desde session_start() hasta que
-// termina el script. En el hosting compartido, con disco lento, eso hacía que
-// las peticiones simultáneas de una misma pestaña (session_check, analíticas,
-// técnicos, la API de la página...) se formaran en fila esperando el candado
-// y acabaran en 504.
-//
-// Por eso la sesión se abre en modo SOLO LECTURA (read_and_close): se lee
-// $_SESSION y el candado se suelta en el acto. Solo login.php y logout.php
-// escriben en la sesión; esos scripts definen, ANTES de incluir este archivo:
-//     define('SESION_ESCRITURA', true);
-// Cualquier script nuevo que necesite modificar $_SESSION debe hacer lo mismo
-// (y llamar session_write_close() en cuanto termine de escribir).
-if (session_status() === PHP_SESSION_NONE && !defined('SIPCONS_SESION_INICIADA')) {
-    define('SIPCONS_SESION_INICIADA', true);
+if (session_status() === PHP_SESSION_NONE) {
     // 30 días: la sesión persiste hasta que el usuario cierre sesión explícitamente
     $lifetime = (int)($_ENV['SESSION_LIFETIME'] ?? 2592000);
 
@@ -44,53 +25,117 @@ if (session_status() === PHP_SESSION_NONE && !defined('SIPCONS_SESION_INICIADA')
         session_save_path($sessionPath);
     }
 
-    $cookieParams = [
+    session_set_cookie_params([
         'lifetime' => $lifetime,
         'path'     => '/',
-        'secure'   => isset($_SERVER['HTTPS']),
+        // S-10: también detrás del proxy de Hostinger (TLS terminado antes de PHP)
+        'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                        || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https'
+                        || str_starts_with((string)($_ENV['APP_URL'] ?? getenv('APP_URL') ?: ''), 'https://'),
         'httponly' => true,
         'samesite' => 'Lax',
-    ];
-    session_set_cookie_params($cookieParams);
+    ]);
 
-    $sesionEscritura = defined('SESION_ESCRITURA') && SESION_ESCRITURA;
+    session_start();
+}
 
-    if ($sesionEscritura) {
-        session_start();
-    } elseif (isset($_COOKIE[session_name()])) {
-        session_start(['read_and_close' => true]);
+// Empresa de la sesión: activa el prefijo de sus tablas para toda la petición.
+// Solo si la conexión ya existe (logout.php carga este archivo sin base de datos).
+if (!empty($_SESSION['empresa_id']) && function_exists('establecerEmpresa') && isset($GLOBALS['pdo'])) {
+    establecerEmpresa((int)$_SESSION['empresa_id']);
+}
 
-        // read_and_close no reescribe el archivo, así que su fecha de
-        // modificación (la que usa la limpieza de PHP para borrar sesiones
-        // viejas) no avanzaría. Una vez al día se abre un instante en modo
-        // escritura para renovarla y se reenvía la cookie con otros
-        // $lifetime segundos: el usuario activo no pierde la sesión.
-        if (!empty($_SESSION['user_id'])
-            && time() - (int)($_SESSION['_renovada'] ?? 0) > 86400
-            && !headers_sent()
-            && @session_start()
-        ) {
-            $_SESSION['_renovada'] = time();
-            session_write_close();
-            setcookie(session_name(), session_id(), [
-                'expires'  => time() + $lifetime,
-                'path'     => $cookieParams['path'],
-                'secure'   => $cookieParams['secure'],
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]);
-        }
-    } else {
-        // Sin cookie de sesión no hay nada que leer: no se toca el disco ni
-        // se crea un archivo de sesión vacío (evita miles de archivos/inodos
-        // por peticiones anónimas, bots o monitores).
-        $_SESSION = [];
+const ROL_SUPERADMIN = 'Superadmin';
+
+// Roles que ya no existen (migración 006) y su equivalente. Se normalizan al
+// iniciar sesión y en sesiones abiertas antes del cambio, así que el código
+// funciona igual aunque la migración todavía no se haya aplicado.
+const ROLES_ANTERIORES = ['Técnico/Administrador' => 'Administrador', 'Programador' => 'Administrador'];
+
+function normalizarRol(string $rol): string {
+    return ROLES_ANTERIORES[$rol] ?? $rol;
+}
+
+if (isset($_SESSION['rol']) && isset(ROLES_ANTERIORES[$_SESSION['rol']])) {
+    $_SESSION['rol'] = normalizarRol($_SESSION['rol']);
+}
+
+// Peticiones que modifican pero se permiten en modo solo lectura
+const ENDPOINTS_PERMITIDOS_SOLO_LECTURA = ['guardar_tema.php', 'analytics_registrar.php', 'logout.php', 'login.php', 'cambiar_password.php'];
+
+// L-13: con la contraseña temporal pendiente de cambiar solo se permite esto
+const ENDPOINTS_PERMITIDOS_CAMBIO_PASSWORD = ['cambiar_password.php', 'session_check.php', 'logout.php', 'guardar_tema.php', 'analytics_registrar.php'];
+
+function esSuperadmin(): bool {
+    return ($_SESSION['rol'] ?? '') === ROL_SUPERADMIN && empty($_SESSION['empresa_id']);
+}
+
+function cerrarSesion(): void {
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
     }
-    unset($sesionEscritura, $cookieParams);
+}
+
+function responderBloqueo(int $codigo, array $datos): void {
+    http_response_code($codigo);
+    header('Content-Type: application/json');
+    $datos += ['success' => false, 'exito' => false];
+    $datos['error'] = $datos['error'] ?? $datos['mensaje'] ?? 'Acceso denegado';
+    $datos['message'] = $datos['message'] ?? $datos['mensaje'] ?? $datos['error'];
+    die(json_encode($datos, JSON_UNESCAPED_UNICODE));
 }
 
 function isLoggedIn(): bool {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+/** Huella corta del hash de la contraseña: cambia cuando cambia la contraseña. */
+function huellaPassword(string $hash): string {
+    return substr(hash('sha256', $hash), 0, 16);
+}
+
+/**
+ * La cuenta en sesión sigue vigente: existe, es de la misma empresa y su
+ * contraseña no cambió desde que inició sesión. Se consulta en cada petición
+ * (una lectura por llave primaria), así que eliminar a un usuario o cambiarle
+ * la contraseña lo saca al instante, y un cambio de rol aplica sin cerrar sesión.
+ */
+function revalidarUsuarioSesion(): bool {
+    global $pdo;
+    static $resultado = null;
+    if ($resultado !== null) return $resultado;
+    $id = (int)($_SESSION['user_id'] ?? 0);
+    if ($id <= 0 || !isset($pdo)) return $resultado = false;
+    $st = $pdo->prepare('SELECT empresa_id, rol, nombre, password FROM usuarios WHERE id = ?');
+    $st->execute([$id]);
+    $u = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$u) return $resultado = false;
+
+    $huella = huellaPassword((string)$u['password']);
+    if (isset($_SESSION['huella']) && !hash_equals((string)$_SESSION['huella'], $huella)) return $resultado = false;
+    $_SESSION['huella'] = $huella; // sesiones abiertas antes de este control
+
+    // Modo soporte: la sesión es del superadministrador (sin empresa) y conserva su rol de soporte
+    if (!empty($_SESSION['soporte'])) {
+        return $resultado = $u['empresa_id'] === null && $u['rol'] === ROL_SUPERADMIN;
+    }
+    if ((int)($u['empresa_id'] ?? 0) !== (int)($_SESSION['empresa_id'] ?? 0)) return $resultado = false;
+    $_SESSION['rol'] = normalizarRol((string)$u['rol']);
+    $_SESSION['nombre'] = $u['nombre'];
+    return $resultado = true;
+}
+
+/** Tras cambiar la contraseña propia, la sesión actual sigue abierta (las demás se cierran). */
+function actualizarHuellaSesion(string $hash): void {
+    $_SESSION['huella'] = huellaPassword($hash);
+}
+
+/** Cierra una sesión que ya no es válida y responde 401. */
+function rechazarSesionInvalida(): void {
+    cerrarSesion();
+    $appUrl = rtrim($_ENV['APP_URL'] ?? '', '/');
+    responderBloqueo(401, ['mensaje' => 'Tu sesión terminó porque tu cuenta cambió. Inicia sesión de nuevo.', 'login_url' => $appUrl . '/auth/login.html']);
 }
 
 function currentUser(): array {
@@ -99,6 +144,7 @@ function currentUser(): array {
         'nombre' => $_SESSION['nombre']   ?? '',
         'usuario'=> $_SESSION['usuario']  ?? '',
         'rol'    => $_SESSION['rol']      ?? '',
+        'empresa_id' => $_SESSION['empresa_id'] ?? null,
     ];
 }
 
@@ -131,29 +177,100 @@ function requireAuth(): void {
         header("Location: $loginUrl");
         exit;
     }
+
+    if (!revalidarUsuarioSesion()) rechazarSesionInvalida();
+
+    // A partir de aquí toda petición autenticada opera dentro de una empresa
+    if (empty($_SESSION['empresa_id'])) {
+        if (esSuperadmin()) {
+            responderBloqueo(403, ['mensaje' => 'La cuenta de plataforma no opera dentro de una empresa.']);
+        }
+        cerrarSesion(); // sesión anterior a la migración multiempresa
+        responderBloqueo(401, ['mensaje' => 'Tu sesión expiró. Inicia sesión de nuevo.', 'login_url' => '/auth/login.html']);
+    }
+
+    // En modo soporte la plataforma entra aunque la cuenta esté vencida o suspendida
+    if (!empty($_SESSION['soporte'])) {
+        return;
+    }
+    // L-13: la contraseña temporal que entregó el panel se cambia antes de usar el sistema
+    require_once __DIR__ . '/usuarios.php';
+    global $pdo;
+    if (isset($pdo) && !in_array(basename($_SERVER['SCRIPT_NAME'] ?? ''), ENDPOINTS_PERMITIDOS_CAMBIO_PASSWORD, true)
+        && usuarioDebeCambiarPassword($pdo, (int)($_SESSION['user_id'] ?? 0))) {
+        responderBloqueo(403, ['mensaje' => 'Cambia tu contraseña temporal para continuar.', 'codigo' => 'cambio_password', 'redirect' => 'ajustes.html#seguridad']);
+    }
+    $situacion = situacionEmpresa(empresaActual());
+    if ($situacion['acceso'] === 'bloqueado') {
+        responderBloqueo(403, ['mensaje' => $situacion['mensaje'], 'estado_empresa' => $situacion['estado']]);
+    }
+    $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    if ($situacion['acceso'] === 'lectura' && !in_array($metodo, ['GET', 'HEAD'], true)
+        && !in_array(basename($_SERVER['SCRIPT_NAME'] ?? ''), ENDPOINTS_PERMITIDOS_SOLO_LECTURA, true)) {
+        responderBloqueo(403, ['mensaje' => $situacion['mensaje'], 'estado_empresa' => $situacion['estado'], 'solo_lectura' => true]);
+    }
+}
+
+/** Solo la cuenta de plataforma (superadministrador, sin empresa). */
+function requireSuperadmin(): void {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
+    if (isLoggedIn() && !revalidarUsuarioSesion()) rechazarSesionInvalida();
+    if (!isLoggedIn() || !esSuperadmin()) {
+        responderBloqueo(isLoggedIn() ? 403 : 401, ['mensaje' => 'Acceso exclusivo de la cuenta de plataforma.']);
+    }
 }
 
 /**
  * ¿Puede el usuario en sesión poner una incidencia en "Cerrado con factura"
  * o "Cerrado sin factura"?
  *  - El rol Técnico nunca puede.
- *  - Usuarios restringidos individualmente (cualquier rol) en el .env de cada
- *    servidor: USUARIOS_SIN_CIERRE=ariana,otro_usuario (nombre de usuario de
- *    inicio de sesión, sin importar mayúsculas). Para quitar la restricción
- *    basta con borrar al usuario de esa línea; no hay que cambiar código.
+ *  - Cualquier otro usuario puede, salvo que el administrador de su empresa le
+ *    quite el permiso en Usuarios (usuarios.puede_cerrar = 0, migración 003).
+ *    Se consulta en cada petición: el cambio aplica sin cerrar sesión.
  */
 function puedeCerrarIncidencias(): bool {
     if (($_SESSION['rol'] ?? '') === 'Técnico') return false;
+    $id = (int)($_SESSION['user_id'] ?? 0);
+    if ($id <= 0 || !usuariosTienePuedeCerrar()) return true;
+    global $pdo;
+    $st = $pdo->prepare('SELECT puede_cerrar FROM usuarios WHERE id = ?');
+    $st->execute([$id]);
+    $valor = $st->fetchColumn();
+    return $valor === false || (int)$valor === 1;
+}
 
-    $lista = array_filter(array_map(
-        fn($u) => mb_strtolower(trim($u)),
-        explode(',', (string)($_ENV['USUARIOS_SIN_CIERRE'] ?? ''))
-    ));
-    $usuario = mb_strtolower(trim((string)($_SESSION['usuario'] ?? '')));
-    return $usuario === '' || !in_array($usuario, $lista, true);
+/** La columna usuarios.puede_cerrar existe (migración 003 aplicada). */
+function usuariosTienePuedeCerrar(): bool {
+    static $existe = null;
+    if ($existe === null) {
+        global $pdo;
+        try {
+            $existe = (bool)$pdo->query("SHOW COLUMNS FROM usuarios LIKE 'puede_cerrar'")->fetch();
+        } catch (Throwable $e) {
+            $existe = false;
+        }
+    }
+    return $existe;
 }
 
 const ESTATUS_DE_CIERRE = ['Cerrado con factura', 'Cerrado sin factura'];
+
+/** La columna usuarios.puede_autorizar_descuentos existe (migración 007 aplicada). */
+function usuariosTieneAutorizaDescuentos(): bool {
+    static $existe = null;
+    if ($existe === null) {
+        global $pdo;
+        try {
+            $existe = (bool)$pdo->query("SHOW COLUMNS FROM usuarios LIKE 'puede_autorizar_descuentos'")->fetch();
+        } catch (Throwable $e) {
+            $existe = false;
+        }
+    }
+    return $existe;
+}
 
 function requireRole(string ...$roles): void {
     requireAuth();

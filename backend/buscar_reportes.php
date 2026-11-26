@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('reportes');
 // buscar_reportes.php
 
 ob_start(); 
@@ -7,7 +9,6 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
     
-    header("Access-Control-Allow-Origin: *");
     header("Content-Type: application/json");
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
     header("Pragma: no-cache");
@@ -25,6 +26,16 @@ try {
     $params = [];
     $types = "";
 
+    // D-9: el Técnico solo ve sus órdenes; los mantenimientos programados (sin
+    // técnico, "Por asignar") no le corresponden.
+    require_once __DIR__ . '/lib/incidencias_helpers.php';
+    // A-H10: los programados siempre están "Por asignar": con filtro de técnico no hay ninguno
+    if ((soloOrdenesPropias() || $tecnico !== '') && !empty($solo_programadas) && $solo_programadas === '1') {
+        if (ob_get_length()) ob_clean();
+        echo json_encode(["message" => "No se encontraron datos"]);
+        exit;
+    }
+
     if (!empty($solo_programadas) && $solo_programadas === '1') {
         // CORRECCIÓN: COALESCE(p.garantia, 0) añadido en el GROUP_CONCAT
         // LEFT JOIN a ventas para mostrar el folio real (VT-00001) y no el id
@@ -33,10 +44,10 @@ try {
             SELECT
                 MIN(p.id) as id,
                 'PROG-CAL' as numero_incidente,
-                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
+                IF(p.origen = 'Venta propia', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
-                CONCAT('Sin póliza: contactar para recomendar Mantenimiento/Calibración de ', COUNT(p.id), ' equipo(s).') as falla,
+                CONCAT('Sin póliza: contactar para recomendar Mantenimiento de ', COUNT(p.id), ' equipo(s).') as falla,
                 p.proxima_calibracion as fecha,
                 'Programado' as estatus,
                 MAX(p.equipo) as categoria,
@@ -52,10 +63,10 @@ try {
             SELECT
                 MIN(p.id) as id,
                 'PROG-SERV' as numero_incidente,
-                IF(p.origen = 'Venta SIPCONS', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
+                IF(p.origen = 'Venta propia', CONCAT('Venta #', MAX(v.folio)), 'Equipo Externo') as reporte_cliente,
                 p.cliente as cliente,
                 p.sucursal as sucursal,
-                CONCAT('Póliza: Mantenimiento/Calibración de ', COUNT(p.id), ' equipo(s).') as falla,
+                CONCAT('Póliza: Mantenimiento de ', COUNT(p.id), ' equipo(s).') as falla,
                 p.proximo_servicio as fecha,
                 'Programado' as estatus,
                 MAX(p.equipo) as categoria,
@@ -69,9 +80,14 @@ try {
     } else {
         $sql = "SELECT id, numero_incidente, reporte_cliente, cliente, sucursal, falla, fecha, estatus, categoria, tecnico, '' as detalles_completos 
                 FROM incidencias WHERE 1=1";
+        if (soloOrdenesPropias()) {
+            [$soloMias, $paramsMias] = filtroOrdenesSesion($pdo);
+            $sql .= " AND $soloMias";
+            foreach ($paramsMias as $pm) { $params[] = $pm; $types .= "s"; }
+        }
                 
         if (!empty($solo_activas) && $solo_activas === '1') {
-            $sql .= " AND estatus IN ('Abierto', 'Asignado', 'Pendiente', 'Completado')";
+            $sql .= ' AND ' . sqlOrdenActiva();  // D-4
         }
         if (!empty($estatus)) {
             $sql .= " AND estatus = ?";
@@ -82,7 +98,7 @@ try {
             // Técnico completo dentro de "A/B": "Ernesto Chávez" no atrapa a
             // su homónimo "Ernesto Chávez Rice" (ver sqlCoincideTecnico()).
             $sql .= " AND CONCAT('/', REPLACE(REPLACE(TRIM(tecnico), ' /', '/'), '/ ', '/'), '/') LIKE ?";
-            $params[] = "%/$tecnico/%";
+            $params[] = '%/' . addcslashes($tecnico, '%_' . chr(92)) . '/%';
             $types .= "s";
         }
     }
@@ -132,6 +148,7 @@ try {
         $incidencias[] = $fila;
     }
 
+    $incidencias = filtrarOrdenesVisibles($pdo, $incidencias);  // D-9: comparación exacta
     if (ob_get_length()) ob_clean();
     echo json_encode(empty($incidencias) ? ["message" => "No se encontraron datos"] : $incidencias);
 
@@ -140,7 +157,7 @@ try {
 
 } catch (Exception $e) {
     if (ob_get_length()) ob_clean();
-    echo json_encode(["error" => "Error atrapado en PHP: " . $e->getMessage()]);
+    echo json_encode(["error" => "Error atrapado en PHP: " . mensajeErrorPublico($e)]);
     exit;
 }
 ?>

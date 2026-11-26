@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('ventas');
 
 header('Content-Type: application/json');
 
@@ -54,7 +56,7 @@ try {
 } catch(PDOException $e) {
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
+        'error' => mensajeErrorPublico($e),
         'data' => []
     ]);
 }

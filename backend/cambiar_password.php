@@ -1,7 +1,14 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/../config/demo.php';
 header('Content-Type: application/json');
+
+demoBloquear('el cambio de contraseña');
+if (!empty($_SESSION['soporte'])) {
+    http_response_code(403);
+    die(json_encode(['success' => false, 'message' => 'En modo soporte no se cambian contraseñas. Hazlo desde el panel de plataforma.']));
+}
 
 try {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -13,9 +20,10 @@ try {
         die(json_encode(['success' => false, 'message' => 'Completa la contraseña actual y la nueva']));
     }
 
-    if (strlen($nueva) < 6) {
+    require_once __DIR__ . '/../config/usuarios.php';
+    if (strlen($nueva) < MIN_PASSWORD_USUARIO) {
         http_response_code(400);
-        die(json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres']));
+        die(json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos ' . MIN_PASSWORD_USUARIO . ' caracteres'], JSON_UNESCAPED_UNICODE));
     }
 
     // Siempre el usuario en sesión: nunca un id que venga del cliente, para
@@ -31,15 +39,21 @@ try {
     $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$fila || !password_verify($actual, $fila['password'])) {
-        // 403, no 401: la sesión es válida. El frontend (scripts/conexion.js)
-        // interpreta cualquier 401 como "tu sesión se cerró".
-        http_response_code(403);
+        http_response_code(401);
         die(json_encode(['success' => false, 'message' => 'La contraseña actual no es correcta']));
     }
 
     $hash = password_hash($nueva, PASSWORD_DEFAULT);
+    if ($nueva === $actual) {
+        http_response_code(400);
+        die(json_encode(['success' => false, 'message' => 'La nueva contraseña debe ser distinta de la actual'], JSON_UNESCAPED_UNICODE));
+    }
     $stmtU = $pdo->prepare("UPDATE usuarios SET password = ? WHERE id = ?");
     $stmtU->execute([$hash, $userId]);
+    if (usuariosTienenCambioPassword($pdo)) {  // L-13: ya no es temporal
+        $pdo->prepare('UPDATE usuarios SET debe_cambiar_password = 0 WHERE id = ?')->execute([$userId]);
+    }
+    actualizarHuellaSesion($hash); // esta sesión sigue; las de otros dispositivos se cierran
 
     registrarAuditoria('usuarios', $userId, 'UPDATE', null, [
         'password_cambiada' => true,
@@ -48,6 +62,7 @@ try {
 
     echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
 } catch (Throwable $e) {
+    error_log('Cambio de contraseña: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'No se pudo cambiar la contraseña. Inténtalo de nuevo.'], JSON_UNESCAPED_UNICODE);
 }

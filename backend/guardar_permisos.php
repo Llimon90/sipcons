@@ -4,11 +4,11 @@ require_once __DIR__ . '/../auth/permisos.php';
 requireGestionPrivilegios();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/../config/demo.php';
+
+demoBloquear('modificar los privilegios por rol');
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -58,5 +58,5 @@ try {
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error al guardar privilegios: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al guardar privilegios: ' . mensajeErrorPublico($e)]);
 }

@@ -1,0 +1,160 @@
+/* ===== MÓDULO DE COTIZACIONES =====
+   public/cotizaciones.html (lista y servicios) y public/cotizacion.html
+   (documento). Reutiliza los bloques de inventario.css: .inv-kpis,
+   .inv-filtros, .inv-tabla, .inv-modal. */
+
+/* Pestañas */
+.cot-pestanas { display: flex; gap: 6px; border-bottom: 2px solid #e3e8ef; margin-bottom: 20px; }
+.cot-pestanas button {
+  width: auto; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px;
+  padding: 10px 16px; font-weight: 600; color: #6c7a89; cursor: pointer; border-radius: 0; box-shadow: none;
+}
+.cot-pestanas button.activa { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+.cot-pestanas button:hover { transform: none; color: var(--brand-primary); background: none; }
+
+/* Indicadores clicables */
+button.cot-kpi { text-align: left; cursor: pointer; width: 100%; font: inherit; color: inherit; box-shadow: none; }
+button.cot-kpi:hover { transform: none; border-color: var(--brand-primary); background: #f7f9fc; }
+.cot-kpi-ok { border-left-color: #16a34a !important; }
+
+.cot-rango { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: #6c7a89; }
+.cot-rango input { width: auto; }
+.cot-fila { cursor: pointer; }
+.cot-por-vencer { color: #b45309; font-weight: 700; }
+.cot-nota { color: #6c7a89; font-size: 0.9rem; margin: 6px 0 14px; }
+
+/* Ventas por registrar */
+.cot-aviso { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+.cot-aviso-titulo { font-weight: 700; color: #5b21b6; margin-bottom: 8px; }
+.cot-aviso ul, .cot-ventas { list-style: none; margin: 0; padding: 0; }
+.cot-aviso li, .cot-ventas li {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 0; border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.cot-aviso li:first-child, .cot-ventas li:first-child { border-top: none; }
+.cot-aviso a, .cot-ventas a.btn-primary, .cot-ventas button { width: auto; }
+
+/* Documento */
+.cot-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 16px; }
+.cot-volver { color: #6c7a89; text-decoration: none; font-weight: 600; }
+.cot-titulo { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px; }
+.cot-titulo h2 { margin: 0; }
+.cot-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.cot-acciones > * { width: auto !important; }
+.cot-aviso-linea { background: #f1f5f9; border-radius: 8px; padding: 9px 14px; margin-bottom: 8px; color: #334155; font-size: 0.92rem; }
+.cot-aviso-linea i { color: var(--brand-primary); margin-right: 6px; }
+
+.cot-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 18px; margin: 18px 0 8px; }
+.cot-campo-ancho { grid-column: span 2; }
+.cot-grid label { display: block; }
+.cot-switch { display: flex; align-items: center; gap: 10px; padding-top: 22px; }
+.cot-switch label { margin: 0; }
+
+.cot-seccion { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 22px 0 10px; }
+.cot-seccion h3 { margin: 0; }
+.cot-botones-partidas { display: flex; flex-wrap: wrap; gap: 8px; }
+.cot-botones-partidas button { width: auto; }
+
+.cot-partidas td { vertical-align: top; }
+.cot-partidas .cot-desc { min-width: 300px; width: 34%; }
+.cot-partidas .cot-desc input { width: 100%; font-weight: 600; }
+.cot-partidas .cot-desc .etiqueta { margin: 4px 4px 0 0; }
+.cot-partidas input.cot-num { text-align: right; }
+.cot-partidas select { width: auto; min-width: 84px; }
+.cot-no-aceptada td { opacity: 0.6; }
+.cot-margen-bajo { color: #b91c1c; font-weight: 700; }
+
+.cot-pie { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; margin-top: 18px; align-items: start; }
+.cot-textos { display: grid; gap: 12px; }
+.cot-textos label { display: block; }
+.cot-totales { background: #f7f9fc; border: 1px solid #e3e8ef; border-radius: 12px; padding: 16px 18px; position: sticky; top: 16px; }
+.cot-totales h3 { margin: 0 0 10px; font-size: 1rem; }
+.cot-totales > div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+.cot-totales .cot-total { font-size: 1.25rem; font-weight: 800; color: var(--brand-secondary-dark, #1a3c8a); border-top: 2px solid #e3e8ef; margin-top: 6px; padding-top: 10px; }
+/* U-23: contraste AA del total en tema oscuro */
+html[data-theme="dark"] .cot-totales .cot-total { color: var(--brand-dm-link, #8ab4ff); border-top-color: #334155; }
+.cot-totales .cot-aprobado { font-weight: 700; color: #15803d; }
+.cot-totales .cot-equivalente { color: #6c7a89; font-size: 0.88rem; }
+.cot-totales .cot-margen { margin-top: 10px; border-top: 1px dashed #cbd5e1; padding-top: 10px; color: #334155; font-weight: 600; }
+.cot-totales .cot-margen.bajo { color: #b91c1c; }
+.cot-alerta-margen { margin: 8px 0 0; font-size: 0.85rem; color: #b45309; }
+
+.cot-bloque { margin-top: 24px; background: #fff; border: 1px solid #e3e8ef; border-radius: 12px; padding: 14px 18px; }
+.cot-bloque h3 { margin: 0 0 8px; font-size: 1.02rem; }
+.cot-bloque button { width: auto; }
+
+.cot-sin-guardar { color: #b45309; font-weight: 600; font-size: 0.9rem; margin-right: auto; align-self: center; }
+.cot-sin-guardar i { font-size: 0.6rem; vertical-align: middle; }
+
+/* Catálogo */
+.cot-modal-catalogo { max-width: 760px !important; }
+.cot-catalogo-filtros { display: flex; gap: 10px; margin-bottom: 12px; }
+.cot-catalogo-filtros input { flex: 1; }
+.cot-catalogo-filtros select { width: auto; }
+.cot-catalogo { list-style: none; margin: 0; padding: 0; max-height: 52vh; overflow-y: auto; }
+.cot-catalogo li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid #eef1f5; }
+.cot-catalogo li .etiqueta { margin-top: 4px; }
+.cot-cat-precio { display: flex; align-items: center; gap: 10px; font-weight: 700; white-space: nowrap; }
+.cot-cat-precio button { width: auto; padding: 6px 12px; }
+.etiqueta-servicio { background: #eef2ff; color: #4338ca; }
+
+/* Diálogos (aprobar / rechazar) */
+.cot-dialogo { text-align: left; }
+.cot-dialogo label { display: block; font-weight: 600; margin-bottom: 4px; }
+.cot-dialogo input, .cot-dialogo textarea { width: 100%; box-sizing: border-box; }
+.cot-checklist { list-style: none; padding: 0; margin: 0; max-height: 40vh; overflow-y: auto; }
+.cot-checklist li { padding: 6px 0; border-bottom: 1px solid #eef1f5; }
+.cot-checklist label { font-weight: 500; display: flex; gap: 8px; align-items: baseline; }
+.cot-checklist input { width: auto; }
+
+/* Aviso flotante */
+.cot-toast {
+  position: fixed; right: 20px; bottom: 20px; z-index: 3000; max-width: 380px;
+  background: #1e293b; color: #fff; padding: 12px 16px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  animation: cot-entrar 0.2s ease-out;
+}
+.cot-toast.error { background: #b91c1c; }
+@keyframes cot-entrar { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Sección en incidencia y perfil del cliente */
+.cot-seccion-externa .cot-tabla-compacta { margin-top: 8px; }
+
+/* Celular */
+@media (max-width: 900px) {
+  .cot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cot-pie { grid-template-columns: 1fr; }
+  .cot-totales { position: static; }
+}
+@media (max-width: 600px) {
+  .cot-grid { grid-template-columns: 1fr; }
+  .cot-campo-ancho { grid-column: auto; }
+  .cot-acciones { width: 100%; }
+  .cot-acciones > * { flex: 1 1 auto; }
+  .cot-catalogo li { flex-direction: column; align-items: flex-start; }
+  .cot-catalogo-filtros { flex-direction: column; }
+  .cot-partidas input.cot-num, .cot-partidas select { width: 100% !important; }
+  .cot-toast { left: 16px; right: 16px; bottom: 90px; }
+}
+
+/* Modo oscuro */
+html[data-theme="dark"] .cot-pestanas { border-bottom-color: #2c3a4b; }
+html[data-theme="dark"] .cot-aviso { background: #241d3d; border-color: #3b2f63; }
+html[data-theme="dark"] .cot-aviso-titulo { color: #c4b5fd; }
+html[data-theme="dark"] .cot-aviso-linea { background: #1e2a38; color: #d5dee8; }
+html[data-theme="dark"] .cot-totales, html[data-theme="dark"] .cot-bloque { background: #17212d; border-color: #2c3a4b; }
+html[data-theme="dark"] .cot-totales .cot-margen { color: #d5dee8; }
+html[data-theme="dark"] .cot-catalogo li, html[data-theme="dark"] .cot-checklist li { border-color: #2c3a4b; }
+html[data-theme="dark"] .etiqueta-servicio { background: #23264a; color: #c7d2fe; }
+html[data-theme="dark"] button.cot-kpi:hover { background: #1e2a38; }
+
+/* Aviso en Registrar venta (venta que viene de una cotización) */
+.cot-aviso-venta { background: #f5f3ff; border: 1px solid #ddd6fe; color: #4c1d95; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; }
+.cot-aviso-venta i { margin-right: 6px; }
+html[data-theme="dark"] .cot-aviso-venta { background: #241d3d; border-color: #3b2f63; color: #ddd6fe; }
+
+.cot-seccion-externa[hidden] { display: none !important; }
+.cot-seccion-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.cot-seccion-botones [hidden] { display: none !important; }
+
+/* Lo oculto por la interfaz (permisos o estatus) se oculta aunque su regla tenga display propio */
+.cot-documento [hidden], .inventario [hidden] { display: none !important; }

@@ -6,11 +6,10 @@
 // aquí siempre se deriva de la sesión, para que un técnico no pueda ver
 // los datos de otro cambiando un query param.
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('incidencias');  // P-H08
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if (!isset($conn) || $conn->connect_error) {
     echo json_encode(['success' => false, 'error' => 'Error al cargar la conexión a la base de datos.']);
@@ -18,6 +17,7 @@ if (!isset($conn) || $conn->connect_error) {
 }
 
 require_once __DIR__ . '/lib/estadisticas_helpers.php';
+require_once __DIR__ . '/lib/incidencias_helpers.php';  // sqlOrdenPorAtender (D-4)
 
 // --- 1. IDENTIDAD DEL TÉCNICO EN SESIÓN ---
 //
@@ -62,7 +62,7 @@ if ($action !== 'resumen') {
 $rango = construirFiltros($conn, 'i', 'fecha', null, null, $identidadTecnico);
 $filtros_where = $rango['where'];
 
-$sqlPeriodo = "SELECT id, fecha, estatus, tecnico, sucursal, categoria, prioridad FROM incidencias i {$filtros_where}";
+$sqlPeriodo = "SELECT id, fecha, estatus, tecnico, sucursal FROM incidencias i {$filtros_where}";
 $candidatasPeriodo = ejecutarConsulta($conn, $sqlPeriodo);
 $misIncidenciasPeriodo = array_values(array_filter(
     $candidatasPeriodo,
@@ -104,11 +104,13 @@ $tendencia = $totalAnterior > 0
 
 // --- 4. BACKLOG ACTUAL (sin filtro de fecha: "lo que tengo pendiente hoy") ---
 $identidadEscapada = $conn->real_escape_string($identidadTecnico);
+// S-H11: coincidencia exacta por técnico (antes un LIKE '%Juan%' llenaba el LIMIT con "Juan Carlos")
+$coincideYo = sqlCoincideTecnico('tecnico') . " LIKE '%/" . $conn->real_escape_string(addcslashes($identidadTecnico, '%_' . chr(92))) . "/%'";
 $sqlBacklog = "
     SELECT id, numero_incidente, cliente, sucursal, estatus, fecha, tecnico
     FROM incidencias
-    WHERE tecnico LIKE '%{$identidadEscapada}%'
-      AND LOWER(estatus) NOT IN ('completado', 'cerrado con factura', 'cerrado sin factura', 'resuelto')
+    WHERE {$coincideYo}
+      AND " . sqlOrdenPorAtender() . "
     ORDER BY fecha ASC
     LIMIT 200
 ";
@@ -121,17 +123,14 @@ $backlog = array_values(array_filter(
 $ahora = time();
 $vencidas = 0;
 foreach ($backlog as $b) {
-    $ts = strtotime($b['fecha']);
-    if ($ts !== false && ($ahora - $ts) > (SLA_CIERRE_HORAS * 3600)) {
-        $vencidas++;
-    }
+    if (ordenAtrasada($b['fecha'], $b['estatus'])) $vencidas++;  // D-18: el mismo cálculo que Inicio y alertas
 }
 
 // --- 5. EVOLUCIÓN MENSUAL (últimos 12 meses, incidencias cerradas propias) ---
 $sqlHistorico = "
     SELECT fecha, estatus, tecnico
     FROM incidencias
-    WHERE tecnico LIKE '%{$identidadEscapada}%'
+    WHERE {$coincideYo}
       AND fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
 ";
 $candidatasHistorico = ejecutarConsulta($conn, $sqlHistorico);
@@ -157,20 +156,20 @@ $insights = [];
 
 if ($totalAnterior > 0) {
     $comparativo = $tendencia > 0 ? 'más' : ($tendencia < 0 ? 'menos' : 'la misma cantidad de');
-    $insights[] = "Se te asignaron {$asignadas} incidencias este periodo, {$comparativo} que en el periodo anterior ({$totalAnterior}).";
+    $insights[] = "Se te asignaron {$asignadas} órdenes de servicio este periodo, {$comparativo} que en el periodo anterior ({$totalAnterior}).";
 }
 
 if ($agregado['sla_cierre_pct'] !== null) {
-    $insights[] = "El {$agregado['sla_cierre_pct']}% de tus incidencias cerradas se atendieron dentro de los 7 días esperados, con base en {$agregado['muestras_cierre']} de {$asignadas} incidencias con historial.";
+    $insights[] = "El {$agregado['sla_cierre_pct']}% de tus órdenes de servicio cerradas se atendieron dentro de los " . slaDiasEmpresa() . " días esperados, con base en {$agregado['muestras_cierre']} de {$asignadas} órdenes de servicio con historial.";
 }
 
 if ($reincidenciasMias > 0 && $asignadas > 0) {
     $pctReincidencias = round(($reincidenciasMias / $asignadas) * 100, 1);
-    $insights[] = "{$reincidenciasMias} de tus incidencias fueron reincidencias (el mismo equipo volvió a fallar de algo parecido en menos de " . REINCIDENCIA_VENTANA_DIAS . " días; {$pctReincidencias}%). Vale la pena revisar si falta documentar la causa raíz antes de cerrar.";
+    $insights[] = "{$reincidenciasMias} de tus órdenes de servicio fueron reincidencias (el mismo equipo volvió a fallar de algo parecido en menos de " . REINCIDENCIA_VENTANA_DIAS . " días; {$pctReincidencias}%). Vale la pena revisar si falta documentar la causa raíz antes de cerrar.";
 }
 
 if ($vencidas > 0) {
-    $insights[] = "Tienes {$vencidas} incidencia(s) abiertas con más de 7 días sin cerrarse. Conviene revisarlas pronto.";
+    $insights[] = "Tienes {$vencidas} orden(es) de servicio abiertas con más de " . slaDiasEmpresa() . " días sin cerrarse. Conviene revisarlas pronto.";
 }
 
 if (empty($insights)) {
@@ -193,6 +192,7 @@ echo json_encode([
             'muestras_cierre' => $agregado['muestras_cierre'],
             'sla_cierre_pct' => $agregado['sla_cierre_pct'],
             'reincidencias' => $reincidenciasMias,
+            'sla_dias' => slaDiasEmpresa(),
         ],
         'evolucion_mensual' => $evolucionMensual,
         'insights' => $insights,

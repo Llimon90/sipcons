@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Contratar plan</title>
+  <script>
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('app_tema') === 'oscuro' ? 'dark' : 'light'); } catch (e) {}
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+  <link rel="stylesheet" href="../branding/tema.css.php" />
+  <script src="../branding/marca.js.php"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/acceso.css?v=20261125" />
+</head>
+<body>
+
+<main class="login-card contratar-card">
+  <img class="logo" data-brand-logo src="../img/logo.svg" alt="Servidesk" />
+  <h1 class="registro-titulo" id="titulo">Contratar plan</h1>
+  <p class="tagline" id="subtitulo"></p>
+
+  <div class="error-msg" id="errorMsg" role="alert">
+    <i class="fas fa-circle-exclamation"></i>
+    <span id="errorText"></span>
+  </div>
+  <div class="aviso-cuenta" id="avisoCuenta" role="status" hidden></div>
+
+  <div id="contenido"><p class="cargando-texto">Cargando…</p></div>
+
+  <p class="cambio-pagina">
+    <a id="linkVolver" href="../index.html" hidden><i class="fas fa-arrow-left"></i> Volver al sistema</a>
+    <span id="sepVolver" hidden> · </span>
+    <a href="logout.php">Cerrar sesión</a>
+  </p>
+</main>
+
+<footer class="page-footer">&copy; <span id="year"></span> <span data-brand="empresa">Servidesk</span>.</footer>
+
+<script>
+(function () {
+  'use strict';
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  var datos = null;
+  var ciclo = 'mensual';
+  var planElegido = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function dinero(n, sinCodigo) {
+    var moneda = (datos && datos.pago.moneda) || 'MXN';
+    return (parseFloat(n) || 0).toLocaleString('es-MX', { style: 'currency', currency: moneda }) + (sinCodigo ? '' : ' ' + moneda);
+  }
+  function fecha(v) {
+    if (!v) return '—';
+    var d = new Date(String(v).slice(0, 10) + 'T00:00:00');
+    return isNaN(d) ? '—' : d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  // Texto libre de la plataforma: se escapa y solo los enlaces https se vuelven clicables
+  function textoConEnlaces(t) {
+    return esc(t).replace(/https:\/\/[^\s<]+/g, function (u) {
+      return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>';
+    }).replace(/\n/g, '<br>');
+  }
+  function mostrarError(texto) {
+    $('errorText').textContent = texto;
+    $('errorMsg').classList.add('visible');
+    $('errorMsg').scrollIntoView({ block: 'nearest' });
+  }
+  function ocultarError() { $('errorMsg').classList.remove('visible'); }
+
+  function api(accion, cuerpo) {
+    var op = { credentials: 'same-origin', cache: 'no-store' };
+    if (cuerpo) { op.method = 'POST'; op.body = cuerpo; }
+    return fetch('contratar.php?accion=' + accion, op).then(function (r) {
+      if (r.status === 401) { window.location.replace('login.html'); throw new Error('Sesión expirada'); }
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok || !j.exito) {
+          var err = new Error(j.mensaje || 'Error ' + r.status);
+          err.status = r.status;
+          throw err;
+        }
+        return j;
+      });
+    });
+  }
+
+  function cargar() {
+    return api('estado').then(function (j) {
+      datos = j;
+      ciclo = j.empresa.ciclo === 'anual' ? 'anual' : 'mensual';
+      pintar();
+    }).catch(function (e) {
+      $('contenido').innerHTML = '';
+      mostrarError(e.message);
+    });
+  }
+
+  function pintar() {
+    var e = datos.empresa;
+    $('subtitulo').textContent = e.nombre;
+    var conAcceso = e.acceso === 'total' || e.acceso === 'lectura';
+    $('linkVolver').hidden = !conAcceso;
+    $('sepVolver').hidden = !conAcceso;
+    $('titulo').textContent = e.estado === 'prueba' || e.estado === 'prueba_vencida' ? 'Contratar plan' : 'Renovar o cambiar plan';
+    var aviso = $('avisoCuenta');
+    aviso.hidden = !e.mensaje;
+    aviso.className = 'aviso-cuenta ' + (e.acceso === 'total' ? 'info' : 'alerta');
+    aviso.textContent = e.mensaje || '';
+    if (datos.pendiente) pintarPendiente(datos.pendiente);
+    else pintarFormulario();
+  }
+
+  // ------------------------------------------------------------ elegir plan
+  function pintarFormulario() {
+    var ultima = datos.historial[0];
+    var rechazo = ultima && ultima.estado === 'rechazada'
+      ? '<div class="aviso-cuenta alerta"><strong>Tu solicitud ' + esc(ultima.referencia) + ' no se pudo confirmar:</strong> ' + esc(ultima.motivo) + '</div>' : '';
+    if (!datos.planes.length) {
+      $('contenido').innerHTML = rechazo + '<p class="ayuda-bloque">Por ahora no hay planes disponibles para contratar en línea. ' + esc(datos.pago.contacto) + '</p>';
+      return;
+    }
+    if (!planElegido || !datos.planes.some(function (p) { return p.id === planElegido; })) {
+      planElegido = datos.planes.some(function (p) { return p.id === datos.empresa.plan_id; }) ? datos.empresa.plan_id : datos.planes[0].id;
+    }
+    var hayAnual = datos.planes.some(function (p) { return p.anual > 0; });
+    var f = datos.fiscal || {};
+    var opciones = function (lista, valor) {
+      return Object.keys(lista).map(function (k) {
+        return '<option value="' + esc(k) + '"' + (k === valor ? ' selected' : '') + '>' + esc(k + ' · ' + lista[k]) + '</option>';
+      }).join('');
+    };
+    $('contenido').innerHTML = rechazo +
+      '<form id="formContratar" novalidate>' +
+      '<div class="paso-titulo"><span>1</span> Elige tu plan</div>' +
+      (hayAnual ? '<div class="ciclo-selector" role="radiogroup" aria-label="Forma de pago">' +
+        '<button type="button" data-ciclo="mensual">Mensual</button><button type="button" data-ciclo="anual">Anual</button></div>' : '') +
+      '<div class="planes-grid" id="planes"></div>' +
+      '<div class="paso-titulo"><span>2</span> Facturación</div>' +
+      '<label class="acepto"><input type="checkbox" name="requiere_factura" value="1" id="chkFactura"' + (f.rfc ? ' checked' : '') + '>' +
+      '<span>Necesito factura (CFDI)</span></label>' +
+      '<div id="camposFactura" class="campos-factura">' +
+      '<div class="form-group"><label for="rfc">RFC</label><input id="rfc" name="rfc" maxlength="13" autocomplete="off" style="text-transform:uppercase" value="' + esc(f.rfc) + '"></div>' +
+      '<div class="form-group"><label for="razon_social">Razón social <span class="opcional">(como en tu constancia fiscal)</span></label><input id="razon_social" name="razon_social" maxlength="200" value="' + esc(f.razon_social) + '"></div>' +
+      '<div class="form-group"><label for="regimen_fiscal">Régimen fiscal</label><select id="regimen_fiscal" name="regimen_fiscal"><option value="">Selecciona…</option>' + opciones(datos.regimenes, f.regimen_fiscal) + '</select></div>' +
+      '<div class="fila-2"><div class="form-group"><label for="codigo_postal">C.P. fiscal</label><input id="codigo_postal" name="codigo_postal" maxlength="5" inputmode="numeric" value="' + esc(f.codigo_postal) + '"></div>' +
+      '<div class="form-group"><label for="uso_cfdi">Uso del CFDI</label><select id="uso_cfdi" name="uso_cfdi">' + opciones(datos.usos_cfdi, f.uso_cfdi || 'G03') + '</select></div></div>' +
+      '<div class="form-group"><label for="correo_factura">Correo para recibir la factura</label><input id="correo_factura" name="correo_factura" type="email" maxlength="150" value="' + esc(f.correo_factura) + '"></div>' +
+      '</div>' +
+      '<div class="paso-titulo"><span>3</span> Resumen</div>' +
+      '<div class="resumen-pago" id="resumen"></div>' +
+      '<button type="submit" class="btn-login" id="btnContratar"><div class="spinner" id="spinner"></div><span id="btnText">Continuar al pago</span></button>' +
+      '<p class="ayuda-bloque">Al continuar te damos los datos para transferir y una referencia. Tu plan se activa en cuanto confirmemos el pago' +
+      (datos.dias_verificacion ? ' y, mientras lo verificamos, conservas el acceso' : '') + '. Tu información se conserva siempre.</p>' +
+      '</form>';
+
+    document.querySelectorAll('[data-ciclo]').forEach(function (b) {
+      b.addEventListener('click', function () { ciclo = b.getAttribute('data-ciclo'); pintarPlanes(); });
+    });
+    var chk = $('chkFactura');
+    var alternarFactura = function () { $('camposFactura').hidden = !chk.checked; };
+    chk.addEventListener('change', alternarFactura);
+    alternarFactura();
+    $('formContratar').addEventListener('submit', enviarSolicitud);
+    pintarPlanes();
+  }
+
+  function pintarPlanes() {
+    document.querySelectorAll('[data-ciclo]').forEach(function (b) {
+      b.classList.toggle('activo', b.getAttribute('data-ciclo') === ciclo);
+      b.setAttribute('aria-checked', b.getAttribute('data-ciclo') === ciclo ? 'true' : 'false');
+    });
+    var disponibles = datos.planes.filter(function (p) { return p[ciclo] > 0; });
+    if (!disponibles.some(function (p) { return p.id === planElegido; }) && disponibles.length) planElegido = disponibles[0].id;
+    $('planes').innerHTML = disponibles.map(function (p) {
+      var ahorro = ciclo === 'anual' && p.mensual > 0 ? Math.round((1 - p.anual / (p.mensual * 12)) * 100) : 0;
+      return '<label class="plan-opcion' + (p.id === planElegido ? ' elegido' : '') + '">' +
+        '<input type="radio" name="plan_id" value="' + p.id + '"' + (p.id === planElegido ? ' checked' : '') + '>' +
+        (p.id === datos.empresa.plan_id ? '<span class="plan-actual">Tu plan actual</span>' : '') +
+        '<span class="plan-nombre">' + esc(p.nombre) + '</span>' +
+        '<span class="plan-precio">' + dinero(p[ciclo], true) + '<small> ' + esc(datos.pago.moneda) + ' / ' + (ciclo === 'anual' ? 'año' : 'mes') + '</small></span>' +
+        (ahorro > 0 ? '<span class="plan-ahorro">Ahorras ' + ahorro + '%</span>' : '') +
+        '<span class="plan-detalle"><i class="fas fa-users"></i> ' + (p.max_usuarios ? 'Hasta ' + p.max_usuarios + ' usuarios' : 'Usuarios ilimitados') + '</span>' +
+        (p.descripcion ? '<span class="plan-detalle">' + esc(p.descripcion) + '</span>' : '') + '</label>';
+    }).join('');
+    document.querySelectorAll('input[name="plan_id"]').forEach(function (r) {
+      r.addEventListener('change', function () { planElegido = parseInt(r.value, 10); pintarPlanes(); });
+    });
+    var plan = datos.planes.filter(function (p) { return p.id === planElegido; })[0];
+    $('resumen').innerHTML = plan
+      ? '<div><span>Plan ' + esc(plan.nombre) + ' · ' + (ciclo === 'anual' ? 'anual' : 'mensual') + '</span><strong>' + dinero(plan[ciclo]) + '</strong></div>' +
+        (datos.empresa.estado === 'prueba' && datos.empresa.prueba_hasta
+          ? '<p>Tus días de prueba restantes se respetan: el periodo pagado empieza al terminar tu prueba.</p>' : '')
+      : '';
+  }
+
+  function enviarSolicitud(ev) {
+    ev.preventDefault();
+    ocultarError();
+    var form = ev.target;
+    var cuerpo = new FormData(form);
+    cuerpo.set('ciclo', ciclo);
+    if (!form.requiere_factura.checked) {
+      ['rfc', 'razon_social', 'regimen_fiscal', 'codigo_postal', 'uso_cfdi', 'correo_factura'].forEach(function (k) { cuerpo.delete(k); });
+    }
+    var boton = $('btnContratar');
+    boton.disabled = true;
+    $('spinner').style.display = 'block';
+    $('btnText').textContent = 'Generando tu referencia…';
+    api('solicitar', cuerpo).then(function (j) {
+      return cargar().then(function () { if (j.aviso) mostrarError(j.aviso); });
+    }).catch(function (e) {
+      mostrarError(e.message);
+      boton.disabled = false;
+      $('spinner').style.display = 'none';
+      $('btnText').textContent = 'Continuar al pago';
+    });
+  }
+
+  // ------------------------------------------------------------ solicitud en verificación
+  function pintarPendiente(s) {
+    var p = datos.pago;
+    var hayBanco = p.clabe || p.banco;
+    var copiar = function (valor) {
+      return '<button type="button" class="btn-copiar" data-copiar="' + esc(valor) + '" title="Copiar"><i class="far fa-copy"></i></button>';
+    };
+    $('contenido').innerHTML =
+      '<div class="paso-titulo"><span>1</span> Transfiere</div>' +
+      '<div class="datos-pago">' +
+      '<div class="dato-pago destacado"><span>Monto</span><strong>' + dinero(s.monto) + '</strong></div>' +
+      '<div class="dato-pago destacado"><span>Referencia o concepto</span><strong>' + esc(s.referencia) + copiar(s.referencia) + '</strong></div>' +
+      (hayBanco
+        ? (p.banco ? '<div class="dato-pago"><span>Banco</span><strong>' + esc(p.banco) + '</strong></div>' : '') +
+          (p.beneficiario ? '<div class="dato-pago"><span>Beneficiario</span><strong>' + esc(p.beneficiario) + '</strong></div>' : '') +
+          (p.clabe ? '<div class="dato-pago"><span>CLABE</span><strong class="mono">' + esc(p.clabe) + copiar(p.clabe) + '</strong></div>' : '')
+        : '<p class="ayuda-bloque">Te enviaremos los datos para transferir. ' + esc(p.contacto) + '</p>') +
+      '</div>' +
+      (p.instrucciones ? '<p class="ayuda-bloque">' + textoConEnlaces(p.instrucciones) + '</p>' : '') +
+      '<p class="ayuda-bloque">Escribe la referencia <strong>' + esc(s.referencia) + '</strong> en el concepto de tu transferencia para identificar tu pago.</p>' +
+
+      '<div class="paso-titulo"><span>2</span> Envíanos tu comprobante</div>' +
+      (s.tiene_comprobante
+        ? '<p class="comprobante-ok"><i class="fas fa-check-circle"></i> Comprobante recibido' +
+          (s.comprobante_nombre ? ': ' + esc(s.comprobante_nombre) : '') +
+          ' · <a href="contratar.php?accion=comprobante&id=' + s.id + '" target="_blank" rel="noopener">Ver</a></p>'
+        : '<p class="ayuda-bloque">Opcional, pero acelera la confirmación. PDF o imagen, máximo 8 MB.</p>') +
+      '<form id="formComprobante" class="form-comprobante">' +
+      '<input type="file" name="comprobante" id="archivoComprobante" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,application/pdf,image/*" required>' +
+      '<button type="submit" class="btn-demo">' + (s.tiene_comprobante ? 'Reemplazar comprobante' : 'Subir comprobante') + '</button></form>' +
+
+      '<div class="paso-titulo"><span>3</span> Confirmamos tu pago</div>' +
+      '<p class="ayuda-bloque">Revisamos tu depósito y activamos tu plan <strong>' + esc(s.plan || '') + '</strong> (' + (s.ciclo === 'anual' ? 'anual' : 'mensual') + ').' +
+      (s.acceso_hasta && datos.empresa.verificacion_hasta ? ' Mientras tanto conservas el acceso hasta el ' + fecha(datos.empresa.verificacion_hasta) + '.' : '') +
+      (s.requiere_factura === '1' || s.requiere_factura === 1 ? ' Tu factura llegará a ' + esc(s.correo_factura) + '.' : '') + '</p>' +
+      '<p class="ayuda-bloque">¿Elegiste otro plan por error? <a href="#" id="cancelarSolicitud">Cancelar esta solicitud</a></p>';
+
+    $('contenido').querySelectorAll('[data-copiar]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var valor = b.getAttribute('data-copiar');
+        (navigator.clipboard ? navigator.clipboard.writeText(valor) : Promise.reject()).then(function () {
+          b.innerHTML = '<i class="fas fa-check"></i>';
+          setTimeout(function () { b.innerHTML = '<i class="far fa-copy"></i>'; }, 1500);
+        }).catch(function () { window.prompt('Copia el dato:', valor); });
+      });
+    });
+    $('formComprobante').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      ocultarError();
+      if (!$('archivoComprobante').files.length) { mostrarError('Elige el archivo de tu comprobante.'); return; }
+      var cuerpo = new FormData(this);
+      cuerpo.set('id', s.id);
+      var boton = this.querySelector('button');
+      boton.disabled = true;
+      boton.textContent = 'Subiendo…';
+      api('comprobante', cuerpo).then(cargar).catch(function (e) {
+        mostrarError(e.message);
+        boton.disabled = false;
+        boton.textContent = 'Subir comprobante';
+      });
+    });
+    $('cancelarSolicitud').addEventListener('click', function (ev) {
+      ev.preventDefault();
+      if (!window.confirm('¿Cancelar la solicitud ' + s.referencia + '? Si ya transferiste, mejor envíanos tu comprobante.')) return;
+      var cuerpo = new FormData();
+      cuerpo.set('id', s.id);
+      api('cancelar', cuerpo).then(cargar).catch(function (e) { mostrarError(e.message); });
+    });
+  }
+
+  cargar();
+})();
+</script>
+
+</body>
+</html>

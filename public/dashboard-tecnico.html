@@ -7,15 +7,17 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
     <link rel="icon" href="../img/favicon.ico" />
     <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
-            --accent-color: #3498db;
-            --accent-dark: #2980b9;
+            --accent-color: var(--brand-primary);
+            --accent-dark: var(--brand-primary-hover);
             --success-color: #16a34a;
             --warning-color: #d97706;
             --danger-color: #dc2626;
@@ -108,7 +110,7 @@
             font-size: 14px; background: var(--surface); color: var(--text-color); transition: var(--transition);
         }
         .filter-item select:focus, .filter-item input:focus {
-            border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15); outline: none;
+            border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.15); outline: none;
         }
 
         .btn {
@@ -117,7 +119,7 @@
             align-items: center; gap: 8px; white-space: nowrap;
         }
         .btn-primary { background: var(--accent-color); color: white; }
-        .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35); }
+        .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb), 0.35); }
 
         #mainContent.is-loading .stats-grid, #mainContent.is-loading .chart-container { opacity: 0.45; pointer-events: none; }
         .loading-indicator { display: none; align-items: center; gap: 8px; font-size: 12.5px; color: var(--accent-color); font-weight: 700; margin-left: 6px; }
@@ -153,8 +155,11 @@
             .filter-item { min-width: 100%; }
         }
     </style>
-    <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+    <script src="../scripts/auth-guard.js?v=20261124"></script>
+    <script src="../scripts/dialogo.js?v=20261101"></script>
+    <script src="../scripts/menu-lateral.js?v=20261125"></script>
+    <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -217,7 +222,7 @@
 
         <div class="stats-grid" id="statsMios">
             <div class="stat-card">
-                <h3><i class="fas fa-tasks"></i> Incidencias Asignadas</h3>
+                <h3><i class="fas fa-tasks"></i> Órdenes de servicio asignadas</h3>
                 <div class="stat-value"><span id="miAsignadas">0</span><i class="fas fa-clipboard-list stat-icon"></i></div>
                 <div class="stat-change"><i class="fas fa-chart-line"></i><span id="miTendencia">+0% vs periodo anterior</span></div>
             </div>
@@ -254,12 +259,12 @@
         </div>
 
         <div class="chart-container full-width">
-            <div class="chart-title"><span>Incidencias Cerradas por Mes (últimos 12 meses)</span></div>
+            <div class="chart-title"><span>Órdenes de servicio cerradas por mes (últimos 12 meses)</span></div>
             <canvas id="chartMiEvolucion" height="220"></canvas>
         </div>
 
         <div class="chart-container full-width">
-            <div class="chart-title"><span>Mis Incidencias Pendientes</span></div>
+            <div class="chart-title"><span>Mis órdenes de servicio pendientes</span></div>
             <div id="misPendientesAviso" class="panel-error" style="display: none;"></div>
             <table class="drilldown-table" id="misPendientesTabla" style="display: none;">
                 <thead>
@@ -276,13 +281,13 @@
             </table>
             <div class="chart-empty-state" id="misPendientesVacio" style="display: none;">
                 <i class="fas fa-circle-check"></i>
-                <span>No tienes incidencias pendientes en este momento.</span>
+                <span>No tienes órdenes de servicio pendientes en este momento.</span>
             </div>
         </div>
     </main>
 
-    <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-    <script src="../scripts/dashboard-tecnico.js?v=20260927"></script>
+    <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+    <script src="../scripts/dashboard-tecnico.js?v=20261111"></script>
 </body>
 </html>

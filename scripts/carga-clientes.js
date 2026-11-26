@@ -24,17 +24,17 @@ async function cargarClientes(busqueda = '') {
       
       // Redirección a la nueva página de perfil enviando el ID por la URL
       row.onclick = () => {
-          window.location.href = `perfil-cliente.html?id=${cliente.id}`;
+          window.location.href = `perfil-cliente.html?id=${escHTML(cliente.id)}`;
       };
 
       // Inyectamos solo las 6 columnas de datos (Eliminamos la columna de acciones)
       row.innerHTML = `
-        <td><a href="perfil-cliente.html?id=${cliente.id}">${cliente.nombre}</a></td>
-        <td>${cliente.rfc || '-'}</td>
-        <td>${cliente.direccion || '-'}</td>
-        <td>${cliente.telefono || '-'}</td>
-        <td>${cliente.contactos || '-'}</td>
-        <td>${cliente.email || '-'}</td>
+        <td><a href="perfil-cliente.html?id=${escHTML(cliente.id)}">${escHTML(cliente.nombre)}</a></td>
+        <td>${escHTML(cliente.rfc || '-')}</td>
+        <td>${escHTML(cliente.direccion || '-')}</td>
+        <td>${escHTML(cliente.telefono || '-')}</td>
+        <td>${escHTML(cliente.contactos || '-')}</td>
+        <td>${escHTML(cliente.email || '-')}</td>
       `;
 
       listaClientes.appendChild(row);

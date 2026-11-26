@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const j = await res.json().catch(() => { throw new Error('Respuesta no JSON'); });
-      if (!res.ok) throw new Error(j.mensaje || `Error ${res.status}`);
+      if (!res.ok) throw new Error(j.mensaje || `Error ${escHTML(res.status)}`);
 
       showMessage(j.mensaje, 'success');
       form.reset();
@@ -164,13 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${new Date(venta.fecha_registro).toLocaleDateString()}</td>
-          <td>${venta.cliente}</td>
-          <td>${venta.sucursal || '-'}</td>
-          <td>${venta.equipo}</td>
-          <td>${venta.marca || ''} ${venta.modelo || ''}</td>
-          <td>${venta.numero_serie || venta.numero_serie || '-'}</td>
-          <td>${venta.garantia} meses</td>
-          <td>${venta.notas || '-'}</td>
+          <td>${escHTML(venta.cliente)}</td>
+          <td>${escHTML(venta.sucursal || '-')}</td>
+          <td>${escHTML(venta.equipo)}</td>
+          <td>${escHTML(venta.marca || '')} ${escHTML(venta.modelo || '')}</td>
+          <td>${escHTML(venta.numero_serie || '-')}</td>
+          <td>${escHTML(venta.garantia)} meses</td>
+          <td>${escHTML(venta.notas || '-')}</td>
         `;
         tbody.appendChild(tr);
       });

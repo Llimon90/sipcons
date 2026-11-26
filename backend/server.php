@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('incidencias');
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/../config/branding.php';
 
 // Encabezados generales
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 
 // 🔒 Evitar caché del lado del cliente y del servidor
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
@@ -29,18 +29,20 @@ if ($method === "GET") {
     // **INICIO - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
     
     // Consulta para obtener todas las incidencias sin filtrar
-    $sql = "SELECT * FROM incidencias WHERE estatus IN ('Abierto','Asignado', 'Pendiente', 'Completado') ORDER BY numero_incidente DESC;";
+    // D-9: el Técnico solo recibe las órdenes donde está asignado
+    require_once __DIR__ . '/lib/incidencias_helpers.php';
+    [$soloMias, $paramsMias] = filtroOrdenesSesion($pdo);
+    // D-42: ?programadas=1 trae las de fecha futura (la lista normal no las incluye hasta su día)
+    $programadas = ($_GET['programadas'] ?? '') === '1';
+    $st = $pdo->prepare("SELECT * FROM incidencias WHERE " . ($programadas ? sqlOrdenProgramada() : sqlOrdenActiva()) . " AND $soloMias ORDER BY "
+        . ($programadas ? 'fecha ASC, id ASC' : 'id DESC'));  // D-4
+    $st->execute($paramsMias);
+    $incidencias = filtrarOrdenesVisibles($pdo, $st->fetchAll(PDO::FETCH_ASSOC));
 
-    $result = $conn->query($sql);
-
-    if ($result->num_rows > 0) {
-        $incidencias = [];
-        while($row = $result->fetch_assoc()) {
-            $incidencias[] = $row;
-        }
+    if ($incidencias) {
         echo json_encode($incidencias);
     } else {
-        echo json_encode(["message" => "No hay incidencias abiertas"]);
+        echo json_encode(["message" => $programadas ? "No hay órdenes de servicio programadas" : "No hay órdenes de servicio abiertas"]);
     }
     
     // **FIN - FUNCIÓN PARA MOSTRAR LA BASE DE DATOS EN EL DOM**
@@ -52,8 +54,6 @@ if ($method === "GET") {
     // La incidencia y sus archivos se guardan juntos o no se guarda nada.
     require_once __DIR__ . '/../config/guardados_log.php';
     require_once __DIR__ . '/lib/incidencias_helpers.php';
-    require_once __DIR__ . '/lib/sla_helpers.php';
-    require_once __DIR__ . '/lib/automatizacion_helpers.php';
     ini_set('display_errors', '0');
 
     $archivosMovidos = [];
@@ -75,7 +75,7 @@ if ($method === "GET") {
             $responderError(413, 'envio_muy_grande',
                 'Los archivos que adjuntaste pesan demasiado' .
                 ($limites['total_mb'] ? " (el máximo es {$limites['total_mb']} MB en total)" : '') .
-                '. No se registró la incidencia. Quita o reduce los archivos e intenta de nuevo.');
+                '. No se registró la orden de servicio. Quita o reduce los archivos e intenta de nuevo.');
         }
         $data = $_POST;
     } else {
@@ -84,38 +84,67 @@ if ($method === "GET") {
 
     // Validar los datos
     if (!isset($data["reporte_cliente"], $data["cliente"], $data["contacto"], $data["sucursal"], $data["fecha"], $data["tecnico"], $data["status"], $data["falla"], $data["notas"])) {
-        $responderError(400, 'faltan_datos', 'Faltan datos de la incidencia. Recarga la página e intenta de nuevo.');
+        $responderError(400, 'faltan_datos', 'Faltan datos de la orden de servicio. Recarga la página e intenta de nuevo.');
     }
-    if (trim($data['cliente']) === '' || trim($data['contacto']) === '' || trim($data['fecha']) === '') {
-        $responderError(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta y fecha.');
+    if (trim($data['cliente']) === '' || trim($data['contacto']) === '' || trim($data['fecha']) === '' || trim((string)$data['falla']) === '') {
+        $responderError(400, 'faltan_datos', 'Faltan datos obligatorios: cliente, quién reporta, fecha y motivo del servicio.');
     }
-
-    // Prioridad: lista blanca en el servidor, nunca se confía en lo que
-    // mande el formulario. Si falta o no es válida, se usa "Media".
-    $prioridad = prioridadValida($data['prioridad'] ?? null) ? $data['prioridad'] : PRIORIDAD_DEFAULT;
-
-    // Cerrar con/sin factura: no lo puede hacer el rol Técnico ni los usuarios
-    // restringidos en el .env (ver puedeCerrarIncidencias en config/auth.php)
-    if (!puedeCerrarIncidencias() && in_array($data["status"], ESTATUS_DE_CIERRE, true)) {
-        $responderError(403, 'sin_permiso', 'Tu usuario no tiene permiso para cerrar incidencias con o sin factura.');
+    if ($errorFecha = errorFechaOrden((string)$data['fecha'])) $responderError(400, 'fecha_invalida', $errorFecha);  // L-18
+    // D-1: lista cerrada de estatus (la validación completa, con los técnicos, va abajo)
+    if (estatusOficial((string)$data['status']) === null) {
+        $responderError(400, 'estatus_invalido', 'Elige un estatus de la lista: ' . implode(', ', ESTATUS_ORDEN) . '.');
     }
 
     // Archivos: se revisan antes de registrar nada
     $revisionArchivos = revisarArchivosSubidos('archivos');
     if ($rechazo = rechazoDeArchivos($revisionArchivos, $limites)) {
-        $responderError($rechazo[0], $rechazo[1], str_replace('No se guardó ningún cambio.', 'No se registró la incidencia.', $rechazo[2]));
+        $responderError($rechazo[0], $rechazo[1], str_replace('No se guardó ningún cambio.', 'No se registró la orden de servicio.', $rechazo[2]));
     }
+
+    // D-7: clave única del formulario. Si el mismo envío llega dos veces (doble clic,
+    // red lenta, reintento), se responde la orden que ya se creó en vez de crear otra.
+    $claveEnvio = trim((string)($data['clave_envio'] ?? ''));
+    if (!preg_match('/^[A-Za-z0-9_-]{8,64}$/', $claveEnvio)) $claveEnvio = '';
+    $tieneClaveEnvio = (bool)$pdo->query("SHOW COLUMNS FROM incidencias LIKE 'clave_envio'")->fetch();
+
+    /** Responde con la orden que ya registró este mismo envío. */
+    $responderYaRegistrada = function (array $fila) use ($pdo) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        // S-4 · D-9: con la clave de una orden que no es suya, el Técnico no recibe sus datos
+        if (!ordenVisibleParaSesion($pdo, $fila['tecnico'] ?? '')) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'motivo' => 'clave_repetida',
+                'message' => 'Este envío ya se registró. Recarga la página para capturar una orden nueva.'], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        $st = $pdo->prepare('SELECT COUNT(*) FROM archivos_incidencias WHERE incidencia_id = ?');
+        $st->execute([$fila['id']]);
+        echo json_encode([
+            'success' => true, 'ya_registrada' => true,
+            'message' => 'Esta orden de servicio ya se había registrado con este mismo envío.',
+            'numero_incidente' => $fila['numero_incidente'], 'id' => (int)$fila['id'],
+            'guardado_en' => date('Y-m-d H:i:s'), 'archivos_agregados' => [],
+            'incidencia' => [
+                'cliente' => $fila['cliente'], 'contacto' => $fila['contacto'], 'sucursal' => $fila['sucursal'],
+                'fecha' => substr((string)$fila['fecha'], 0, 10), 'falla' => $fila['falla'], 'tecnico' => $fila['tecnico'],
+                'estatus' => $fila['estatus'], 'archivos' => (int)$st->fetchColumn(),
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    };
 
     try {
         $pdo->beginTransaction();
 
-        // Obtener el último número de incidencia (bloqueado hasta terminar,
-        // para que dos registros simultáneos no tomen el mismo folio)
-        $ultimo = $pdo->query("SELECT numero_incidente FROM incidencias ORDER BY id DESC LIMIT 1 FOR UPDATE")->fetchColumn();
-        $nuevoNumeroIncidente = "SIP-0001"; // Valor inicial si no hay registros
-        if ($ultimo) {
-            $numeroIncremental = intval(explode("-", $ultimo)[1] ?? 0) + 1;
-            $nuevoNumeroIncidente = "SIP-" . str_pad($numeroIncremental, 4, "0", STR_PAD_LEFT);
+        // Folio del contador de la empresa: bloquea hasta terminar, así que dos altas
+        // simultáneas no toman el mismo folio y uno eliminado no se reutiliza (CV-12)
+        $nuevoNumeroIncidente = tomarFolioIncidencia($pdo);
+
+        // D-7: lectura con bloqueo (ve lo último confirmado por otro envío)
+        if ($claveEnvio !== '' && $tieneClaveEnvio) {
+            $st = $pdo->prepare('SELECT * FROM incidencias WHERE clave_envio = ? FOR UPDATE');
+            $st->execute([$claveEnvio]);
+            if ($previa = $st->fetch(PDO::FETCH_ASSOC)) $responderYaRegistrada($previa);
         }
 
         // numero_serie (migración 010) es opcional; si la columna aún no existe se ignora.
@@ -128,49 +157,63 @@ if ($method === "GET") {
             'contacto'         => trim((string)$data['contacto']),
             'sucursal'         => (string)$data['sucursal'],
             'categoria'        => (string)($data['categoria'] ?? ''),
-            'prioridad'        => $prioridad,
             'fecha'            => (string)$data['fecha'],
             'tecnico'          => (string)$data['tecnico'],
             'estatus'          => (string)$data['status'],
             'falla'            => (string)$data['falla'],
+            'accion'           => (string)($data['accion'] ?? ''),  // D-26: trabajo realizado (capturas posteriores)
             'notas'            => (string)$data['notas'],
             'numero_incidente' => $nuevoNumeroIncidente,
         ];
         if ($tieneSerie) $valores['numero_serie'] = $numeroSerie !== '' ? $numeroSerie : null;
+        if ($tieneClaveEnvio && $claveEnvio !== '') $valores['clave_envio'] = $claveEnvio;
 
-        // Reglas de automatización (migración 060): solo al CREAR, nunca al
-        // editar, para no pelear con un cambio manual posterior del técnico.
-        // Puede sobreescribir 'tecnico' y/o 'prioridad' según categoria/sucursal/prioridad.
-        $tieneReglasAutomatizacion = (bool)$pdo->query("SHOW TABLES LIKE 'reglas_automatizacion'")->fetch();
-        if ($tieneReglasAutomatizacion) {
-            $sobreescritos = aplicarReglasAutomatizacion($pdo, $valores);
-            foreach ($sobreescritos as $campo => $valor) {
-                $valores[$campo] = $valor;
-            }
+        // D-26: el cliente debe estar en el catálogo (se guarda como está en el catálogo)
+        $clienteCatalogo = clienteDelCatalogo($pdo, $valores['cliente']);
+        if ($clienteCatalogo === null) {
+            $responderError(400, 'cliente_no_registrado', 'El cliente "' . $valores['cliente'] . '" no está en el catálogo. Elígelo de la lista o dalo de alta con «Crear cliente» y vuelve a registrar.');
+        }
+        $valores['cliente'] = $clienteCatalogo;
+
+        // D-44: la sucursal se liga al catálogo del cliente (si es nueva, se da de alta)
+        require_once __DIR__ . '/lib/sucursales_helpers.php';
+        if (sucTablaDisponible($pdo)) {
+            [$sucursalId, $sucursalNombre] = sucResolverPorCliente($pdo, $clienteCatalogo, $valores['sucursal']);
+            $valores['sucursal'] = $sucursalNombre;
+            $valores['sucursal_id'] = $sucursalId;
         }
 
-        // cliente_id (migración 017): se resuelve por nombre al dar de alta,
-        // para que el portal de autoservicio pueda ubicar el ticket sin
-        // depender de que el formulario interno ya mande un id de cliente.
-        // Si no hay coincidencia exacta, queda NULL y se vincula a mano desde
-        // Clientes → Acceso al portal.
-        $tieneClienteId = (bool)$pdo->query("SHOW COLUMNS FROM incidencias LIKE 'cliente_id'")->fetch();
-        if ($tieneClienteId) {
-            $stClienteId = $pdo->prepare("SELECT id FROM clientes WHERE TRIM(LOWER(nombre)) = TRIM(LOWER(?)) LIMIT 1");
-            $stClienteId->execute([$valores['cliente']]);
-            $valores['cliente_id'] = $stClienteId->fetchColumn() ?: null;
+        // D-10: solo técnicos asignables de la empresa (normalizados, sin repetir)
+        require_once __DIR__ . '/lib/tecnicos_helpers.php';
+        [$tecnicosOk, $errorTecnicos] = normalizarTecnicosOrden($pdo, $valores['tecnico']);
+        if ($errorTecnicos !== null) $responderError(400, 'tecnico_invalido', $errorTecnicos);
+        $valores['tecnico'] = $tecnicosOk;
+
+        // Estatus (0.1): lista cerrada, D-5, permiso para cerrar o cancelar, motivo
+        $reglas = reglasEstatusOrden(null, $valores['estatus'], $tecnicosOk,
+            isset($data['motivo_estatus']) ? (string)$data['motivo_estatus'] : null, '', puedeCerrarIncidencias());
+        if (isset($reglas['error'])) $responderError($reglas['http'], $reglas['http'] === 403 ? 'sin_permiso' : 'estatus_invalido', $reglas['error']);
+        $valores['estatus'] = $reglas['estatus'];
+        if (incidenciasTieneMotivoEstatus($pdo)) {
+            $valores['motivo_estatus'] = $reglas['motivo_estatus'];
+        } elseif ($reglas['motivo_estatus'] !== null) {
+            $responderError(503, 'migracion_pendiente', 'Falta aplicar la actualización 010 de la base de datos para guardar motivos de estatus. Avisa al administrador del sistema.');
         }
 
         $columnas = implode(', ', array_map(fn($c) => "`$c`", array_keys($valores)));
         $marcas = implode(', ', array_fill(0, count($valores), '?'));
         $pdo->prepare("INSERT INTO incidencias ($columnas) VALUES ($marcas)")->execute(array_values($valores));
         $nuevoId = (int)$pdo->lastInsertId();
+        if (!empty($valores['numero_serie'])) {  // D-41: la serie capturada es el primer equipo de la orden
+            require_once __DIR__ . '/lib/equipos_orden_helpers.php';
+            eqoAgregar($pdo, $nuevoId, (string)$valores['numero_serie'], [], true);
+        }
 
         try {
             $archivosAgregados = guardarArchivosIncidencia($pdo, $nuevoId, $revisionArchivos['validos'], $archivosMovidos);
         } catch (RuntimeException $e) {
             $responderError(500, 'archivo_no_guardado',
-                "No se pudo guardar el archivo \"{$e->getMessage()}\" en el servidor. No se registró la incidencia. Intenta de nuevo.");
+                "No se pudo guardar el archivo \"{$e->getMessage()}\" en el servidor. No se registró la orden de servicio. Intenta de nuevo.");
         }
 
         // Comprobación: se vuelve a leer lo registrado y se compara con lo enviado
@@ -178,20 +221,20 @@ if ($method === "GET") {
         $st->execute([$nuevoId]);
         $registrada = $st->fetch(PDO::FETCH_ASSOC);
         if (!$registrada) {
-            $responderError(500, 'verificacion', 'No se pudo confirmar el registro en la base de datos. No se registró la incidencia. Intenta de nuevo.');
+            $responderError(500, 'verificacion', 'No se pudo confirmar el registro en la base de datos. No se registró la orden de servicio. Intenta de nuevo.');
         }
         $distintos = camposQueNoCoinciden($valores, $registrada);
         if ($distintos) {
             $responderError(500, 'verificacion',
                 'No se pudo registrar correctamente: ' . nombresCamposIncidencia($distintos) .
-                '. Es posible que el texto sea demasiado largo o tenga caracteres especiales no admitidos (por ejemplo, emojis). No se registró la incidencia.',
+                '. Es posible que el texto sea demasiado largo o tenga caracteres especiales no admitidos (por ejemplo, emojis). No se registró la orden de servicio.',
                 'Campos que no coinciden tras registrar: ' . implode(',', $distintos));
         }
         $st = $pdo->prepare('SELECT COUNT(*) FROM archivos_incidencias WHERE incidencia_id = ?');
         $st->execute([$nuevoId]);
         $archivosEnBase = (int)$st->fetchColumn();
         if ($archivosEnBase !== count($archivosAgregados)) {
-            $responderError(500, 'verificacion', 'No se pudieron confirmar los archivos adjuntos. No se registró la incidencia. Intenta de nuevo.',
+            $responderError(500, 'verificacion', 'No se pudieron confirmar los archivos adjuntos. No se registró la orden de servicio. Intenta de nuevo.',
                 "Archivos esperados " . count($archivosAgregados) . ", en base $archivosEnBase");
         }
 
@@ -203,7 +246,7 @@ if ($method === "GET") {
         // base (no lo que se envió), para que quien registra lo pueda revisar.
         $respuesta = [
             "success" => true,
-            "message" => "Incidencia registrada correctamente",
+            "message" => "Orden de servicio registrada correctamente",
             "numero_incidente" => $registrada['numero_incidente'],
             "id" => $nuevoId,
             "guardado_en" => date('Y-m-d H:i:s'),
@@ -223,9 +266,16 @@ if ($method === "GET") {
         $pdo->commit();
         echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
     } catch (Throwable $e) {
-        error_log('server.php (alta de incidencia): ' . $e->getMessage());
+        // D-7: otro envío con la misma clave ganó la carrera (índice único)
+        if ($claveEnvio !== '' && $tieneClaveEnvio && $e instanceof PDOException && str_contains($e->getMessage(), 'uniq_clave_envio')) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $st = $pdo->prepare('SELECT * FROM incidencias WHERE clave_envio = ?');
+            $st->execute([$claveEnvio]);
+            if ($previa = $st->fetch(PDO::FETCH_ASSOC)) $responderYaRegistrada($previa);
+        }
+        error_log('server.php (alta de orden de servicio): ' . $e->getMessage());
         $responderError(500, 'error_servidor',
-            'Ocurrió un problema en el servidor y no se registró la incidencia. Intenta de nuevo en un momento.',
+            'Ocurrió un problema en el servidor y no se registró la orden de servicio. Intenta de nuevo en un momento.',
             get_class($e) . ': ' . $e->getMessage());
     }
 }

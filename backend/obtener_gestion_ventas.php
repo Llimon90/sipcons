@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('ventas');
 header('Content-Type: application/json');
 
 try {
@@ -40,6 +42,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    echo json_encode(['exito' => false, 'mensaje' => $e->getMessage()]);
+    echo json_encode(['exito' => false, 'mensaje' => mensajeErrorPublico($e)]);
 }
 ?>

@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de Incidencia</title>
+    <title>Detalle de la orden de servicio</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
-    <link rel="stylesheet" href="../css/detalle.css?v=8">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../css/inventario.css?v=20261111">
+    <link rel="stylesheet" href="../css/cotizaciones.css?v=20261125">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
+    <link rel="stylesheet" href="../css/detalle.css?v=20261111">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js" crossorigin="anonymous"></script>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -49,82 +55,57 @@
   <main id="mainContent">
         <!-- Formulario para ACTUALIZAR una incidencia -->
         <section class="encabezado">
-            <h2>Detalles de la Incidencia</h2>
+            <h2>Detalles de la orden de servicio</h2>
             <div id="detalle-incidencia">
                 <p>Cargando detalles...</p>
             </div>
         </section>
         
+        <section class="refacciones-incidencia" id="seccion-equipos">
+            <h2><i class="fas fa-weight-scale"></i> Equipos atendidos</h2>
+            <div id="equipos-orden"></div>
+        </section>
+
+        <section class="refacciones-incidencia">
+            <h2><i class="fas fa-boxes"></i> Conceptos aplicados</h2>
+            <div id="refacciones-incidencia"></div>
+        </section>
+
+        <section class="refacciones-incidencia cot-seccion-externa" id="seccion-cotizaciones" hidden>
+            <div class="cot-seccion">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Cotizaciones</h2>
+                <div class="cot-seccion-botones">
+                    <button type="button" class="btn-secundario" id="btn-cotizar-utilizado" hidden title="Cotización del trabajo ya realizado: trae las refacciones registradas en esta orden de servicio (ya instaladas, no se vuelven a descontar)"><i class="fas fa-file-import"></i> <span>Cotizar lo utilizado</span></button>
+                    <button type="button" class="btn-secundario" id="btn-cotizar"><i class="fas fa-plus"></i> Cotizar</button>
+                </div>
+            </div>
+            <div id="cotizaciones-incidencia"></div>
+        </section>
+
         <section class="archivos-incidencia">
-            <h2>Archivos de la Incidencia</h2>
+            <h2>Archivos de la orden de servicio</h2>
             <div id="contenedor-archivos"></div>
-        </section>
-
-        <!-- ============================================================ -->
-        <!-- Extras de esta incidencia: etiquetas, bitácora de tiempo y
-             plantillas de respuesta rápida. Sección independiente del
-             formulario principal (no comparte estado con detalle.js). -->
-        <!-- ============================================================ -->
-        <section class="archivos-incidencia" id="seccion-extras-incidencia">
-            <h2>Etiquetas</h2>
-            <div id="etiquetas-asignadas" class="etiquetas-chips"></div>
-            <div style="margin-top:8px;">
-                <select id="selector-etiqueta"><option value="">Agregar etiqueta...</option></select>
-            </div>
-
-            <h2 style="margin-top:20px;">Plantilla de respuesta rápida</h2>
-            <p style="color:#7f8c8d; margin-top:-6px;">Inserta un texto predefinido en las notas adicionales.</p>
-            <select id="selector-plantilla"><option value="">Selecciona una plantilla...</option></select>
-
-            <h2 style="margin-top:20px;">Bitácora de tiempo</h2>
-            <div id="bitacora-tiempo-lista"></div>
-            <div class="form-row" style="margin-top:8px;">
-                <div>
-                    <label for="bitacora-minutos">Minutos invertidos</label>
-                    <input type="number" id="bitacora-minutos" min="1" max="1440" style="width:100px;">
-                </div>
-                <div>
-                    <label for="bitacora-descripcion">Descripción (opcional)</label>
-                    <input type="text" id="bitacora-descripcion" maxlength="255">
-                </div>
-            </div>
-            <button type="button" id="btn-agregar-tiempo">Registrar tiempo</button>
-            <span id="mensaje-bitacora" style="margin-left:10px;"></span>
-        </section>
-
-        <!-- ============================================================ -->
-        <!-- Refacciones usadas en esta incidencia (descuenta inventario).
-             Sección independiente, no toca detalle.js ni detalle-extras.js. -->
-        <!-- ============================================================ -->
-        <section class="archivos-incidencia" id="seccion-refacciones-incidencia">
-            <h2>Refacciones utilizadas</h2>
-            <div id="refacciones-consumidas"><p>Cargando...</p></div>
-            <div class="form-row" style="margin-top:8px; align-items:flex-end;">
-                <div class="full-width">
-                    <label for="refaccion-producto">Producto (SKU o nombre)</label>
-                    <select id="refaccion-producto"><option value="">Buscando productos...</option></select>
-                </div>
-                <div>
-                    <label for="refaccion-cantidad">Cantidad</label>
-                    <input type="number" id="refaccion-cantidad" min="1" value="1" style="width:90px;">
-                </div>
-                <div>
-                    <button type="button" id="btn-registrar-refaccion">Registrar uso</button>
-                </div>
-            </div>
-            <span id="mensaje-refaccion" style="margin-left:10px;"></span>
         </section>
     </main>
 
-    <script src="../scripts/sidebar-state.js?v=20261002"></script>
-    <script src="../scripts/contactos-widget.js?v=3"></script>
-    <script src="../scripts/serie-equipo.js"></script>
-    <script src="../scripts/tecnicos.js?v=2"></script>
-    <script src="../scripts/visor-archivos.js?v=3"></script>
-    <script src="../scripts/dialogo.js?v=2"></script>
-    <script src="../scripts/selector-archivos.js?v=2"></script>
-    <script src="../scripts/detalle.js?v=20"></script>
-    <script src="../scripts/detalle-extras.js?v=1"></script>
-    <script src="../scripts/detalle-refacciones.js?v=1"></script>
+    <script src="../scripts/sidebar-state.js?v=20261125"></script>
+    <script src="../scripts/contactos-widget.js?v=20261029"></script>
+    <script src="../scripts/alta-rapida.js?v=20261101b"></script>
+    <script src="../scripts/serie-equipo.js?v=20261029"></script>
+    <script src="../scripts/sucursales-campo.js?v=20261112"></script>
+    <script src="../scripts/tecnicos.js?v=20261029"></script>
+    <script src="../scripts/visor-archivos.js?v=20261112"></script>
+    <script src="../scripts/dialogo.js?v=20261101"></script>
+    <script src="../scripts/ui-tablas.js?v=20261110"></script>
+    <script src="../scripts/selector-archivos.js?v=20261101"></script>
+    <script src="../scripts/estatus-orden.js?v=20261110"></script>
+    <script src="../scripts/cambios-formulario.js?v=20261112"></script>
+    <script src="../scripts/detalle.js?v=20261125"></script>
+    <script src="../scripts/refacciones-incidencia.js?v=20261125"></script>
+    <script src="../scripts/red.js?v=20261113"></script>
+    <script src="../scripts/sugerencias-equipo.js?v=20261113"></script>
+    <script src="../scripts/equipos-orden.js?v=20261113"></script>
+    <script src="../scripts/cotizaciones-comun.js?v=20261125"></script>
+    <script src="../scripts/cotizaciones-incidencia.js?v=20261111"></script>
 </body>
 </html>

@@ -1,11 +1,51 @@
-<IfModule mod_headers.c>
-  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+# =====================================================================
+#  Servidesk - reglas de Apache / LiteSpeed (Hostinger, hosting compartido)
+#  La app no usa rutas virtuales: cada página es un archivo real (.html o
+#  .php), así que no hace falta reescribir URLs, solo proteger y cachear.
+# =====================================================================
+
+DirectoryIndex index.html index.php
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # --- HTTPS obligatorio (también detrás del proxy de Hostinger) --------
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:\d+)?$ [NC]
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # --- Nada interno es accesible por web ------------------------------
+  # El despliegue por Git de Hostinger deja .git/ dentro de public_html;
+  # database/ trae el seed (con hashes de contraseñas) y storage/ las sesiones.
+  # vendor/ = librerías de terceros (Dompdf); tests/, marketing-video/, auditorias/ y herramientas/ = desarrollo
+  RewriteRule ^(database|storage|cron|config|backend/lib|docs|vendor|tests|marketing-video|auditorias|herramientas)(/|$) - [R=404,L]
+  # Cualquier archivo o carpeta que empiece con punto (.git, .env, .github,
+  # .vscode, .user.ini...), excepto .well-known (validación del certificado SSL)
+  RewriteRule (^|/)\.(?!well-known/) - [R=404,L]
+  # Documentación y herramientas del repositorio
+  RewriteRule ^(README|DEPLOY|CLAUDE|GEMINI|AGENTS)\.md$ - [R=404,L]
+  # S-1: bitácoras de errores de PHP que el hosting deja junto a los scripts (rutas, SQL, datos)
+  RewriteRule (^|/)(error_log|php_errorlog)$ - [R=404,L]
+
+  # --- Solid Link (D-50): Solid Admin administra esta instancia -----------
+  # El token llega en Authorization; algunos servidores lo descartan si no se reenvía.
+  RewriteRule ^api/solid/v1/?(.*)$ api/solid.php?ruta=$1 [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # --- Sitio de ventas: robots.txt y sitemap.xml se arman en soluciones/ ---
+  RewriteRule ^robots\.txt$ soluciones/robots.php [L]
+  RewriteRule ^sitemap\.xml$ soluciones/sitemap.php [L]
+
+  # --- Archivos subidos: siempre a través de backend/archivo.php ----------
+  # (comprueba la sesión y que el archivo sea de la empresa del usuario)
+  # BASE = ruta del sitio (/ o /subcarpeta/), para que funcione en subcarpetas.
+  RewriteCond %{REQUEST_URI}::$1 ^(.*?/)(.*)::\2$
+  RewriteRule ^(.*)$ - [E=BASE:%1]
+  RewriteRule ^(uploads|manuales)/(.+)$ %{ENV:BASE}backend/archivo.php?ruta=$1/$2 [L,QSA,B]
 </IfModule>
 
-# Bloquea el acceso web directo a archivos ocultos (.env, .git, etc.).
-# Compatible con Apache 2.2 y 2.4.
+# Respaldo si mod_rewrite no estuviera disponible: archivos ocultos (.env...).
 <FilesMatch "^\.">
   <IfModule mod_authz_core.c>
     Require all denied
@@ -15,3 +55,29 @@
     Deny from all
   </IfModule>
 </FilesMatch>
+
+<IfModule mod_headers.c>
+  # --- Cabeceras de seguridad -----------------------------------------
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+  # --- Caché ----------------------------------------------------------
+  # Páginas: siempre frescas (los permisos y la sesión se validan al cargar).
+  <FilesMatch "\.html?$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+  # CSS/JS se versionan con ?v= en cada página; imágenes y fuentes cambian poco.
+  <FilesMatch "\.(css|js|png|jpe?g|gif|svg|webp|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  # Los .php (API y branding) envían sus propias cabeceras de caché.
+</IfModule>
+
+# AddOutputFilterByType es de mod_filter: sin él, la directiva tumba el sitio (500)
+<IfModule mod_deflate.c>
+  <IfModule mod_filter.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+  </IfModule>
+</IfModule>

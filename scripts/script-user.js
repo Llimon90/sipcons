@@ -8,13 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const nombre = document.getElementById('nombre').value.trim();
     const correo = document.getElementById('correo').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
-    const usuario = document.getElementById('usuario').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
     const rol = document.getElementById('rol').value;
 
     if (password !== confirmPassword) {
-      alert('Las contraseñas no coinciden');
+      AppAviso.alerta('Las contraseñas no coinciden');
       return;
     }
 
@@ -22,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     datos.append('nombre', nombre);
     datos.append('correo', correo);
     datos.append('telefono', telefono);
-    datos.append('usuario', usuario);
     datos.append('password', password);
     datos.append('rol', rol);
 
@@ -35,15 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const resultado = await respuesta.json();
 
       if (resultado.success) {
-        alert('Usuario registrado exitosamente');
+        AppAviso.alerta('Usuario registrado exitosamente');
         form.reset();
         cargarUsuarios(); // Recargar la lista después de agregar
       } else {
-        alert('Error: ' + resultado.message);
+        AppAviso.alerta('Error: ' + resultado.message);
       }
     } catch (error) {
       console.error('Error al enviar los datos:', error);
-      alert('Ocurrió un error al registrar el usuario.');
+      AppAviso.alerta('Ocurrió un error al registrar el usuario.');
     }
   });
 
@@ -63,16 +61,19 @@ async function cargarUsuarios() {
                 const fila = document.createElement('tr');
 
                 fila.innerHTML = `
-                    <td>${usuario.nombre}</td>
-                    <td>${usuario.usuario}</td>
-                    <td>${usuario.rol}</td>
+                    <td>${escHTML(usuario.nombre)}</td>
+                    <td>${escHTML(usuario.usuario)}</td>
+                    <td>${escHTML(usuario.rol)}</td>
                     <td>
                         <div class="acciones-usuario">
-                            <button class="btn-editar" data-fila-accion data-id="${usuario.id}" title="Editar">
-                                <i class="fas fa-edit"></i>
+                            <a class="btn-editar" href="perfil.html?id=${encodeURIComponent(usuario.id)}" title="Ver perfil" aria-label="Ver perfil de ${escHTML(usuario.nombre)}">
+                                <i class="fas fa-id-badge" aria-hidden="true"></i>
+                            </a>
+                            <button class="btn-editar" data-fila-accion data-id="${escHTML(usuario.id)}" title="Editar" aria-label="Editar a ${escHTML(usuario.nombre)}">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
                             </button>
-                            <button class="btn-eliminar" data-id="${usuario.id}" title="Eliminar">
-                                <i class="fas fa-trash-alt"></i>
+                            <button class="btn-eliminar" data-id="${escHTML(usuario.id)}" title="Eliminar" aria-label="Eliminar a ${escHTML(usuario.nombre)}">
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                             </button>
                         </div>
                     </td>
@@ -96,11 +97,11 @@ async function cargarUsuarios() {
                 });
             });
         } else {
-            alert('Error al obtener los usuarios: ' + resultado.message);
+            AppAviso.alerta('Error al obtener los usuarios: ' + resultado.message);
         }
     } catch (error) {
         console.error('Error al cargar los usuarios:', error);
-        alert('Ocurrió un error al cargar los usuarios.');
+        AppAviso.alerta('Ocurrió un error al cargar los usuarios.');
     }
 }
 
@@ -111,32 +112,33 @@ async function editarUsuario(id) {
         const usuario = await respuesta.json();
 
         if (usuario.error) {
-            alert(usuario.error);
+            AppAviso.alerta(usuario.error);
             return;
         }
 
         const formulario = document.getElementById('formulario-edicion');
         formulario.innerHTML = `
             <form id="form-editar-usuario">
-                <input type="hidden" id="id-usuario" value="${usuario.id}">
+                <input type="hidden" id="id-usuario" value="${escHTML(usuario.id)}">
                 <div class="form-row">
                     <div>
                         <label for="nombre-editar">Nombre completo:</label>
-                        <input type="text" id="nombre-editar" value="${usuario.nombre}" required>
+                        <input type="text" id="nombre-editar" value="${escHTML(usuario.nombre)}" required>
                     </div>
                     <div>
-                        <label for="correo-editar">Correo electrónico:</label>
-                        <input type="email" id="correo-editar" value="${usuario.correo}" >
+                        <label for="correo-editar">Correo electrónico (usuario de acceso):</label>
+                        <input type="email" id="correo-editar" value="${escHTML(usuario.correo)}" required maxlength="100">
+                        <small class="ayuda-campo">Si lo cambias, entrará con el nuevo correo.</small>
                     </div>
                 </div>
                 <div class="form-row">
                     <div>
                         <label for="telefono-editar">Teléfono:</label>
-                        <input type="text" id="telefono-editar" value="${usuario.telefono}">
+                        <input type="text" id="telefono-editar" value="${escHTML(usuario.telefono)}">
                     </div>
                     <div>
-                        <label for="usuario-editar">Usuario:</label>
-                        <input type="text" id="usuario-editar" value="${usuario.usuario}" >
+                        <label>Usuario de acceso actual:</label>
+                        <input type="text" value="${escHTML(usuario.usuario)}" disabled>
                     </div>
                 </div>
                 <div class="form-row">
@@ -150,10 +152,27 @@ async function editarUsuario(id) {
                             <option value="Técnico" ${usuario.rol === 'Técnico' ? 'selected' : ''}>Técnico</option>
                             <option value="Administrativo" ${usuario.rol === 'Administrativo' ? 'selected' : ''}>Administrativo</option>
                             <option value="Supervisor" ${usuario.rol === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
-                            <option value="Técnico/Administrador" ${usuario.rol === 'Técnico/Administrador' ? 'selected' : ''}>Técnico/Administrador</option>
                             <option value="Administrador" ${usuario.rol === 'Administrador' ? 'selected' : ''}>Administrador</option>
                             
                         </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label class="check-permiso">
+                            <input type="checkbox" id="puede-cerrar-editar" ${usuario.puede_cerrar === undefined || String(usuario.puede_cerrar) === '1' ? 'checked' : ''}>
+                            Puede cerrar órdenes de servicio (Cerrado con factura / sin factura)
+                        </label>
+                        <small style="color:#7f8c8d;">El rol Técnico nunca puede cerrarlas, aunque esté marcado.</small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label class="check-permiso">
+                            <input type="checkbox" id="autoriza-descuentos-editar" ${String(usuario.puede_autorizar_descuentos) === '1' ? 'checked' : ''}>
+                            Puede autorizar descuentos (en cotizaciones)
+                        </label>
+                        <small style="color:#7f8c8d;">Permite rebasar el descuento máximo de la empresa (Mi empresa → Cotizaciones). El Administrador siempre puede.</small>
                     </div>
                 </div>
                 <button type="submit">Guardar Cambios</button>
@@ -171,7 +190,7 @@ async function editarUsuario(id) {
 
     } catch (error) {
         console.error('Error al cargar usuario:', error);
-        alert('Error al cargar los datos del usuario');
+        AppAviso.alerta('Error al cargar los datos del usuario');
     }
 }
 
@@ -183,9 +202,10 @@ async function actualizarUsuario() {
         nombre: document.getElementById('nombre-editar').value,
         correo: document.getElementById('correo-editar').value,
         telefono: document.getElementById('telefono-editar').value,
-        usuario: document.getElementById('usuario-editar').value,
         password: document.getElementById('password-editar').value,
-        rol: document.getElementById('rol-editar').value
+        rol: document.getElementById('rol-editar').value,
+        puede_cerrar: document.getElementById('puede-cerrar-editar').checked ? 1 : 0,
+        puede_autorizar_descuentos: document.getElementById('autoriza-descuentos-editar').checked ? 1 : 0
     };
 
     try {
@@ -200,34 +220,40 @@ async function actualizarUsuario() {
         const resultado = await respuesta.json();
 
         if (resultado.success) {
-            alert('Usuario actualizado correctamente');
+            AppAviso.alerta(resultado.acceso_cambiado
+                ? 'Usuario actualizado. A partir de ahora inicia sesión con: ' + resultado.usuario
+                : 'Usuario actualizado correctamente');
             document.getElementById('modal-edicion').style.display = 'none';
             cargarUsuarios(); // Recargar la lista de usuarios
         } else {
-            alert(resultado.message || 'Error al actualizar el usuario');
+            AppAviso.alerta(resultado.message || 'Error al actualizar el usuario');
         }
     } catch (error) {
         console.error('Error al actualizar usuario:', error);
-        alert('Error al actualizar el usuario');
+        AppAviso.alerta('Error al actualizar el usuario');
     }
 }
 
 // Función para eliminar usuario
 async function eliminarUsuario(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+    if (await AppAviso.confirmar('La persona ya no podrá entrar al sistema. Su historial se conserva.', { peligro: true, boton: 'Sí, eliminar', titulo: '¿Eliminar este usuario?' })) {
         try {
-            const respuesta = await fetch(`../backend/eliminar_usuario.php?id=${id}`);
+            const respuesta = await fetch('../backend/eliminar_usuario.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
             const resultado = await respuesta.json();
 
             if (resultado.success) {
-                alert('Usuario eliminado exitosamente.');
+                AppAviso.alerta('Usuario eliminado exitosamente.');
                 cargarUsuarios(); // Recargar la lista de usuarios
             } else {
-                alert('Error al eliminar el usuario: ' + resultado.message);
+                AppAviso.alerta('Error al eliminar el usuario: ' + resultado.message);
             }
         } catch (error) {
             console.error('Error al eliminar el usuario:', error);
-            alert('Ocurrió un error al eliminar el usuario.');
+            AppAviso.alerta('Ocurrió un error al eliminar el usuario.');
         }
     }
 }

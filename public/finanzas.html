@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanzas</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finanzas</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
-  <style>
-    .tarjetas-finanzas { display:flex; flex-wrap:wrap; gap:15px; margin:15px 0; }
-    .tarjeta-finanzas { background:#fff; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); padding:18px; flex:1 1 200px; }
-    .tarjeta-finanzas h3 { margin:0 0 8px; font-size:0.9rem; color:#7f8c8d; }
-    .tarjeta-finanzas p { margin:0; font-size:1.6rem; font-weight:bold; }
-  </style>
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../css/inventario.css?v=20261111">
+  <link rel="stylesheet" href="../css/finanzas.css?v=20261111b">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 
 <body>
@@ -43,53 +46,235 @@
   </aside>
 
   <main id="mainContent">
-    <section class="encabezado">
-      <h2>Finanzas</h2>
-      <p>Resumen ejecutivo: ventas, cuentas por cobrar, cotizaciones e inventario, con desglose por cliente y sucursal.</p>
-    </section>
-
-    <section class="encabezado">
-      <div class="form-row" style="align-items:flex-end;">
+    <section class="encabezado inventario finanzas">
+      <div class="inv-cabecera">
         <div>
-          <label for="cliente_id">Cliente:</label>
-          <select id="cliente_id"><option value="">Todos</option></select>
+          <h2><i class="fas fa-wallet"></i> Finanzas</h2>
+          <p>Lo que te deben tus clientes, lo que cobras, lo que gastas y cuánto ganas en cada orden de servicio. Importes en pesos.</p>
         </div>
-        <div>
-          <label for="fecha_inicio">Desde:</label>
-          <input type="date" id="fecha_inicio">
-        </div>
-        <div>
-          <label for="fecha_fin">Hasta:</label>
-          <input type="date" id="fecha_fin">
-        </div>
-        <div>
-          <button type="button" id="btn-filtrar">Filtrar</button>
+        <div class="fin-botones">
+          <button type="button" id="btn-nueva-cuenta" class="btn-primary"><i class="fas fa-file-invoice"></i> Nueva cuenta por cobrar</button>
+          <button type="button" id="btn-nuevo-gasto" class="btn-secundario"><i class="fas fa-receipt"></i> Registrar gasto</button>
         </div>
       </div>
-    </section>
 
-    <section class="encabezado">
-      <div class="tarjetas-finanzas">
-        <div class="tarjeta-finanzas"><h3>Ventas del periodo</h3><p id="t-ventas">0</p></div>
-        <div class="tarjeta-finanzas"><h3>Por cobrar (saldo vigente)</h3><p id="t-por-cobrar">$0.00</p></div>
-        <div class="tarjeta-finanzas"><h3>Vencido</h3><p id="t-vencido" style="color:#e74c3c;">$0.00</p></div>
-        <div class="tarjeta-finanzas"><h3>Cobrado en el periodo</h3><p id="t-cobrado">$0.00</p></div>
-        <div class="tarjeta-finanzas"><h3>Cotizaciones (tasa de conversión)</h3><p id="t-conversion">0%</p></div>
-        <div class="tarjeta-finanzas"><h3>Valor de inventario</h3><p id="t-inventario">$0.00</p></div>
+      <nav class="fin-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="resumen" class="activo"><i class="fas fa-chart-pie"></i> Resumen</button>
+        <button type="button" role="tab" data-tab="cuentas"><i class="fas fa-hand-holding-usd"></i> Cuentas por cobrar</button>
+        <button type="button" role="tab" data-tab="gastos"><i class="fas fa-receipt"></i> Gastos</button>
+        <button type="button" role="tab" data-tab="rentabilidad"><i class="fas fa-chart-line"></i> Rentabilidad</button>
+      </nav>
+
+      <!-- Resumen -->
+      <div class="fin-panel" data-panel="resumen">
+        <div class="inv-kpis fin-kpis">
+          <div class="inv-kpi"><div class="inv-kpi-valor" id="k-por-cobrar">–</div><div class="inv-kpi-etiqueta">Por cobrar</div></div>
+          <div class="inv-kpi peligro"><div class="inv-kpi-valor" id="k-vencido">–</div><div class="inv-kpi-etiqueta">Vencido</div></div>
+          <div class="inv-kpi"><div class="inv-kpi-valor" id="k-cobrado">–</div><div class="inv-kpi-etiqueta">Cobrado este mes</div></div>
+          <div class="inv-kpi alerta"><div class="inv-kpi-valor" id="k-gastos">–</div><div class="inv-kpi-etiqueta">Gastos este mes</div></div>
+          <div class="inv-kpi"><div class="inv-kpi-valor" id="k-flujo">–</div><div class="inv-kpi-etiqueta">Flujo del mes (cobrado − gastos)</div></div>
+        </div>
+
+        <div class="inv-paneles">
+          <div class="inv-panel">
+            <h3>Cobrado contra gastos (últimos 6 meses)</h3>
+            <div class="inv-grafico"><canvas id="g-flujo"></canvas></div>
+          </div>
+          <div class="inv-panel">
+            <h3>Antigüedad del saldo</h3>
+            <ul class="fin-antiguedad" id="antiguedad"><li>Cargando...</li></ul>
+            <p class="fin-nota" id="por-vencer"></p>
+          </div>
+        </div>
+
+        <div class="inv-paneles fin-paneles-iguales">
+          <div class="inv-panel">
+            <h3>Trabajo sin cuenta por cobrar <span class="fin-contador" id="pend-total"></span></h3>
+            <p class="fin-nota">Cotizaciones aprobadas y órdenes cerradas con factura que aún no se registran para cobro.</p>
+            <ul class="fin-lista" id="pendientes"><li>Cargando...</li></ul>
+          </div>
+          <div class="inv-panel">
+            <h3>Clientes que más deben</h3>
+            <ul class="fin-lista" id="deudores"><li>Cargando...</li></ul>
+          </div>
+        </div>
       </div>
-    </section>
 
-    <section class="lista-incidencias">
-      <h2>Desglose por cliente y sucursal</h2>
-      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
-        <thead><tr><th>Cliente</th><th>Sucursal</th><th>Ventas (periodo)</th><th>Saldo por cobrar</th></tr></thead>
-        <tbody id="cuerpo-desglose"><tr><td colspan="4">Cargando...</td></tr></tbody>
-      </table>
+      <!-- Cuentas por cobrar -->
+      <div class="fin-panel" data-panel="cuentas" hidden>
+        <div class="inv-filtros">
+          <input type="search" id="c-buscar" placeholder="Buscar por folio, cliente, concepto o factura...">
+          <select id="c-estado" aria-label="Estado">
+            <option value="abiertas">Por cobrar</option>
+            <option value="vencidas">Vencidas</option>
+            <option value="pagadas">Pagadas</option>
+            <option value="canceladas">Canceladas</option>
+            <option value="todas">Todas</option>
+          </select>
+          <label>Desde <input type="date" id="c-desde"></label>
+          <label>Hasta <input type="date" id="c-hasta"></label>
+          <button type="button" class="btn-secundario" data-exportar="cuentas" title="Cuentas del periodo en CSV (Excel), para tu contador"><i class="fas fa-file-csv"></i> Cuentas</button>
+          <button type="button" class="btn-secundario" data-exportar="cobros" title="Cobros del periodo en CSV (Excel), para tu contador"><i class="fas fa-file-csv"></i> Cobros</button>
+        </div>
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas inv-tabla fin-tabla">
+            <thead><tr><th>Folio</th><th>Cliente</th><th>Concepto</th><th>Factura</th><th>Vence</th><th>Total</th><th>Saldo</th><th>Estatus</th><th></th></tr></thead>
+            <tbody id="tabla-cuentas"><tr><td colspan="9" class="inv-vacio">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+        <p class="fin-nota" id="c-suma"></p>
+      </div>
+
+      <!-- Gastos -->
+      <div class="fin-panel" data-panel="gastos" hidden>
+        <div class="inv-filtros">
+          <input type="search" id="g-buscar" placeholder="Buscar por concepto, proveedor, referencia u orden...">
+          <select id="g-categoria" aria-label="Categoría"><option value="">Todas las categorías</option></select>
+          <label>Desde <input type="date" id="g-desde"></label>
+          <label>Hasta <input type="date" id="g-hasta"></label>
+          <button type="button" class="btn-secundario" data-exportar="gastos" title="Gastos del periodo en CSV (Excel), para tu contador"><i class="fas fa-file-csv"></i> Exportar</button>
+        </div>
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas inv-tabla fin-tabla">
+            <thead><tr><th>Fecha</th><th>Categoría</th><th>Concepto</th><th>Proveedor</th><th>Orden</th><th>Total</th><th>Comprobante</th><th></th></tr></thead>
+            <tbody id="tabla-gastos"><tr><td colspan="8" class="inv-vacio">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+        <p class="fin-nota" id="g-suma"></p>
+      </div>
+
+      <!-- Rentabilidad -->
+      <div class="fin-panel" data-panel="rentabilidad" hidden>
+        <div class="inv-filtros">
+          <label>Órdenes desde <input type="date" id="r-desde"></label>
+          <label>Hasta <input type="date" id="r-hasta"></label>
+        </div>
+        <p class="fin-nota"><i class="fas fa-info-circle"></i> Por cada orden de servicio del periodo: <b>ingreso</b> = sus cuentas por cobrar sin IVA (propias o de sus cotizaciones);
+          <b>costo</b> = refacciones registradas en la orden, al costo de ese momento, más los gastos ligados a la orden (sin IVA).</p>
+        <div class="inv-kpis fin-kpis">
+          <div class="inv-kpi"><div class="inv-kpi-valor" id="r-ingreso">–</div><div class="inv-kpi-etiqueta">Ingreso (sin IVA)</div></div>
+          <div class="inv-kpi alerta"><div class="inv-kpi-valor" id="r-refacciones">–</div><div class="inv-kpi-etiqueta">Refacciones a costo</div></div>
+          <div class="inv-kpi alerta"><div class="inv-kpi-valor" id="r-gastos">–</div><div class="inv-kpi-etiqueta">Gastos directos</div></div>
+          <div class="inv-kpi"><div class="inv-kpi-valor" id="r-utilidad">–</div><div class="inv-kpi-etiqueta">Utilidad</div></div>
+          <div class="inv-kpi"><div class="inv-kpi-valor" id="r-margen">–</div><div class="inv-kpi-etiqueta">Margen</div></div>
+        </div>
+        <h3 class="fin-subtitulo">Por orden de servicio</h3>
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas inv-tabla fin-tabla">
+            <thead><tr><th>Orden</th><th>Fecha</th><th>Cliente</th><th>Técnico</th><th>Ingreso</th><th>Refacciones</th><th>Gastos</th><th>Utilidad</th><th>Margen</th></tr></thead>
+            <tbody id="tabla-rent"><tr><td colspan="9" class="inv-vacio">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+        <h3 class="fin-subtitulo">Por cliente</h3>
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas inv-tabla fin-tabla">
+            <thead><tr><th>Cliente</th><th>Órdenes</th><th>Ingreso</th><th>Costo</th><th>Utilidad</th><th>Margen</th></tr></thead>
+            <tbody id="tabla-rent-clientes"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/finanzas.js?v=1"></script>
+  <!-- Alta de cuenta por cobrar -->
+  <div id="modal-cuenta" class="modal inv-modal">
+    <div class="modal-content">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3>Nueva cuenta por cobrar</h3>
+      <p class="fin-origen" id="cu-origen" hidden></p>
+      <form id="form-cuenta" class="inv-form-grid" autocomplete="off" novalidate>
+        <div class="completo"><label for="cu-cliente">Cliente</label>
+          <input id="cu-cliente" list="lista-clientes" required placeholder="Escribe para buscar en tu catálogo">
+          <datalist id="lista-clientes"></datalist>
+        </div>
+        <div class="completo"><label for="cu-concepto">Concepto</label><input id="cu-concepto" name="concepto" required maxlength="255" placeholder="Ej. Mantenimiento preventivo de noviembre"></div>
+        <div><label for="cu-fecha">Fecha</label><input id="cu-fecha" name="fecha" type="date" required></div>
+        <div><label for="cu-dias">Días de crédito</label><input id="cu-dias" name="dias_credito" type="number" min="0" max="365" step="1" value="0"></div>
+        <div><label for="cu-vence">Vence</label><input id="cu-vence" name="vencimiento" type="date" required></div>
+        <div class="fin-check"><label><input type="checkbox" id="cu-guardar-credito" name="guardar_credito"> Usar estos días para este cliente en adelante</label></div>
+        <div><label for="cu-subtotal">Subtotal (sin IVA)</label><input id="cu-subtotal" name="subtotal" type="number" min="0" step="0.01" required></div>
+        <div><label for="cu-iva">IVA <span class="fin-atajos" data-iva-de="cu-subtotal" data-iva-en="cu-iva"><button type="button" data-tasa="0.16">16%</button><button type="button" data-tasa="0.08">8%</button><button type="button" data-tasa="0">0</button></span></label>
+          <input id="cu-iva" name="iva" type="number" min="0" step="0.01" value="0"></div>
+        <div><label for="cu-ret">Retenciones <small>(si el cliente retiene)</small></label><input id="cu-ret" name="retenciones" type="number" min="0" step="0.01" value="0"></div>
+        <div><label>Total a cobrar</label><div class="fin-total" id="cu-total">$0.00</div></div>
+        <div class="completo"><label for="cu-factura">Factura <small>folio o UUID, si ya la emitiste (puedes agregarla después)</small></label><input id="cu-factura" name="factura" maxlength="100"></div>
+        <div class="completo"><label for="cu-notas">Notas</label><textarea id="cu-notas" name="notas" rows="2"></textarea></div>
+        <div class="completo inv-modal-acciones">
+          <button type="button" class="btn-secundario" data-cerrar>Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar cuenta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detalle de cuenta: cobros -->
+  <div id="modal-detalle" class="modal inv-modal">
+    <div class="modal-content fin-modal-ancho">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3 id="d-titulo">Cuenta</h3>
+      <div id="d-resumen" class="fin-detalle-resumen"></div>
+      <h4 class="fin-subtitulo">Cobros</h4>
+      <div class="inv-tabla-wrap">
+        <table class="tabla-ventas fin-tabla">
+          <thead><tr><th>Fecha</th><th>Monto</th><th>Forma</th><th>Referencia</th><th>Comprobante</th><th></th></tr></thead>
+          <tbody id="d-cobros"></tbody>
+        </table>
+      </div>
+      <form id="form-cobro" class="inv-form-grid fin-form-cobro" autocomplete="off" novalidate>
+        <h4 class="completo fin-subtitulo">Registrar cobro</h4>
+        <div><label for="co-fecha">Fecha</label><input id="co-fecha" name="fecha" type="date" required></div>
+        <div><label for="co-monto">Monto</label><input id="co-monto" name="monto" type="number" min="0.01" step="0.01" required></div>
+        <div><label for="co-forma">Forma de pago</label><select id="co-forma" name="forma"></select></div>
+        <div><label for="co-ref">Referencia</label><input id="co-ref" name="referencia" maxlength="100" placeholder="Ej. SPEI, número de cheque"></div>
+        <div class="completo"><input type="file" id="co-comprobante" accept="application/pdf,image/jpeg,image/png,image/webp" data-selector data-texto="Comprobante (opcional)" data-ayuda="PDF o imagen, hasta 5 MB"></div>
+        <div class="completo inv-modal-acciones">
+          <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Registrar cobro</button>
+        </div>
+      </form>
+      <form id="form-editar" class="inv-form-grid" autocomplete="off" novalidate>
+        <h4 class="completo fin-subtitulo">Datos de la cuenta</h4>
+        <div><label for="ed-factura">Factura (folio o UUID)</label><input id="ed-factura" name="factura" maxlength="100"></div>
+        <div><label for="ed-vence">Vence</label><input id="ed-vence" name="vencimiento" type="date"></div>
+        <div class="completo"><label for="ed-notas">Notas</label><textarea id="ed-notas" name="notas" rows="2"></textarea></div>
+        <div class="completo inv-modal-acciones">
+          <button type="button" class="btn-secundario" id="d-estado-cuenta"><i class="fas fa-file-alt"></i> Estado de cuenta del cliente</button>
+          <button type="button" class="btn-secundario" id="d-nota-credito" hidden><i class="fas fa-file-invoice"></i> Nota de crédito</button>
+          <button type="button" class="btn-rojo" id="d-cancelar" hidden><i class="fas fa-ban"></i> Cancelar cuenta</button>
+          <button type="submit" class="btn-secundario"><i class="fas fa-save"></i> Guardar datos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Gasto -->
+  <div id="modal-gasto" class="modal inv-modal">
+    <div class="modal-content">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3 id="ga-titulo">Registrar gasto</h3>
+      <form id="form-gasto" class="inv-form-grid" autocomplete="off" novalidate>
+        <input type="hidden" name="id">
+        <div><label for="ga-fecha">Fecha</label><input id="ga-fecha" name="fecha" type="date" required></div>
+        <div><label for="ga-categoria">Categoría</label><input id="ga-categoria" name="categoria" list="lista-categorias" required maxlength="60"><datalist id="lista-categorias"></datalist></div>
+        <div class="completo"><label for="ga-concepto">Concepto</label><input id="ga-concepto" name="concepto" required maxlength="255" placeholder="Ej. Gasolina camioneta 2"></div>
+        <div><label for="ga-proveedor">Proveedor</label><input id="ga-proveedor" name="proveedor" maxlength="150"></div>
+        <div><label for="ga-forma">Forma de pago</label><select id="ga-forma" name="forma"></select></div>
+        <div><label for="ga-monto">Total pagado (con IVA)</label><input id="ga-monto" name="monto" type="number" min="0.01" step="0.01" required></div>
+        <div><label for="ga-iva">IVA incluido <span class="fin-atajos" data-iva-incluido="ga-monto" data-iva-en="ga-iva"><button type="button" data-tasa="0.16">16%</button><button type="button" data-tasa="0.08">8%</button><button type="button" data-tasa="0">0</button></span></label>
+          <input id="ga-iva" name="iva" type="number" min="0" step="0.01" value="0"></div>
+        <div><label for="ga-ref">Referencia</label><input id="ga-ref" name="referencia" maxlength="100" placeholder="Ej. folio del ticket o factura"></div>
+        <div><label for="ga-orden">Orden de servicio <small>(si es costo de un servicio)</small></label><input id="ga-orden" name="incidencia_folio" list="lista-ordenes" maxlength="100" placeholder="Folio"><datalist id="lista-ordenes"></datalist></div>
+        <div class="completo"><input type="file" id="ga-comprobante" accept="application/pdf,image/jpeg,image/png,image/webp" data-selector data-texto="Ticket o factura (opcional)" data-ayuda="PDF o foto, hasta 5 MB"></div>
+        <div class="completo inv-modal-acciones">
+          <button type="button" class="btn-secundario" data-cerrar>Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar gasto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/selector-archivos.js?v=20261101"></script>
+  <script src="../scripts/alta-rapida.js?v=20261101b"></script>
+  <script src="../scripts/finanzas.js?v=20261125"></script>
 </body>
 </html>

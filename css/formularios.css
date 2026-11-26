@@ -1,0 +1,429 @@
+/* =====================================================================
+   Sistema de formularios (todas las páginas internas).
+   Se carga después de styles.css y dark.css. Unifica secciones, etiquetas,
+   campos, validación, casillas y botones; scripts/formularios.js añade el
+   comportamiento (requeridos, errores en línea, textos que crecen).
+   No aplica al inicio (.ini) ni a Mi empresa (.me-pagina), que tienen su
+   propio diseño, ni a la barra lateral.
+   ===================================================================== */
+:root {
+  --f-tarjeta: #ffffff;
+  --f-tarjeta-borde: #e5eaf0;
+  --f-sombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px rgba(15, 23, 42, 0.06);
+  --f-fondo-campo: #ffffff;
+  --f-borde: #cfd8e3;
+  --f-borde-hover: #9fb0c3;
+  --f-texto: #1e293b;
+  --f-etiqueta: #334155;
+  --f-suave: #64748b;
+  --f-placeholder: #94a3b8;
+  --f-deshabilitado: #f1f5f9;
+  --f-error: #dc2626;
+  --f-error-anillo: rgba(220, 38, 38, 0.15);
+  --f-acento: var(--brand-primary, #3498db);
+  --f-acento-rgb: var(--brand-primary-rgb, 52, 152, 219);
+  --f-anillo: rgba(var(--f-acento-rgb), 0.18);
+  --f-peligro: #dc2626;
+  --f-peligro-hover: #b91c1c;
+  --f-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+html[data-theme="dark"] {
+  --f-tarjeta: #16212d;
+  --f-tarjeta-borde: #263546;
+  --f-sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --f-fondo-campo: #101a24;
+  --f-borde: #33475c;
+  --f-borde-hover: #4b6480;
+  --f-texto: #e6edf3;
+  --f-etiqueta: #c9d4e0;
+  --f-suave: #9fb0c1;
+  --f-placeholder: #6b7f93;
+  --f-deshabilitado: #1b2733;
+  --f-error: #f87171;
+  --f-error-anillo: rgba(248, 113, 113, 0.18);
+  --f-acento: var(--brand-dm-accent, #4aa8ee);
+  --f-acento-rgb: var(--brand-dm-accent-rgb, 74, 168, 238);
+  --f-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%239fb0c1' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------
+   1. Secciones: tarjetas limpias, títulos a la izquierda
+   --------------------------------------------------------------------- */
+main:not(.ini):not(.me-pagina) :is(.encabezado, .lista-incidencias, .lista-clientes, .lista-usuarios, .lista-ventas, .archivos-incidencia) {
+  background: var(--f-tarjeta);
+  color: var(--f-texto);
+  border: 1px solid var(--f-tarjeta-borde);
+  border-radius: 14px;
+  box-shadow: var(--f-sombra);
+  padding: 28px 32px;
+  text-align: left;
+}
+main:not(.ini):not(.me-pagina) :is(.encabezado, .lista-incidencias, .lista-clientes, .lista-usuarios, .lista-ventas, .archivos-incidencia) > h2,
+main:not(.ini):not(.me-pagina) .encabezado > div > h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  text-align: left;
+  color: var(--f-texto);
+}
+main:not(.ini):not(.me-pagina) :is(.encabezado, .lista-incidencias, .lista-clientes, .lista-usuarios, .lista-ventas) > h2 + :is(form, p, div) { margin-top: 18px; }
+main:not(.ini):not(.me-pagina) h2 > i.fas, main:not(.ini):not(.me-pagina) h2 > i.fa-solid { color: var(--f-acento); margin-right: 6px; font-size: 0.9em; }
+
+/* Filas y bloques de campos */
+main:not(.ini):not(.me-pagina) .form-row { gap: 18px 22px; margin-bottom: 18px; }
+main:not(.ini):not(.me-pagina) :is(.form-campo, .form-group) { margin-bottom: 18px; }
+
+/* ---------------------------------------------------------------------
+   2. Etiquetas
+   --------------------------------------------------------------------- */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) label {
+  display: block;
+  text-align: left;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--f-etiqueta);
+  margin: 0 0 7px;
+}
+/* Los íconos dentro de las etiquetas se retiran: el sistema se lee igual en todas las páginas */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) label > i:first-child:is(.fas, .fa, .fa-solid, .far, .bi) { display: none; }
+.f-req { color: var(--f-error); margin-left: 3px; font-weight: 700; }
+.f-opcional {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--f-deshabilitado);
+  color: var(--f-suave);
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+/* Etiquetas que envuelven una casilla: en línea con la casilla */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) label:has(> input[type="checkbox"], > input[type="radio"]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 500;
+  font-size: 0.92rem;
+  color: var(--f-texto);
+  cursor: pointer;
+  margin-bottom: 0;
+}
+/* Ayudas debajo de un campo */
+main:not(.ini):not(.me-pagina) :is(input, select, textarea) + :is(small, .ayuda, .ayuda-campo) {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--f-suave);
+  text-align: left;
+}
+
+/* ---------------------------------------------------------------------
+   3. Campos
+   --------------------------------------------------------------------- */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(
+  input:not([type]), input[type="text"], input[type="email"], input[type="password"], input[type="number"],
+  input[type="date"], input[type="search"], input[type="tel"], input[type="url"], input[type="time"],
+  input[type="datetime-local"], input[type="month"], select, textarea) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1.5px solid var(--f-borde);
+  border-radius: 10px;
+  background-color: var(--f-fondo-campo);
+  color: var(--f-texto);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  box-shadow: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):hover:not(:disabled):not([readonly]):not(:focus) {
+  border-color: var(--f-borde-hover);
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):focus {
+  outline: none;
+  border-color: var(--f-acento);
+  box-shadow: 0 0 0 4px var(--f-anillo);
+  background-color: var(--f-fondo-campo);
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(input, textarea)::placeholder { color: var(--f-placeholder); opacity: 1; }
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) textarea {
+  min-height: 96px;
+  height: auto;
+  resize: vertical;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 40px;
+  background-image: var(--f-chevron);
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.65; }
+html[data-theme="dark"] :is(main, .modal, .modal-content) input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.85); }
+/* Solo lectura y deshabilitados: claramente no editables */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):is(:disabled, [readonly]) {
+  background-color: var(--f-deshabilitado);
+  color: var(--f-suave);
+  cursor: not-allowed;
+}
+/* Números alineados (cantidades, meses, montos) */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="number"] { font-variant-numeric: tabular-nums; }
+
+/* Selector de archivos nativo */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1.5px dashed var(--f-borde);
+  border-radius: 10px;
+  background: var(--f-fondo-campo);
+  color: var(--f-suave);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="file"]:hover { border-color: var(--f-acento); }
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--f-borde);
+  border-radius: 8px;
+  background: var(--f-tarjeta);
+  color: var(--f-texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------
+   4. Validación en línea (scripts/formularios.js marca .f-tocado)
+   --------------------------------------------------------------------- */
+:is(input, select, textarea).f-tocado:invalid {
+  border-color: var(--f-error) !important;
+  box-shadow: 0 0 0 4px var(--f-error-anillo) !important;
+}
+.f-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--f-error);
+  text-align: left;
+  animation: f-aparecer 0.15s ease-out;
+}
+.f-error-msg::before { content: "!"; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: var(--f-error); color: #fff; font-size: 0.68rem; font-weight: 800; flex: none; }
+@keyframes f-aparecer { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.f-contador { display: block; margin-top: 5px; font-size: 0.75rem; color: var(--f-suave); text-align: right; font-variant-numeric: tabular-nums; }
+.f-contador.limite { color: var(--f-error); font-weight: 600; }
+
+/* ---------------------------------------------------------------------
+   5. Casillas, opciones e interruptores
+   --------------------------------------------------------------------- */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="checkbox"]:not(.f-switch):not(.form-check-input),
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) input[type="radio"]:not(.form-check-input) {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--f-acento);
+  cursor: pointer;
+  flex: none;
+}
+input[type="checkbox"].f-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 42px !important;
+  height: 24px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 999px;
+  background: var(--f-borde);
+  cursor: pointer;
+  flex: none;
+  transition: background 0.18s ease;
+  box-shadow: none;
+}
+input[type="checkbox"].f-switch::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s ease;
+}
+input[type="checkbox"].f-switch:checked { background: var(--f-acento); }
+input[type="checkbox"].f-switch:checked::before { transform: translateX(18px); }
+input[type="checkbox"].f-switch:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--f-anillo); }
+.f-switch-label { margin: 0 !important; cursor: pointer; font-weight: 600 !important; color: var(--f-texto) !important; font-size: 0.92rem !important; }
+
+/* ---------------------------------------------------------------------
+   6. Botones con jerarquía: principal, secundario y peligro
+   --------------------------------------------------------------------- */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(
+  button[type="submit"]:not(.chart-btn):not(.tab):not(.btn-eliminar):not(.btn-editar):not(.btn-edit):not(.btn-delete):not(.btn-outline-secondary):not(.btn-outline):not(.btn-secundario):not(.btn-secondary):not(.btn-rojo):not(.btn-danger),
+  button:not([class]):not([type="button"]):not([type="reset"]),
+  .btn-primary, .btn-primario) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 22px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--brand-primary, #3498db);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(var(--brand-primary-rgb, 52, 152, 219), 0.25);
+  transform: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(
+  button[type="submit"]:not(.chart-btn):not(.tab):not(.btn-eliminar):not(.btn-editar):not(.btn-edit):not(.btn-delete):not(.btn-outline-secondary):not(.btn-outline):not(.btn-secundario):not(.btn-secondary):not(.btn-rojo):not(.btn-danger),
+  button:not([class]):not([type="button"]):not([type="reset"]),
+  .btn-primary, .btn-primario):hover:not(:disabled) {
+  background: var(--brand-primary-hover, #2980b9);
+  color: #fff;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), 0 6px 16px rgba(var(--brand-primary-rgb, 52, 152, 219), 0.32);
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(.btn-secundario, .btn-secondary, .btn-outline, .btn-outline-secondary, .btn-cancelar, .btn-agregar-tecnico) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1.5px solid var(--f-borde);
+  border-radius: 10px;
+  background: var(--f-tarjeta);
+  color: var(--f-texto) !important;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(.btn-secundario, .btn-secondary, .btn-outline, .btn-outline-secondary, .btn-cancelar, .btn-agregar-tecnico):hover:not(:disabled) {
+  border-color: var(--f-acento);
+  color: var(--f-acento) !important;
+  background: var(--f-tarjeta);
+  transform: none;
+  box-shadow: none;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) .btn-agregar-tecnico { min-height: 38px; padding: 7px 14px; font-size: 0.88rem; color: var(--f-acento) !important; border-style: dashed; margin-top: 8px; }
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(.btn-rojo, .btn-danger:not(.btn-small)) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--f-peligro);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.22);
+  transform: none;
+}
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(.btn-rojo, .btn-danger:not(.btn-small)):hover:not(:disabled) { background: var(--f-peligro-hover); transform: none; }
+/* Ningún botón del contenido "brinca" al pasar el mouse */
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) button:hover,
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) button:active { transform: none; }
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) button:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--f-anillo); }
+:is(main:not(.ini):not(.me-pagina), .modal, .modal-content) button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; filter: grayscale(0.2); }
+
+/* Casillas de Bootstrap (Buscar incidencias): solo el color de la marca */
+main .form-check-input:checked { background-color: var(--f-acento); border-color: var(--f-acento); }
+main .form-check-input:focus { box-shadow: 0 0 0 4px var(--f-anillo); border-color: var(--f-acento); }
+
+/* Barras de filtros con botones (Estadísticas): los botones no se salen de la tarjeta */
+main .filter-item:has(> div > button) { flex: 0 0 auto; min-width: 0; }
+main .filter-item > div:has(> button) { flex-wrap: wrap; }
+main .filter-item button { white-space: nowrap; }
+
+/* ---------------------------------------------------------------------
+   7. Acciones fijas al pie en formularios largos
+   (Detalle de incidencia, Registro de venta, Detalle de venta)
+   --------------------------------------------------------------------- */
+.detalle-acciones,
+main .form-row:has(> #btn-registrar-venta),
+main div:has(> #btn-guardar-cambios) {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 24px 0 0 !important;
+  padding: 14px 0 !important;
+  background: color-mix(in srgb, var(--f-tarjeta) 88%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--f-tarjeta-borde);
+}
+.detalle-acciones > button, main .form-row > #btn-registrar-venta, main div > #btn-guardar-cambios { width: auto !important; flex: none; }
+.detalle-acciones .btn-rojo { margin-left: auto; }
+
+/* ---------------------------------------------------------------------
+   8. Celular y tableta
+   --------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  main:not(.ini):not(.me-pagina) :is(.encabezado, .lista-incidencias, .lista-clientes, .lista-usuarios, .lista-ventas, .archivos-incidencia) {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+  /* 16 px evita el zoom automático de iOS al enfocar */
+  :is(main:not(.ini):not(.me-pagina), .modal, .modal-content) :is(input, select, textarea) { font-size: 16px; }
+  .detalle-acciones,
+  main .form-row:has(> #btn-registrar-venta),
+  main div:has(> #btn-guardar-cambios) {
+    margin: 20px 0 0 !important;
+    padding: 12px 0 !important;
+    flex-wrap: wrap;
+  }
+  .detalle-acciones > button, main .form-row > #btn-registrar-venta, main div > #btn-guardar-cambios { flex: 1 1 100%; width: 100% !important; }
+  .detalle-acciones .btn-rojo { margin-left: 0; }
+}
+@media (max-width: 1024px) {
+  /* Por encima de la barra inferior de navegación */
+  body.con-nav-inferior .detalle-acciones,
+  body.con-nav-inferior main .form-row:has(> #btn-registrar-venta),
+  body.con-nav-inferior main div:has(> #btn-guardar-cambios) { bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f-error-msg { animation: none; }
+  input[type="checkbox"].f-switch, input[type="checkbox"].f-switch::before { transition: none; }
+}

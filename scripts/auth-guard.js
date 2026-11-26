@@ -8,16 +8,20 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
     }
+    // Escape global para cualquier dato que se pinte con innerHTML
+    window.escHTML = escapeHtml;
 
     var inPublic = /\/public\//.test(window.location.pathname);
     var authPath = inPublic ? '../auth/' : 'auth/';
     var indexPath = inPublic ? '../index.html' : 'index.html';
+    // Marca de que este navegador ya inició sesión alguna vez (ver redirección sin sesión)
+    var INGRESO_KEY = 'app_ya_entro';
 
     // ---------- Tema claro / oscuro ----------
     // El tema vive en la cuenta del usuario (usuarios.tema) y se recuerda en
     // cualquier dispositivo. localStorage solo sirve para pintar sin parpadeo
     // antes de que responda el servidor; la fuente de verdad es session_check.php.
-    var TEMA_KEY = 'sipcons_tema';
+    var TEMA_KEY = 'app_tema';
     var temaActual = 'claro';
 
     function aplicarTema(tema, notificar) {
@@ -28,18 +32,17 @@
         document.documentElement.setAttribute('data-bs-theme', tema === 'oscuro' ? 'dark' : 'light'); // Bootstrap 5.3 (reportes.html)
         try { localStorage.setItem(TEMA_KEY, tema); } catch (e) { /* sin storage */ }
         if (notificar && cambio) {
-            try { window.dispatchEvent(new CustomEvent('sipcons-tema', { detail: { tema: tema } })); } catch (e) { /* nada */ }
+            try { window.dispatchEvent(new CustomEvent('app-tema', { detail: { tema: tema } })); } catch (e) { /* nada */ }
         }
     }
 
     try { aplicarTema(localStorage.getItem(TEMA_KEY), false); } catch (e) { aplicarTema('claro', false); }
 
-    window.sipconsTema = {
+    window.appTema = {
         obtener: function () { return temaActual; },
         // Aplica el tema al instante y lo guarda en la cuenta del usuario.
         establecer: function (tema) {
             aplicarTema(tema, true);
-            actualizarCache({ tema: temaActual });
             return fetch((inPublic ? '../' : '') + 'backend/guardar_tema.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -51,80 +54,29 @@
         }
     };
 
-    // ---------- Caché de la sesión (sessionStorage, por pestaña) ----------
-    // session_check.php se consultaba en CADA carga de página. Ahora su
-    // respuesta se reutiliza durante AUTH_TTL_MS en la misma pestaña. La
-    // seguridad no cambia: cada endpoint del backend sigue validando la sesión
-    // en el servidor (requireAuth); esto solo decide qué menú/página pintar.
-    // Se borra al cerrar sesión, al entrar al login y ante cualquier 401.
-    var AUTH_CACHE_KEY = 'sipcons_auth';
-    var AUTH_TTL_MS = 5 * 60 * 1000;             // se usa sin preguntar al servidor
-    var AUTH_RESPALDO_MS = 12 * 60 * 60 * 1000;  // respaldo si el servidor no responde
-
-    function leerCache() {
-        try {
-            var o = JSON.parse(sessionStorage.getItem(AUTH_CACHE_KEY) || 'null');
-            if (o && o.t && o.data && o.data.authenticated === true) return o;
-        } catch (e) { /* sin storage */ }
-        return null;
-    }
-    function guardarCache(data) {
-        try { sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ t: Date.now(), data: data })); } catch (e) { /* sin storage */ }
-    }
-    function actualizarCache(cambios) {
-        var o = leerCache();
-        if (!o) return;
-        for (var k in cambios) { if (Object.prototype.hasOwnProperty.call(cambios, k)) o.data[k] = cambios[k]; }
-        try { sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(o)); } catch (e) { /* sin storage */ }
-    }
-    function borrarCache() {
-        try {
-            sessionStorage.removeItem(AUTH_CACHE_KEY);
-            sessionStorage.removeItem('sipcons_tecnicos'); // caché de scripts/tecnicos.js
-        } catch (e) { /* sin storage */ }
-    }
-    function irAlLogin() {
-        borrarCache();
-        window.location.replace(authPath + 'login.html');
-    }
-    window.SipconsAuth = { borrarCache: borrarCache, irAlLogin: irAlLogin };
-
-    // Cualquier enlace de "Cerrar sesión" (inyectado o fijo en el HTML) limpia la caché
-    document.addEventListener('click', function (e) {
-        var a = e.target && e.target.closest ? e.target.closest('a[href*="logout.php"]') : null;
-        if (a) borrarCache();
-    }, true);
-
-    // Analíticas de uso (solo registra; el panel es exclusivo del Programador).
-    // Se cargan cuando session_check confirma que están habilitadas
-    // (ANALYTICS_ENABLED en el .env); así un "apagado" no genera ni una petición.
-    var analyticsCargado = false;
-    function cargarAnalytics() {
-        if (analyticsCargado) return;
-        analyticsCargado = true;
-        try {
-            var trackerScript = document.createElement('script');
-            trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=3';
-            trackerScript.async = true;
-            document.head.appendChild(trackerScript);
-        } catch (e) { /* las analíticas nunca deben romper la página */ }
-    }
+    // Analíticas de uso (solo registra; el panel es privado, con token)
+    try {
+        var trackerScript = document.createElement('script');
+        trackerScript.src = (inPublic ? '../' : '') + 'scripts/analytics.js?v=20261029';
+        trackerScript.async = true;
+        document.head.appendChild(trackerScript);
+    } catch (e) { /* las analíticas nunca deben romper la página */ }
 
     // Aviso de "sin conexión a internet" y bloqueo de envíos sin conexión (todas las páginas)
     try {
         var conexionScript = document.createElement('script');
-        conexionScript.src = (inPublic ? '../' : '') + 'scripts/conexion.js?v=2';
+        conexionScript.src = (inPublic ? '../' : '') + 'scripts/conexion.js?v=1';
         conexionScript.async = true;
         document.head.appendChild(conexionScript);
     } catch (e) { /* nunca debe romper la página */ }
 
     function rastrear(tipo, elemento) {
         try {
-            if (window.sipconsTrack) {
-                window.sipconsTrack(tipo, elemento);
-                if (window.sipconsFlush) window.sipconsFlush();
+            if (window.appTrack) {
+                window.appTrack(tipo, elemento);
+                if (window.appFlush) window.appFlush();
             } else {
-                (window.__sipconsTrackQ = window.__sipconsTrackQ || []).push([tipo, elemento]);
+                (window.__appTrackQ = window.__appTrackQ || []).push([tipo, elemento]);
             }
         } catch (e) { /* nada */ }
     }
@@ -132,37 +84,43 @@
     // Permite a los scripts de cada página reaccionar al usuario/rol de la
     // sesión sin repetir el fetch a session_check.php. Si ya está listo,
     // invoca el callback de inmediato; si no, lo encola.
-    var authState = { ready: false, user: null, modulos: [] };
+    var authState = { ready: false, user: null, modulos: [], empresa: null };
     var authReadyCallbacks = [];
-    window.sipconsOnAuthReady = function (callback) {
+    window.appOnAuthReady = function (callback) {
         if (authState.ready) {
             callback(authState);
         } else {
             authReadyCallbacks.push(callback);
         }
     };
-    function marcarAuthListo(user, modulos) {
+    function marcarAuthListo(user, modulos, empresa) {
+        try { localStorage.setItem(INGRESO_KEY, '1'); } catch (e) { /* sin storage */ }
         authState.ready = true;
         authState.user = user;
         authState.modulos = modulos;
+        authState.empresa = empresa || null;
         authReadyCallbacks.forEach(function (cb) { cb(authState); });
         authReadyCallbacks = [];
     }
 
     // Deshabilita, en un <select> de estatus de incidencia, las opciones de
     // cierre (con/sin factura) cuando el usuario en sesión no puede cerrar:
-    // rol "Técnico" o usuario restringido en el .env del servidor (lo decide
+    // rol "Técnico" o usuario sin ese permiso en Usuarios (lo decide
     // session_check.php en "puede_cerrar"). Se deja la opción visible (por si
     // ya era el valor guardado) pero no elegible.
-    window.sipconsAplicarRestriccionEstatus = function (selectEl) {
+    window.appAplicarRestriccionEstatus = function (selectEl) {
         if (!selectEl) return;
-        window.sipconsOnAuthReady(function (auth) {
+        window.appOnAuthReady(function (auth) {
             var user = auth.user || {};
             var puedeCerrar = typeof user.puede_cerrar === 'boolean' ? user.puede_cerrar : user.rol !== 'Técnico';
             if (puedeCerrar) return;
-            var restringidos = ['Cerrado con factura', 'Cerrado sin factura'];
+            // Cerrar o cancelar exige permiso de cierre (RP-12); reabrir también (D-3)
+            var finales = ['Cerrado con factura', 'Cerrado sin factura', 'Cancelado'];
+            var actual = selectEl.dataset.estatusGuardado || selectEl.value;
+            var yaFinal = finales.indexOf(actual) !== -1;
             Array.prototype.forEach.call(selectEl.options, function (opt) {
-                if (restringidos.indexOf(opt.value) !== -1) {
+                if (opt.value === actual) return;
+                if (yaFinal || finales.indexOf(opt.value) !== -1) {
                     opt.disabled = true;
                 }
             });
@@ -175,175 +133,111 @@
     var PAGINA_A_MODULO = {
         'incidencias.html': 'incidencias',
         'detalle.html': 'incidencias',
-        'incidencias_general.html': 'incidencias',
         'reportes.html': 'reportes',
         'clientes.html': 'clientes',
         'perfil-cliente.html': 'clientes',
+        'cotizaciones.html': 'cotizaciones',
+        // El técnico abre aquí los borradores que crea desde su incidencia
+        'cotizacion.html': ['cotizaciones', 'incidencias'],
         'usuarios.html': 'usuarios',
         'ventas.html': 'ventas',
         'admin-ventas.html': 'ventas',
         'consulta_ventas.html': 'ventas',
-        'detalle-venta.html': 'ventas',
         'detalles-venta.html': 'ventas',
+        'inventario.html': 'inventario',
+        'finanzas.html': 'finanzas',
+        'estado-cuenta.html': 'finanzas',
         'soporte.html': 'soporte',
         'informes.html': 'informes',
         'historial.html': 'historial',
-        'inventario.html': 'inventario',
-        'cotizaciones.html': 'cotizaciones',
-        'cotizacion-detalle.html': 'cotizaciones',
-        'cuentas-por-cobrar.html': 'cuentas_por_cobrar',
-        'finanzas.html': 'finanzas',
-        'problemas.html': 'problemas',
-        'cambios.html': 'cambios',
-        'catalogo-servicios.html': 'catalogo_servicios',
-        'base-conocimiento.html': 'base_conocimiento',
+        'importar.html': ['clientes', 'inventario'],
     };
 
     // Ocultar página inmediatamente para evitar flash de contenido no autorizado
     document.documentElement.style.visibility = 'hidden';
 
-    // Ejecuta fn cuando exista el DOM (con caché la sesión está lista antes
-    // de que el navegador termine de leer el HTML).
-    function alDom(fn) {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', fn, { once: true });
-        } else {
-            fn();
+    // Aviso fijo según la situación de la empresa (prueba, pago vencido, solo
+    // lectura, pago en verificación), con el acceso a Contratar plan para el administrador
+    function avisoEmpresa(empresa) {
+        if (!empresa || !empresa.mensaje || document.getElementById('aviso-empresa')) return;
+        var tipo = empresa.estado === 'prueba' || empresa.estado === 'activa' ? 'info' : 'alerta';
+        var aviso = document.createElement('div');
+        aviso.id = 'aviso-empresa';
+        aviso.className = 'aviso-empresa aviso-empresa--' + tipo;
+        aviso.setAttribute('role', 'status');
+        var accion = '';
+        if (empresa.puede_contratar) {
+            accion = ' <a class="aviso-empresa-accion" href="' + authPath + 'contratar.html">' +
+                (empresa.verificacion ? 'Ver mi solicitud' : empresa.estado === 'prueba' ? 'Contratar plan' : empresa.estado === 'activa' ? 'Renovar' : 'Pagar ahora') + '</a>';
         }
+        aviso.innerHTML = '<i class="fas ' + (tipo === 'info' ? 'fa-hourglass-half' : 'fa-exclamation-triangle') + '"></i> ' + escapeHtml(empresa.mensaje) + accion;
+        // Dentro del contenido (la barra lateral es fija y taparía un aviso a todo lo ancho)
+        var destino = document.getElementById('mainContent') || document.body;
+        destino.insertBefore(aviso, destino.firstChild);
     }
 
-    // ---------- Aviso "el servidor no responde" (nunca expulsa al usuario) ----------
-    var avisoServidor = null;
-    function mostrarAvisoServidor(texto, conBoton) {
-        alDom(function () {
-            if (!avisoServidor) {
-                avisoServidor = document.createElement('div');
-                avisoServidor.setAttribute('role', 'alert');
-                // visibility: visible para verse aunque la página siga oculta
-                avisoServidor.style.cssText =
-                    'visibility:visible;position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:2147483000;' +
-                    'max-width:min(560px,calc(100% - 32px));box-sizing:border-box;padding:14px 18px;border-radius:10px;' +
-                    'background:#b45309;color:#fff;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;' +
-                    'box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
-                avisoServidor.innerHTML =
-                    '<span class="aviso-servidor-texto" style="flex:1 1 240px"></span>' +
-                    '<button type="button" style="visibility:visible;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.5);' +
-                    'border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit">Reintentar ahora</button>';
-                avisoServidor.querySelector('button').addEventListener('click', function () {
-                    clearTimeout(temporizadorReintento);
-                    verificarSesion(intentoActual);
+    // Superadministrador dentro de una empresa (panel > Entrar como soporte)
+    function avisoSoporte(empresa) {
+        if (document.getElementById('aviso-soporte')) return;
+        var aviso = document.createElement('div');
+        aviso.id = 'aviso-soporte';
+        aviso.setAttribute('role', 'status');
+        aviso.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:99999;' +
+            'display:flex;align-items:center;gap:12px;padding:10px 14px 10px 16px;border-radius:12px;' +
+            'background:#1e1b4b;color:#e0e7ff;border:1px solid #6366f1;box-shadow:0 10px 30px rgba(0,0,0,.35);' +
+            'font:500 14px/1.3 Inter,"Segoe UI",sans-serif;max-width:calc(100vw - 32px);';
+        aviso.innerHTML = '<i class="fas fa-headset"></i><span>Modo soporte' +
+            (empresa && empresa.nombre ? ' en <strong>' + escapeHtml(empresa.nombre) + '</strong>' : '') + '</span>' +
+            '<a href="' + authPath + 'soporte_salir.php" style="background:#6366f1;color:#fff;padding:6px 12px;border-radius:8px;' +
+            'text-decoration:none;font-weight:600;white-space:nowrap">Volver al panel</a>';
+        document.body.appendChild(aviso);
+    }
+
+    fetch(authPath + 'session_check.php', { cache: 'no-store', credentials: 'same-origin' })
+        .then(function (r) {
+            if (!r.ok) {
+                // 403 = empresa bloqueada: el login muestra el motivo
+                return r.json().catch(function () { return {}; }).then(function (j) {
+                    try { if (j && j.mensaje) sessionStorage.setItem('aviso_login', j.mensaje); } catch (e) { /* nada */ }
+                    // Quien llega a la dirección principal sin haber entrado nunca desde
+                    // este navegador es un visitante: ve el sitio de ventas, no el login
+                    var yaEntro = false;
+                    try { yaEntro = !!localStorage.getItem(INGRESO_KEY); } catch (e) { /* sin storage */ }
+                    if (r.status === 401 && !inPublic && !yaEntro) {
+                        window.location.replace('soluciones/');
+                        return null;
+                    }
+                    window.location.replace(authPath + 'login.html');
+                    return null;
                 });
-                document.body.appendChild(avisoServidor);
             }
-            avisoServidor.querySelector('.aviso-servidor-texto').textContent = texto;
-            avisoServidor.querySelector('button').style.display = conBoton ? '' : 'none';
-            avisoServidor.style.display = 'flex';
-        });
-    }
-    function ocultarAvisoServidor() {
-        if (avisoServidor) avisoServidor.style.display = 'none';
-    }
-
-    // ---------- Verificación de sesión ----------
-    // SOLO un 401 (o una respuesta que diga authenticated:false) manda al
-    // login. Un 502/503/504, una respuesta ilegible o un fallo de red son
-    // problemas temporales del servidor: se reintenta con espera creciente y,
-    // si la pestaña ya tenía la sesión verificada, se sigue trabajando con ella.
-    var RETRASOS_MS = [2000, 5000, 10000, 20000, 30000];
-    var MAX_INTENTOS_AUTO = RETRASOS_MS.length;
-    var intentoActual = 0;
-    var temporizadorReintento = null;
-    var sesionAplicada = false;
-
-    function verificarSesion(intento) {
-        intentoActual = intento;
-        var control = window.AbortController ? new AbortController() : null;
-        var limite = setTimeout(function () { if (control) control.abort(); }, 20000);
-
-        fetch(authPath + 'session_check.php', {
-            cache: 'no-store',
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' },
-            signal: control ? control.signal : undefined
+            return r.json();
         })
-            .then(function (r) {
-                clearTimeout(limite);
-                if (r.status === 401) return { authenticated: false };
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json().catch(function () { throw new Error('Respuesta ilegible (HTTP ' + r.status + ')'); });
-            })
-            .then(function (data) {
-                if (!data || data.authenticated !== true) {
-                    irAlLogin(); // sesión inválida confirmada por el servidor
-                    return;
-                }
-                guardarCache(data);
-                ocultarAvisoServidor();
-                if (sesionAplicada) {
-                    aplicarTema(data.tema, true); // la página ya está pintada (con el respaldo)
-                } else {
-                    alDom(function () { aplicarSesion(data); });
-                }
-            })
-            .catch(function (err) {
-                clearTimeout(limite);
-                falloTemporal(intento, err);
-            });
-    }
-
-    function falloTemporal(intento, err) {
-        try { console.warn('session_check no respondió:', err && err.message ? err.message : err); } catch (e) { /* nada */ }
-
-        // Respaldo: la última sesión verificada en esta pestaña (máx. 12 h)
-        var respaldo = leerCache();
-        if (!sesionAplicada && respaldo && Date.now() - respaldo.t < AUTH_RESPALDO_MS) {
-            alDom(function () { aplicarSesion(respaldo.data); });
-        }
-
-        // Si ya se pinta con el respaldo, basta con 2 reintentos en segundo
-        // plano: no cargar más a un servidor que está saturado.
-        if (intento + 1 >= (sesionAplicada ? 2 : MAX_INTENTOS_AUTO)) {
-            if (!sesionAplicada) {
-                mostrarAvisoServidor('El servidor no está respondiendo. Tu sesión sigue abierta; vuelve a intentarlo en un momento.', true);
-            } else {
-                ocultarAvisoServidor(); // con respaldo se sigue trabajando; no insistir
+        .then(function (data) {
+            if (!data) return;
+            if (data.plataforma) {
+                // Cuenta de plataforma (superadministrador): no opera dentro de una empresa
+                window.location.replace((inPublic ? '../' : '') + 'plataforma/index.html');
+                return;
             }
-            return;
-        }
-
-        var espera = RETRASOS_MS[intento];
-        if (!sesionAplicada) {
-            mostrarAvisoServidor('El servidor tarda en responder. Reintentando en ' + Math.round(espera / 1000) + ' s… (tu sesión sigue abierta)', true);
-        }
-        temporizadorReintento = setTimeout(function () { verificarSesion(intento + 1); }, espera);
-    }
-
-    var cacheInicial = leerCache();
-    if (cacheInicial && Date.now() - cacheInicial.t < AUTH_TTL_MS) {
-        alDom(function () { aplicarSesion(cacheInicial.data); });
-    } else {
-        verificarSesion(0);
-    }
-
-    function aplicarSesion(data) {
-        if (sesionAplicada) return;
-        sesionAplicada = true;
-        try {
-            if (data.analytics !== false) cargarAnalytics();
 
             var user = data.user || {};
             if (typeof data.puede_cerrar === 'boolean') user.puede_cerrar = data.puede_cerrar;
+            user.debe_cambiar_password = !!data.debe_cambiar_password;  // L-13
             aplicarTema(data.tema, true); // el tema de la cuenta manda sobre el recordado en este navegador
             var displayName = user.nombre || user.usuario || 'Usuario';
             var modulosPermitidos = data.modulos || [];
 
-            marcarAuthListo(user, modulosPermitidos);
+            marcarAuthListo(user, modulosPermitidos, data.empresa);
+            if (data.soporte) avisoSoporte(data.empresa);
+            else if (data.empresa) avisoEmpresa(data.empresa);
 
             function puedeAcceder(pagina) {
                 var modulo = PAGINA_A_MODULO[pagina];
                 // Si la página no está mapeada a ningún módulo, es de acceso libre.
                 if (!modulo) return true;
-                return modulosPermitidos.indexOf(modulo) !== -1;
+                // Varios módulos: basta con tener uno
+                return [].concat(modulo).some(function (m) { return modulosPermitidos.indexOf(m) !== -1; });
             }
 
             // Si el usuario llega directo a una página que su rol no tiene
@@ -352,6 +246,11 @@
             // (requirePermiso); esto solo evita una pantalla que de todos
             // modos fallará al llamar a la API.
             var paginaActual = window.location.pathname.split('/').pop();
+            // L-13: con la contraseña temporal del panel, primero se cambia en Ajustes
+            if (data.debe_cambiar_password && paginaActual !== 'ajustes.html') {
+                window.location.replace((inPublic ? '' : 'public/') + 'ajustes.html#seguridad');
+                return;
+            }
             if (!puedeAcceder(paginaActual)) {
                 rastrear('acceso_denegado', paginaActual);
                 setTimeout(function () { window.location.replace(indexPath); }, 300);
@@ -365,7 +264,7 @@
             if (sidebar) {
                 // Actualizar nombre en sidebar
                 var nameEl = sidebar.querySelector('.user-name');
-                if (nameEl) nameEl.textContent = displayName;
+                if (nameEl) { nameEl.textContent = displayName; nameEl.title = displayName; }
 
                 // Agregar enlace a Historial si el rol tiene ese módulo y el
                 // sidebar de esta página no lo trae ya
@@ -391,6 +290,50 @@
                     }
                 }
 
+                // Enlace a Inventario (módulo nuevo): se agrega después de Clientes
+                // en las barras laterales que no lo traen escrito
+                if (puedeAcceder('inventario.html')) {
+                    var listaInv = sidebar.querySelector('ul');
+                    if (listaInv && !listaInv.querySelector('a[href$="inventario.html"]')) {
+                        var invItem = document.createElement('li');
+                        var invLink = document.createElement('a');
+                        invLink.href = inPublic ? 'inventario.html' : 'public/inventario.html';
+                        invLink.title = 'Inventario';
+                        invLink.innerHTML =
+                            '<i class="fas fa-boxes"></i>' +
+                            '<span class="sidebar-link-text">Inventario</span>';
+                        invItem.appendChild(invLink);
+                        var enlaceClientes = listaInv.querySelector('a[href$="clientes.html"]');
+                        var liClientes = enlaceClientes ? enlaceClientes.closest('li') : null;
+                        if (liClientes && liClientes.nextSibling) {
+                            listaInv.insertBefore(invItem, liClientes.nextSibling);
+                        } else {
+                            listaInv.appendChild(invItem);
+                        }
+                    }
+                }
+
+                // Mi empresa (plan, uso y marca): solo quien administra la cuenta,
+                // antes de Ajustes
+                if (data.empresa && data.empresa.administra) {
+                    var listaEmp = sidebar.querySelector('ul');
+                    if (listaEmp && !listaEmp.querySelector('a[href$="mi-empresa.html"]')) {
+                        var empItem = document.createElement('li');
+                        var empLink = document.createElement('a');
+                        empLink.href = inPublic ? 'mi-empresa.html' : 'public/mi-empresa.html';
+                        empLink.title = 'Mi empresa';
+                        if (/mi-empresa\.html$/.test(window.location.pathname)) empLink.className = 'active';
+                        empLink.innerHTML =
+                            '<i class="fas fa-building"></i>' +
+                            '<span class="sidebar-link-text">Mi empresa</span>';
+                        empItem.appendChild(empLink);
+                        var enlaceAjustes = listaEmp.querySelector('a[href$="ajustes.html"]');
+                        var liAjustes = enlaceAjustes ? enlaceAjustes.closest('li') : null;
+                        if (liAjustes) listaEmp.insertBefore(empItem, liAjustes);
+                        else listaEmp.appendChild(empItem);
+                    }
+                }
+
                 // Agregar botón de cerrar sesión al footer si no existe
                 var footer = sidebar.querySelector('.sidebar-footer');
                 if (footer && !footer.querySelector('.logout-btn')) {
@@ -404,6 +347,10 @@
                     footer.appendChild(logoutLink);
                 }
             } else {
+                // Inicio: tarjeta de Mi empresa para quien administra la cuenta
+                var opcionEmpresa = document.getElementById('opcion-mi-empresa');
+                if (opcionEmpresa && data.empresa && data.empresa.administra) opcionEmpresa.hidden = false;
+
                 // Sin sidebar (index.html): inyectar barra de usuario arriba a la derecha
                 var bar = document.createElement('div');
                 bar.id = 'user-top-bar';
@@ -425,10 +372,11 @@
                     item.style.display = 'none';
                 }
             }
-        } catch (e) {
-            // Un error al pintar el menú no debe dejar la página invisible
-            try { console.error('auth-guard:', e); } catch (e2) { /* nada */ }
-            document.documentElement.style.visibility = '';
-        }
-    }
+            // Títulos de grupo del menú por áreas que se quedaron vacíos
+            if (window.appMenu) window.appMenu.ajustarGrupos();
+        })
+        .catch(function () {
+            // Falla cerrado: sin poder verificar la sesión no se muestra nada
+            window.location.replace(authPath + 'login.html');
+        });
 })();

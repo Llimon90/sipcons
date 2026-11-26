@@ -1,6 +1,6 @@
 /**
  * scripts/detalles-venta.js
- * Lógica Completa (Cantidades Dinámicas, Frecuencia de Servicio y PDF.js) - SIPCONS
+ * Lógica Completa (Cantidades Dinámicas, Frecuencia de Servicio y PDF.js)
  */
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -9,12 +9,9 @@ function getShortFileName(fileName, maxLength = 18) {
     return fileName.length > maxLength ? fileName.substring(0, maxLength) + '...' : fileName;
 }
 
+// Aviso estándar del sistema (AppAviso, scripts/dialogo.js)
 function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notificacion ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    AppAviso.mostrar(message, type === 'success' ? 'ok' : type);
 }
 
 // ==========================================
@@ -173,7 +170,7 @@ async function cargarArchivosAdjuntosVentas(archivosArray) {
 }
 
 async function borrarArchivoVenta(idArchivo, urlArchivo, containerElement) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) return;
+    if (!(await AppAviso.confirmar('El archivo se eliminará de forma permanente.', { peligro: true, boton: 'Sí, eliminar', titulo: '¿Eliminar este archivo?' }))) return;
     containerElement.classList.add('eliminando');
 
     try {
@@ -205,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ventaId = urlParams.get('id');
 
     if (!ventaId) {
-        alert("Error: ID no encontrado.");
+        AppAviso.alerta("Error: ID no encontrado.");
         window.location.href = 'ventas.html';
         return;
     }
@@ -216,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardar = document.getElementById('btn-guardar-cambios');
     let valorPrevioQty = 0;
 
-    // Periodicidad de mantenimiento/calibración + check de póliza
-    const refrescarPeriodicidad = SipconsPeriodicidad.enlazar(
+    // Periodicidad de mantenimiento + check de póliza
+    const refrescarPeriodicidad = AppPeriodicidad.enlazar(
         document.getElementById('calibracion'),
         document.getElementById('servicio'),
         document.getElementById('aviso-periodicidad')
@@ -245,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return { hayErrores: estadoError, hayVacios };
     };
 
-    const actualizarCamposSerie = () => {
+    const actualizarCamposSerie = async () => {
         let cant = parseInt(qtyInput.value) || 0;
         if (cant < 0) { qtyInput.value = 0; cant = 0; }
 
@@ -259,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     riesgo++;
                 }
             }
-            if (riesgo > 0 && !confirm(`¡Atención! Borrarás ${riesgo} serie(s) ya capturadas o guardadas. ¿Estás seguro?`)) {
+            if (riesgo > 0 && !(await AppAviso.confirmar(`Borrarás ${riesgo} serie(s) ya capturadas o guardadas.`, { peligro: true, boton: 'Sí, quitar', titulo: '¿Reducir la cantidad?' }))) {
                 qtyInput.value = valorPrevioQty;
                 return;
             }
@@ -286,6 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     qtyInput.addEventListener('input', actualizarCamposSerie);
+
+    const selectArticulo = document.getElementById('articulo_id');
+    AppInventario.selectorVenta(selectArticulo, {
+        equipo: document.getElementById('equipo'),
+        marca: document.getElementById('marca'),
+        modelo: document.getElementById('modelo')
+    });
 
     const cargarDatos = async () => {
         try {
@@ -315,11 +319,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if(data.series.length > 0) {
                     const d = data.series[0];
+                    AppInventario.seleccionar(selectArticulo, d.articulo_id);
                     document.getElementById('equipo').value = d.equipo || '';
                     document.getElementById('marca').value = d.marca || '';
                     document.getElementById('modelo').value = d.modelo || '';
                     document.getElementById('garantia').value = d.garantia || 0;
-                    document.getElementById('calibracion').value = SipconsPeriodicidad.mesesDe(d);
+                    document.getElementById('calibracion').value = AppPeriodicidad.mesesDe(d);
                     document.getElementById('notas').value = d.notas || '';
 
                     document.getElementById('servicio').checked = (d.servicio == 1);
@@ -332,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 seriesContainer.innerHTML = data.series.map((s, index) => `
                     <div class="serie-item-wrapper" style="background: white; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                         <label style="font-size: 0.8rem; color: #7f8c8d; font-weight: bold;">SERIE EQUIPO ${index + 1}</label>
-                        <input type="text" class="serie-edit-input" data-id="${s.id}" value="${s.numero_serie}" required style="width: 100%; padding: 5px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;">
+                        <input type="text" class="serie-edit-input" data-id="${escHTML(s.id)}" value="${escHTML(s.numero_serie)}" required style="width: 100%; padding: 5px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;">
                     </div>
                 `).join('');
 
@@ -391,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btn-eliminar-venta').addEventListener('click', async () => {
-        if(confirm("¡ATENCIÓN! Esto borrará permanentemente la venta, sus series y todos los archivos. ¿Proceder?")) {
+        if (await AppAviso.confirmar('Se borrarán permanentemente la venta, sus series y todos sus archivos.', { peligro: true, boton: 'Sí, eliminar venta', titulo: '¿Eliminar esta venta?' })) {
             try {
                 const resp = await fetch('../backend/eliminar_venta.php', {
                     method: 'POST',
@@ -400,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const res = await resp.json();
                 if(res.exito) {
-                    alert("Venta eliminada del sistema.");
+                    AppAviso.alerta("Venta eliminada del sistema.");
                     window.location.href = 'ventas.html';
                 } else {
                     showNotification(res.mensaje, "error");

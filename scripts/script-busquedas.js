@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarIncidencias();
   cargarClientes();
   // Técnicos desde la BD (usuarios con rol técnico/supervisor/administrador)
-  SipconsTecnicos.llenarSelect(document.getElementById("tecnico"), { placeholder: "Cualquier técnico" });
+  AppTecnicos.llenarSelect(document.getElementById("tecnico"), { placeholder: "Cualquier técnico" });
 
   const form = document.getElementById("report-form");
   if (form) {
@@ -124,13 +124,13 @@ async function cargarIncidencias() {
     }
 
     if (data.error) {
-      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger fw-bold">Error SQL: ${data.error}</td></tr>`;
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger fw-bold">Error SQL: ${escHTML(data.error)}</td></tr>`;
       data = [];
       return;
     }
 
     if (data.message) {
-      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">${data.message}</td></tr>`;
+      tablaBody.innerHTML = `<tr><td colspan="8" class="text-center">${escHTML(data.message)}</td></tr>`;
       incidenciasTotales = [];
     } else {
       incidenciasTotales = data;
@@ -160,7 +160,8 @@ function mostrarIncidenciasPagina() {
   items.forEach((inc, indexArray) => {
     const row = document.createElement("tr");
     const esProgramado = inc.estatus === 'Programado';
-    const esActiva = ['Abierto', 'Asignado', 'Pendiente', 'Completado', 'Programado'].includes(inc.estatus);
+    // D-4: activa = cualquier estatus salvo Cerrado y Cancelado
+    const esActiva = !['Cerrado con factura', 'Cerrado sin factura', 'Cancelado'].includes(inc.estatus);
     const indiceGlobal = inicio + indexArray;
 
     // Traducir códigos de reporte interno para el usuario en la tabla
@@ -172,33 +173,33 @@ function mostrarIncidenciasPagina() {
     }
 
     let enlaceHTML = esProgramado
-      ? `<a href="javascript:void(0);" onclick="abrirModalProgramada(${indiceGlobal})"><i class="bi bi-window-stack"></i> ${nombreReporteVisual}</a>`
-      : `<a href="detalle.html?id=${inc.id}">${nombreReporteVisual || "N/A"}</a>`;
+      ? `<a href="javascript:void(0);" onclick="abrirModalProgramada(${indiceGlobal})"><i class="bi bi-window-stack"></i> ${escHTML(nombreReporteVisual)}</a>`
+      : `<a href="detalle.html?id=${escHTML(inc.id)}">${escHTML(nombreReporteVisual || "N/A")}</a>`;
 
-    const estatus = window.SipconsTablas ? SipconsTablas.estatusHTML(inc.estatus) : inc.estatus;
+    const estatus = window.AppTablas ? AppTablas.estatusHTML(inc.estatus) : inc.estatus;
 
     row.innerHTML = `
       <td>${enlaceHTML}</td>
-      <td>${inc.reporte_cliente || "N/A"}</td>
-      <td>${inc.cliente}</td>
-      <td>${inc.sucursal}</td>
-      <td>${inc.falla}</td>
-      <td>${inc.fecha}</td>
+      <td>${escHTML(inc.reporte_cliente || "N/A")}</td>
+      <td>${escHTML(inc.cliente)}</td>
+      <td>${escHTML(inc.sucursal)}</td>
+      <td>${escHTML(inc.falla)}</td>
+      <td>${escHTML(inc.fecha)}</td>
       <td>${estatus}</td>
       <td><span class="etiqueta ${esActiva ? "etiqueta-ok" : "etiqueta-neutral"}">${esActiva ? "Activa" : "Inactiva"}</span></td>
     `;
 
     // Toda la fila abre la incidencia (antes solo el folio respondía al clic)
     row.className = 'fila-clic';
-    row.title = esProgramado ? 'Ver detalle de la programación' : 'Abrir incidencia';
+    row.title = esProgramado ? 'Ver detalle de la programación' : 'Abrir orden de servicio';
     row.addEventListener('click', (ev) => {
       if (ev.target.closest('a, button')) return;
       if (esProgramado) {
         abrirModalProgramada(indiceGlobal);
       } else if (ev.ctrlKey || ev.metaKey) {
-        window.open(`detalle.html?id=${inc.id}`, '_blank');
+        window.open(`detalle.html?id=${escHTML(inc.id)}`, '_blank');
       } else {
-        window.location.href = `detalle.html?id=${inc.id}`;
+        window.location.href = `detalle.html?id=${escHTML(inc.id)}`;
       }
     });
     tablaBody.appendChild(row);
@@ -250,9 +251,9 @@ window.abrirModalProgramada = function(indice) {
       // --- TEXTOS DE PERIODICIDAD MEJORADOS Y EXPLICATIVOS ---
       let textoPeriodo = "";
       if (d.numero_incidente === 'PROG-CAL' && calibracion > 0) {
-          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-phone-alt text-danger"></i> <strong>Acción Técnica:</strong> Sin póliza. Contactar al cliente para recomendar Mantenimiento/Calibración cada ${calibracion} meses</div>`;
+          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-phone-alt text-danger"></i> <strong>Acción Técnica:</strong> Sin póliza. Contactar al cliente para recomendar Mantenimiento cada ${calibracion} meses</div>`;
       } else if (d.numero_incidente === 'PROG-SERV' && servicio > 0) {
-          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-file-signature text-primary"></i> <strong>Póliza:</strong> Mantenimiento/Calibración programado cada ${servicio} meses</div>`;
+          textoPeriodo = `<div style="font-size: 0.8rem; color:#7f8c8d; margin-top:4px;"><i class="fas fa-file-signature text-primary"></i> <strong>Póliza:</strong> Mantenimiento programado cada ${servicio} meses</div>`;
       }
 
       // --- CONSTRUCCIÓN DEL ROW DEL EQUIPO ---
@@ -282,14 +283,14 @@ window.abrirModalProgramada = function(indice) {
 
   if (d.numero_incidente === 'PROG-CAL') {
       tituloModalVisual = 'CONTACTAR CLIENTE (SIN PÓLIZA)';
-      explicacionTipoVisita = 'CONTACTAR PARA RECOMENDAR MANTENIMIENTO / CALIBRACIÓN';
+      explicacionTipoVisita = 'CONTACTAR PARA RECOMENDAR MANTENIMIENTO';
   } else if (d.numero_incidente === 'PROG-SERV') {
-      tituloModalVisual = 'PÓLIZA (MANTENIMIENTO / CALIBRACIÓN)';
-      explicacionTipoVisita = 'SERVICIO PROGRAMADO POR PÓLIZA (MANTENIMIENTO / CALIBRACIÓN)';
+      tituloModalVisual = 'PÓLIZA (MANTENIMIENTO)';
+      explicacionTipoVisita = 'SERVICIO PROGRAMADO POR PÓLIZA (MANTENIMIENTO)';
   }
 
   if(modalLabel) {
-      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${tituloModalVisual} - ${d.reporte_cliente}`;
+      modalLabel.innerHTML = `<i class="bi bi-calendar-check text-primary"></i> Programación: ${tituloModalVisual} - ${escHTML(d.reporte_cliente)}`;
   }
   
   if(modalBody) {
@@ -297,15 +298,15 @@ window.abrirModalProgramada = function(indice) {
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="text-muted small d-block" style="text-transform:uppercase; font-weight:bold;">Cliente</label>
-          <p class="mb-0" style="font-size:1.1rem; color:#2c3e50;"><strong>${d.cliente}</strong></p>
+          <p class="mb-0" style="font-size:1.1rem; color:#2c3e50;"><strong>${escHTML(d.cliente)}</strong></p>
           <label class="text-muted small d-block mt-3" style="text-transform:uppercase; font-weight:bold;">Sucursal</label>
-          <p class="mb-0">${d.sucursal}</p>
+          <p class="mb-0">${escHTML(d.sucursal)}</p>
         </div>
         <div class="col-md-6">
           <label class="text-muted small d-block" style="text-transform:uppercase; font-weight:bold;">Fecha Agendada</label>
-          <p class="mb-0"><span class="badge bg-warning text-dark px-3 py-2" style="font-size:1rem; border:1px solid #e1b100;">${d.fecha}</span></p>
+          <p class="mb-0"><span class="badge bg-warning text-dark px-3 py-2" style="font-size:1rem; border:1px solid #e1b100;">${escHTML(d.fecha)}</span></p>
           <label class="text-muted small d-block mt-3" style="text-transform:uppercase; font-weight:bold;">Tipo de Gestión / Visita</label>
-          <p class="mb-0 fw-bold" style="color:#2980b9;">${explicacionTipoVisita}</p>
+          <p class="mb-0 fw-bold" style="color:var(--brand-primary-hover);">${explicacionTipoVisita}</p>
         </div>
       </div>
       <div class="bg-light p-3 rounded border">
@@ -347,7 +348,7 @@ async function cargarClientes() {
     const clientes = await response.json();
     const select = document.getElementById('cliente');
     if (select) {
-      clientes.forEach(c => { select.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`; });
+      clientes.forEach(c => { select.innerHTML += `<option value="${escHTML(c.nombre)}">${escHTML(c.nombre)}</option>`; });
     }
   } catch(e) { console.warn("Error cargando clientes"); }
 }

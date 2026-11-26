@@ -1,33 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotizaciones</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotizaciones</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../css/inventario.css?v=20261111">
+  <link rel="stylesheet" href="../css/cotizaciones.css?v=20261125">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 
 <body>
-  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
-    <i class="fas fa-home"></i>
-    <span>Volver al Inicio</span>
-  </button>
-
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
       <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
     </div>
-
     <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
-
     <div class="sidebar-footer">
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
@@ -37,80 +36,103 @@
   </aside>
 
   <main id="mainContent">
-    <section class="encabezado">
-      <h2>Cotizaciones</h2>
-      <p>Cotiza antes de vender. Una cotización aprobada se puede convertir en venta.</p>
-    </section>
-
-    <section class="encabezado">
-      <form id="form-cotizacion">
-        <h2>Nueva cotización</h2>
-        <div class="form-row">
-          <div>
-            <label for="cliente_id">Cliente:</label>
-            <select id="cliente_id" required><option value="">Selecciona...</option></select>
-          </div>
-          <div>
-            <label for="sucursal">Sucursal:</label>
-            <input type="text" id="sucursal" placeholder="Opcional">
-          </div>
-          <div>
-            <label for="fecha">Fecha:</label>
-            <input type="date" id="fecha" required>
-          </div>
-          <div>
-            <label for="fecha_vigencia">Vigente hasta:</label>
-            <input type="date" id="fecha_vigencia">
-          </div>
+    <section class="encabezado inventario">
+      <div class="inv-cabecera">
+        <div>
+          <h2><i class="fas fa-file-invoice-dollar"></i> Cotizaciones</h2>
+          <p>Presupuestos para tus clientes con productos y servicios del catálogo.</p>
         </div>
-
-        <h3>Líneas</h3>
-        <table class="tabla-ventas" style="width:100%;" id="tabla-lineas">
-          <thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Importe</th><th></th></tr></thead>
-          <tbody id="cuerpo-lineas"></tbody>
-        </table>
-        <button type="button" id="btn-agregar-linea" style="margin:10px 0;">+ Agregar línea</button>
-
-        <div style="text-align:right; max-width:300px; margin-left:auto;">
-          <p>Subtotal: $<span id="total-subtotal">0.00</span></p>
-          <p>IVA (16%): $<span id="total-iva">0.00</span></p>
-          <p><strong>Total: $<span id="total-total">0.00</span></strong></p>
-        </div>
-
-        <div class="form-row">
-          <div class="full-width">
-            <label for="notas">Notas:</label>
-            <input type="text" id="notas">
-          </div>
-        </div>
-
-        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar cotización</button>
-        <span id="mensaje-cotizacion" style="margin-left:10px;"></span>
-      </form>
-    </section>
-
-    <section class="lista-incidencias">
-      <h2>Cotizaciones registradas</h2>
-      <div class="form-row">
-        <input type="text" id="campo-busqueda" placeholder="Buscar por folio o cliente..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
-        <select id="filtro-estatus">
-          <option value="">Todos los estatus</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Aprobada">Aprobada</option>
-          <option value="Rechazada">Rechazada</option>
-          <option value="Convertida">Convertida</option>
-          <option value="Vencida">Vencida</option>
-        </select>
+        <a href="cotizacion.html" id="btn-nueva" class="btn-primary"><i class="fas fa-plus"></i> Nueva cotización</a>
       </div>
-      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
-        <thead><tr><th>Folio</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estatus</th><th>Acciones</th></tr></thead>
-        <tbody id="cuerpo-cotizaciones"><tr><td colspan="6">Cargando...</td></tr></tbody>
-      </table>
+
+      <div class="cot-pestanas" role="tablist">
+        <button type="button" role="tab" class="activa" data-pestana="lista"><i class="fas fa-list"></i> Cotizaciones</button>
+        <button type="button" role="tab" data-pestana="servicios"><i class="fas fa-concierge-bell"></i> Servicios</button>
+      </div>
+
+      <!-- Pestaña: cotizaciones -->
+      <div id="pestana-lista">
+        <div id="aviso-ventas" class="cot-aviso" hidden></div>
+
+        <div class="inv-kpis">
+          <button type="button" class="inv-kpi cot-kpi" data-filtro-estatus="borrador"><div class="inv-kpi-valor" id="kpi-borradores">–</div><div class="inv-kpi-etiqueta">Borradores</div></button>
+          <button type="button" class="inv-kpi cot-kpi" data-filtro-estatus="enviada"><div class="inv-kpi-valor" id="kpi-enviadas">–</div><div class="inv-kpi-etiqueta">Enviadas</div></button>
+          <button type="button" class="inv-kpi cot-kpi alerta" data-por-vencer="1"><div class="inv-kpi-valor" id="kpi-por-vencer">–</div><div class="inv-kpi-etiqueta">Por vencer (3 días)</div></button>
+          <div class="inv-kpi cot-kpi-ok"><div class="inv-kpi-valor" id="kpi-aprobadas">–</div><div class="inv-kpi-etiqueta" id="kpi-aprobadas-monto">Aprobadas este mes</div></div>
+        </div>
+
+        <div class="inv-filtros">
+          <input type="search" id="f-buscar" placeholder="Buscar por folio, cliente o sucursal...">
+          <select id="f-cliente" aria-label="Cliente"><option value="">Todos los clientes</option></select>
+          <select id="f-estatus" aria-label="Estatus"><option value="">Todos los estatus</option></select>
+          <label class="cot-rango">Desde <input type="date" id="f-desde"></label>
+          <label class="cot-rango">Hasta <input type="date" id="f-hasta"></label>
+          <label><input type="checkbox" id="f-por-vencer"> Por vencer</label>
+        </div>
+
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas inv-tabla" style="width:100%;">
+            <thead>
+              <tr><th>Folio</th><th>Cliente</th><th>Fecha</th><th>Vigencia</th><th>Total</th><th>Estatus</th></tr>
+            </thead>
+            <tbody id="tabla-cotizaciones">
+              <tr><td colspan="6" class="inv-vacio">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pestaña: catálogo de servicios (mismo catálogo que Inventario) -->
+      <div id="pestana-servicios" hidden>
+        <p class="cot-nota">
+          Servicios y mano de obra que agregas a tus cotizaciones. Viven en el mismo catálogo que tus productos
+          (<a href="inventario.html">Inventario</a>), pero no llevan existencias.
+        </p>
+        <div class="inv-filtros">
+          <input type="search" id="s-buscar" placeholder="Buscar servicio...">
+          <button type="button" id="btn-nuevo-servicio" class="btn-primary"><i class="fas fa-plus"></i> Nuevo servicio</button>
+        </div>
+        <div class="inv-tabla-wrap">
+          <table class="tabla-ventas inv-tabla" style="width:100%;">
+            <thead><tr><th>Clave</th><th>Servicio</th><th>Tipo</th><th>Unidad</th><th>Costo</th><th>Precio</th><th></th></tr></thead>
+            <tbody id="tabla-servicios"><tr><td colspan="7" class="inv-vacio">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/cotizaciones.js?v=1"></script>
+  <!-- Alta / edición de servicio -->
+  <div id="modal-servicio" class="modal inv-modal">
+    <div class="modal-content">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3 id="titulo-servicio">Nuevo servicio</h3>
+      <form id="form-servicio" class="inv-form-grid" autocomplete="off">
+        <input type="hidden" name="id">
+        <div><label for="sv-sku">Clave</label><input id="sv-sku" name="sku" required maxlength="40" placeholder="Ej. MO-INST"></div>
+        <div><label for="sv-categoria">Tipo</label>
+          <select id="sv-categoria" name="categoria"><option value="Servicio">Servicio</option><option value="Mano de obra">Mano de obra</option></select>
+        </div>
+        <div class="completo"><label for="sv-nombre">Nombre</label><input id="sv-nombre" name="nombre" required maxlength="150" placeholder="Ej. Instalación de minisplit hasta 2 TR"></div>
+        <div><label for="sv-unidad">Unidad</label>
+          <select id="sv-unidad" name="unidad"><option value="servicio">Servicio</option><option value="hr">Hora (hr)</option><option value="visita">Visita</option><option value="pza">Pieza (pza)</option></select>
+        </div>
+        <div class="solo-margen"><label for="sv-costo">Costo</label><input id="sv-costo" name="costo_unitario" type="number" min="0" step="0.01" value="0"></div>
+        <div><label for="sv-precio">Precio</label><input id="sv-precio" name="precio_venta" type="number" min="0" step="0.01" value="0"></div>
+        <div class="completo"><label for="sv-descripcion">Descripción</label><textarea id="sv-descripcion" name="descripcion" rows="2"></textarea></div>
+        <div class="completo inv-modal-acciones">
+          <button type="button" class="btn-secundario" data-cerrar>Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/red.js?v=20261113"></script>
+  <script src="../scripts/cotizaciones-comun.js?v=20261125"></script>
+  <script src="../scripts/cotizaciones.js?v=20261102"></script>
 </body>
 </html>

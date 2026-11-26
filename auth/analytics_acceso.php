@@ -11,7 +11,7 @@
 // historial del navegador. Cambiar el token en el .env invalida todo acceso.
 // Nada en el portal enlaza a este panel.
 
-const ANALYTICS_COOKIE = 'sipcons_an_panel';
+const ANALYTICS_COOKIE = 'app_an_panel';
 const ANALYTICS_COOKIE_HORAS = 12;
 
 function analyticsTokenConfigurado(): ?string {
@@ -20,7 +20,7 @@ function analyticsTokenConfigurado(): ?string {
 }
 
 function analyticsCookieValor(string $token): string {
-    return hash_hmac('sha256', 'sipcons-analytics-panel-v1', $token);
+    return hash_hmac('sha256', 'app-analytics-panel-v1', $token);
 }
 
 function puedeVerAnaliticas(): bool {
@@ -44,7 +44,7 @@ function analyticsIniciarAcceso(string $intento): bool {
     setcookie(ANALYTICS_COOKIE, analyticsCookieValor($token), [
         'expires'  => time() + ANALYTICS_COOKIE_HORAS * 3600,
         'path'     => $base === '' ? '/' : $base,
-        'secure'   => !empty($_SERVER['HTTPS']),
+        'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https',  // S-10
         'httponly' => true,
         'samesite' => 'Strict',
     ]);

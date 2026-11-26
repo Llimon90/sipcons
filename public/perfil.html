@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi perfil</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+    <link rel="icon" href="../img/favicon.ico" />
+    <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/perfil.css?v=20261112">
+    <script src="../scripts/auth-guard.js?v=20261124"></script>
+    <script src="../scripts/dialogo.js?v=20261101"></script>
+    <script src="../scripts/menu-lateral.js?v=20261125"></script>
+    <script src="../scripts/formularios.js?v=20261125"></script>
+    <link rel="stylesheet" href="../css/formularios.css?v=20261030">
+</head>
+<body>
+
+    <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+        <i class="fas fa-home"></i>
+        <span>Volver al Inicio</span>
+    </button>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title"><i class="fas fa-id-badge"></i> Perfil</h2>
+            <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+        </div>
+
+        <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span class="user-name">Usuario</span>
+            </div>
+        </div>
+    </aside>
+
+    <main id="mainContent">
+        <div id="perfil" class="pf" aria-live="polite"><p class="pf-cargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando…</p></div>
+    </main>
+
+    <script src="../scripts/sidebar-state.js?v=20261125"></script>
+    <script src="../scripts/ui-tablas.js?v=20261110"></script>
+    <script src="../scripts/perfil.js?v=20261125"></script>
+</body>
+</html>

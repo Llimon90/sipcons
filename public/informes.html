@@ -7,15 +7,17 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
+    <link rel="stylesheet" href="../css/styles.css?v=20261125">
+    <link rel="stylesheet" href="../css/dark.css?v=20261101">
+    <link rel="stylesheet" href="../branding/tema.css.php">
+    <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
-            --accent-color: #3498db;
-            --accent-dark: #2980b9;
+            --accent-color: var(--brand-primary);
+            --accent-dark: var(--brand-primary-hover);
             --success-color: #16a34a;
             --warning-color: #d97706;
             --danger-color: #dc2626;
@@ -173,7 +175,7 @@
         }
 
         .chart-btn:hover {
-            background: rgba(52, 152, 219, 0.1);
+            background: rgba(var(--brand-primary-rgb), 0.1);
             color: var(--accent-color);
             border-color: var(--accent-color);
         }
@@ -235,7 +237,7 @@
 
         .filter-item select:focus, .filter-item input:focus {
             border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+            box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.15);
             outline: none;
         }
 
@@ -254,10 +256,10 @@
         }
 
         .btn-primary { background: var(--accent-color); color: white; }
-        .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35); }
+        .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb), 0.35); }
 
         .btn-outline { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); }
-        .btn-outline:hover { background: rgba(52, 152, 219, 0.08); }
+        .btn-outline:hover { background: rgba(var(--brand-primary-rgb), 0.08); }
 
         #mainContent.is-loading .stats-grid,
         #mainContent.is-loading .chart-container { opacity: 0.45; pointer-events: none; }
@@ -458,7 +460,7 @@
         }
 
         .modal-aviso {
-            background: rgba(52, 152, 219, 0.1);
+            background: rgba(var(--brand-primary-rgb), 0.1);
             color: var(--accent-dark);
             padding: 10px 14px;
             border-radius: var(--border-radius-sm);
@@ -516,8 +518,11 @@
 
         .btn-sm { padding: 6px 12px; font-size: 12.5px; }
     </style>
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 <body>
 
@@ -560,7 +565,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="direccion">Global</button>
       <button class="tab" data-tab="overview">Resumen General</button>
-      <button class="tab" data-tab="incidencias">Análisis de Incidencias</button>
+      <button class="tab" data-tab="incidencias">Análisis de órdenes de servicio</button>
       <button class="tab" data-tab="tecnicos">Rendimiento de Técnicos</button>
     </div>
 
@@ -604,10 +609,12 @@
             <option value="">Todos los estatus</option>
             <option value="Abierto">Abierto</option>
             <option value="Asignado">Asignado</option>
+            <option value="En proceso">En proceso</option>
             <option value="Pendiente">Pendiente</option>
             <option value="Completado">Completado</option>
             <option value="Cerrado con factura">Cerrado con Factura</option>
             <option value="Cerrado sin factura">Cerrado sin Factura</option>
+            <option value="Cancelado">Cancelado</option>
           </select>
         </div>
         <div class="filter-item">
@@ -628,7 +635,7 @@
     <div class="tab-content active" id="direccion-tab">
       <div class="stats-grid" id="statsDireccion">
         <div class="stat-card">
-          <h3><i class="fas fa-layer-group"></i> Total Incidencias</h3>
+          <h3><i class="fas fa-layer-group"></i> Total de órdenes</h3>
           <div class="stat-value">
             <span id="direccionTotal">0</span>
             <i class="fas fa-clipboard-list stat-icon"></i>
@@ -644,7 +651,7 @@
             <span id="direccionSla">N/D</span>
             <i class="fas fa-shield-alt stat-icon"></i>
           </div>
-          <div class="stat-subtext">Meta: cierre en 7 días o menos</div>
+          <div class="stat-subtext" data-sla-meta>Meta: cierre en 7 días o menos</div>
         </div>
         <div class="stat-card stat-card--info">
           <h3><i class="fas fa-clock"></i> Tiempo de Cierre</h3>
@@ -660,7 +667,7 @@
             <span id="direccionFacturadas">0</span>
             <i class="fas fa-file-invoice stat-icon"></i>
           </div>
-          <div class="stat-subtext">Incidencias facturadas en el periodo</div>
+          <div class="stat-subtext">Órdenes de servicio facturadas en el periodo</div>
         </div>
         <div class="stat-card stat-card--warning">
           <h3><i class="fas fa-rotate-left"></i> Reincidencias</h3>
@@ -688,7 +695,7 @@
       <!-- Estadísticas Generales -->
       <div class="stats-grid" id="statsGeneral">
         <div class="stat-card">
-          <h3><i class="fas fa-tasks"></i> Total Incidencias</h3>
+          <h3><i class="fas fa-tasks"></i> Total de órdenes</h3>
           <div class="stat-value">
             <span id="totalIncidencias">0</span>
             <i class="fas fa-clipboard-list stat-icon"></i>
@@ -726,7 +733,7 @@
             <span id="tiempoRespuesta">N/D</span>
             <i class="fas fa-stopwatch stat-icon"></i>
           </div>
-          <div class="stat-subtext" id="tiempoRespuestaMuestras">Basado en 0 de 0 incidencias con historial</div>
+          <div class="stat-subtext" id="tiempoRespuestaMuestras">Basado en 0 de 0 órdenes de servicio con historial</div>
           <span class="badge-sla badge-sla--neutral" id="tiempoRespuestaBadge">Sin datos suficientes</span>
         </div>
         <div class="stat-card stat-card--info">
@@ -735,7 +742,7 @@
             <span id="tiempoPromedio">N/D</span>
             <i class="fas fa-flag-checkered stat-icon"></i>
           </div>
-          <div class="stat-subtext" id="tiempoPromedioMuestras">Basado en 0 de 0 incidencias con historial</div>
+          <div class="stat-subtext" id="tiempoPromedioMuestras">Basado en 0 de 0 órdenes de servicio con historial</div>
           <span class="badge-sla badge-sla--neutral" id="tiempoPromedioBadge">Sin datos suficientes</span>
         </div>
         <div class="stat-card stat-card--warning">
@@ -752,7 +759,7 @@
       <div class="stats-row">
         <div class="chart-container">
           <div class="chart-title">
-            <span>Incidencias por Estatus <span class="chart-hint">(clic en una porción para revisar y corregir)</span></span>
+            <span>Órdenes de servicio por Estatus <span class="chart-hint">(clic en una porción para revisar y corregir)</span></span>
             <div class="chart-actions">
               <button class="chart-btn" onclick="toggleChartType('estatus')">
                 <i class="fas fa-exchange-alt"></i> Vista
@@ -766,7 +773,7 @@
         </div>
         <div class="chart-container">
           <div class="chart-title">
-            <span>Incidencias por Técnico</span>
+            <span>Órdenes de servicio por Técnico</span>
             <div class="chart-actions">
               <button class="chart-btn" onclick="toggleChartType('tecnico')">
                 <i class="fas fa-exchange-alt"></i> Vista
@@ -783,7 +790,7 @@
       <div class="stats-row">
         <div class="chart-container">
           <div class="chart-title">
-            <span>Incidencias por Sucursal</span>
+            <span>Órdenes de servicio por Sucursal</span>
             <div class="chart-actions">
               <button class="chart-btn" onclick="toggleChartType('sucursal')">
                 <i class="fas fa-exchange-alt"></i> Vista
@@ -816,7 +823,7 @@
     <div class="tab-content" id="incidencias-tab">
       <div class="stats-grid">
         <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Abierto')">
-          <h3><i class="fas fa-exclamation-circle"></i> Incidencias Abiertas</h3>
+          <h3><i class="fas fa-exclamation-circle"></i> Órdenes de servicio abiertas</h3>
           <div class="stat-value">
             <span id="incidenciasAbiertas">0</span>
             <i class="fas fa-door-open stat-icon"></i>
@@ -839,7 +846,16 @@
             <span id="incidenciasAsignadas">0</span>
             <i class="fas fa-user-check stat-icon"></i>
           </div>
-          <div class="stat-change"><span>En proceso</span></div>
+          <div class="stat-change"><span>Con técnico, sin empezar</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
+        </div>
+        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('En proceso')">
+          <h3><i class="fas fa-screwdriver-wrench"></i> En proceso</h3>
+          <div class="stat-value">
+            <span id="incidenciasEnProceso">0</span>
+            <i class="fas fa-screwdriver-wrench stat-icon"></i>
+          </div>
+          <div class="stat-change"><span>El técnico está trabajando</span></div>
           <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
         <div class="stat-card stat-card--success stat-card--clickable" onclick="abrirModalPorEstatus('Completado')">
@@ -857,7 +873,16 @@
             <span id="incidenciasFacturadas">0</span>
             <i class="fas fa-file-invoice stat-icon"></i>
           </div>
-          <div class="stat-change"><span>Incidencias facturadas</span></div>
+          <div class="stat-change"><span>Órdenes de servicio facturadas</span></div>
+          <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
+        </div>
+        <div class="stat-card stat-card--clickable" onclick="abrirModalPorEstatus('Cancelado')">
+          <h3><i class="fas fa-ban"></i> Canceladas</h3>
+          <div class="stat-value">
+            <span id="incidenciasCanceladas">0</span>
+            <i class="fas fa-ban stat-icon"></i>
+          </div>
+          <div class="stat-change"><span>No cuentan en la eficiencia ni en el SLA</span></div>
           <div class="stat-card-hint"><i class="fas fa-list-check"></i> Ver detalle</div>
         </div>
         <div class="stat-card stat-card--warning stat-card--clickable" onclick="abrirModalReabiertas()">
@@ -873,7 +898,7 @@
 
       <div class="chart-container full-width">
         <div class="chart-title">
-          <span>Top 10 Clientes con Más Incidencias</span>
+          <span>Top 10 Clientes con más órdenes de servicio</span>
           <div class="chart-actions">
             <button class="chart-btn" onclick="toggleChartType('clientes')">
               <i class="fas fa-exchange-alt"></i> Vista
@@ -888,11 +913,11 @@
 
       <div class="stats-row">
         <div class="chart-container">
-          <div class="chart-title"><span>Equipos con Más Incidencias</span></div>
+          <div class="chart-title"><span>Equipos con más órdenes de servicio</span></div>
           <canvas id="chartEquipos" height="250"></canvas>
         </div>
         <div class="chart-container">
-          <div class="chart-title"><span>Tipos de Falla Más Comunes</span></div>
+          <div class="chart-title"><span>Motivos del servicio más comunes</span></div>
           <canvas id="chartFallasComunes" height="250"></canvas>
         </div>
       </div>
@@ -930,7 +955,7 @@
             <span id="tecnicoMes">-</span>
             <i class="fas fa-award stat-icon"></i>
           </div>
-          <div class="stat-change"><span>Más incidencias resueltas</span></div>
+          <div class="stat-change"><span>Más órdenes de servicio resueltas</span></div>
         </div>
         <div class="stat-card">
           <h3><i class="fas fa-users"></i> Total de Técnicos</h3>
@@ -975,7 +1000,7 @@
   <div class="modal-overlay" id="modalDrilldown">
     <div class="modal-panel">
       <div class="modal-header">
-        <h2 id="modalDrilldownTitulo">Incidencias</h2>
+        <h2 id="modalDrilldownTitulo">Órdenes de servicio</h2>
         <button type="button" class="modal-close" id="modalDrilldownCerrar" title="Cerrar">
           <i class="fas fa-times"></i>
         </button>
@@ -998,14 +1023,14 @@
         </table>
         <div class="chart-empty-state" id="modalDrilldownVacio" style="display: none;">
           <i class="fas fa-inbox"></i>
-          <span>No hay incidencias para este filtro</span>
+          <span>No hay órdenes de servicio para este filtro</span>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/estadisticas.js?v=20260929"></script>
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/estadisticas.js?v=20261111"></script>
 </body>
 </html>

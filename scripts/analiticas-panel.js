@@ -1,4 +1,4 @@
-// Panel de analíticas de uso (solo Programador). Todo texto que viene de la
+// Panel de analíticas de uso (acceso por token). Todo texto que viene de la
 // base (etiquetas de botones, mensajes de error, etc.) se pinta con
 // textContent: nunca como HTML.
 (function () {

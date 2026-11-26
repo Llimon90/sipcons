@@ -3,37 +3,18 @@
 // La identidad (usuario, rol) SIEMPRE sale de la sesión del servidor, nunca
 // del cliente. Nunca debe romper el sitio: ante cualquier problema responde
 // rápido y en silencio.
-//
-// Interruptor de emergencia en el .env:  ANALYTICS_ENABLED=0
-// Con eso este endpoint responde 204 sin abrir MySQL ni la sesión, y además
-// session_check.php avisa al navegador para que ni siquiera cargue
-// scripts/analytics.js (cero peticiones). Se reactiva con ANALYTICS_ENABLED=1
-// o borrando la línea.
-require_once __DIR__ . '/../config/env.php';
-
-header('Cache-Control: no-store');
-
-if (!envBool('ANALYTICS_ENABLED', true)) {
-    http_response_code(204);
-    exit;
-}
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    http_response_code(405);
-    exit;
-}
-// Sin cookie de sesión no hay usuario: se corta antes de conectar a MySQL
-if (!isset($_COOKIE[session_name()])) {
-    http_response_code(401);
-    exit;
-}
-
-// La sesión se abre en solo lectura (read_and_close, ver config/auth.php):
-// no bloquea las demás peticiones de la pestaña.
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/lib/analytics_helpers.php';
 
-if (!isLoggedIn()) {
+header('Content-Type: application/json');
+header('Cache-Control: no-store');
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    http_response_code(405);
+    exit;
+}
+if (!isLoggedIn() || !revalidarUsuarioSesion()) {  // S-2: un usuario eliminado ya no registra eventos
     http_response_code(401);
     exit;
 }
@@ -78,7 +59,7 @@ $filas = [];
 foreach (array_slice($lote['ev'], 0, 50) as $e) {
     if (!is_array($e) || !in_array($e['t'] ?? null, ANALYTICS_TIPOS, true)) continue;
     $filas[] = [
-        $usuarioId, $usuario, $usuarioNombre, $rol, $sesion, $visita, $e['t'], $pagina, $modulo,
+        isset($_SESSION['empresa_id']) ? (int)$_SESSION['empresa_id'] : null, $usuarioId, $usuario, $usuarioNombre, $rol, $sesion, $visita, $e['t'], $pagina, $modulo,
         analyticsLimpiar($e['e'] ?? null, 200), analyticsLimpiar($e['d'] ?? null, 300),
         $clamp($e['v'] ?? null), $clamp($e['x'] ?? null),
         $referrer, $ua['dispositivo'], $ua['navegador'], $ua['sistema'], $viewport,
@@ -99,8 +80,8 @@ try {
         exit;
     }
 
-    $cols = 'usuario_id, usuario, usuario_nombre, rol, sesion_id, visita_id, tipo, pagina, modulo, elemento, detalle, valor, extra, referrer_pagina, dispositivo, navegador, sistema, viewport';
-    $unaFila = '(' . implode(',', array_fill(0, 18, '?')) . ')';
+    $cols = 'empresa_id, usuario_id, usuario, usuario_nombre, rol, sesion_id, visita_id, tipo, pagina, modulo, elemento, detalle, valor, extra, referrer_pagina, dispositivo, navegador, sistema, viewport';
+    $unaFila = '(' . implode(',', array_fill(0, 19, '?')) . ')';
     $sql = "INSERT INTO analytics_eventos ({$cols}) VALUES " . implode(',', array_fill(0, count($filas), $unaFila));
     $params = [];
     foreach ($filas as $fila) {

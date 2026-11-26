@@ -1,0 +1,33 @@
+/* Importar datos (public/importar.html). Usa las pestañas y notas de finanzas.css. */
+.imp-aviso { background: #fdf1df; color: #a35a00; border-radius: 8px; padding: 12px 14px; }
+
+.imp-pasos { margin: 0 0 8px; padding-left: 22px; }
+.imp-pasos li { margin-bottom: 16px; line-height: 1.5; }
+.imp-pasos li > div { margin-top: 8px; }
+.imp-pasos .btn-secundario { display: inline-flex; align-items: center; gap: 6px; width: auto !important; text-decoration: none; }
+.imp-subida { max-width: 520px; }
+
+.imp-resumen { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.imp-cifra { background: #f7f9fc; border: 1px solid #e3e8ef; border-radius: 8px; padding: 8px 14px; }
+.imp-cifra b { font-size: 1.2rem; margin-right: 4px; }
+.imp-cifra.ok b { color: #16a34a; }
+.imp-cifra.error b { color: #dc2626; }
+.imp-filtro { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; margin: 4px 0 10px; }
+.imp-filtro input { width: auto; }
+
+.imp-tabla { font-size: 0.85rem; }
+.imp-tabla td { white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.imp-tabla td.imp-notas { white-space: normal; min-width: 220px; max-width: 340px; }
+.imp-error td { background: #fef2f2; }
+.imp-omitir td { color: #6c7a89; }
+.imp-nota-aviso { color: #a35a00; }
+
+.imp-acciones { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.imp-acciones button { width: auto !important; }
+.imp-acciones button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+html[data-theme="dark"] .imp-aviso { background: #3a2a12; color: #f5c27a; }
+html[data-theme="dark"] .imp-cifra { background: #1b2836; border-color: #2c3d50; }
+html[data-theme="dark"] .imp-error td { background: #3a1d22; }
+html[data-theme="dark"] .imp-omitir td { color: #94a3b8; }
+html[data-theme="dark"] .imp-nota-aviso { color: #f5c27a; }

@@ -1,0 +1,14 @@
+# Carpeta de archivos subidos por usuarios: aquí nunca se ejecuta código.
+# Se niega cualquier script del lado del servidor (y el propio .htaccess);
+# los adjuntos (pdf, imágenes, office...) se sirven normalmente.
+Options -ExecCGI -Indexes
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .cgi .sh
+<FilesMatch "(?i)\.(php\d?|phtml|phar|pht|pl|py|cgi|sh|shtml|asp|aspx|jsp|htaccess|htpasswd)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

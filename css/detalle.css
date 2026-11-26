@@ -1,21 +1,5 @@
 /* Detalle de incidencia (detalle.html). Se carga después de styles.css. */
 
-.badge-sla {
-    display: inline-block;
-    margin-left: 10px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    vertical-align: middle;
-}
-.badge-sla.sla-verde { background: #e6f6ec; color: #1e7e42; }
-.badge-sla.sla-amarillo { background: #fff6e0; color: #92700f; }
-.badge-sla.sla-rojo { background: #fdecea; color: #a8322b; }
-html[data-theme="dark"] .badge-sla.sla-verde { background: #163a26; color: #6fd99a; }
-html[data-theme="dark"] .badge-sla.sla-amarillo { background: #3a2f0f; color: #f0cf6e; }
-html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b3; }
-
 .retorna {
     padding: 10px;
     background-color: #e9e9e9;
@@ -71,7 +55,7 @@ html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b
 }
 
 .archivo-container:hover {
-    border-color: #3498db;
+    border-color: var(--brand-primary);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
@@ -82,7 +66,7 @@ html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b
 }
 
 .archivo-enlace:focus-visible {
-    outline: 2px solid #3498db;
+    outline: 2px solid var(--brand-primary);
     outline-offset: -2px;
     border-radius: 10px;
 }
@@ -272,34 +256,12 @@ html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b
     transform: none;
 }
 
-#form-editar .btn-agregar-tecnico {
-    padding: 8px 14px;
-    font-size: 14px;
-    border-radius: 8px;
-    background: #4CAF50;
-    box-shadow: none;
-}
-
+/* Botones del formulario: estilos comunes en css/formularios.css */
 .detalle-acciones {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 10px;
-}
-
-#form-editar .detalle-acciones button {
-    padding: 12px 22px;
-    font-size: 15px;
-    border-radius: 8px;
-}
-
-#form-editar button[type="submit"] {
-    background: #4CAF50;
-    box-shadow: 0 4px 14px rgba(76, 175, 80, 0.3);
-}
-
-#form-editar button[type="submit"]:hover {
-    background: #45a049;
 }
 
 @media (max-width: 768px) {
@@ -325,14 +287,6 @@ html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b
         height: 32px;
     }
 
-    #form-editar .btn-agregar-tecnico {
-        width: 100%;
-    }
-
-    .detalle-acciones {
-        flex-direction: column;
-    }
-
     #btn-eliminar-incidencia {
         margin-left: 0 !important;
     }
@@ -344,3 +298,9 @@ html[data-theme="dark"] .badge-sla.sla-rojo { background: #3b1a1c; color: #ffb3b
         text-align: center;
     }
 }
+
+/* O-6: altas desde la orden (contacto del cliente, técnico) */
+.btn-link-mini { display: inline-block; width: auto !important; background: none !important; border: 0 !important; box-shadow: none !important;
+  padding: 2px 0 !important; margin: 4px 12px 0 0 !important; color: var(--primary, #3498db) !important; font-size: 0.85rem; cursor: pointer; }
+.btn-link-mini:hover { text-decoration: underline; }
+.btn-link-mini:disabled { opacity: .5; cursor: wait; }

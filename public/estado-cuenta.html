@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estado de cuenta</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/finanzas.css?v=20261104">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+</head>
+<body class="ec-body">
+  <div class="ec-pagina">
+    <div class="ec-barra">
+      <button type="button" class="btn-secundario" onclick="location.href='finanzas.html#cuentas'"><i class="fas fa-arrow-left"></i> Finanzas</button>
+      <button type="button" class="btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Imprimir o guardar PDF</button>
+      <button type="button" class="btn-secundario" id="ec-compartir"><i class="fas fa-share-alt" aria-hidden="true"></i> Compartir por WhatsApp</button>
+    </div>
+    <div id="ec-contenido"><p>Cargando...</p></div>
+  </div>
+  <script src="../scripts/estado-cuenta.js?v=20261125"></script>
+</body>
+</html>

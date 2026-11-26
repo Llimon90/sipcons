@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
   <link rel="icon" href="../img/favicon.ico" />
   <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
-    <link rel="stylesheet" href="../css/styles.css?v=20261009d">
-    <link rel="stylesheet" href="../css/dark.css?v=20261009b">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <script src="../scripts/auth-guard.js?v=20261009c"></script>
-  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <link rel="stylesheet" href="../css/styles.css?v=20261125">
+  <link rel="stylesheet" href="../css/dark.css?v=20261101">
+  <link rel="stylesheet" href="../css/inventario.css?v=20261111">
+  <link rel="stylesheet" href="../branding/tema.css.php">
+  <script src="../branding/marca.js.php"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../scripts/auth-guard.js?v=20261124"></script>
+  <script src="../scripts/dialogo.js?v=20261101"></script>
+  <script src="../scripts/menu-lateral.js?v=20261125"></script>
+  <script src="../scripts/formularios.js?v=20261125"></script>
+  <link rel="stylesheet" href="../css/formularios.css?v=20261030">
 </head>
 
 <body>
@@ -37,135 +44,168 @@
   </aside>
 
   <main id="mainContent">
-    <section class="encabezado">
-      <h2>Inventario</h2>
-      <p>Catálogo de refacciones y productos, con su stock y movimientos.</p>
-    </section>
-
-    <section class="encabezado">
-      <form id="form-producto">
-        <h2>Dar de alta un producto</h2>
-        <div class="form-row">
-          <div>
-            <label for="sku">SKU:</label>
-            <input type="text" id="sku" name="sku" required>
-          </div>
-          <div>
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" required>
-          </div>
-          <div>
-            <label for="categoria">Categoría:</label>
-            <select id="categoria" name="categoria">
-              <option value="Refacción">Refacción</option>
-              <option value="Equipo">Equipo</option>
-              <option value="Consumible">Consumible</option>
-              <option value="Herramienta">Herramienta</option>
-            </select>
-          </div>
-          <div>
-            <label for="unidad">Unidad:</label>
-            <input type="text" id="unidad" name="unidad" value="pza">
-          </div>
+    <section class="encabezado inventario">
+      <div class="inv-cabecera">
+        <div>
+          <h2><i class="fas fa-boxes"></i> Inventario</h2>
+          <p>Catálogo de productos y servicios: equipos, refacciones, consumibles, herramientas, servicios y mano de obra.</p>
         </div>
-        <div class="form-row">
-          <div>
-            <label for="marca">Marca:</label>
-            <input type="text" id="marca" name="marca">
-          </div>
-          <div>
-            <label for="modelo">Modelo:</label>
-            <input type="text" id="modelo" name="modelo">
-          </div>
-          <div>
-            <label for="ubicacion">Ubicación:</label>
-            <input type="text" id="ubicacion" name="ubicacion" placeholder="Ej. Almacén A, anaquel 3">
-          </div>
+        <div class="inv-cabecera-botones">
+          <span data-solo-administra hidden><a href="importar.html?tipo=articulos" class="btn-secundario"><i class="fas fa-file-import"></i> Importar desde Excel</a></span>
+          <button type="button" id="btn-nuevo" class="btn-primary"><i class="fas fa-plus"></i> Nuevo artículo</button>
         </div>
-        <div class="form-row">
-          <div class="full-width">
-            <label for="descripcion">Descripción:</label>
-            <input type="text" id="descripcion" name="descripcion">
-          </div>
-        </div>
-        <div class="form-row">
-          <div>
-            <label for="stock_actual">Stock inicial:</label>
-            <input type="number" id="stock_actual" name="stock_actual" min="0" value="0">
-          </div>
-          <div>
-            <label for="stock_minimo">Stock mínimo:</label>
-            <input type="number" id="stock_minimo" name="stock_minimo" min="0" value="0">
-          </div>
-          <div>
-            <label for="costo">Costo:</label>
-            <input type="number" id="costo" name="costo" min="0" step="0.01" value="0">
-          </div>
-          <div>
-            <label for="precio_venta">Precio de venta:</label>
-            <input type="number" id="precio_venta" name="precio_venta" min="0" step="0.01" value="0">
-          </div>
-        </div>
-        <button type="submit" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Guardar producto</button>
-        <span id="mensaje-producto" style="margin-left:10px;"></span>
-      </form>
-    </section>
-
-    <section class="lista-incidencias">
-      <h2>Catálogo</h2>
-      <div class="form-row">
-        <input type="text" id="campo-busqueda" placeholder="Buscar por SKU, nombre, marca, modelo o descripción..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
-        <select id="filtro-categoria" style="padding:10px;">
-          <option value="">Todas las categorías</option>
-          <option value="Refacción">Refacción</option>
-          <option value="Equipo">Equipo</option>
-          <option value="Consumible">Consumible</option>
-          <option value="Herramienta">Herramienta</option>
-        </select>
-        <label style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
-          <input type="checkbox" id="filtro-bajo-minimo"> Solo bajo mínimo
-        </label>
       </div>
-      <table class="tabla-ventas" style="width:100%; margin-top:15px;">
+
+      <div class="inv-kpis">
+        <div class="inv-kpi"><div class="inv-kpi-valor" id="kpi-articulos">–</div><div class="inv-kpi-etiqueta">Artículos activos</div></div>
+        <div class="inv-kpi"><div class="inv-kpi-valor" id="kpi-valor">–</div><div class="inv-kpi-etiqueta">Valor del inventario (a costo)</div></div>
+        <div class="inv-kpi alerta"><div class="inv-kpi-valor" id="kpi-bajo">–</div><div class="inv-kpi-etiqueta">En o por debajo del mínimo</div></div>
+        <div class="inv-kpi"><div class="inv-kpi-valor" id="kpi-movs">–</div><div class="inv-kpi-etiqueta">Movimientos (30 días)</div></div>
+      </div>
+
+      <div class="inv-paneles">
+        <div class="inv-panel">
+          <h3>Refacciones y consumibles usados (últimos 6 meses, valor a costo)</h3>
+          <div class="inv-grafico"><canvas id="grafico-consumo"></canvas></div>
+        </div>
+        <div class="inv-panel">
+          <h3>Más utilizados (180 días)</h3>
+          <ul class="inv-top" id="lista-top"><li><span>Cargando...</span></li></ul>
+        </div>
+      </div>
+
+      <div class="inv-filtros">
+        <input type="search" id="f-buscar" placeholder="Buscar por SKU, nombre, marca, modelo o ubicación...">
+        <select id="f-tipo" aria-label="Tipo">
+          <option value="">Productos y servicios</option>
+          <option value="productos">Solo productos</option>
+          <option value="servicios">Solo servicios y mano de obra</option>
+        </select>
+        <select id="f-categoria">
+          <option value="">Todas las categorías</option>
+        </select>
+        <label><input type="checkbox" id="f-bajo"> Solo bajo mínimo</label>
+        <label><input type="checkbox" id="f-inactivos"> Incluir inactivos</label>
+      </div>
+
+      <div class="inv-tabla-wrap">
+      <table class="tabla-ventas inv-tabla" style="width:100%;">
         <thead>
           <tr>
-            <th>SKU</th><th>Nombre</th><th>Categoría</th><th>Marca/Modelo</th><th>Unidad</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio</th><th>Acciones</th>
+            <th>SKU</th>
+            <th>Artículo</th>
+            <th>Categoría</th>
+            <th>Existencia</th>
+            <th>Mínimo</th>
+            <th>Costo</th>
+            <th>Precio</th>
+            <th>Ubicación</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="cuerpo-productos"><tr><td colspan="10">Cargando...</td></tr></tbody>
+        <tbody id="tabla-articulos">
+          <tr><td colspan="9" class="inv-vacio">Cargando...</td></tr>
+        </tbody>
       </table>
-    </section>
-
-    <section class="lista-incidencias" id="seccion-movimiento" style="display:none;">
-      <h2>Registrar movimiento — <span id="nombre-producto-movimiento"></span></h2>
-      <form id="form-movimiento" class="form-row" style="align-items:flex-end;">
-        <input type="hidden" id="movimiento-producto-id">
-        <div>
-          <label for="movimiento-tipo">Tipo:</label>
-          <select id="movimiento-tipo">
-            <option value="Entrada">Entrada</option>
-            <option value="Salida">Salida</option>
-            <option value="Ajuste">Ajuste</option>
-          </select>
-        </div>
-        <div>
-          <label for="movimiento-cantidad">Cantidad:</label>
-          <input type="number" id="movimiento-cantidad" min="1" value="1">
-        </div>
-        <div class="full-width">
-          <label for="movimiento-motivo">Motivo:</label>
-          <input type="text" id="movimiento-motivo" placeholder="Ej. venta, uso en servicio, compra a proveedor...">
-        </div>
-        <div>
-          <button type="submit">Registrar</button>
-        </div>
-      </form>
-      <div id="historial-movimientos" style="margin-top:15px;"></div>
+      </div>
     </section>
   </main>
 
-  <script src="../scripts/sidebar-state.js?v=20261002"></script>
-  <script src="../scripts/ui-tablas.js?v=2"></script>
-  <script src="../scripts/inventario.js?v=1"></script>
+  <!-- Alta / edición de artículo -->
+  <div id="modal-articulo" class="modal inv-modal">
+    <div class="modal-content">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3 id="titulo-articulo">Nuevo artículo</h3>
+      <form id="form-articulo" class="inv-form-grid" autocomplete="off">
+        <input type="hidden" name="id">
+        <div><label for="a-sku">SKU / Código</label><input id="a-sku" name="sku" required maxlength="40"></div>
+        <div><label for="a-categoria">Categoría</label><select id="a-categoria" name="categoria" required></select></div>
+        <div class="completo"><label for="a-nombre">Nombre</label><input id="a-nombre" name="nombre" required maxlength="150"></div>
+        <div><label for="a-marca">Marca</label><input id="a-marca" name="marca" maxlength="100"></div>
+        <div><label for="a-modelo">Modelo</label><input id="a-modelo" name="modelo" maxlength="100"></div>
+        <div><label for="a-unidad">Unidad</label>
+          <select id="a-unidad" name="unidad">
+            <option value="pza">Pieza (pza)</option>
+            <option value="jgo">Juego (jgo)</option>
+            <option value="caja">Caja</option>
+            <option value="lt">Litro (lt)</option>
+            <option value="kg">Kilogramo (kg)</option>
+            <option value="m">Metro (m)</option>
+            <option value="rollo">Rollo</option>
+            <option value="servicio">Servicio</option>
+            <option value="hr">Hora (hr)</option>
+            <option value="visita">Visita</option>
+          </select>
+        </div>
+        <div class="solo-fisico"><label for="a-ubicacion">Ubicación</label><input id="a-ubicacion" name="ubicacion" maxlength="100" placeholder="Ej. Anaquel A-3"></div>
+        <div class="solo-fisico"><label class="f-check"><input type="checkbox" id="a-serie" name="controla_serie" value="1"> Controla número de serie</label>
+          <small class="texto-suave">Al aplicarlo en una orden se pide el N/S de cada pieza (tarjetas, celdas de carga, displays).</small></div>
+        <div class="solo-fisico"><label for="a-minimo">Stock mínimo</label><input id="a-minimo" name="stock_minimo" type="number" min="0" step="0.01" value="0"></div>
+        <div id="campo-inicial" class="solo-fisico"><label for="a-inicial">Existencia inicial</label><input id="a-inicial" name="existencia_inicial" type="number" min="0" step="0.01" value="0"></div>
+        <p class="completo inv-nota-servicio" id="nota-servicio" hidden><i class="fas fa-info-circle"></i> Los servicios y la mano de obra no llevan existencias: se cotizan y facturan, pero no entran al kárdex ni a los mínimos.</p>
+        <div><label for="a-costo">Costo unitario</label><input id="a-costo" name="costo_unitario" type="number" min="0" step="0.01" value="0"></div>
+        <div><label for="a-precio">Precio de venta</label><input id="a-precio" name="precio_venta" type="number" min="0" step="0.01" value="0"></div>
+        <div class="completo"><label for="a-descripcion">Descripción</label><textarea id="a-descripcion" name="descripcion" rows="2"></textarea></div>
+        <div class="completo inv-foto" id="campo-foto">
+          <label for="a-foto">Foto del producto <small>JPG o PNG, hasta 3 MB · aparece en el PDF de las cotizaciones</small></label>
+          <div class="inv-foto-fila">
+            <div class="inv-foto-previa" id="foto-previa"><i class="fas fa-image" aria-hidden="true"></i></div>
+            <div class="inv-foto-subida">
+              <input id="a-foto" type="file" accept="image/jpeg,image/png" data-selector data-texto="Toca para elegir la foto" data-ayuda="JPG o PNG, hasta 3 MB">
+              <button type="button" class="btn-secundario" id="foto-quitar" hidden><i class="fas fa-trash-alt"></i> Quitar foto</button>
+            </div>
+          </div>
+        </div>
+        <div class="completo inv-modal-acciones">
+          <button type="button" class="btn-secundario" data-cerrar>Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Movimiento manual -->
+  <div id="modal-movimiento" class="modal inv-modal">
+    <div class="modal-content">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3>Movimiento de inventario</h3>
+      <p id="mov-articulo" style="margin-top:0;"></p>
+      <form id="form-movimiento" class="inv-form-grid" autocomplete="off">
+        <input type="hidden" name="articulo_id">
+        <div><label for="m-tipo">Tipo</label>
+          <select id="m-tipo" name="tipo">
+            <option value="entrada">Entrada (compra / recepción)</option>
+            <option value="salida">Salida (consumo interno)</option>
+            <option value="ajuste">Ajuste por conteo físico</option>
+          </select>
+        </div>
+        <div><label for="m-cantidad" id="m-cantidad-label">Cantidad</label><input id="m-cantidad" name="cantidad" type="number" min="0" step="0.01" required></div>
+        <div class="completo"><label for="m-motivo">Motivo / referencia</label><input id="m-motivo" name="motivo" maxlength="255" placeholder="Ej. Factura de proveedor F-1234"></div>
+        <div class="completo inv-modal-acciones">
+          <button type="button" class="btn-secundario" data-cerrar>Cancelar</button>
+          <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Kárdex -->
+  <div id="modal-kardex" class="modal inv-modal">
+    <div class="modal-content" style="max-width:900px;">
+      <button type="button" class="close-modal" data-cerrar aria-label="Cerrar">&times;</button>
+      <h3 id="titulo-kardex">Kárdex</h3>
+      <div class="inv-kardex-wrap">
+        <table class="tabla-ventas" style="width:100%;">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Cantidad</th><th>Existencia</th><th>Motivo</th><th>Usuario</th></tr></thead>
+          <tbody id="tabla-kardex"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../scripts/sidebar-state.js?v=20261125"></script>
+  <script src="../scripts/ui-tablas.js?v=20261110"></script>
+  <script src="../scripts/selector-archivos.js?v=20261101"></script>
+  <script src="../scripts/inventario.js?v=20261112"></script>
 </body>
 </html>

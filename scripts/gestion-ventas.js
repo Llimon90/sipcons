@@ -58,17 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Redirección directa al detalle de la venta (Asegúrate de que este archivo exista)
             tr.onclick = () => {
-                window.location.href = `detalles-venta.html?id=${v.id}`;
+                window.location.href = `detalles-venta.html?id=${escHTML(v.id)}`;
             };
 
             tr.innerHTML = `
-                <td><span class="etiqueta etiqueta-info">${v.folio}</span></td>
+                <td><span class="etiqueta etiqueta-info">${escHTML(v.folio)}</span></td>
                 <td>${v.fecha_registro.split(' ')[0]}</td> 
-                <td><strong>${v.cliente}</strong></td>
-                <td><small>${v.equipos || '-'}</small><br><small class="texto-suave">${v.marcas || ''}</small></td>
-                <td class="celda-centro"><strong>${v.cantidad_equipos}</strong></td>
+                <td><strong>${escHTML(v.cliente)}</strong></td>
+                <td><small>${escHTML(v.equipos || '-')}</small><br><small class="texto-suave">${escHTML(v.marcas || '')}</small></td>
+                <td class="celda-centro"><strong>${escHTML(v.cantidad_equipos)}</strong></td>
                 <td class="celda-centro">
-                    ${v.equipos_con_servicio > 0 ? `<span class="etiqueta etiqueta-ok" title="${v.equipos_con_servicio} equipos con cláusula"><i class="fas fa-check-circle"></i> Sí</span>` : '<span class="etiqueta etiqueta-error"><i class="fas fa-times-circle"></i> No</span>'}
+                    ${v.equipos_con_servicio > 0 ? `<span class="etiqueta etiqueta-ok" title="${escHTML(v.equipos_con_servicio)} equipos con cláusula"><i class="fas fa-check-circle"></i> Sí</span>` : '<span class="etiqueta etiqueta-error"><i class="fas fa-times-circle"></i> No</span>'}
                 </td>
             `;
             tbody.appendChild(tr);

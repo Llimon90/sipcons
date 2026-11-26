@@ -9,6 +9,8 @@ const btnActualizar = document.getElementById('btn-actualizar');
 const btnEliminar = document.getElementById('btn-eliminar');
 
 function fechaDeHoy() {
+  // S-H07: el "hoy" de la empresa (el navegador puede estar en otra zona)
+  if (window.appFechaEmpresa) return window.appFechaEmpresa(0);
   // Fecha local (toISOString daría la de UTC: después de las 4-5 p. m. en Tijuana sería "mañana")
   const hoy = new Date();
   const dos = n => String(n).padStart(2, '0');
@@ -19,12 +21,28 @@ function fechaDeHoy() {
 document.getElementById('fecha').value = fechaDeHoy();
 
 // Selector de imágenes/archivos del cliente
-const selectorArchivos = SipconsArchivos.crear(document.getElementById('archivos-nuevos'), {
+const selectorArchivos = AppArchivos.crear(document.getElementById('archivos-nuevos'), {
   texto: 'Toca para agregar fotos o archivos del cliente'
 });
-SipconsArchivos.cargarLimites().then(limites => selectorArchivos.establecerLimites(limites));
+AppArchivos.cargarLimites().then(limites => selectorArchivos.establecerLimites(limites));
 
 let registrando = false;
+
+// D-7: clave única de este formulario. Un reintento del mismo envío (doble clic, red
+// lenta) usa la misma clave y el servidor no crea otra orden; al registrar se cambia.
+function nuevaClaveEnvio() {
+  try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* navegador antiguo */ }
+  return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+}
+let claveEnvio = nuevaClaveEnvio();
+
+// D-26: "Trabajo realizado" solo cuando la orden se captura ya completada o cerrada
+function mostrarTrabajoRealizado() {
+  const fila = document.getElementById('fila-accion');
+  if (!fila) return;
+  fila.hidden = !['Completado', 'Cerrado sin factura', 'Cerrado con factura'].includes(document.getElementById('estatus').value);
+}
+document.getElementById('estatus').addEventListener('change', mostrarTrabajoRealizado);
 
 // Aviso al salir si hay datos capturados que no se han registrado
 let hayDatosSinRegistrar = false;
@@ -55,7 +73,7 @@ function marcarRegistrando(activo) {
     btnRegistrar.classList.add('guardando');
     btnRegistrar.disabled = true;
   } else {
-    textoBoton(btnRegistrar.dataset.textoOriginal || 'Registrar Incidencia');
+    textoBoton(btnRegistrar.dataset.textoOriginal || 'Registrar orden de servicio');
     btnRegistrar.classList.remove('guardando');
     btnRegistrar.disabled = false;
   }
@@ -63,11 +81,11 @@ function marcarRegistrando(activo) {
 
 function registrarEnAnaliticas(correcto, motivo, ms, estado, folio) {
   try {
-    if (!window.sipconsTrack) return;
-    window.sipconsTrack('guardado',
+    if (!window.appTrack) return;
+    window.appTrack('guardado',
       correcto ? 'Registro correcto' : `Registro fallido: ${motivo}`,
-      `${correcto ? 'ok' : 'error'} · ${folio || 'nueva incidencia'}`, ms, estado);
-    if (window.sipconsFlush) window.sipconsFlush();
+      `${correcto ? 'ok' : 'error'} · ${folio || 'nueva orden de servicio'}`, ms, estado);
+    if (window.appFlush) window.appFlush();
   } catch (e) { /* las analíticas nunca deben estorbar */ }
 }
 
@@ -76,6 +94,8 @@ function limpiarFormulario() {
   form.reset();
   selectorArchivos.limpiar();
   document.getElementById('fecha').value = fechaDeHoy();
+  if (window.AppEstatus) AppEstatus.marcarGuardado(document.getElementById('estatus'), 'Abierto', '');
+  mostrarTrabajoRealizado();
   hayDatosSinRegistrar = false;
   if (window.recargarListaIncidencias) window.recargarListaIncidencias();
 }
@@ -85,12 +105,12 @@ async function registrarIncidencia() {
 
   const problema = selectorArchivos.revisar();
   if (problema) {
-    await SipconsDialogo.mostrar({
+    await AppDialogo.mostrar({
       tipo: 'aviso',
       titulo: 'Revisa los archivos',
       mensaje: problema.mensaje,
       lista: problema.lista,
-      nota: 'Todavía no se registró la incidencia. Lo que capturaste sigue en pantalla.',
+      nota: 'Todavía no se registró la orden de servicio. Lo que capturaste sigue en pantalla.',
       botones: [{ texto: 'Entendido', valor: 'ok', estilo: 'primario' }]
     });
     return;
@@ -105,22 +125,25 @@ async function registrarIncidencia() {
   datos.append('contacto', document.getElementById('contacto').value);
   datos.append('sucursal', document.getElementById('sucursal').value);
   datos.append('categoria', document.getElementById('categoria').value);
-  datos.append('prioridad', document.getElementById('prioridad').value);
   datos.append('numero_serie', (document.getElementById('numero_serie')?.value || '').trim());
   datos.append('falla', document.getElementById('falla').value);
   datos.append('fecha', document.getElementById('fecha').value);
   datos.append('tecnico', document.getElementById('tecnico').value);
   datos.append('status', document.getElementById('estatus').value);
+  if (window.AppEstatus) datos.append('motivo_estatus', AppEstatus.motivoEstatus());
+  datos.append('clave_envio', claveEnvio);
+  const filaAccion = document.getElementById('fila-accion');
+  datos.append('accion', filaAccion && !filaAccion.hidden ? document.getElementById('accion').value : '');
   datos.append('notas', document.getElementById('notas').value);
 
   const elegidos = selectorArchivos.archivos();
   if (elegidos.length) {
     textoBoton('<i class="fas fa-spinner fa-spin"></i> Preparando archivos…');
-    const listos = await SipconsArchivos.prepararParaEnvio(elegidos);
+    const listos = await AppArchivos.prepararParaEnvio(elegidos);
     listos.forEach(archivo => datos.append('archivos[]', archivo));
   }
 
-  const respuesta = await SipconsArchivos.enviarConAvance('../backend/server.php', datos, (porcentaje) => {
+  const respuesta = await AppArchivos.enviarConAvance('../backend/server.php', datos, (porcentaje) => {
     textoBoton(porcentaje < 100 && elegidos.length
       ? `<i class="fas fa-spinner fa-spin"></i> Subiendo… ${porcentaje}%`
       : '<i class="fas fa-spinner fa-spin"></i> Registrando…');
@@ -133,15 +156,16 @@ async function registrarIncidencia() {
   if (resultado && resultado.success) {
     registrarEnAnaliticas(true, '', ms, respuesta.estado, resultado.numero_incidente);
     hayDatosSinRegistrar = false;
+    claveEnvio = nuevaClaveEnvio();  // la próxima orden es otro envío
     const adjuntos = (resultado.archivos_agregados || []).length;
-    const eleccion = await SipconsDialogo.mostrar({
+    const eleccion = await AppDialogo.mostrar({
       tipo: 'ok',
-      titulo: 'Incidencia registrada',
-      mensaje: `La incidencia ${resultado.numero_incidente} se registró correctamente${resultado.guardado_en ? ` el ${formatearFechaHora(resultado.guardado_en)}` : ''}.`,
+      titulo: 'Orden de servicio registrada',
+      mensaje: `La orden de servicio ${resultado.numero_incidente} se registró correctamente${resultado.guardado_en ? ` el ${formatearFechaHora(resultado.guardado_en)}` : ''}.`,
       nota: adjuntos ? `Se ${adjuntos === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${adjuntos} archivos`}.` : '',
       botones: [
         { texto: 'Registrar otra', valor: 'otra', estilo: 'secundario' },
-        { texto: 'Abrir incidencia', valor: 'abrir', estilo: 'primario' }
+        { texto: 'Abrir orden de servicio', valor: 'abrir', estilo: 'primario' }
       ]
     });
     if (eleccion === 'abrir' && resultado.id) {
@@ -157,10 +181,10 @@ async function registrarIncidencia() {
   registrarEnAnaliticas(false, motivo, ms, respuesta.estado);
 
   if (respuesta.sesionCerrada) {
-    const eleccion = await SipconsDialogo.mostrar({
+    const eleccion = await AppDialogo.mostrar({
       tipo: 'aviso',
       titulo: 'Tu sesión se cerró',
-      mensaje: 'Para registrar la incidencia, vuelve a iniciar sesión. Lo que capturaste sigue en pantalla y no se perderá.',
+      mensaje: 'Para registrar la orden de servicio, vuelve a iniciar sesión. Lo que capturaste sigue en pantalla y no se perderá.',
       botones: [
         { texto: 'Cerrar', valor: null, estilo: 'secundario' },
         { texto: 'Iniciar sesión', valor: 'login', estilo: 'primario' }
@@ -168,7 +192,7 @@ async function registrarIncidencia() {
     });
     if (eleccion === 'login') {
       window.open('../auth/login.html', '_blank');
-      const siguiente = await SipconsDialogo.mostrar({
+      const siguiente = await AppDialogo.mostrar({
         tipo: 'info',
         titulo: 'Inicia sesión y regresa',
         mensaje: 'Se abrió una pestaña para iniciar sesión. Cuando termines, vuelve a esta pestaña y presiona "Registrar ahora".',
@@ -195,9 +219,9 @@ async function registrarIncidencia() {
   const botones = [{ texto: 'Cerrar', valor: null, estilo: 'secundario' }];
   if (!sinReintento.includes(motivo)) botones.push({ texto: 'Intentar de nuevo', valor: 'reintentar', estilo: 'primario' });
 
-  const eleccion = await SipconsDialogo.mostrar({
+  const eleccion = await AppDialogo.mostrar({
     tipo: 'error',
-    titulo: 'No se registró la incidencia',
+    titulo: 'No se registró la orden de servicio',
     mensaje,
     nota: 'Lo que capturaste sigue en pantalla; no se perdió nada.',
     botones

@@ -1,9 +1,8 @@
 <?php
 require_once __DIR__ . '/../auth/middleware.php';
+require_once __DIR__ . '/../auth/permisos.php';
+requirePermisoAlguno('soporte');
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
 
 // Manejar preflight requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -11,8 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 // Configuración de errores para desarrollo
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+ini_set('display_errors', '0');  // S-8
+ini_set('display_startup_errors', '0');
 error_reporting(E_ALL);
 
 // Incluir conexión
@@ -28,7 +27,29 @@ try {
         echo json_encode(['success' => false, 'message' => 'No se especificó acción']);
         exit;
     }
+
+    // Las acciones que crean, modifican o borran solo se aceptan por POST
+    $accionesEscritura = ['add_marca', 'add_modelo', 'update_modelo', 'delete_modelo', 'delete_marca', 'delete_documento', 'upload_documentos'];
+    // D-28: el Técnico solo consulta; crean, editan y borran el Administrador y el Supervisor
+    if (in_array($action, $accionesEscritura, true) && !esAdministracion() && ($_SESSION['rol'] ?? '') !== 'Supervisor') {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Tu rol solo puede consultar los manuales.']);
+        exit;
+    }
+    if (in_array($action, $accionesEscritura, true) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        exit;
+    }
     
+    // D-28: los cambios quedan en el historial (quién, qué, antes y después)
+    $esEscritura = in_array($action, $accionesEscritura, true);
+    if ($esEscritura) {
+        require_once __DIR__ . '/../auth/audit.php';
+        $cambio = soporteAntesDelCambio($conn, $action);
+        ob_start();
+    }
+
     switch($action) {
         case 'get_marcas':
             getMarcas($conn);
@@ -69,12 +90,51 @@ try {
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida: ' . $action]);
     }
+    if ($esEscritura) {
+        $salida = ob_get_clean();
+        echo $salida;
+        $resultado = json_decode((string)$salida, true);
+        if (!empty($resultado['success'])) soporteRegistrarHistorial($cambio, $resultado);
+    }
 } catch(Exception $e) {
+    if (!empty($esEscritura) && ob_get_level() > 0) ob_end_clean();
     error_log("Error en soporte_backend.php: " . $e->getMessage());
     echo json_encode([
         'success' => false, 
-        'message' => 'Error del servidor: ' . $e->getMessage()
+        'message' => 'Error del servidor: ' . mensajeErrorPublico($e)
     ]);
+}
+
+/** Datos de la acción de escritura y del registro como estaba antes (para el historial). */
+function soporteAntesDelCambio(PDO $conn, string $action): array {
+    $json = json_decode((string)file_get_contents('php://input'), true) ?: [];
+    $fila = function (string $sql, $id) use ($conn) {
+        if (!$id) return null;
+        $st = $conn->prepare($sql);
+        $st->execute([$id]);
+        return $st->fetch(PDO::FETCH_ASSOC) ?: null;
+    };
+    $sqlModelo = 'SELECT m.id, m.marca_id, ma.nombre AS marca, m.nombre, m.tipo_equipo FROM modelos m LEFT JOIN marcas ma ON ma.id = m.marca_id WHERE m.id = ?';
+    $campos = fn() => array_intersect_key($_POST, array_flip(['marca_id', 'nombre', 'tipo_equipo']));
+    switch ($action) {
+        case 'add_marca':        return ['marcas', 'CREATE', null, null, ['nombre' => trim((string)($json['nombre'] ?? ''))]];
+        case 'delete_marca':     return ['marcas', 'DELETE', (int)($json['marca_id'] ?? 0), $fila('SELECT id, nombre FROM marcas WHERE id = ?', (int)($json['marca_id'] ?? 0)), null];
+        case 'add_modelo':       return ['modelos', 'CREATE', null, null, $campos() + ['archivos' => array_values(array_map(fn($f) => $f['name'] ?? '', $_FILES))]];
+        case 'update_modelo':    return ['modelos', 'UPDATE', (int)($_POST['modelo_id'] ?? 0), $fila($sqlModelo, (int)($_POST['modelo_id'] ?? 0)), $campos()];
+        case 'delete_modelo':    return ['modelos', 'DELETE', (int)($json['modelo_id'] ?? 0), $fila($sqlModelo, (int)($json['modelo_id'] ?? 0)), null];
+        case 'delete_documento': return ['documentos', 'DELETE', (int)($json['documento_id'] ?? 0),
+                                     $fila('SELECT id, modelo_id, tipo_documento, nombre_archivo, ruta_archivo FROM documentos WHERE id = ?', (int)($json['documento_id'] ?? 0)), null];
+        case 'upload_documentos':return ['documentos', 'CREATE', (int)($_POST['modelo_id'] ?? 0), null,
+                                     ['modelo_id' => (int)($_POST['modelo_id'] ?? 0), 'archivos' => array_values(array_map(fn($f) => $f['name'] ?? '', $_FILES))]];
+    }
+    return ['soporte', $action, null, null, null];
+}
+
+function soporteRegistrarHistorial(array $cambio, array $resultado): void {
+    [$tabla, $accion, $id, $antes, $nuevos] = $cambio;
+    $id = $id ?: (int)($resultado['id'] ?? 0);
+    $folio = $nuevos['nombre'] ?? $antes['nombre'] ?? $antes['nombre_archivo'] ?? null;
+    registrarAuditoria($tabla, $id ?: null, $accion, $antes, $nuevos, $folio !== null ? mb_substr((string)$folio, 0, 100) : null);
 }
 
 function getMarcas($conn) {
@@ -90,7 +150,7 @@ function getMarcas($conn) {
             'count' => count($marcas)
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al obtener marcas: " . $e->getMessage());
+        throw new Exception("Error al obtener marcas: " . mensajeErrorPublico($e));
     }
 }
 
@@ -120,7 +180,7 @@ function getModelos($conn) {
             'count' => count($modelos)
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al obtener modelos: " . $e->getMessage());
+        throw new Exception("Error al obtener modelos: " . mensajeErrorPublico($e));
     }
 }function getModeloInfo($conn) {
     try {
@@ -150,7 +210,7 @@ function getModelos($conn) {
             'modelo' => $modelo
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al obtener información del modelo: " . $e->getMessage());
+        throw new Exception("Error al obtener información del modelo: " . mensajeErrorPublico($e));
     }
 }
 
@@ -185,7 +245,7 @@ function getDocumentos($conn) {
             'count' => count($documentos)
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al obtener documentos: " . $e->getMessage());
+        throw new Exception("Error al obtener documentos: " . mensajeErrorPublico($e));
     }
 }
 
@@ -221,7 +281,7 @@ function addMarca($conn) {
         $marca_id = $conn->lastInsertId();
         
         // Crear carpeta para la marca
-        $marca_dir = '../manuales/' . sanitizeFolderName($nombre) . '/';
+        $marca_dir = '../' . carpetaEmpresa('manuales') . '/' . sanitizeFolderName($nombre) . '/';
         if (crearEstructuraDirectorios($marca_dir)) {
             echo json_encode([
                 'success' => true, 
@@ -237,14 +297,11 @@ function addMarca($conn) {
         }
         
     } catch(PDOException $e) {
-        throw new Exception("Error al agregar marca: " . $e->getMessage());
+        throw new Exception("Error al agregar marca: " . mensajeErrorPublico($e));
     }
 }
 function addModelo($conn) {
     try {
-        // Debug: mostrar datos recibidos
-        error_log("Datos POST recibidos: " . print_r($_POST, true));
-        error_log("Archivos recibidos: " . print_r($_FILES, true));
         
         $marca_id = $_POST['marca_id'] ?? '';
         $nombre = trim($_POST['nombre'] ?? '');
@@ -281,7 +338,7 @@ function addModelo($conn) {
         $modelo_id = $conn->lastInsertId();
 
         // Crear estructura de carpetas
-        $base_dir = '../manuales/';
+        $base_dir = '../' . carpetaEmpresa('manuales') . '/';
         
         // Sanitizar nombres para usar en carpetas
         $marca_folder = sanitizeFolderName($marca['nombre']);
@@ -318,7 +375,7 @@ function addModelo($conn) {
             'ruta_modelo' => $modelo_dir
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al agregar modelo: " . $e->getMessage());
+        throw new Exception("Error al agregar modelo: " . mensajeErrorPublico($e));
     }
 }
 function updateModelo($conn) {
@@ -367,7 +424,7 @@ function updateModelo($conn) {
             'message' => 'Modelo actualizado correctamente'
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al actualizar modelo: " . $e->getMessage());
+        throw new Exception("Error al actualizar modelo: " . mensajeErrorPublico($e));
     }
 }
 
@@ -415,7 +472,7 @@ function deleteModelo($conn) {
         }
 
         // Eliminar carpeta del modelo
-        $carpeta_modelo = '../manuales/' . sanitizeFolderName($marca_nombre) . '/' . sanitizeFolderName($modelo_nombre) . '/';
+        $carpeta_modelo = '../' . carpetaEmpresa('manuales') . '/' . sanitizeFolderName($marca_nombre) . '/' . sanitizeFolderName($modelo_nombre) . '/';
         if (is_dir($carpeta_modelo)) {
             eliminarCarpetaRecursivamente($carpeta_modelo);
             error_log("Carpeta eliminada: " . $carpeta_modelo);
@@ -434,7 +491,7 @@ function deleteModelo($conn) {
             'message' => 'Modelo y todos sus documentos eliminados correctamente'
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al eliminar modelo: " . $e->getMessage());
+        throw new Exception("Error al eliminar modelo: " . mensajeErrorPublico($e));
     }
 }
 
@@ -472,7 +529,7 @@ function deleteMarca($conn) {
         }
 
         // Eliminar carpeta de la marca (si está vacía)
-        $carpeta_marca = '../manuales/' . sanitizeFolderName($marca['nombre']) . '/';
+        $carpeta_marca = '../' . carpetaEmpresa('manuales') . '/' . sanitizeFolderName($marca['nombre']) . '/';
         if (is_dir($carpeta_marca)) {
             // Verificar si la carpeta está vacía
             if (count(glob($carpeta_marca . "/*")) === 0) {
@@ -490,7 +547,7 @@ function deleteMarca($conn) {
             'message' => 'Marca eliminada correctamente'
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al eliminar marca: " . $e->getMessage());
+        throw new Exception("Error al eliminar marca: " . mensajeErrorPublico($e));
     }
 }
 
@@ -538,7 +595,7 @@ function deleteDocumento($conn) {
             'message' => 'Documento eliminado correctamente'
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al eliminar documento: " . $e->getMessage());
+        throw new Exception("Error al eliminar documento: " . mensajeErrorPublico($e));
     }
 }
 
@@ -586,7 +643,7 @@ function uploadDocumentos($conn) {
         }
 
         // Crear ruta del modelo
-        $base_dir = '../manuales/';
+        $base_dir = '../' . carpetaEmpresa('manuales') . '/';
         $marca_folder = sanitizeFolderName($modelo['marca_nombre']);
         $modelo_folder = sanitizeFolderName($modelo['modelo_nombre']);
         $modelo_dir = $base_dir . $marca_folder . '/' . $modelo_folder . '/';
@@ -604,7 +661,7 @@ function uploadDocumentos($conn) {
             'documentos' => $documentos_subidos
         ]);
     } catch(PDOException $e) {
-        throw new Exception("Error al subir documentos: " . $e->getMessage());
+        throw new Exception("Error al subir documentos: " . mensajeErrorPublico($e));
     }
 }
 
@@ -745,7 +802,7 @@ function buscarContenido($conn) {
         ]);
 
     } catch(PDOException $e) {
-        throw new Exception("Error en búsqueda: " . $e->getMessage());
+        throw new Exception("Error en búsqueda: " . mensajeErrorPublico($e));
     }
 }
 

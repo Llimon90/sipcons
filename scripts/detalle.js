@@ -2,23 +2,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 
 // Funciones de utilidad
 function getShortFileName(url, maxLength = 20) {
-    const fileName = SipconsVisor.nombreDe(url);
+    const fileName = AppVisor.nombreDe(url);
     return fileName.length > maxLength
         ? fileName.substring(0, maxLength) + '...'
         : fileName;
 }
 
+// Aviso estándar del sistema (AppAviso, scripts/dialogo.js)
 function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notificacion ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    AppAviso.mostrar(message, type === 'success' ? 'ok' : type);
 }
 
 // Funciones relacionadas con archivos
 async function eliminarArchivo(urlArchivo, containerElement, id) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este archivo permanentemente?')) {
+    if (!(await AppAviso.confirmar('El archivo se eliminará de forma permanente.', { peligro: true, boton: 'Sí, eliminar', titulo: '¿Eliminar este archivo?' }))) {
         return;
     }
 
@@ -74,7 +71,7 @@ const ANCHO_MINIATURA_PX = 320;
 
 async function renderPdfThumbnail(archivo, canvas) {
     try {
-        const pdf = await SipconsVisor.cargarPdf(archivo);
+        const pdf = await AppVisor.cargarPdf(archivo);
         const page = await pdf.getPage(1);
         const base = page.getViewport({ scale: 1 });
         const viewport = page.getViewport({ scale: ANCHO_MINIATURA_PX / base.width });
@@ -112,7 +109,7 @@ function programarMiniaturaPdf(archivo, canvas) {
 }
 
 function createFilePreview(archivo) {
-    const tipo = SipconsVisor.tipoDe(archivo);
+    const tipo = AppVisor.tipoDe(archivo);
     let previewElement;
 
     if (tipo === 'imagen') {
@@ -139,7 +136,7 @@ function createFilePreview(archivo) {
 
 function iconoArchivo(archivo) {
     const icono = document.createElement('i');
-    icono.className = `fas ${SipconsVisor.iconoDe(archivo)} archivo-icono`;
+    icono.className = `fas ${AppVisor.iconoDe(archivo)} archivo-icono`;
     return icono;
 }
 
@@ -147,7 +144,7 @@ function iconoArchivo(archivo) {
 function abrirEnVisor(archivoContainer) {
     const contenedores = Array.from(document.querySelectorAll('#contenedor-archivos .archivo-container'));
     const lista = contenedores.map(c => ({ url: c.dataset.url }));
-    SipconsVisor.abrir(lista, contenedores.indexOf(archivoContainer));
+    AppVisor.abrir(lista, contenedores.indexOf(archivoContainer));
 }
 
 function createFileContainer(archivo, id) {
@@ -155,7 +152,7 @@ function createFileContainer(archivo, id) {
     archivoContainer.className = 'archivo-container';
     archivoContainer.dataset.url = archivo;
 
-    const nombre = SipconsVisor.nombreDe(archivo);
+    const nombre = AppVisor.nombreDe(archivo);
 
     // El enlace conserva la URL: Ctrl/Cmd + clic o clic central abren en pestaña nueva
     const link = document.createElement('a');
@@ -204,7 +201,7 @@ async function cargarArchivosAdjuntos(archivos, id) {
     contenedorArchivos.innerHTML = "";
 
     if (archivos && archivos.length > 0) {
-        if (archivos.some(a => SipconsVisor.tipoDe(a) === 'pdf')) SipconsVisor.precalentarPdf();
+        if (archivos.some(a => AppVisor.tipoDe(a) === 'pdf')) AppVisor.precalentarPdf();
         for (const archivo of archivos) {
             const { container, preview } = createFileContainer(archivo, id);
             contenedorArchivos.appendChild(container);
@@ -224,7 +221,7 @@ function escapeAttr(valor) {
 }
 
 // Roles que pueden eliminar incidencias (el backend vuelve a validarlo)
-const ROLES_ELIMINAR_INCIDENCIA = ['Administrador', 'Técnico/Administrador', 'Programador'];
+const ROLES_ELIMINAR_INCIDENCIA = ['Administrador', 'Soporte de plataforma'];
 
 // Cliente (mayúsculas) -> contactos, para los desplegables de cliente y "reporta"
 let contactosPorCliente = {};
@@ -275,7 +272,25 @@ async function configurarClienteYContacto(clienteOriginal) {
         }
     });
 
-    SipconsSerie.vincular(inputCliente, document.getElementById('lista-series'));
+    AppSerie.vincular(inputCliente, document.getElementById('lista-series'));
+    if (window.AppSucursales) AppSucursales.vincular(inputCliente, document.getElementById('sucursal'));  // D-44
+
+    // Cliente que no existe: se crea aquí mismo y queda seleccionado
+    if (window.AppAltaRapida) {
+        AppAltaRapida.cliente(inputCliente, {
+            existe: (nombre) => clientesValidos.includes(nombre.trim().toUpperCase())
+                || nombre.trim().toUpperCase() === String(clienteOriginal || '').trim().toUpperCase(),
+            alCrear: (c) => {
+                const clave = c.nombre.trim().toUpperCase();
+                const option = document.createElement('option');
+                option.value = c.nombre;
+                datalistClientes.appendChild(option);
+                clientesValidos.push(clave);
+                contactosPorCliente[clave] = [c.contacto];
+                inputContacto.value = c.contacto;
+            }
+        });
+    }
 
     try {
         const response = await fetch(`../backend/obtener-clientes.php?t=${Date.now()}`, { cache: 'no-store' });
@@ -289,7 +304,7 @@ async function configurarClienteYContacto(clienteOriginal) {
 
             const clave = cliente.nombre.trim().toUpperCase();
             clientesValidos.push(clave);
-            contactosPorCliente[clave] = SipconsContactos.parsear(cliente.contactos);
+            contactosPorCliente[clave] = AppContactos.parsear(cliente.contactos);
         });
 
         validarCliente();
@@ -300,7 +315,8 @@ async function configurarClienteYContacto(clienteOriginal) {
 }
 
 async function eliminarIncidencia(id, folio) {
-    if (!confirm(`¿Eliminar definitivamente la incidencia ${folio || id}?\n\nSe borrará de la base de datos. El movimiento quedará registrado en el historial.`)) {
+    if (!(await AppAviso.confirmar('Se borrará de la base de datos. El movimiento quedará registrado en el historial.',
+        { peligro: true, boton: 'Sí, eliminar', titulo: `¿Eliminar la orden de servicio ${folio || id}?` }))) {
         return;
     }
 
@@ -313,15 +329,15 @@ async function eliminarIncidencia(id, folio) {
         const result = await response.json();
 
         if (!response.ok || !result.success) {
-            throw new Error(result.error || 'No se pudo eliminar la incidencia');
+            throw new Error(result.error || 'No se pudo eliminar la orden de servicio');
         }
 
         estadoDetalle.salirSinAviso = true;
         borrarBorrador();
-        showNotification('Incidencia eliminada correctamente');
+        showNotification('Orden de servicio eliminada correctamente');
         setTimeout(() => { window.location.href = 'incidencias.html'; }, 1200);
     } catch (error) {
-        console.error('Error al eliminar incidencia:', error);
+        console.error('Error al eliminar orden de servicio:', error);
         showNotification(error.message, 'error');
     }
 }
@@ -339,26 +355,6 @@ function tecnicoGroupHTML(opcionesHTML, requerido) {
         </div>`;
 }
 
-// Insignia de SLA: compara la fecha de reporte con el límite de cierre que
-// aplica a esta incidencia (categoría+prioridad, ver backend/lib/sla_helpers.php).
-// No se muestra si ya está cerrada (ahí lo que importa es si se cerró a tiempo,
-// no una cuenta en vivo) o si el servidor no envió la regla.
-const ESTATUS_SLA_CERRADOS = ['completado', 'cerrado con factura', 'cerrado sin factura', 'resuelto'];
-function slaBadgeHTML(data) {
-    if (!data.sla || !data.fecha) return '';
-    if (ESTATUS_SLA_CERRADOS.includes((data.estatus || '').trim().toLowerCase())) return '';
-
-    const horasTranscurridas = (Date.now() - new Date(data.fecha).getTime()) / 3600000;
-    const limite = Number(data.sla.horas_cierre) || 0;
-    if (!limite) return '';
-
-    let color = 'sla-verde', texto = 'Dentro de SLA';
-    if (horasTranscurridas >= limite) { color = 'sla-rojo'; texto = 'SLA vencido'; }
-    else if (horasTranscurridas >= limite * 0.8) { color = 'sla-amarillo'; texto = 'SLA por vencer'; }
-
-    return `<span class="badge-sla ${color}" title="Límite de cierre: ${limite} h (prioridad ${escapeAttr(data.prioridad || 'Media')})">${texto}</span>`;
-}
-
 function createFormHTML(data, tecnicosLista) {
     // Convertir técnico existente en array si no lo es
     const tecnicosIniciales = Array.isArray(data.tecnico) ? data.tecnico : 
@@ -366,10 +362,10 @@ function createFormHTML(data, tecnicosLista) {
 
     return `
         <form id="form-editar">
-            <p class="detalle-folio"><strong># REPORTE INTERNO:</strong> ${data.numero_incidente} ${slaBadgeHTML(data)}</p>
+            <p class="detalle-folio"><strong>FOLIO:</strong> ${escHTML(data.numero_incidente)}</p>
             <div class="form-row">
                 <div>
-                    <label for="reporte_cliente"># INCIDENCIA CLIENTE:</label>
+                    <label for="reporte_cliente"># REPORTE DEL CLIENTE:</label>
                     <input type="text" id="reporte_cliente" value="${escapeAttr(data.reporte_cliente)}">
                 </div>
                 <div>
@@ -384,6 +380,7 @@ function createFormHTML(data, tecnicosLista) {
                     <label for="contacto">CONTACTO:</label>
                     <input type="text" id="contacto" list="lista-contactos" autocomplete="off" placeholder="Selecciona o escribe quién reporta" value="${escapeAttr(data.contacto)}" required>
                     <datalist id="lista-contactos"></datalist>
+                    <button type="button" id="guardar-contacto" class="btn-link-mini" hidden><i class="fas fa-user-plus"></i> Guardar como contacto del cliente</button>
                 </div>
                 <div>
                     <label for="sucursal">SUCURSAL:</label>
@@ -394,27 +391,12 @@ function createFormHTML(data, tecnicosLista) {
             <div class="form-row">
                 <div>
                     <label for="categoria">CATEGORÍA:</label>
-                    <select id="categoria">
-                        <option value="">SELECCIONE UNA OPCIÓN</option>
-                        <option value="Mr. Tienda/Mr. Chef" ${data.categoria && data.categoria.trim() === 'Mr. Tienda/Mr. Chef' ? 'selected' : ''}>Mr. Tienda/Mr. Chef</option>
-                        <option value="Distribuidora el Florido" ${data.categoria && data.categoria.trim() === 'Distribuidora el Florido' ? 'selected' : ''}>Distribuidora el Florido</option>
-                        <option value="Calimax" ${data.categoria && data.categoria.trim() === 'Calimax' ? 'selected' : ''}>Calimax</option>
-                        <option value="Recolección" ${data.categoria && data.categoria.trim() === 'Recolección' ? 'selected' : ''}>Recolección</option>
-                        <option value="Otros" ${data.categoria && data.categoria.trim() === 'Otros' ? 'selected' : ''}>Otros</option>
-                    </select>
+                    <select id="categoria"></select>
                 </div>
                 <div>
                     <label for="fecha">FECHA:</label>
-                    <input type="date" id="fecha" value="${data.fecha || ''}" required>
-                </div>
-                <div>
-                    <label for="prioridad">PRIORIDAD:</label>
-                    <select id="prioridad">
-                        <option value="Baja" ${data.prioridad === "Baja" ? 'selected' : ''}>Baja</option>
-                        <option value="Media" ${!data.prioridad || data.prioridad === "Media" ? 'selected' : ''}>Media</option>
-                        <option value="Alta" ${data.prioridad === "Alta" ? 'selected' : ''}>Alta</option>
-                        <option value="Crítica" ${data.prioridad === "Crítica" ? 'selected' : ''}>Crítica</option>
-                    </select>
+                    <input type="date" id="fecha" value="${escHTML(data.fecha || '')}" required>
+                    <small id="aviso-programada" class="texto-suave" hidden><i class="fas fa-calendar-alt"></i> Programada: aparece en la bandeja ese día.</small>
                 </div>
             </div>
 
@@ -428,12 +410,14 @@ function createFormHTML(data, tecnicosLista) {
                 <label>TÉCNICOS:</label>
                 <div id="tecnicos-container">
                     ${tecnicosIniciales.map((tecnico, index) => tecnicoGroupHTML(
-                        SipconsTecnicos.opcionesHTML(tecnicosLista, tecnico, "Sin técnico asignado"), index > 0
+                        AppTecnicos.opcionesHTML(tecnicosLista, tecnico, "Sin técnico asignado"), index > 0
                     )).join('')}
                     ${tecnicosIniciales.length === 0 ? tecnicoGroupHTML(
-                        SipconsTecnicos.opcionesHTML(tecnicosLista, '', "Seleccione una opción"), false
+                        AppTecnicos.opcionesHTML(tecnicosLista, '', "Seleccione una opción"), false
                     ) : ''}
                 </div>
+                <button type="button" id="nuevo-tecnico" class="btn-link-mini" hidden><i class="fas fa-user-plus"></i> Nuevo técnico</button>
+                <small id="nuevo-tecnico-nota" class="texto-suave" hidden>¿Falta un técnico? Pídele al administrador que lo dé de alta en Usuarios.</small>
                 <button type="button" id="agregar-tecnico" class="btn-agregar-tecnico">
                     <i class="fas fa-plus"></i> Agregar técnico
                 </button>
@@ -442,29 +426,24 @@ function createFormHTML(data, tecnicosLista) {
             <div class="form-campo">
                 <label for="estatus">ESTATUS:</label>
                 <select id="estatus">
-                    <option value="Abierto" ${data.estatus === "Abierto" ? 'selected' : ''}>Abierto</option>
-                    <option value="Asignado" ${data.estatus === "Asignado" ? 'selected' : ''}>Asignado</option>
-                    <option value="Pendiente" ${data.estatus === "Pendiente" ? 'selected' : ''}>Pendiente</option>
-                    <option value="Completado" ${data.estatus === "Completado" ? 'selected' : ''}>Completado</option>
-                    <option value="Cerrado sin factura" ${data.estatus === "Cerrado sin factura" ? 'selected' : ''}>Cerrado sin factura</option>
-                    <option value="Cerrado con factura" ${data.estatus === "Cerrado con factura" ? 'selected' : ''}>Cerrado con factura</option>
+                    ${ESTATUS_ORDEN.map(e => `<option value="${e}" ${data.estatus === e ? 'selected' : ''}>${e}</option>`).join('')}
                 </select>
             </div>
 
             <div class="form-row">
                 <div>
-                    <label for="falla">FALLA:</label>
-                    <textarea id="falla" required>${data.falla || ''}</textarea>
+                    <label for="falla">MOTIVO DEL SERVICIO:</label>
+                    <textarea id="falla" required>${escHTML(data.falla || '')}</textarea>
                 </div>
                 <div>
                     <label for="accion">TRABAJO REALIZADO:</label>
-                    <textarea id="accion">${data.accion || ''}</textarea>
+                    <textarea id="accion">${escHTML(data.accion || '')}</textarea>
                 </div>
             </div>
 
             <div class="form-campo">
                 <label for="notas">NOTAS ADICIONALES</label>
-                <textarea id="notas">${data.notas || ''}</textarea>
+                <textarea id="notas">${escHTML(data.notas || '')}</textarea>
             </div>
 
             <div class="form-campo">
@@ -478,23 +457,105 @@ function createFormHTML(data, tecnicosLista) {
                     <i class="fas fa-save"></i> Guardar cambios
                 </button>
                 <button type="button" id="btn-eliminar-incidencia" class="btn-rojo" style="display: none;">
-                    <i class="fas fa-trash-alt"></i> Eliminar incidencia
+                    <i class="fas fa-trash-alt"></i> Eliminar orden de servicio
                 </button>
             </div>
         </form>
 
-        <div class="form-campo" id="seccion-comentarios">
-            <label>SEGUIMIENTO / COMENTARIOS</label>
-            <div id="lista-comentarios"><p>Cargando…</p></div>
-            <textarea id="nuevo-comentario" placeholder="Escribe una actualización para el expediente..."></textarea>
-            <label style="font-weight:normal; display:block; margin:6px 0;">
-                <input type="checkbox" id="comentario-visible-cliente"> Visible para el cliente en el portal
-            </label>
-            <button type="button" id="btn-agregar-comentario"><i class="fas fa-comment"></i> Agregar comentario</button>
-            <span id="mensaje-comentario"></span>
-        </div>
-
     `;
+}
+
+// O-6: dar de alta un contacto del cliente o un técnico sin salir de la orden.
+// El contacto lo agrega quien edita la orden; el técnico, solo quien tiene el módulo
+// Usuarios (crea una cuenta con acceso al sistema).
+function setupAltasDesdeOrden(tecnicosLista) {
+    const idOrden = estadoDetalle.id || new URLSearchParams(location.search).get('id');
+    const inputContacto = document.getElementById('contacto');
+    const inputCliente = document.getElementById('cliente');
+    const btnContacto = document.getElementById('guardar-contacto');
+    const esContactoNuevo = () => {
+        const lista = contactosPorCliente[inputCliente.value.trim().toUpperCase()] || [];
+        const v = inputContacto.value.trim().toLowerCase();
+        return v !== '' && !lista.some(n => n.toLowerCase() === v);
+    };
+    const revisar = () => { if (btnContacto) btnContacto.hidden = !esContactoNuevo(); };
+    if (inputContacto && btnContacto) {
+        inputContacto.addEventListener('input', revisar);
+        inputCliente.addEventListener('change', revisar);
+        btnContacto.addEventListener('click', async () => {
+            btnContacto.disabled = true;
+            try {
+                const r = await fetch('../backend/agregar-contacto.php', {
+                    method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ incidencia_id: Number(idOrden), nombre: inputContacto.value.trim() })
+                });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || !j.exito) throw new Error(j.mensaje || 'No se pudo agregar el contacto.');
+                const clave = inputCliente.value.trim().toUpperCase();
+                (contactosPorCliente[clave] = contactosPorCliente[clave] || []).push(j.contacto.nombre);
+                const op = document.createElement('option');
+                op.value = j.contacto.nombre;
+                document.getElementById('lista-contactos').appendChild(op);
+                showNotification(j.ya_existia ? 'Ese contacto ya estaba en el cliente.' : 'Contacto agregado al cliente.', 'success');
+                revisar();
+            } catch (e) {
+                showNotification(e.message, 'error');
+            } finally {
+                btnContacto.disabled = false;
+            }
+        });
+        setTimeout(revisar, 1500);  // cuando ya cargaron los contactos del cliente
+    }
+
+    const btnTecnico = document.getElementById('nuevo-tecnico');
+    const nota = document.getElementById('nuevo-tecnico-nota');
+    if (!btnTecnico || !window.appOnAuthReady) return;
+    window.appOnAuthReady(function (auth) {
+        const puede = (auth.modulos || []).indexOf('usuarios') !== -1;
+        btnTecnico.hidden = !puede;
+        if (nota) nota.hidden = puede;
+    });
+    btnTecnico.addEventListener('click', async () => {
+        const nodo = document.createElement('div');
+        nodo.className = 'inv-alta-modal';
+        nodo.innerHTML =
+            '<label class="alta-campo"><span>Nombre completo</span><input name="nombre" maxlength="100" required></label>' +
+            '<label class="alta-campo"><span>Correo (para iniciar sesión)</span><input name="correo" type="email" maxlength="100" required></label>' +
+            '<label class="alta-campo"><span>Teléfono (opcional)</span><input name="telefono" maxlength="20"></label>' +
+            '<label class="alta-campo"><span>Contraseña temporal</span><input name="password" type="text" minlength="8" maxlength="72" required></label>';
+        const v = await AppDialogo.mostrar({
+            tipo: 'info', titulo: 'Nuevo técnico', contenido: nodo,
+            nota: 'Se crea una cuenta con el rol Técnico. Compártele su correo y contraseña; podrá cambiarla al entrar.',
+            botones: [{ texto: 'Cancelar', valor: null, estilo: 'secundario' }, { texto: 'Dar de alta', valor: 'si', estilo: 'primario' }]
+        });
+        if (v !== 'si') return;
+        const val = n => nodo.querySelector('[name="' + n + '"]').value.trim();
+        if (!val('nombre') || !val('correo') || val('password').length < 8) {
+            showNotification('Escribe nombre, correo y una contraseña de al menos 8 caracteres.', 'error');
+            return;
+        }
+        const datos = new FormData();
+        ['nombre', 'correo', 'telefono', 'password'].forEach(n => datos.append(n, val(n)));
+        datos.append('rol', 'Técnico');
+        try {
+            const r = await fetch('../backend/alta-user.php', { method: 'POST', credentials: 'same-origin', body: datos });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok || !j.success) throw new Error(j.message || 'No se pudo dar de alta al técnico.');
+            const nuevo = { valor: val('nombre'), nombre: val('nombre') };
+            tecnicosLista.push(nuevo);
+            document.querySelectorAll('.tecnico-select').forEach(sel => {
+                const op = document.createElement('option');
+                op.value = nuevo.valor;
+                op.textContent = nuevo.nombre;
+                sel.appendChild(op);
+            });
+            const libre = Array.from(document.querySelectorAll('.tecnico-select')).find(s => !s.value);
+            if (libre) { libre.value = nuevo.valor; libre.dispatchEvent(new Event('change', { bubbles: true })); }
+            showNotification('Técnico dado de alta' + (libre ? ' y asignado a la orden. Guarda los cambios.' : '. Ya aparece en la lista.'), 'success');
+        } catch (e) {
+            showNotification(e.message, 'error');
+        }
+    });
 }
 
 function setupTecnicosMultiples(tecnicosLista) {
@@ -523,7 +584,7 @@ function setupTecnicosMultiples(tecnicosLista) {
     function crearSelectTecnico() {
         const plantilla = document.createElement('template');
         plantilla.innerHTML = tecnicoGroupHTML(
-            SipconsTecnicos.opcionesHTML(tecnicosLista, '', 'Seleccione una opción'), true
+            AppTecnicos.opcionesHTML(tecnicosLista, '', 'Seleccione una opción'), true
         ).trim();
         const tecnicoGroup = plantilla.content.firstElementChild;
         const select = tecnicoGroup.querySelector('select');
@@ -570,20 +631,25 @@ function setupTecnicosMultiples(tecnicosLista) {
 //   otra pestaña/equipo del mismo usuario) para no pisar esos cambios.
 // =====================================================================
 
-const CAMPOS_FORM = ['reporte_cliente', 'cliente', 'contacto', 'sucursal', 'categoria', 'prioridad', 'fecha',
-    'numero_serie', 'estatus', 'falla', 'accion', 'notas'];
+const CAMPOS_FORM = ['reporte_cliente', 'cliente', 'contacto', 'sucursal', 'categoria', 'fecha',
+    'numero_serie', 'estatus', 'motivo_estatus', 'falla', 'accion', 'notas'];
+
+// Lista cerrada de estatus (docs/REGLAS_NEGOCIO.md 0.1); la valida el servidor
+const ESTATUS_ORDEN = ['Abierto', 'Asignado', 'En proceso', 'Pendiente', 'Completado',
+    'Cerrado sin factura', 'Cerrado con factura', 'Cancelado'];
 
 const NOMBRES_CAMPO = {
-    reporte_cliente: '# Incidencia cliente', cliente: 'Cliente', contacto: 'Contacto',
-    sucursal: 'Sucursal', categoria: 'Categoría', prioridad: 'Prioridad', fecha: 'Fecha', numero_serie: 'Número de serie',
-    estatus: 'Estatus', falla: 'Falla', accion: 'Trabajo realizado', notas: 'Notas', tecnicos: 'Técnicos'
+    reporte_cliente: '# Reporte del cliente', cliente: 'Cliente', contacto: 'Contacto',
+    sucursal: 'Sucursal', categoria: 'Categoría', fecha: 'Fecha', numero_serie: 'Número de serie',
+    estatus: 'Estatus', motivo_estatus: 'Motivo del estatus', falla: 'Motivo del servicio', accion: 'Trabajo realizado', notas: 'Notas', tecnicos: 'Técnicos'
 };
 
 // No se ofrece un borrador más viejo que esto
 const BORRADOR_DIAS = 30;
 
 // Motivos de error en los que reintentar igual no sirve (hay que cambiar algo antes)
-const MOTIVOS_SIN_REINTENTO = ['envio_muy_grande', 'archivo_muy_grande', 'faltan_datos', 'sin_permiso', 'no_existe', 'id_invalido'];
+const MOTIVOS_SIN_REINTENTO = ['fecha_invalida', 'confirmar_documentos', 'envio_muy_grande', 'archivo_muy_grande', 'faltan_datos', 'sin_permiso', 'no_existe', 'id_invalido',
+    'estatus_invalido', 'tecnico_invalido', 'migracion_pendiente'];
 
 const estadoDetalle = {
     id: null,
@@ -606,6 +672,8 @@ function leerFormulario() {
         valores[campo] = el ? el.value : '';
     });
     valores.numero_serie = valores.numero_serie.trim();
+    // El motivo solo cuenta si el estatus lo pide (campo visible); si no, el servidor lo borra
+    if (window.AppEstatus) valores.motivo_estatus = AppEstatus.motivoEstatus();
     valores.tecnicos = Array.from(document.querySelectorAll('.tecnico-select'))
         .map(select => select.value)
         .filter(Boolean);
@@ -650,7 +718,7 @@ function formatearFechaHora(valor) {
 // ---------- borrador local ----------
 
 function claveBorrador() {
-    return `sipcons_borrador_incidencia_${estadoDetalle.id}`;
+    return `app_borrador_incidencia_${estadoDetalle.id}`;
 }
 
 function leerBorrador() {
@@ -734,7 +802,24 @@ function aplicarValores(valores) {
     const selects = contenedor.querySelectorAll('.tecnico-select');
     selects.forEach((select, i) => { select.value = deseados[i] || ''; });
     selects.forEach(select => select.dispatchEvent(new Event('change', { bubbles: true })));
+    // Muestra u oculta los campos de motivo según el estatus recuperado
+    const estatus = document.getElementById('estatus');
+    if (estatus) estatus.dispatchEvent(new Event('change'));
 }
+
+// O-7: otra sección (solicitud de alta de refacción) agregó una nota a la orden. Si el
+// usuario no ha tocado las notas, se actualizan y se sigue con la versión nueva; si ya
+// las cambió, se deja la versión anterior para que el guardado avise del cambio (409).
+document.addEventListener('orden:notas-externas', function (e) {
+    const d = e.detail || {};
+    const notas = document.getElementById('notas');
+    if (!notas || !estadoDetalle.original || !d.version) return;
+    if (notas.value !== estadoDetalle.original.notas) return;
+    notas.value = d.notas;
+    estadoDetalle.original.notas = d.notas;
+    estadoDetalle.version = d.version;
+    if (estadoDetalle.datosServidor) estadoDetalle.datosServidor.notas = d.notas;
+});
 
 function mostrarAvisoBorrador(borrador) {
     const form = document.getElementById('form-editar');
@@ -750,8 +835,8 @@ function mostrarAvisoBorrador(borrador) {
     const notas = [`Los escribiste el ${formatearFechaHora(new Date(borrador.fecha))}.`];
     if (cambioDespues) {
         notas.push(puedeIntegrar
-            ? 'Después de eso se guardaron otros cambios en esta incidencia; puedes integrarlos con los tuyos.'
-            : 'La incidencia cambió desde entonces: revisa los datos antes de guardar.');
+            ? 'Después de eso se guardaron otros cambios en esta orden de servicio; puedes integrarlos con los tuyos.'
+            : 'La orden de servicio cambió desde entonces: revisa los datos antes de guardar.');
     }
     if (borrador.archivos > 0) {
         notas.push('Los archivos que habías elegido tendrás que seleccionarlos otra vez.');
@@ -895,7 +980,7 @@ async function elegirEnConflictos(conflictos, mios, suyos, quien) {
         contenido.appendChild(grupo);
     });
 
-    const eleccion = await SipconsDialogo.mostrar({
+    const eleccion = await AppDialogo.mostrar({
         tipo: 'info',
         ancho: true,
         titulo: conflictos.length === 1 ? 'Elige qué conservar en este campo' : 'Elige qué conservar en estos campos',
@@ -987,6 +1072,8 @@ async function integrarVersiones({ mios, original, baseServidor, actual, quien }
     estadoDetalle.original = valoresDeDatos(actual);
     if (archivosCambiaron) cargarArchivosAdjuntos(actual.archivos || [], estadoDetalle.id);
 
+    const selEstatus = document.getElementById('estatus');
+    if (selEstatus) selEstatus.dataset.estatusGuardado = actual.estatus || '';  // reabrir se mide contra lo guardado
     aplicarValores(resultado);
     guardarBorrador();
     resaltarCampos(deLaOtra);
@@ -1019,12 +1106,12 @@ function textoBotonGuardar(texto) {
 
 function registrarGuardadoEnAnaliticas(correcto, motivo, ms, estado) {
     try {
-        if (!window.sipconsTrack) return;
-        window.sipconsTrack('guardado',
+        if (!window.appTrack) return;
+        window.appTrack('guardado',
             correcto ? 'Guardado correcto' : `Guardado fallido: ${motivo}`,
             `${correcto ? 'ok' : 'error'} · ${estadoDetalle.folio || estadoDetalle.id}`,
             ms, estado);
-        if (window.sipconsFlush) window.sipconsFlush();
+        if (window.appFlush) window.appFlush();
     } catch (e) { /* las analíticas nunca deben estorbar */ }
 }
 
@@ -1042,7 +1129,7 @@ async function handleFormSubmit(e, forzar = false) {
 
     const problemaArchivos = revisarArchivosAntesDeEnviar();
     if (problemaArchivos) {
-        await SipconsDialogo.mostrar({
+        await AppDialogo.mostrar({
             tipo: 'aviso',
             titulo: 'Revisa los archivos',
             mensaje: problemaArchivos.mensaje,
@@ -1058,8 +1145,10 @@ async function handleFormSubmit(e, forzar = false) {
     formData.append('id', estadoDetalle.id);
     formData.append('version', estadoDetalle.version);
     if (forzar) formData.append('forzar', '1');
+    if (estadoDetalle.confirmarDocumentos) formData.append('confirmar_documentos', '1');  // L-16 · L-17
     CAMPOS_FORM.forEach(campo => formData.append(campo, valores[campo]));
     formData.append('tecnico', valores.tecnicos.join('/'));
+    if (window.AppEstatus) formData.append('motivo_reapertura', AppEstatus.motivoReapertura());  // D-3
 
     guardarBorrador();
     marcarGuardando(true);
@@ -1069,11 +1158,11 @@ async function handleFormSubmit(e, forzar = false) {
     const elegidos = archivosSeleccionados();
     if (elegidos.length) {
         textoBotonGuardar('Preparando archivos…');
-        const listos = await SipconsArchivos.prepararParaEnvio(elegidos);
+        const listos = await AppArchivos.prepararParaEnvio(elegidos);
         listos.forEach(archivo => formData.append('archivos[]', archivo));
     }
 
-    const envio = await SipconsArchivos.enviarConAvance('../backend/actualiza.php', formData, (porcentaje) => {
+    const envio = await AppArchivos.enviarConAvance('../backend/actualiza.php', formData, (porcentaje) => {
         textoBotonGuardar(porcentaje < 100 && elegidos.length ? `Subiendo… ${porcentaje}%` : 'Guardando…');
     });
     marcarGuardando(false);
@@ -1086,7 +1175,7 @@ async function handleFormSubmit(e, forzar = false) {
 
     if (datos && datos.success) {
         registrarGuardadoEnAnaliticas(true, '', ms, estado);
-        return guardadoCorrecto(datos);
+        return guardadoCorrecto(datos, valores);
     }
 
     const motivo = sinConexion ? 'sin_conexion' : sesionCerrada ? 'sesion_cerrada'
@@ -1095,6 +1184,13 @@ async function handleFormSubmit(e, forzar = false) {
 
     if (sesionCerrada) return avisarSesionCerrada(forzar);
     if (estado === 409 && datos && datos.actual) return resolverConflicto(datos);
+    // L-16 · L-17: cancelar o cambiar el cliente de una orden con documentos se confirma
+    if (estado === 409 && datos && datos.motivo === 'confirmar_documentos') {
+        const si = await AppAviso.confirmar(datos.error, { titulo: 'Esta orden tiene documentos', boton: 'Guardar de todos modos', peligro: true });
+        if (!si) return;
+        estadoDetalle.confirmarDocumentos = true;
+        try { return await handleFormSubmit(null, forzar); } finally { estadoDetalle.confirmarDocumentos = false; }
+    }
 
     let mensaje;
     if (sinConexion) {
@@ -1109,7 +1205,7 @@ async function handleFormSubmit(e, forzar = false) {
     if (!MOTIVOS_SIN_REINTENTO.includes(motivo)) {
         botones.push({ texto: 'Intentar de nuevo', valor: 'reintentar', estilo: 'primario' });
     }
-    const eleccion = await SipconsDialogo.mostrar({
+    const eleccion = await AppDialogo.mostrar({
         tipo: 'error',
         titulo: 'No se guardaron los cambios',
         mensaje,
@@ -1119,16 +1215,16 @@ async function handleFormSubmit(e, forzar = false) {
     if (eleccion === 'reintentar') handleFormSubmit(null, forzar);
 }
 
-async function guardadoCorrecto(datos) {
+async function guardadoCorrecto(datos, enviados) {
     estadoDetalle.salirSinAviso = true;
     clearTimeout(temporizadorBorrador);
     borrarBorrador(true);
 
     const agregados = (datos.archivos_agregados || []).length;
-    await SipconsDialogo.mostrar({
+    await AppDialogo.mostrar({
         tipo: 'ok',
         titulo: 'Cambios guardados',
-        mensaje: `La incidencia ${estadoDetalle.folio} se guardó correctamente el ${formatearFechaHora(datos.guardado_en || new Date())}.`,
+        mensaje: `La orden de servicio ${estadoDetalle.folio} se guardó correctamente el ${formatearFechaHora(datos.guardado_en || new Date())}.`,
         nota: agregados ? `Se ${agregados === 1 ? 'adjuntó 1 archivo' : `adjuntaron ${agregados} archivos`}.` : '',
         botones: [{ texto: 'Aceptar', valor: 'ok', estilo: 'primario' }]
     });
@@ -1142,7 +1238,24 @@ async function guardadoCorrecto(datos) {
     }
     estadoDetalle.version = incidencia.version || estadoDetalle.version;
     estadoDetalle.datosServidor = incidencia;
-    estadoDetalle.original = leerFormulario();
+    // C-H13: lo guardado es lo que confirmó el servidor, no lo que hay ahora en pantalla.
+    // Los campos que no se tocaron mientras se guardaba toman el valor del servidor (que
+    // puede ajustarlos: D-5 estatus, D-26 cliente del catálogo, técnicos normalizados);
+    // lo que se escribió durante el guardado se conserva y sigue contando como cambio.
+    const servidor = valoresDeDatos(incidencia);
+    const ahora = leerFormulario();
+    const parcial = {};
+    CAMPOS_FORM.forEach(campo => { if (!enviados || ahora[campo] === enviados[campo]) parcial[campo] = servidor[campo]; });
+    const tecnicosDelServidor = !enviados || mismosValores(ahora.tecnicos, enviados.tecnicos);
+    parcial.tecnicos = tecnicosDelServidor ? servidor.tecnicos : ahora.tecnicos;
+    const selEstatus = document.getElementById('estatus');
+    if (selEstatus) selEstatus.dataset.estatusGuardado = incidencia.estatus || '';
+    aplicarValores(parcial);
+    const reapertura = document.getElementById('motivo_reapertura');
+    if (reapertura && 'estatus' in parcial) reapertura.value = '';
+    // Se compara contra lo que quedó en pantalla, no contra el servidor (falso "cambios sin guardar")
+    estadoDetalle.original = AppCambios.lineaBaseTrasGuardar(CAMPOS_FORM, servidor, leerFormulario(),
+        CAMPOS_FORM.filter(campo => campo in parcial), tecnicosDelServidor);
     if (estadoDetalle.selector) estadoDetalle.selector.limpiar();
     if (agregados) cargarArchivosAdjuntos(incidencia.archivos || [], estadoDetalle.id);
     document.querySelectorAll('#form-editar .aviso-borrador').forEach(a => a.remove());
@@ -1152,7 +1265,7 @@ async function guardadoCorrecto(datos) {
 }
 
 async function avisarSesionCerrada(forzar) {
-    const eleccion = await SipconsDialogo.mostrar({
+    const eleccion = await AppDialogo.mostrar({
         tipo: 'aviso',
         titulo: 'Tu sesión se cerró',
         mensaje: 'Para guardar, vuelve a iniciar sesión. Lo que escribiste sigue en pantalla y no se perderá.',
@@ -1164,7 +1277,7 @@ async function avisarSesionCerrada(forzar) {
     if (eleccion !== 'login') return;
 
     window.open('../auth/login.html', '_blank');
-    const siguiente = await SipconsDialogo.mostrar({
+    const siguiente = await AppDialogo.mostrar({
         tipo: 'info',
         titulo: 'Inicia sesión y regresa',
         mensaje: 'Se abrió una pestaña para iniciar sesión. Cuando termines, vuelve a esta pestaña y presiona "Guardar ahora".',
@@ -1186,7 +1299,7 @@ async function resolverConflicto(datos) {
     if (mismosValores(mios, valoresActuales) && !archivosSeleccionados().length) {
         borrarBorrador(true);
         estadoDetalle.salirSinAviso = true;
-        await SipconsDialogo.mostrar({
+        await AppDialogo.mostrar({
             tipo: 'ok',
             titulo: 'Cambios guardados',
             mensaje: 'Estos cambios ya estaban guardados.',
@@ -1204,9 +1317,9 @@ async function resolverConflicto(datos) {
         : `${datos.modificado_por || 'Otra persona'} la modificó${cuando}`;
     const quienCorto = datos.modificado_por_mi ? 'tu otra pestaña' : (datos.modificado_por || 'la otra persona');
 
-    const eleccion = await SipconsDialogo.mostrar({
+    const eleccion = await AppDialogo.mostrar({
         tipo: 'aviso',
-        titulo: 'Esta incidencia cambió mientras la editabas',
+        titulo: 'Esta orden de servicio cambió mientras la editabas',
         mensaje: `${quienTexto}, después de que abriste esta página. Todavía no se guardaron tus cambios.`,
         lista: cambiados.length ? cambiados.map(nombre => `Cambió: ${nombre}`) : null,
         nota: '"Integrar ambas versiones" conserva tus cambios y los de la otra versión; solo si los dos cambiaron el mismo campo te preguntará qué dejar.',
@@ -1227,7 +1340,7 @@ async function resolverConflicto(datos) {
             quien: quienCorto
         });
     } else if (eleccion === 'forzar') {
-        const confirmar = await SipconsDialogo.mostrar({
+        const confirmar = await AppDialogo.mostrar({
             tipo: 'aviso',
             titulo: '¿Reemplazar los otros cambios?',
             mensaje: 'Se guardará solo lo que tienes en pantalla y se perderán los cambios de la otra versión en los campos que no coinciden.',
@@ -1245,55 +1358,6 @@ async function resolverConflicto(datos) {
 }
 
 // Función principal para cargar los detalles
-async function cargarComentarios(id) {
-    const lista = document.getElementById('lista-comentarios');
-    if (!lista) return;
-    try {
-        const res = await fetch(`../backend/obtener-comentarios-incidencia.php?incidencia_id=${encodeURIComponent(id)}`, { cache: 'no-store' });
-        const data = await res.json();
-        if (!data.success || !data.comentarios.length) {
-            lista.innerHTML = '<p class="estado-vacio">Sin comentarios todavía.</p>';
-            return;
-        }
-        lista.innerHTML = data.comentarios.map(c => `
-            <div class="comentario-item">
-                <p class="comentario-meta">${escapeAttr(c.autor_nombre)} · ${escapeAttr(c.creado_en)}${c.visible_cliente == 1 ? ' · <span class="badge-visible-cliente">Visible al cliente</span>' : ''}</p>
-                <p>${escapeAttr(c.comentario)}</p>
-            </div>
-        `).join('');
-    } catch (e) {
-        lista.innerHTML = '<p class="estado-vacio">No se pudieron cargar los comentarios.</p>';
-    }
-}
-
-async function agregarComentario(id) {
-    const textarea = document.getElementById('nuevo-comentario');
-    const visibleCliente = document.getElementById('comentario-visible-cliente');
-    const mensaje = document.getElementById('mensaje-comentario');
-    const comentario = textarea.value.trim();
-    if (!comentario) return;
-
-    mensaje.textContent = 'Guardando...';
-    try {
-        const res = await fetch('../backend/guardar-comentario-incidencia.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ incidencia_id: id, comentario, visible_cliente: visibleCliente.checked }),
-        });
-        const data = await res.json();
-        if (data.success) {
-            textarea.value = '';
-            visibleCliente.checked = false;
-            mensaje.textContent = '';
-            cargarComentarios(id);
-        } else {
-            mensaje.textContent = data.message || 'No se pudo guardar el comentario.';
-        }
-    } catch (e) {
-        mensaje.textContent = 'Error de conexión.';
-    }
-}
-
 async function cargarDetalleIncidencia(id) {
     try {
         const response = await fetch(`../backend/detalle.php?id=${encodeURIComponent(id)}`, {
@@ -1313,17 +1377,19 @@ async function cargarDetalleIncidencia(id) {
         estadoDetalle.limites = data.limites_subida || null;
 
         // Lista de técnicos desde la BD (usuarios con rol técnico/supervisor/administrador)
-        const tecnicosLista = await SipconsTecnicos.cargar();
+        const tecnicosLista = await AppTecnicos.cargar();
 
         document.getElementById("detalle-incidencia").innerHTML = createFormHTML(data, tecnicosLista);
+        window.APP_BRAND && APP_BRAND.llenarCategorias(document.getElementById('categoria'), (data.categoria || '').trim(), 'SELECCIONE UNA OPCIÓN');
         const form = document.getElementById("form-editar");
         form.addEventListener("submit", (e) => handleFormSubmit(e));
 
         // Configurar la funcionalidad de múltiples técnicos
         setupTecnicosMultiples(tecnicosLista);
+        setupAltasDesdeOrden(tecnicosLista);  // O-6
 
         // Selector de archivos nuevos (vista previa, quitar, aviso de peso)
-        estadoDetalle.selector = SipconsArchivos.crear(document.getElementById('archivos'), {
+        estadoDetalle.selector = AppArchivos.crear(document.getElementById('archivos'), {
             limites: estadoDetalle.limites || {},
             texto: 'Toca para agregar fotos o archivos'
         });
@@ -1333,7 +1399,7 @@ async function cargarDetalleIncidencia(id) {
 
         // Botón de eliminar: solo visible para administradores
         const btnEliminar = document.getElementById('btn-eliminar-incidencia');
-        window.sipconsOnAuthReady(function (auth) {
+        window.appOnAuthReady(function (auth) {
             const rol = auth.user && auth.user.rol;
             if (ROLES_ELIMINAR_INCIDENCIA.includes(rol)) {
                 btnEliminar.style.display = 'inline-block';
@@ -1342,14 +1408,22 @@ async function cargarDetalleIncidencia(id) {
         });
 
         // El rol Técnico no puede cerrar incidencias con/sin factura
-        window.sipconsAplicarRestriccionEstatus(document.getElementById("estatus"));
+        window.appAplicarRestriccionEstatus(document.getElementById("estatus"));
+        // Campos de motivo (Pendiente, Cancelado, reabrir) según el estatus
+        if (window.AppEstatus) AppEstatus.conectar(document.getElementById("estatus"), { guardado: data.estatus, motivo: data.motivo_estatus || '' });
 
         if (data.archivos) {
             cargarArchivosAdjuntos(data.archivos, id);
         }
 
-        cargarComentarios(id);
-        document.getElementById('btn-agregar-comentario').addEventListener('click', () => agregarComentario(id));
+        // D-42: una fecha futura deja la orden programada hasta ese día
+        const inputFecha = document.getElementById('fecha'), avisoProg = document.getElementById('aviso-programada');
+        if (inputFecha && avisoProg) {
+            const d = new Date(), hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const pintar = () => { avisoProg.hidden = !(inputFecha.value && inputFecha.value > hoy); };
+            inputFecha.addEventListener('input', pintar);
+            pintar();
+        }
 
         // Punto de partida para saber si hay cambios sin guardar
         estadoDetalle.original = leerFormulario();

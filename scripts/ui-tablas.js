@@ -105,7 +105,9 @@
     const CLASE_ESTATUS = {
         'abierto': 'etiqueta-info',
         'asignado': 'etiqueta-morado',
+        'en proceso': 'etiqueta-morado',
         'pendiente': 'etiqueta-alerta',
+        'cancelado': 'etiqueta-error',
         'programado': 'etiqueta-info',
         'completado': 'etiqueta-ok',
         'cerrado con factura': 'etiqueta-neutral',
@@ -120,5 +122,5 @@
         return `<span class="etiqueta ${clase}">${seguro}</span>`;
     }
 
-    window.SipconsTablas = { actualizar: prepararTodas, estatusHTML };
+    window.AppTablas = { actualizar: prepararTodas, estatusHTML };
 })();

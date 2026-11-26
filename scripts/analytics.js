@@ -8,8 +8,8 @@
 (function () {
     'use strict';
     try {
-        if (window.__sipconsAnalytics) return;
-        window.__sipconsAnalytics = true;
+        if (window.__appAnalytics) return;
+        window.__appAnalytics = true;
 
         var pagina = (location.pathname.split('/').pop() || 'index.html');
         if (/^analiticas\./i.test(pagina)) return; // el panel no se observa a sí mismo
@@ -18,17 +18,6 @@
         var ENDPOINT = (enPublic ? '../' : '') + 'backend/analytics_registrar.php';
         var SESION_TTL = 30 * 60 * 1000;
         var LOTE_MAX = 40;
-        // Cada cuánto se manda lo acumulado mientras la pestaña está abierta
-        // (antes 15 s: ~4 peticiones PHP por minuto por pestaña).
-        var ENVIO_CADA_MS = 2 * 60 * 1000;
-        // Al ocultar la pestaña solo se envía si pasó al menos esto desde el
-        // último envío (o si hay muchos eventos); al cerrar/salir siempre.
-        var OCULTAR_MIN_MS = 60 * 1000;
-        // Si el servidor responde 429/5xx o no responde, se pausa el envío
-        // en esta pestaña para no cargarlo más.
-        var PAUSA_MS = 10 * 60 * 1000;
-        var PAUSA_KEY = 'sipcons_an_pausa';
-        var ultimoEnvio = Date.now();
         var cola = [];
         var origFetch = window.fetch ? window.fetch.bind(window) : null;
 
@@ -47,10 +36,10 @@
         function sesionId() {
             try {
                 var ahora = Date.now();
-                var o = JSON.parse(localStorage.getItem('sipcons_an_s') || 'null');
+                var o = JSON.parse(localStorage.getItem('app_an_s') || 'null');
                 if (!o || !o.id || ahora - o.t > SESION_TTL) o = { id: rid() };
                 o.t = ahora;
-                localStorage.setItem('sipcons_an_s', JSON.stringify(o));
+                localStorage.setItem('app_an_s', JSON.stringify(o));
                 return o.id;
             } catch (e) {
                 return sesionFallback;
@@ -63,8 +52,8 @@
                 var r = new URL(document.referrer);
                 if (r.origin === location.origin) paginaPrevia = r.pathname.split('/').pop() || 'index.html';
             }
-            if (!paginaPrevia) paginaPrevia = sessionStorage.getItem('sipcons_an_prev') || '';
-            sessionStorage.setItem('sipcons_an_prev', pagina);
+            if (!paginaPrevia) paginaPrevia = sessionStorage.getItem('app_an_prev') || '';
+            sessionStorage.setItem('app_an_prev', pagina);
         } catch (e) { /* sin storage */ }
 
         function texto(s, n) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, n); }
@@ -79,22 +68,10 @@
             cola.push(ev);
             if (cola.length >= LOTE_MAX) flush(false);
         }
-        window.sipconsTrack = track;
-
-        function enPausa() {
-            try { return Date.now() < Number(sessionStorage.getItem(PAUSA_KEY) || 0); } catch (e) { return false; }
-        }
-        function pausar() {
-            try { sessionStorage.setItem(PAUSA_KEY, String(Date.now() + PAUSA_MS)); } catch (e) { /* nada */ }
-        }
+        window.appTrack = track;
 
         function flush(alSalir) {
             if (!cola.length) return;
-            if (enPausa()) {
-                if (alSalir) cola = []; // lo pendiente se descarta: el servidor está saturado
-                return;
-            }
-            ultimoEnvio = Date.now();
             var lote = cola.splice(0, 50);
             var cuerpo = JSON.stringify({
                 s: sesionId(), p: visitaId, pg: pagina, ref: paginaPrevia,
@@ -107,19 +84,17 @@
                     origFetch(ENDPOINT, {
                         method: 'POST', body: cuerpo, keepalive: true, credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json' }
-                    }).then(function (r) {
-                        if (r.status === 429 || r.status >= 500) pausar();
-                    }, function () { pausar(); });
+                    }).catch(function () {});
                 }
             } catch (e) { /* silencioso */ }
             if (cola.length) flush(alSalir);
         }
-        window.sipconsFlush = function () { flush(false); };
+        window.appFlush = function () { flush(false); };
 
         // Eventos que otras piezas (auth-guard) dejaron en cola antes de cargar este script
-        if (window.__sipconsTrackQ && window.__sipconsTrackQ.length) {
-            window.__sipconsTrackQ.forEach(function (q) { track(q[0], q[1], q[2], q[3], q[4]); });
-            window.__sipconsTrackQ = [];
+        if (window.__appTrackQ && window.__appTrackQ.length) {
+            window.__appTrackQ.forEach(function (q) { track(q[0], q[1], q[2], q[3], q[4]); });
+            window.__appTrackQ = [];
         }
 
         // ---------- página vista y carga
@@ -343,18 +318,12 @@
         }
 
         // ---------- envío periódico y al salir
-        // Todo se agrupa en lotes: una petición cada ENVIO_CADA_MS como máximo
-        // (o antes si se juntan LOTE_MAX eventos) y una al salir de la página.
         setInterval(function () {
-            if (document.visibilityState !== 'visible') return; // en segundo plano no se envía nada
-            enviarPermanencia();
+            if (document.visibilityState === 'visible') enviarPermanencia();
             flush(false);
-        }, ENVIO_CADA_MS);
+        }, 15000);
         document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState !== 'hidden') return;
-            enviarPermanencia();
-            // Cambiar de pestaña muchas veces ya no genera una petición por cambio
-            if (cola.length >= 10 || Date.now() - ultimoEnvio >= OCULTAR_MIN_MS) flush(true);
+            if (document.visibilityState === 'hidden') { enviarPermanencia(); flush(true); }
         });
         window.addEventListener('pagehide', function () { enviarPermanencia(); flush(true); });
     } catch (e) {
