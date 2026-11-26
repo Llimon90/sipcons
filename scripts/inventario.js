@@ -5,6 +5,7 @@
         var cuerpoProductos = document.getElementById('cuerpo-productos');
         var campoBusqueda = document.getElementById('campo-busqueda');
         var filtroBajoMinimo = document.getElementById('filtro-bajo-minimo');
+        var filtroCategoria = document.getElementById('filtro-categoria');
         var seccionMovimiento = document.getElementById('seccion-movimiento');
         var formMovimiento = document.getElementById('form-movimiento');
         var movimientoProductoId = document.getElementById('movimiento-producto-id');
@@ -20,18 +21,22 @@
             var params = new URLSearchParams();
             if (campoBusqueda.value.trim()) params.set('q', campoBusqueda.value.trim());
             if (filtroBajoMinimo.checked) params.set('bajo_minimo', '1');
+            if (filtroCategoria.value) params.set('categoria', filtroCategoria.value);
             fetch('../backend/buscar-productos.php?' + params.toString(), { credentials: 'same-origin' })
                 .then(function (r) { return r.json(); })
                 .then(function (productos) {
                     if (!Array.isArray(productos) || productos.length === 0) {
-                        cuerpoProductos.innerHTML = '<tr><td colspan="8">Sin productos registrados.</td></tr>';
+                        cuerpoProductos.innerHTML = '<tr><td colspan="10">Sin productos registrados.</td></tr>';
                         return;
                     }
                     cuerpoProductos.innerHTML = productos.map(function (p) {
                         var bajoMinimo = parseInt(p.stock_actual, 10) <= parseInt(p.stock_minimo, 10);
+                        var marcaModelo = [p.marca, p.modelo].filter(Boolean).map(escapeHtml).join(' / ');
                         return '<tr' + (bajoMinimo ? ' style="background:#fdecea;"' : '') + '>' +
                             '<td>' + escapeHtml(p.sku) + '</td>' +
                             '<td>' + escapeHtml(p.nombre) + '</td>' +
+                            '<td>' + escapeHtml(p.categoria) + '</td>' +
+                            '<td>' + marcaModelo + '</td>' +
                             '<td>' + escapeHtml(p.unidad) + '</td>' +
                             '<td>' + escapeHtml(p.stock_actual) + (bajoMinimo ? ' <i class="fas fa-exclamation-triangle" title="Stock bajo mínimo" style="color:#e74c3c;"></i>' : '') + '</td>' +
                             '<td>' + escapeHtml(p.stock_minimo) + '</td>' +
@@ -44,7 +49,7 @@
                         '</tr>';
                     }).join('');
                 })
-                .catch(function () { cuerpoProductos.innerHTML = '<tr><td colspan="8">No se pudo cargar el inventario.</td></tr>'; });
+                .catch(function () { cuerpoProductos.innerHTML = '<tr><td colspan="10">No se pudo cargar el inventario.</td></tr>'; });
         }
 
         formProducto.addEventListener('submit', function (e) {
@@ -52,6 +57,10 @@
             var datos = {
                 sku: document.getElementById('sku').value.trim(),
                 nombre: document.getElementById('nombre').value.trim(),
+                categoria: document.getElementById('categoria').value,
+                marca: document.getElementById('marca').value.trim(),
+                modelo: document.getElementById('modelo').value.trim(),
+                ubicacion: document.getElementById('ubicacion').value.trim(),
                 descripcion: document.getElementById('descripcion').value.trim(),
                 unidad: document.getElementById('unidad').value.trim() || 'pza',
                 stock_actual: document.getElementById('stock_actual').value,
@@ -119,6 +128,7 @@
 
         campoBusqueda.addEventListener('input', function () { clearTimeout(window.__invTimer); window.__invTimer = setTimeout(cargarProductos, 300); });
         filtroBajoMinimo.addEventListener('change', cargarProductos);
+        filtroCategoria.addEventListener('change', cargarProductos);
 
         cargarProductos();
     });

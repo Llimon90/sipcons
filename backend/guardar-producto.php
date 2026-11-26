@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../auth/permisos.php';
 require_once __DIR__ . '/../auth/audit.php';
+require_once __DIR__ . '/lib/inventario_helpers.php';
 requirePermiso('inventario');
 header('Content-Type: application/json');
 
@@ -10,7 +11,11 @@ try {
 
     $sku = trim((string)($data['sku'] ?? ''));
     $nombre = trim((string)($data['nombre'] ?? ''));
+    $categoria = trim((string)($data['categoria'] ?? ''));
+    $marca = trim((string)($data['marca'] ?? '')) ?: null;
+    $modelo = trim((string)($data['modelo'] ?? '')) ?: null;
     $descripcion = trim((string)($data['descripcion'] ?? ''));
+    $ubicacion = trim((string)($data['ubicacion'] ?? '')) ?: null;
     $unidad = trim((string)($data['unidad'] ?? 'pza')) ?: 'pza';
     $stockInicial = max(0, (int)($data['stock_actual'] ?? 0));
     $stockMinimo = max(0, (int)($data['stock_minimo'] ?? 0));
@@ -22,14 +27,19 @@ try {
         echo json_encode(['success' => false, 'message' => 'SKU y nombre son obligatorios.']);
         exit;
     }
+    if (!in_array($categoria, INV_CATEGORIAS, true)) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => 'Categoría no válida.']);
+        exit;
+    }
 
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare(
-        'INSERT INTO inventario_productos (sku, nombre, descripcion, unidad, stock_actual, stock_minimo, costo, precio_venta)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO inventario_productos (sku, nombre, categoria, marca, modelo, descripcion, ubicacion, unidad, stock_actual, stock_minimo, costo, precio_venta)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    $stmt->execute([$sku, $nombre, $descripcion, $unidad, $stockInicial, $stockMinimo, $costo, $precioVenta]);
+    $stmt->execute([$sku, $nombre, $categoria, $marca, $modelo, $descripcion, $ubicacion, $unidad, $stockInicial, $stockMinimo, $costo, $precioVenta]);
     $id = (int)$pdo->lastInsertId();
 
     if ($stockInicial > 0) {

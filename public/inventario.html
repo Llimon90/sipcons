@@ -68,8 +68,31 @@
             <input type="text" id="nombre" name="nombre" required>
           </div>
           <div>
+            <label for="categoria">Categoría:</label>
+            <select id="categoria" name="categoria">
+              <option value="Refacción">Refacción</option>
+              <option value="Equipo">Equipo</option>
+              <option value="Consumible">Consumible</option>
+              <option value="Herramienta">Herramienta</option>
+            </select>
+          </div>
+          <div>
             <label for="unidad">Unidad:</label>
             <input type="text" id="unidad" name="unidad" value="pza">
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="marca">Marca:</label>
+            <input type="text" id="marca" name="marca">
+          </div>
+          <div>
+            <label for="modelo">Modelo:</label>
+            <input type="text" id="modelo" name="modelo">
+          </div>
+          <div>
+            <label for="ubicacion">Ubicación:</label>
+            <input type="text" id="ubicacion" name="ubicacion" placeholder="Ej. Almacén A, anaquel 3">
           </div>
         </div>
         <div class="form-row">
@@ -104,7 +127,14 @@
     <section class="lista-incidencias">
       <h2>Catálogo</h2>
       <div class="form-row">
-        <input type="text" id="campo-busqueda" placeholder="Buscar por SKU, nombre o descripción..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+        <input type="text" id="campo-busqueda" placeholder="Buscar por SKU, nombre, marca, modelo o descripción..." style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+        <select id="filtro-categoria" style="padding:10px;">
+          <option value="">Todas las categorías</option>
+          <option value="Refacción">Refacción</option>
+          <option value="Equipo">Equipo</option>
+          <option value="Consumible">Consumible</option>
+          <option value="Herramienta">Herramienta</option>
+        </select>
         <label style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
           <input type="checkbox" id="filtro-bajo-minimo"> Solo bajo mínimo
         </label>
@@ -112,10 +142,10 @@
       <table class="tabla-ventas" style="width:100%; margin-top:15px;">
         <thead>
           <tr>
-            <th>SKU</th><th>Nombre</th><th>Unidad</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio</th><th>Acciones</th>
+            <th>SKU</th><th>Nombre</th><th>Categoría</th><th>Marca/Modelo</th><th>Unidad</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio</th><th>Acciones</th>
           </tr>
         </thead>
-        <tbody id="cuerpo-productos"><tr><td colspan="8">Cargando...</td></tr></tbody>
+        <tbody id="cuerpo-productos"><tr><td colspan="10">Cargando...</td></tr></tbody>
       </table>
     </section>
 
