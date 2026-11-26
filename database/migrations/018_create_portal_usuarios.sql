@@ -6,12 +6,18 @@
 -- viceversa. `contacto_id` es informativo (de qué contacto del cliente es
 -- este acceso); el acceso en sí vive aquí, no en cliente_contactos.
 --
+-- Sin FOREIGN KEY hacia `clientes`/`cliente_contactos`: el resto del
+-- esquema (p. ej. cliente_contactos.cliente_id, migración 007) tampoco usa
+-- claves foráneas reales hacia esas tablas, probablemente porque el tipo
+-- exacto de `clientes.id` en producción no es UNSIGNED. Se valida la
+-- existencia del cliente desde el backend, no a nivel de BD.
+--
 -- Cómo aplicar: igual que las migraciones anteriores, primero en apptest.
 
 CREATE TABLE IF NOT EXISTS `portal_usuarios` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cliente_id` INT UNSIGNED NOT NULL,
-  `contacto_id` INT UNSIGNED NULL,
+  `cliente_id` INT NOT NULL,
+  `contacto_id` INT NULL,
   `email` VARCHAR(190) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `activo` TINYINT(1) NOT NULL DEFAULT 1,
@@ -24,6 +30,5 @@ CREATE TABLE IF NOT EXISTS `portal_usuarios` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_portal_email` (`email`),
   KEY `idx_portal_cliente` (`cliente_id`),
-  CONSTRAINT `fk_portal_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_portal_contacto` FOREIGN KEY (`contacto_id`) REFERENCES `cliente_contactos` (`id`) ON DELETE SET NULL
+  KEY `idx_portal_contacto` (`contacto_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
