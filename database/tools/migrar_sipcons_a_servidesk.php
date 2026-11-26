@@ -164,7 +164,12 @@ try {
         migrar($pdo, 'modelos', $DESTINO, "{$P}modelos", $o('modelos'),
             ['id' => 'id', 'marca_id' => 'marca_id', 'nombre' => 'nombre',
              'tipo_equipo' => "COALESCE(NULLIF(tipo_equipo,''),'General')", 'activo' => 'COALESCE(activo,1)']);
-    if (existeTabla($pdo, $ORIGEN, 'documentos'))
+    if (existeTabla($pdo, $ORIGEN, 'documentos')) {
+        // La fecha de subida se llama `fecha_subida` en producción y en algunas
+        // versiones `subido_en`; usamos la que exista en el origen.
+        $colsDoc = columnas($pdo, $ORIGEN, 'documentos');
+        $fechaDoc = in_array('fecha_subida', $colsDoc, true) ? 'fecha_subida'
+                  : (in_array('subido_en', $colsDoc, true) ? 'subido_en' : 'NOW()');
         migrar($pdo, 'documentos', $DESTINO, "{$P}documentos", $o('documentos'), [
             'id' => 'id', 'modelo_id' => 'modelo_id',
             'tipo_documento' => "CASE LOWER(COALESCE(tipo_documento,''))
@@ -172,7 +177,8 @@ try {
                 WHEN 'imagen' THEN 'imagen' WHEN 'diagrama' THEN 'diagrama' WHEN 'esquema' THEN 'esquema'
                 WHEN 'firmware' THEN 'firmware' WHEN 'software' THEN 'software' ELSE 'otro' END",
             'nombre_archivo' => "COALESCE(NULLIF(nombre_archivo,''),'documento')", 'descripcion' => 'descripcion',
-            'ruta_archivo' => "COALESCE(ruta_archivo,'')", 'fecha_subida' => 'COALESCE(subido_en, NOW())']);
+            'ruta_archivo' => "COALESCE(ruta_archivo,'')", 'fecha_subida' => "COALESCE($fechaDoc, NOW())"]);
+    }
     migrar($pdo, 'clientes', $DESTINO, "{$P}clientes", $o('clientes'), [
         'id' => 'id', 'nombre' => 'nombre', 'rfc' => "COALESCE(rfc,'')", 'direccion' => "COALESCE(direccion,'')",
         'telefono' => "COALESCE(telefono,'')", 'contactos' => "COALESCE(contactos,'')", 'email' => "COALESCE(email,'')",
@@ -208,6 +214,39 @@ try {
         migrar($pdo, 'venta_archivos', $DESTINO, "{$P}venta_archivos", $o('venta_archivos'),
             ['id' => 'id', 'venta_id' => 'venta_id', 'ruta_archivo' => "COALESCE(ruta_archivo,'')",
              'nombre_archivo' => 'nombre_archivo', 'tipo_archivo' => 'tipo_archivo']);
+
+    // Ventas MONOLÍTICAS (producción vieja): el equipo vive DENTRO de `ventas`
+    // (columnas equipo/marca/modelo/numero_serie/garantia/servicio/notas), no en
+    // venta_detalles. Servidesk guarda el equipo solo en e1_venta_detalles, así que
+    // generamos una partida de detalle por cada venta con equipo embebido que todavía
+    // NO tenga filas en venta_detalles (para no duplicar las ventas que ya usan detalle).
+    // El paso se omite solo cuando `ventas` no tiene columna `equipo` (esquema nuevo).
+    $colsVentaOrigen = columnas($pdo, $ORIGEN, 'ventas');
+    if (in_array('equipo', $colsVentaOrigen, true)) {
+        // Sin id explícito: el AUTO_INCREMENT ya quedó sobre el MAX id migrado de
+        // venta_detalles (los INSERT previos conservaron sus ids), así que las
+        // partidas nuevas no chocan. NO se usa ALTER TABLE aquí: un DDL haría un
+        // commit implícito y rompería la transacción de toda la migración.
+        $fromMono = "{$o('ventas')} v
+            WHERE COALESCE(NULLIF(TRIM(v.numero_serie),''), NULLIF(TRIM(v.equipo),'')) IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM {$o('venta_detalles')} d WHERE d.venta_id = v.id)";
+        migrar($pdo, 'venta_detalles (equipo embebido en ventas)', $DESTINO, "{$P}venta_detalles", $fromMono, [
+            'venta_id' => 'v.id', 'articulo_id' => 'NULL', 'equipo' => 'v.equipo', 'marca' => 'v.marca',
+            'modelo' => 'v.modelo', 'numero_serie' => "COALESCE(v.numero_serie,'')", 'garantia' => 'v.garantia',
+            'calibracion' => '0', 'servicio' => 'COALESCE(v.servicio,0)', 'frecuencia_servicio' => '0',
+            'notas' => 'v.notas', 'proxima_calibracion' => 'NULL', 'proximo_servicio' => 'NULL']);
+
+        // factura_path (archivo único del esquema viejo) -> e1_venta_archivos, si trae
+        // ruta y la venta no tiene ya archivos migrados.
+        if (in_array('factura_path', $colsVentaOrigen, true) && existeTabla($pdo, $ORIGEN, 'venta_archivos')) {
+            $fromFact = "{$o('ventas')} v
+                WHERE NULLIF(TRIM(v.factura_path),'') IS NOT NULL
+                  AND NOT EXISTS (SELECT 1 FROM {$o('venta_archivos')} a WHERE a.venta_id = v.id)";
+            migrar($pdo, 'venta_archivos (factura_path embebida)', $DESTINO, "{$P}venta_archivos", $fromFact, [
+                'venta_id' => 'v.id', 'ruta_archivo' => 'v.factura_path',
+                'nombre_archivo' => "'factura'", 'tipo_archivo' => 'NULL']);
+        }
+    }
 
     echo "4. Padrón de equipos\n";
     migrar($pdo, 'padron_equipos', $DESTINO, "{$P}padron_equipos", $o('padron_equipos'), [
@@ -269,22 +308,40 @@ try {
 }
 
 echo "\n== Verificación (origen -> destino) ==\n";
+// Partidas de detalle y archivos generados desde ventas monolíticas: el destino
+// tiene MÁS filas que el origen en esas dos tablas, y eso es correcto (no un error).
+// Calculamos cuántas se agregaron para que el conteo esperado cuadre.
+$embDet = 0; $embArch = 0;
+if (in_array('equipo', columnas($pdo, $ORIGEN, 'ventas'), true)) {
+    $embDet = (int)$pdo->query("SELECT COUNT(*) FROM {$o('ventas')} v
+        WHERE COALESCE(NULLIF(TRIM(v.numero_serie),''), NULLIF(TRIM(v.equipo),'')) IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM {$o('venta_detalles')} d WHERE d.venta_id = v.id)")->fetchColumn();
+    if (in_array('factura_path', columnas($pdo, $ORIGEN, 'ventas'), true) && existeTabla($pdo, $ORIGEN, 'venta_archivos')) {
+        $embArch = (int)$pdo->query("SELECT COUNT(*) FROM {$o('ventas')} v
+            WHERE NULLIF(TRIM(v.factura_path),'') IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM {$o('venta_archivos')} a WHERE a.venta_id = v.id)")->fetchColumn();
+    }
+}
+// [origen, destino, filas_extra_esperadas_en_destino]
 $pares = [
-    ['clientes', "{$P}clientes"], ['cliente_contactos', "{$P}cliente_contactos"],
-    ['incidencias', "{$P}incidencias"], ['archivos_incidencias', "{$P}archivos_incidencias"],
-    ['ventas', "{$P}ventas"], ['venta_detalles', "{$P}venta_detalles"], ['venta_archivos', "{$P}venta_archivos"],
-    ['padron_equipos', "{$P}padron_equipos"], ['marcas', "{$P}marcas"], ['modelos', "{$P}modelos"],
-    ['documentos', "{$P}documentos"], ['usuarios', 'usuarios'],
+    ['clientes', "{$P}clientes", 0], ['cliente_contactos', "{$P}cliente_contactos", 0],
+    ['incidencias', "{$P}incidencias", 0], ['archivos_incidencias', "{$P}archivos_incidencias", 0],
+    ['ventas', "{$P}ventas", 0], ['venta_detalles', "{$P}venta_detalles", $embDet],
+    ['venta_archivos', "{$P}venta_archivos", $embArch],
+    ['padron_equipos', "{$P}padron_equipos", 0], ['marcas', "{$P}marcas", 0], ['modelos', "{$P}modelos", 0],
+    ['documentos', "{$P}documentos", 0], ['usuarios', 'usuarios', 0],
 ];
 $problemas = 0;
-foreach ($pares as [$src, $dst]) {
+foreach ($pares as [$src, $dst, $extra]) {
     $co = cuenta($pdo, $ORIGEN, $src);
     $cd = $dst === 'usuarios'
         ? (int)$pdo->query("SELECT COUNT(*) FROM {$dc('usuarios')} WHERE empresa_id = $EMPRESA")->fetchColumn()
         : cuenta($pdo, $DESTINO, $dst);
     if ($co < 0) { printf("   %-22s (no existe en origen)\n", $src); continue; }
-    if ($co !== $cd) $problemas++;
-    printf("   %-22s %5d -> %-5d %s\n", $src, $co, $cd, $co === $cd ? 'OK' : '*** DIFERENTE ***');
+    $esperado = $co + $extra;
+    if ($esperado !== $cd) $problemas++;
+    $nota = $extra > 0 ? " (incluye +$extra de ventas monolíticas)" : '';
+    printf("   %-22s %5d -> %-5d %s%s\n", $src, $co, $cd, $esperado === $cd ? 'OK' : '*** DIFERENTE ***', $nota);
 }
 echo $problemas === 0 ? "\nTodos los conteos cuadran.\n" : "\nHay $problemas tabla(s) con conteo distinto: revisar.\n";
 exit($problemas === 0 ? 0 : 2);
