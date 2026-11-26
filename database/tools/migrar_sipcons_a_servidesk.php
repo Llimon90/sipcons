@@ -36,7 +36,7 @@
 declare(strict_types=1);
 mb_internal_encoding('UTF-8');
 
-$opts = getopt('', ['origen:', 'destino:', 'host:', 'user:', 'pass:', 'empresa:', 'prefijo-folio:', 'force', 'migrar-auditoria']);
+$opts = getopt('', ['origen:', 'destino:', 'host:', 'user:', 'pass:', 'empresa:', 'prefijo-folio:', 'force', 'migrar-auditoria', 'resolver-folios-duplicados']);
 $ORIGEN   = $opts['origen']  ?? null;
 $DESTINO  = $opts['destino'] ?? null;
 $HOST     = $opts['host']    ?? '127.0.0.1';
@@ -45,6 +45,7 @@ $PASS     = $opts['pass']    ?? '';
 $EMPRESA  = (int)($opts['empresa'] ?? 1);
 $FORCE    = isset($opts['force']);
 $MIG_AUD  = isset($opts['migrar-auditoria']);
+$RESOLVER_DUP = isset($opts['resolver-folios-duplicados']);
 $PREF_OVERRIDE = $opts['prefijo-folio'] ?? null;
 $P = 'e' . $EMPRESA . '_';
 
@@ -140,6 +141,34 @@ $mapRol = "CASE rol
              WHEN 'Técnico/Administrativo' THEN 'Supervisor'
              ELSE 'Técnico' END";
 
+// Folios de incidencia duplicados: Servidesk exige numero_incidente único
+// (uniq_numero_incidente en e1_incidencias). Si el origen trae duplicados, el
+// INSERT haría rollback. Por defecto se detiene y los lista (no cambia un folio
+// de negocio en silencio); con --resolver-folios-duplicados se conservan TODAS
+// las incidencias y a las repetidas (salvo la de menor id) se les agrega el
+// sufijo "-<id>" para que el folio quede único y no se pierda ninguna.
+$dups = $pdo->query("SELECT numero_incidente, COUNT(*) n FROM {$o('incidencias')}
+    WHERE numero_incidente IS NOT NULL AND numero_incidente <> ''
+    GROUP BY numero_incidente HAVING n > 1")->fetchAll();
+if ($dups) {
+    $lista = implode(', ', array_map(fn($d) => $d['numero_incidente'] . " (x{$d['n']})", $dups));
+    if (!$RESOLVER_DUP) {
+        fwrite(STDERR, "\nHay folios de incidencia duplicados en el origen: $lista\n");
+        fwrite(STDERR, "Servidesk exige numero_incidente único. Opciones:\n");
+        fwrite(STDERR, "  - Corrige esos folios en el origen (decide cuál conservar), o\n");
+        fwrite(STDERR, "  - Reejecuta con --resolver-folios-duplicados para conservar ambas\n");
+        fwrite(STDERR, "    (a la de mayor id se le agrega el sufijo -<id> en el folio).\n");
+        exit(1);
+    }
+    echo "AVISO: folios duplicados que se resolverán con sufijo -<id>: $lista\n";
+}
+// Expresión del folio: con la bandera, sufija las repetidas (salvo la de menor id).
+$exprFolio = $RESOLVER_DUP
+    ? "CASE WHEN EXISTS (SELECT 1 FROM {$o('incidencias')} i2
+            WHERE i2.numero_incidente = i.numero_incidente AND i2.id < i.id)
+         THEN CONCAT(i.numero_incidente, '-', i.id) ELSE i.numero_incidente END"
+    : 'i.numero_incidente';
+
 $pdo->beginTransaction();
 try {
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
@@ -188,12 +217,12 @@ try {
             ['id' => 'id', 'cliente_id' => 'cliente_id', 'nombre' => 'nombre', 'telefono' => 'telefono', 'email' => 'email']);
 
     echo "2. Incidencias (órdenes de servicio) y archivos\n";
-    migrar($pdo, 'incidencias', $DESTINO, "{$P}incidencias", $o('incidencias'), [
-        'id' => 'id', 'reporte_cliente' => 'reporte_cliente', 'numero_incidente' => 'numero_incidente',
-        'cliente' => 'cliente', 'contacto' => 'contacto', 'sucursal' => 'sucursal', 'sucursal_id' => 'NULL',
-        'fecha' => 'fecha', 'tecnico' => 'tecnico', 'falla' => 'falla', 'categoria' => "COALESCE(categoria,'')",
-        'numero_serie' => 'numero_serie', 'estatus' => 'estatus', 'motivo_estatus' => 'NULL',
-        'accion' => 'accion', 'notas' => 'notas', 'clave_envio' => 'NULL']);
+    migrar($pdo, 'incidencias', $DESTINO, "{$P}incidencias", "{$o('incidencias')} i", [
+        'id' => 'i.id', 'reporte_cliente' => 'i.reporte_cliente', 'numero_incidente' => $exprFolio,
+        'cliente' => 'i.cliente', 'contacto' => 'i.contacto', 'sucursal' => 'i.sucursal', 'sucursal_id' => 'NULL',
+        'fecha' => 'i.fecha', 'tecnico' => 'i.tecnico', 'falla' => 'i.falla', 'categoria' => "COALESCE(i.categoria,'')",
+        'numero_serie' => 'i.numero_serie', 'estatus' => 'i.estatus', 'motivo_estatus' => 'NULL',
+        'accion' => 'i.accion', 'notas' => 'i.notas', 'clave_envio' => 'NULL']);
     if (existeTabla($pdo, $ORIGEN, 'archivos_incidencias'))
         migrar($pdo, 'archivos_incidencias', $DESTINO, "{$P}archivos_incidencias", $o('archivos_incidencias'),
             ['id' => 'id', 'incidencia_id' => 'incidencia_id', 'ruta_archivo' => 'ruta_archivo']);
