@@ -45,7 +45,8 @@
             { pagina: 'ajustes.html', texto: 'Ajustes', icono: 'fa-cog' }
         ] },
         { grupo: 'Ayuda', items: [
-            { pagina: 'soporte.html', texto: 'Soporte técnico', icono: 'fa-headset' }
+            { pagina: 'soporte.html', texto: 'Soporte técnico', icono: 'fa-headset' },
+            { pagina: 'manual.html', texto: 'Manual de usuario', icono: 'fa-book-open' }
         ] }
     ];
 

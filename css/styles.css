@@ -3210,3 +3210,66 @@ body.buscador-abierto { overflow: hidden; }
   body.con-nav-inferior { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
 }
 @media print { .nav-inferior, .buscador-global { display: none !important; } }
+
+/* Dashboard de Inicio (bandeja de trabajo, avisos, carga por técnico) */
+.inicio-subtitulo { color: #6c7a89; margin-top: 4px; }
+
+.inicio-indicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.inicio-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  min-height: 44px;
+  border: 1px solid #dfe6ec;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+.inicio-chip:hover { border-color: #3498db; }
+.inicio-chip.activo { border-color: #3498db; background: rgba(52, 152, 219, 0.08); }
+.inicio-chip.peligro { border-color: #e74c3c; color: #c0392b; }
+.inicio-chip-num { font-size: 1.1rem; font-weight: 700; }
+.inicio-chip-etiqueta { font-size: 0.85rem; color: #6c7a89; }
+
+.inicio-avisos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.inicio-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  background: #f7f9fb;
+}
+.inicio-aviso i { margin-top: 2px; }
+.inicio-aviso strong { display: block; }
+.inicio-aviso span { color: #6c7a89; font-size: 0.9rem; }
+.inicio-aviso-peligro { border-left-color: #e74c3c; }
+.inicio-aviso-peligro i { color: #e74c3c; }
+.inicio-aviso-alerta { border-left-color: #e8a33d; }
+.inicio-aviso-alerta i { color: #e8a33d; }
+.inicio-aviso-info i { color: #3498db; }
+
+.inicio-columnas { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+.inicio-lateral { display: flex; flex-direction: column; gap: 16px; }
+.inicio-carga-wrap, .inicio-cambios-wrap { background: #fff; border: 1px solid #dfe6ec; border-radius: 8px; padding: 16px; }
+.inicio-carga-wrap h3, .inicio-cambios-wrap h3 { margin: 0 0 12px; font-size: 1rem; }
+#inicio-carga, #inicio-cambios { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+#inicio-carga li, #inicio-cambios li { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; }
+.inicio-carga-total { font-weight: 700; color: #3498db; }
+.inicio-carga-sin-tecnico .inicio-carga-total { color: #e74c3c; }
+.inicio-cambio-hace { color: #6c7a89; white-space: nowrap; }
+.inicio-vacio { color: #6c7a89; }
+tr.fila-atrasada td:first-child { border-left: 3px solid #e74c3c; }
+.inicio-modulos-encabezado { margin-top: 32px; }
+
+@media (max-width: 900px) {
+  .inicio-columnas { grid-template-columns: 1fr; }
+}

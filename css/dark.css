@@ -1113,3 +1113,16 @@ html[data-theme="dark"] .buscador-item small, html[data-theme="dark"] .buscador-
 html[data-theme="dark"] .nav-inferior { background: #16212d; border-color: #2c3d50; }
 html[data-theme="dark"] .nav-inferior a, html[data-theme="dark"] .nav-inferior button { color: #9fb0c1; }
 html[data-theme="dark"] .nav-inferior .activo { color: #6ab7f5; }
+
+/* Dashboard de Inicio */
+html[data-theme="dark"] .inicio-subtitulo { color: #8fa1b3; }
+html[data-theme="dark"] .inicio-chip { background: #16212d; border-color: #2c3d50; color: #e6edf3; }
+html[data-theme="dark"] .inicio-chip:hover { border-color: #4aa8ee; }
+html[data-theme="dark"] .inicio-chip.activo { border-color: #4aa8ee; background: rgba(74, 168, 238, 0.12); }
+html[data-theme="dark"] .inicio-chip.peligro { border-color: #e57373; color: #ff8a80; }
+html[data-theme="dark"] .inicio-chip-etiqueta { color: #8fa1b3; }
+html[data-theme="dark"] .inicio-aviso { background: #16212d; }
+html[data-theme="dark"] .inicio-aviso span { color: #8fa1b3; }
+html[data-theme="dark"] .inicio-carga-wrap, html[data-theme="dark"] .inicio-cambios-wrap { background: #16212d; border-color: #2c3d50; }
+html[data-theme="dark"] .inicio-carga-total { color: #6ab7f5; }
+html[data-theme="dark"] .inicio-cambio-hace, html[data-theme="dark"] .inicio-vacio { color: #8fa1b3; }

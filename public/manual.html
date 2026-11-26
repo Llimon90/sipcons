@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de usuario</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png" />
+  <link rel="icon" href="../img/favicon.ico" />
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css?v=20261126a">
+  <link rel="stylesheet" href="../css/dark.css?v=20261126a">
+  <script src="../scripts/auth-guard.js?v=20261009c"></script>
+  <script src="../scripts/menu-lateral.js?v=20261126"></script>
+  <style>
+    .mn-cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .mn-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; min-height: 44px; border: 1px solid #3498db; border-radius: 8px; background: #fff; color: #3498db; cursor: pointer; font: inherit; }
+    .mn-btn:hover { background: #3498db; color: #fff; }
+    .mn-buscador { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid #dfe6ec; border-radius: 8px; margin: 16px 0; }
+    .mn-buscador input { border: none; outline: none; flex: 1; font: inherit; min-height: 24px; }
+    .mn-cuerpo { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+    .mn-indice { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 4px; }
+    .mn-indice a { padding: 8px 10px; border-radius: 6px; color: inherit; text-decoration: none; font-size: 0.9rem; }
+    .mn-indice a:hover, .mn-indice a.activo { background: rgba(52, 152, 219, 0.1); color: #3498db; }
+    .mn-tema { background: #fff; border: 1px solid #dfe6ec; border-radius: 8px; padding: 20px 24px; margin-bottom: 16px; }
+    .mn-tema h2 { margin-top: 0; }
+    .mn-tema[hidden] { display: none; }
+    .mn-sin-resultados { color: #6c7a89; }
+    html[data-theme="dark"] .mn-btn { background: #16212d; border-color: #4aa8ee; color: #6ab7f5; }
+    html[data-theme="dark"] .mn-btn:hover { background: #4aa8ee; color: #0e1620; }
+    html[data-theme="dark"] .mn-buscador { background: #16212d; border-color: #2c3d50; }
+    html[data-theme="dark"] .mn-indice a:hover, html[data-theme="dark"] .mn-indice a.activo { background: rgba(74, 168, 238, 0.15); color: #6ab7f5; }
+    html[data-theme="dark"] .mn-tema { background: #16212d; border-color: #2c3d50; }
+    @media print {
+      .sidebar, .mobile-home-btn, .mn-cabecera-acciones, .mn-buscador, .mn-indice, .nav-inferior { display: none !important; }
+      .mn-cuerpo { grid-template-columns: 1fr; }
+      main#mainContent { margin-left: 0 !important; }
+    }
+    @media (max-width: 900px) { .mn-cuerpo { grid-template-columns: 1fr; } .mn-indice { position: static; } }
+  </style>
+</head>
+<body>
+
+  <button class="mobile-home-btn" onclick="window.location.href='../index.html'">
+    <i class="fas fa-home"></i>
+    <span>Volver al Inicio</span>
+  </button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="fas fa-tools"></i> Panel</h2>
+      <button id="toggleSidebar" class="toggle-sidebar"><i class="fas fa-chevron-left"></i></button>
+    </div>
+    <ul><!-- Menú por áreas: lo arma scripts/menu-lateral.js --></ul>
+    <div class="sidebar-footer">
+      <div class="user-info"><i class="fas fa-user-circle"></i><span class="user-name">Usuario</span></div>
+    </div>
+  </aside>
+
+  <main id="mainContent">
+    <section class="encabezado mn-cabecera">
+      <div>
+        <h2>Manual de usuario</h2>
+        <p>Todo lo que necesitas para usar SIPCONS, explicado por módulo. Busca un tema o recorre el índice.</p>
+      </div>
+      <div class="mn-cabecera-acciones">
+        <button type="button" class="mn-btn" id="mn-pdf"><i class="fas fa-file-pdf"></i> Descargar PDF</button>
+      </div>
+    </section>
+
+    <div class="mn-buscador">
+      <i class="fas fa-magnifying-glass"></i>
+      <input type="search" id="mn-buscar" placeholder="Busca un tema: prioridad, SLA, cerrar incidencia, cuentas por cobrar, portal del cliente…" autocomplete="off">
+    </div>
+    <p class="mn-sin-resultados" id="mn-sin-resultados" hidden>No encontramos ese tema. Prueba con otra palabra.</p>
+
+    <div class="mn-cuerpo">
+      <nav class="mn-indice" id="mn-indice"></nav>
+
+      <div id="mn-temas">
+        <article class="mn-tema" id="t-incidencias" data-titulo="Incidencias">
+          <h2>Incidencias</h2>
+          <p>Da de alta un ticket desde <strong>Incidencias</strong>: cliente, sucursal, categoría, prioridad (Baja/Media/Alta/Crítica) y la falla reportada. La prioridad y la categoría determinan el SLA de respuesta y cierre de esa incidencia (configurable en Ajustes → Reglas de SLA).</p>
+          <p>En el detalle de cada ticket puedes: cambiar estatus (Abierto, Asignado, Pendiente, Completado, Cerrado con/sin factura), registrar las refacciones usadas (descuenta inventario), llevar una bitácora de tiempo invertido, agregar etiquetas y comentarios internos. Un comentario marcado "visible para el cliente" aparece también en su portal.</p>
+          <p>Cerrar con o sin factura requiere permiso; algunos usuarios pueden tenerlo restringido desde el <code>.env</code> del sistema.</p>
+        </article>
+
+        <article class="mn-tema" id="t-buscar" data-titulo="Buscar incidencias e Historial">
+          <h2>Buscar incidencias e Historial</h2>
+          <p><strong>Buscar incidencias</strong> filtra por folio, cliente, sucursal, estatus, técnico o rango de fechas. El buscador global (<kbd>Ctrl</kbd>+<kbd>K</kbd> en cualquier pantalla) busca a la vez en incidencias, clientes y equipos del padrón.</p>
+          <p><strong>Historial</strong> muestra la bitácora de auditoría: quién cambió qué y cuándo, en cualquier módulo del sistema.</p>
+        </article>
+
+        <article class="mn-tema" id="t-problemas" data-titulo="Problemas">
+          <h2>Problemas</h2>
+          <p>Cuando varias incidencias comparten la misma causa raíz, agrúpalas en un <strong>Problema</strong> (folio PRB-#####). Documenta la causa raíz y vincula los folios de incidencia relacionados; el problema se cierra cuando la causa ya se resolvió de fondo.</p>
+        </article>
+
+        <article class="mn-tema" id="t-cambios" data-titulo="Cambios">
+          <h2>Cambios</h2>
+          <p>Una solicitud de <strong>Cambio</strong> (folio CAM-#####) documenta algo que se va a modificar (equipo, configuración, proceso) con su tipo, riesgo y fecha planeada. Requiere aprobación formal de un Administrador antes de poder marcarse como implementado.</p>
+        </article>
+
+        <article class="mn-tema" id="t-clientes" data-titulo="Clientes">
+          <h2>Clientes</h2>
+          <p>Directorio de clientes con sus contactos y su <strong>padrón de equipos</strong> instalados: marca, modelo, número de serie, y si tienen póliza de servicio o garantía/calibración. Diez días antes de que venza una póliza, el sistema genera solo un ticket de mantenimiento preventivo.</p>
+          <p>Desde el perfil del cliente también se da de alta el acceso al <strong>portal de autoservicio</strong> (ver siguiente tema).</p>
+        </article>
+
+        <article class="mn-tema" id="t-portal" data-titulo="Portal de clientes">
+          <h2>Portal de clientes (autoservicio)</h2>
+          <p>Cada cliente puede tener su propio acceso (correo + contraseña, independiente del login de personal) para entrar a <code>/public/portal/</code> y: ver el estatus de sus tickets, abrir uno nuevo, pedir un servicio del catálogo, consultar la base de conocimiento pública, y calificar el servicio al cerrar un ticket (encuesta CSAT).</p>
+          <p>Un cliente nunca ve tickets de otro cliente ni puede acceder a ninguna pantalla de personal, y viceversa.</p>
+        </article>
+
+        <article class="mn-tema" id="t-ventas" data-titulo="Ventas">
+          <h2>Ventas</h2>
+          <p>Registra la venta de un equipo con su número de serie: queda en el historial de ventas y se agrega automáticamente al padrón de equipos del cliente.</p>
+        </article>
+
+        <article class="mn-tema" id="t-cotizaciones" data-titulo="Cotizaciones">
+          <h2>Cotizaciones</h2>
+          <p>Cotiza antes de vender (folio COT-#####) con líneas de producto o servicio e IVA calculado. Una cotización aprobada se puede "Convertir a venta" con un clic.</p>
+        </article>
+
+        <article class="mn-tema" id="t-cxc" data-titulo="Cuentas por cobrar">
+          <h2>Cuentas por cobrar</h2>
+          <p>Lleva el saldo pendiente de cada cliente, con pagos parciales y marca automática de "Vencida" cuando pasa la fecha límite sin saldar.</p>
+        </article>
+
+        <article class="mn-tema" id="t-catalogo" data-titulo="Catálogo de servicios">
+          <h2>Catálogo de servicios</h2>
+          <p>Lista de servicios que un cliente puede solicitar (instalaciones, capacitaciones, visitas) sin necesidad de reportar una falla. Las solicitudes llegan a una bandeja para asignarles técnico, igual que una incidencia.</p>
+        </article>
+
+        <article class="mn-tema" id="t-inventario" data-titulo="Inventario">
+          <h2>Inventario</h2>
+          <p>Kárdex de refacciones, equipos, consumibles y herramientas: entradas, salidas y ajustes de stock, con alerta cuando algo llega a su mínimo. Al usar una refacción en una incidencia, el stock se descuenta solo (y se puede devolver si no se usó).</p>
+        </article>
+
+        <article class="mn-tema" id="t-finanzas" data-titulo="Finanzas">
+          <h2>Finanzas</h2>
+          <p>Panel ejecutivo (solo Administrador) con ventas, cobrado vs. por cobrar, cotizaciones pendientes vs. convertidas, y valor de inventario, desglosado por cliente y sucursal.</p>
+        </article>
+
+        <article class="mn-tema" id="t-kb" data-titulo="Base de conocimiento">
+          <h2>Base de conocimiento</h2>
+          <p>Artículos de solución por categoría, para que los técnicos no repitan el mismo diagnóstico dos veces. Un artículo puede marcarse "Público" para que también aparezca en el portal de clientes.</p>
+        </article>
+
+        <article class="mn-tema" id="t-estadisticas" data-titulo="Estadísticas y Métricas">
+          <h2>Estadísticas y Métricas</h2>
+          <p><strong>Estadísticas e informes</strong>: cumplimiento de SLA, tiempos de respuesta y cierre, carga por técnico y reincidencias, con filtros de fecha, técnico y sucursal. <strong>Mis métricas</strong> es la misma información, pero solo de tus propias incidencias (para el rol Técnico).</p>
+        </article>
+
+        <article class="mn-tema" id="t-usuarios" data-titulo="Usuarios y Ajustes">
+          <h2>Usuarios y Ajustes</h2>
+          <p><strong>Usuarios</strong> da de alta al personal con su rol (Técnico, Administrativo, Supervisor, Administrador, Programador). <strong>Ajustes</strong> controla qué módulo ve cada rol (checklist de privilegios), las reglas de SLA por categoría/prioridad, las reglas de automatización (asignar técnico o cambiar prioridad según categoría/sucursal), plantillas de respuesta rápida y etiquetas, además del tema claro/oscuro.</p>
+        </article>
+
+        <article class="mn-tema" id="t-soporte" data-titulo="Soporte">
+          <h2>Soporte</h2>
+          <p>Manuales y documentación técnica por marca y modelo de equipo, para consulta rápida de los técnicos en campo.</p>
+        </article>
+
+        <article class="mn-tema" id="t-preguntas" data-titulo="Preguntas frecuentes">
+          <h2>Preguntas frecuentes</h2>
+          <p><strong>¿Por qué no puedo cerrar una incidencia?</strong> Tu rol o tu usuario puede tener restringido el cierre con/sin factura; pídele a un Administrador que la cierre o te dé el permiso.</p>
+          <p><strong>¿Por qué no veo un módulo en el menú?</strong> Tu rol no tiene permiso para ese módulo; un Administrador puede activarlo en Ajustes → Privilegios.</p>
+          <p><strong>¿Cómo recupero mi contraseña del portal de clientes?</strong> Usa "Olvidé mi contraseña" en el login del portal; el enlace lo genera el sistema para que el administrador te lo comparta.</p>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <script src="../scripts/sidebar-state.js?v=20261002"></script>
+  <script>
+    (function () {
+      'use strict';
+      var temas = Array.prototype.slice.call(document.querySelectorAll('.mn-tema'));
+      var indice = document.getElementById('mn-indice');
+      var pTitulo = document.createElement('p');
+      pTitulo.className = 'mn-indice-titulo';
+      pTitulo.textContent = 'Contenido';
+      pTitulo.style.fontWeight = '600';
+      pTitulo.style.margin = '0 0 4px';
+      indice.appendChild(pTitulo);
+
+      temas.forEach(function (tema) {
+        var a = document.createElement('a');
+        a.href = '#' + tema.id;
+        a.textContent = tema.dataset.titulo;
+        a.addEventListener('click', function () {
+          indice.querySelectorAll('a').forEach(function (el) { el.classList.remove('activo'); });
+          a.classList.add('activo');
+        });
+        indice.appendChild(a);
+      });
+
+      document.getElementById('mn-buscar').addEventListener('input', function (e) {
+        var q = e.target.value.trim().toLowerCase();
+        var algunaVisible = false;
+        temas.forEach(function (tema) {
+          var visible = !q || tema.textContent.toLowerCase().indexOf(q) !== -1;
+          tema.hidden = !visible;
+          if (visible) algunaVisible = true;
+        });
+        indice.querySelectorAll('a').forEach(function (a, i) { a.parentElement.hidden = false; a.style.display = temas[i].hidden ? 'none' : ''; });
+        document.getElementById('mn-sin-resultados').hidden = algunaVisible;
+      });
+
+      document.getElementById('mn-pdf').addEventListener('click', function () { window.print(); });
+    })();
+  </script>
+</body>
+</html>
