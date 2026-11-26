@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis solicitudes — Portal SIPCONS</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../img/favicon-32.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="portal.css" />
+</head>
+<body>
+
+<div class="portal-shell">
+  <header class="portal-topbar">
+    <img class="logo" src="../../img/logo-sipcons.png" alt="SIPCONS" />
+    <nav>
+      <a href="mis-tickets.html"><i class="fas fa-arrow-left"></i> Mis tickets</a>
+      <a href="solicitar-servicio.html"><i class="fas fa-plus"></i> Nueva solicitud</a>
+      <a href="#" id="btnSalir">Salir</a>
+    </nav>
+  </header>
+
+  <section class="card">
+    <h2>Mis solicitudes de servicio</h2>
+    <div id="contenedorSolicitudes"><p class="estado-vacio">Cargando…</p></div>
+  </section>
+</div>
+
+<script>
+  function escapeHtml(t) {
+    return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function cargarSolicitudes() {
+    const contenedor = document.getElementById('contenedorSolicitudes');
+    try {
+      const res = await fetch('../../backend/portal/mis-solicitudes.php', { credentials: 'include' });
+      if (res.status === 401) { window.location.href = 'login.html'; return; }
+      const data = await res.json();
+      if (!data.success || !data.solicitudes.length) {
+        contenedor.innerHTML = '<p class="estado-vacio">Todavía no has pedido ningún servicio. <a href="solicitar-servicio.html">Solicita el primero</a>.</p>';
+        return;
+      }
+      const filas = data.solicitudes.map(s => `
+        <tr>
+          <td>${escapeHtml(s.folio)}</td>
+          <td>${escapeHtml(s.servicio_nombre)}</td>
+          <td><span class="badge-estatus">${escapeHtml(s.estatus)}</span></td>
+          <td>${escapeHtml(s.fecha)}</td>
+        </tr>
+      `).join('');
+      contenedor.innerHTML = `<table><thead><tr><th>Folio</th><th>Servicio</th><th>Estatus</th><th>Fecha</th></tr></thead><tbody>${filas}</tbody></table>`;
+    } catch (_) {
+      contenedor.innerHTML = '<p class="estado-vacio">No se pudieron cargar tus solicitudes.</p>';
+    }
+  }
+
+  document.getElementById('btnSalir').addEventListener('click', async function (e) {
+    e.preventDefault();
+    try { await fetch('../../backend/portal/logout.php', { method: 'POST', credentials: 'include' }); } catch (_) {}
+    window.location.href = 'login.html';
+  });
+
+  cargarSolicitudes();
+</script>
+
+</body>
+</html>

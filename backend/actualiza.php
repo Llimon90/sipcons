@@ -15,6 +15,7 @@ require_once __DIR__ . '/../auth/audit.php';
 require_once __DIR__ . '/../config/guardados_log.php';
 require_once __DIR__ . '/lib/incidencias_helpers.php';
 require_once __DIR__ . '/lib/sla_helpers.php';
+require_once __DIR__ . '/lib/csat_helpers.php';
 
 // Un aviso de PHP impreso en la respuesta rompería el JSON en el navegador
 ini_set('display_errors', '0');
@@ -204,6 +205,13 @@ try {
     ];
 
     $pdo->commit();
+
+    // Encuesta CSAT: se genera al pasar a un estatus de cierre (no reintenta
+    // si ya existe una para esta incidencia). No debe tumbar el guardado si falla.
+    if (in_array($valores['estatus'], ESTATUS_DE_CIERRE, true) && $valores['estatus'] !== ($anterior['estatus'] ?? null)) {
+        generarEncuestaCsatSiNecesaria($pdo, $idIncidencia, $anterior['numero_incidente'] ?? null);
+    }
+
     responder(200, $respuesta);
 } catch (Throwable $e) {
     error_log('actualiza.php: ' . $e->getMessage());
