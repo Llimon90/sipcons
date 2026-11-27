@@ -13,6 +13,8 @@
     <script src="../branding/marca.js.php"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/perfil.css?v=20261112">
+    <link rel="stylesheet" href="../css/mis-metricas.css?v=20261126">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
     <script src="../scripts/auth-guard.js?v=20261124"></script>
     <script src="../scripts/dialogo.js?v=20261101"></script>
     <script src="../scripts/menu-lateral.js?v=20261125"></script>
@@ -44,10 +46,105 @@
 
     <main id="mainContent">
         <div id="perfil" class="pf" aria-live="polite"><p class="pf-cargando"><i class="fas fa-circle-notch fa-spin"></i> Cargando…</p></div>
+
+        <!-- Mis métricas: solo en el perfil propio; perfil.js lo revela y dashboard-tecnico.js lo llena -->
+        <div id="pf-metricas" hidden>
+            <section class="encabezado">
+                <h2><i class="fas fa-chart-line"></i> Mis métricas <span class="loading-indicator"><i class="fas fa-circle-notch"></i> Actualizando…</span></h2>
+                <p>Tus propios números</p>
+            </section>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <label for="rangoFecha"><i class="far fa-calendar-alt"></i> Rango de fechas</label>
+                        <select id="rangoFecha">
+                            <option value="7">Últimos 7 días</option>
+                            <option value="30" selected>Últimos 30 días</option>
+                            <option value="90">Últimos 3 meses</option>
+                            <option value="180">Últimos 6 meses</option>
+                            <option value="365">Último año</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" id="customDateRange" style="display: none;">
+                        <label for="fechaInicio"><i class="far fa-calendar"></i> Fecha inicio</label>
+                        <input type="date" id="fechaInicio">
+                    </div>
+                    <div class="filter-item" id="customDateRangeEnd" style="display: none;">
+                        <label for="fechaFin"><i class="far fa-calendar"></i> Fecha fin</label>
+                        <input type="date" id="fechaFin">
+                    </div>
+                    <div class="filter-item">
+                        <label>&nbsp;</label>
+                        <button onclick="cargarMiDesempeno()" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Actualizar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="statsMios">
+                <div class="stat-card">
+                    <h3><i class="fas fa-tasks"></i> Órdenes de servicio asignadas</h3>
+                    <div class="stat-value"><span id="miAsignadas">0</span><i class="fas fa-clipboard-list stat-icon"></i></div>
+                    <div class="stat-change"><i class="fas fa-chart-line"></i><span id="miTendencia">+0% vs periodo anterior</span></div>
+                </div>
+                <div class="stat-card stat-card--success">
+                    <h3><i class="fas fa-check-circle"></i> Completadas</h3>
+                    <div class="stat-value"><span id="miCompletadas">0</span><i class="fas fa-check-double stat-icon"></i></div>
+                    <div class="stat-subtext">En el periodo seleccionado</div>
+                </div>
+                <div class="stat-card stat-card--warning">
+                    <h3><i class="fas fa-inbox"></i> Pendientes ahora</h3>
+                    <div class="stat-value"><span id="miPendientes">0</span><i class="fas fa-inbox stat-icon"></i></div>
+                    <div class="stat-subtext" id="miVencidasDetalle">0 con más de 7 días abiertas</div>
+                </div>
+                <div class="stat-card stat-card--info">
+                    <h3><i class="fas fa-bolt"></i> Tiempo de respuesta</h3>
+                    <div class="stat-value"><span id="miRespuesta">N/D</span><i class="fas fa-stopwatch stat-icon"></i></div>
+                    <div class="stat-subtext" id="miRespuestaMuestras">Mediana del periodo</div>
+                </div>
+                <div class="stat-card stat-card--info">
+                    <h3><i class="fas fa-clock"></i> Tiempo de cierre</h3>
+                    <div class="stat-value"><span id="miCierre">N/D</span><i class="fas fa-flag-checkered stat-icon"></i></div>
+                    <div class="stat-subtext" id="miCierreMuestras">Mediana del periodo</div>
+                </div>
+                <div class="stat-card stat-card--warning">
+                    <h3><i class="fas fa-shield-alt"></i> Cumplimiento de atención</h3>
+                    <div class="stat-value"><span id="miSla">N/D</span><i class="fas fa-shield-alt stat-icon"></i></div>
+                    <span class="badge-sla badge-sla--neutral" id="miSlaBadge">Sin datos suficientes</span>
+                </div>
+            </div>
+
+            <div class="chart-container full-width">
+                <div class="chart-title"><span><i class="fas fa-lightbulb"></i> Lecturas del periodo</span></div>
+                <ul class="insights-list" id="misInsights"></ul>
+            </div>
+
+            <div class="chart-container full-width">
+                <div class="chart-title"><span>Órdenes de servicio cerradas por mes (últimos 12 meses)</span></div>
+                <canvas id="chartMiEvolucion" height="220"></canvas>
+            </div>
+
+            <div class="chart-container full-width">
+                <div class="chart-title"><span>Mis órdenes de servicio pendientes</span></div>
+                <div id="misPendientesAviso" class="panel-error" style="display: none;"></div>
+                <table class="drilldown-table" id="misPendientesTabla" style="display: none;">
+                    <thead>
+                        <tr><th>Folio</th><th>Cliente</th><th>Sucursal</th><th>Estatus</th><th>Fecha</th><th>Detalle</th></tr>
+                    </thead>
+                    <tbody id="misPendientesBody"></tbody>
+                </table>
+                <div class="chart-empty-state" id="misPendientesVacio" style="display: none;">
+                    <i class="fas fa-circle-check"></i>
+                    <span>No tienes órdenes de servicio pendientes en este momento.</span>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="../scripts/sidebar-state.js?v=20261125"></script>
     <script src="../scripts/ui-tablas.js?v=20261110"></script>
     <script src="../scripts/perfil.js?v=20261125"></script>
+    <script src="../scripts/dashboard-tecnico.js?v=20261126"></script>
 </body>
 </html>

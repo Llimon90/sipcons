@@ -24,7 +24,7 @@
         indicadores: { sel: '.ini-kpi', titulo: 'Indicadores del día', texto: 'Abiertas, asignadas, pendientes, atrasadas y por cerrar. Toca un indicador para ver esas órdenes en la bandeja.' },
         ordenesTecnico: { sel: menu('incidencias.html'), titulo: 'Órdenes de servicio', texto: 'Al abrir una orden puedes cambiar su estatus (<b>En proceso</b>, <b>Pendiente</b> con su motivo o <b>Completado</b>), escribir el trabajo realizado y adjuntar fotos.' },
         refacciones: { sel: menu('incidencias.html'), titulo: 'Conceptos aplicados', texto: 'Dentro de la orden, en <b>Conceptos aplicados</b>, registras las refacciones (se descuentan del inventario), los servicios y mano de obra, y los equipos de reemplazo (quedan en el padrón del cliente).' },
-        metricas: { sel: menu('dashboard-tecnico.html'), titulo: 'Mis métricas', texto: 'Tu tiempo de atención, lo que tienes pendiente y lo que ya pasó de la meta.' },
+        metricas: { sel: menu('perfil.html'), titulo: 'Mi perfil y mis métricas', texto: 'Tus datos y tu foto, y debajo tus números: tiempo de atención, lo que tienes pendiente y lo que ya pasó de la meta.' },
         manuales: { sel: menu('soporte.html'), titulo: 'Soporte técnico', texto: 'Manuales y listas de partes por marca y modelo, para consultarlos en sitio.' },
         ordenes: { sel: menu('incidencias.html'), titulo: 'Órdenes de servicio', texto: 'Registra órdenes nuevas y dales seguimiento. Al asignar un técnico la orden pasa sola a <b>Asignado</b>; cerrar o cancelar pide permiso de cierre.' },
         asignar: { sel: menu('incidencias.html'), titulo: 'Asignar y dar seguimiento', texto: 'Dentro de cada orden asignas uno o varios técnicos. Si una orden se queda sin técnicos regresa a <b>Abierto</b>.' },

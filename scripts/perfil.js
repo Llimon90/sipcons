@@ -55,7 +55,7 @@
             kpi('fa-flag-checkered', 'Cerradas (30 días)', m.cerradas_30_dias, '') +
             kpi('fa-history', 'Órdenes en total', m.total_historico, '') +
             '</section>' +
-            '<section class="pf-tarjeta"><h2>Órdenes de servicio activas' + (d.propio ? ' <a href="dashboard-tecnico.html">Ver mis métricas <i class="fas fa-arrow-right"></i></a>' : '') + '</h2>';
+            '<section class="pf-tarjeta"><h2>Órdenes de servicio activas' + (d.propio ? ' <a href="#pf-metricas">Ver mis métricas <i class="fas fa-arrow-down"></i></a>' : '') + '</h2>';
         if (!d.activas.length) {
             html += '<p class="pf-suave">Sin órdenes de servicio activas.</p>';
         } else {
@@ -68,6 +68,10 @@
         html += '</section>';
         $('perfil').innerHTML = html;
         enlazar(d);
+        // Las métricas ("mis números") solo tienen sentido en el perfil propio;
+        // al ver el de otro usuario (admin) se ocultan. dashboard-tecnico.js las llena.
+        var metr = document.getElementById('pf-metricas');
+        if (metr) metr.hidden = !d.propio;
     }
 
     function enlazar(d) {

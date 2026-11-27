@@ -1,6 +1,9 @@
 let chartEvolucion = null;
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Integrado en "Mi perfil": al ver el perfil de OTRO usuario (?id=N) estas
+    // métricas (las propias de quien tiene la sesión) no aplican, así que no cargan.
+    if (new URLSearchParams(location.search).get('id')) return;
     inicializarFiltros();
     cargarMiDesempeno();
 });

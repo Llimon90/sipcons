@@ -178,7 +178,7 @@
             }).join('') + '</ul>';
         }
         html += '</section><aside class="ini-lateral">' + tarjetaProgramadas() +
-            '<a class="ini-tarjeta ini-atajo" href="public/dashboard-tecnico.html"><i class="fas fa-user-clock"></i><span><b>Mis métricas</b><small>Tus tiempos de respuesta y cierre</small></span></a>' +
+            '<a class="ini-tarjeta ini-atajo" href="public/perfil.html#pf-metricas"><i class="fas fa-user-clock"></i><span><b>Mis métricas</b><small>Tus tiempos de respuesta y cierre</small></span></a>' +
             '<a class="ini-tarjeta ini-atajo" href="public/reportes.html"><i class="fas fa-search"></i><span><b>Buscar órdenes de servicio</b><small>Historial por cliente, equipo o serie</small></span></a>' +
             '<a class="ini-tarjeta ini-atajo" href="public/soporte.html"><i class="fas fa-book"></i><span><b>Soporte técnico</b><small>Manuales y preguntas frecuentes</small></span></a>' +
             '</aside></div>';

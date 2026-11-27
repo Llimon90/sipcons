@@ -19,8 +19,7 @@
         { grupo: 'Operación', items: [
             { pagina: 'incidencias.html', texto: 'Órdenes de servicio', icono: 'fa-tasks', tambien: ['detalle.html'], contador: 'incidencias' },
             { pagina: 'reportes.html', texto: 'Buscar órdenes de servicio', icono: 'fa-search' },
-            { pagina: 'dashboard-tecnico.html', texto: 'Mis métricas', icono: 'fa-user-clock' },
-            { pagina: 'perfil.html', texto: 'Mi perfil', icono: 'fa-id-badge' }  // D-46
+            { pagina: 'perfil.html', texto: 'Mi perfil', icono: 'fa-id-badge', tambien: ['dashboard-tecnico.html'] }  // D-46; incluye "Mis métricas"
         ] },
         { grupo: 'Comercial', items: [
             { pagina: 'clientes.html', texto: 'Clientes', icono: 'fa-address-book', tambien: ['perfil-cliente.html'] },
