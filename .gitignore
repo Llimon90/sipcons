@@ -17,3 +17,6 @@ auditorias/.tmp/
 
 # Capturas y snapshots de Playwright (revisión de UX local)
 .playwright-mcp/
+.claude/
+storage/sessions_portal/
+storage/sessions/
