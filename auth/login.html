@@ -67,8 +67,7 @@
   </section>
 </main>
 
-<footer class="page-footer">&copy; <span id="year"></span> <span data-brand="empresa">Sistema</span>. <span data-brand="pie_login">Uso exclusivo de personal autorizado.</span>
-  <a id="linkAviso" class="link-aviso" target="_blank" rel="noopener" hidden>Aviso de privacidad</a></footer>
+<footer class="page-footer">&copy; <span id="year"></span> <span data-brand="empresa">Sistema</span>. <span data-brand="pie_login">Uso exclusivo de personal autorizado.</span></footer>
 
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
@@ -82,12 +81,6 @@
       document.getElementById('errorMsg').classList.add('visible');
     }
   } catch (e) {}
-
-  if (window.APP_BRAND && APP_BRAND.aviso_privacidad) {
-    var linkAviso = document.getElementById('linkAviso');
-    linkAviso.href = APP_BRAND.aviso_privacidad;
-    linkAviso.hidden = false;
-  }
 
   // Página de la demo (/demo → login.html?demo): credenciales visibles, acceso
   // en un clic y enlace a la prueba gratis. El login de clientes no muestra nada de esto.
