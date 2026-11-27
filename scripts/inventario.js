@@ -57,11 +57,32 @@
         return (window.APP_BRAND && APP_BRAND.colores.primario) || '#3498db';
     }
 
+    var valorEnUsd = false;  // toggle del KPI de valor: MXN (default) / USD nativo
+    function pintarValorKpi(k) {
+        var boton = $('kpi-valor-toggle');
+        var hayUsd = Number(k.hay_usd) > 0;
+        boton.hidden = !hayUsd;
+        if (!hayUsd) valorEnUsd = false;
+        if (valorEnUsd) {
+            $('kpi-valor').textContent = 'US$' + num(k.valor_usd || 0);
+            $('kpi-valor').title = 'Valor a costo de los artículos guardados en dólares, en USD.';
+            boton.textContent = 'Ver en MXN';
+        } else {
+            $('kpi-valor').textContent = dinero(k.valor);
+            // Sin tipo de cambio configurado, los artículos en USD no entran al total en pesos
+            $('kpi-valor').title = (hayUsd && !(Number(k.tipo_cambio) > 0))
+                ? 'Hay artículos en USD sin tipo de cambio: configúralo en Mi empresa para incluirlos en el total en pesos.'
+                : 'Valor a costo del inventario, en pesos (los artículos en USD se convierten con el tipo de cambio de la empresa).';
+            boton.textContent = 'Ver en USD';
+        }
+    }
+
     function cargarResumen() {
         return api('resumen').then(function (j) {
             var k = j.kpi;
             $('kpi-articulos').textContent = num(k.articulos);
-            $('kpi-valor').textContent = dinero(k.valor);
+            pintarValorKpi(k);
+            $('kpi-valor-toggle').onclick = function () { valorEnUsd = !valorEnUsd; pintarValorKpi(k); };
             $('kpi-bajo').textContent = num(k.bajo_minimo || 0);
             $('kpi-movs').textContent = num(k.movimientos_30d);
 
@@ -166,8 +187,8 @@
                 '<td>' + esc(a.categoria) + '</td>' +
                 '<td>' + etiquetaExistencia(a) + '</td>' +
                 '<td class="inv-num">' + (esFisico(a) ? num(a.stock_minimo) : '—') + '</td>' +
-                '<td class="inv-num">' + dinero(a.costo_unitario) + '</td>' +
-                '<td class="inv-num">' + dinero(a.precio_venta) + '</td>' +
+                '<td class="inv-num">' + dinero(a.costo_unitario) + (a.moneda === 'USD' ? ' <span class="inv-moneda">USD</span>' : '') + '</td>' +
+                '<td class="inv-num">' + dinero(a.precio_venta) + (a.moneda === 'USD' ? ' <span class="inv-moneda">USD</span>' : '') + '</td>' +
                 '<td>' + esc(a.ubicacion || '') + '</td>' +
                 '<td><div class="inv-acciones">' +
                 (activo && esFisico(a) ? '<button type="button" class="btn-edit" data-accion="mov" data-id="' + a.id + '" title="Entrada, salida o ajuste"><i class="fas fa-exchange-alt"></i></button>' : '') +
@@ -195,7 +216,7 @@
             f.elements.unidad.add(new Option(a.unidad, a.unidad));
         }
         if (a) {
-            ['sku', 'nombre', 'categoria', 'marca', 'modelo', 'unidad', 'ubicacion', 'stock_minimo', 'costo_unitario', 'precio_venta', 'descripcion']
+            ['sku', 'nombre', 'categoria', 'marca', 'modelo', 'unidad', 'ubicacion', 'stock_minimo', 'costo_unitario', 'precio_venta', 'moneda', 'descripcion']
                 .forEach(function (c) { if (f.elements[c]) f.elements[c].value = a[c] == null ? '' : a[c]; });
         }
         if (f.elements.controla_serie) f.elements.controla_serie.checked = !!(a && Number(a.controla_serie) === 1);  // D-45

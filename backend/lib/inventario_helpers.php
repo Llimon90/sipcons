@@ -243,6 +243,24 @@ function invTieneTasaIva(PDO $pdo): bool {
     return $cache[$clave];
 }
 
+/**
+ * Expresión SQL del valor del inventario a costo, EN MXN. Los artículos guardados
+ * en USD se convierten con el tipo de cambio de la empresa ($tc, MXN por USD).
+ * Sin la migración 024 (sin columna moneda) o con $tc = 0, suma directa / sin
+ * convertir los USD (que entonces cuentan 0 en el total en pesos).
+ */
+function invSqlValorMXN(float $tc, bool $tieneMoneda): string {
+    if (!$tieneMoneda) return "COALESCE(SUM(existencia * costo_unitario), 0)";
+    $tcSql = sprintf('%.4f', max(0.0, $tc));
+    return "COALESCE(SUM(existencia * costo_unitario * (CASE WHEN moneda = 'USD' THEN $tcSql ELSE 1 END)), 0)";
+}
+
+/** Expresión SQL del valor, en USD nativo, de los artículos guardados en USD. */
+function invSqlValorUSDNativo(bool $tieneMoneda): string {
+    if (!$tieneMoneda) return "0";
+    return "COALESCE(SUM(CASE WHEN moneda = 'USD' THEN existencia * costo_unitario ELSE 0 END), 0)";
+}
+
 /** ¿Ya se aplicó la migración 018 (serie de refacciones; D-45)? */
 function invTieneSeries(PDO $pdo): bool {
     static $cache = [];

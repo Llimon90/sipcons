@@ -207,3 +207,32 @@ html[data-theme="dark"] .inv-foto-previa { background: #1b2836; border-color: #2
 .inv-alta-modal .alta-campo:first-child { grid-column: 1 / -1; }
 @media (max-width: 600px) { .inv-alta-modal { grid-template-columns: 1fr; } }
 html[data-theme="dark"] .inv-reemplazo { background: rgba(52, 152, 219, 0.15); }
+
+/* Etiqueta de moneda USD en la lista (los MXN no llevan etiqueta) */
+.inv-moneda {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--brand-primary, #1a4de4);
+    background: rgba(26, 77, 228, 0.1);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* Botón para alternar la valuación del inventario entre MXN y USD */
+.inv-kpi-toggle {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--brand-primary, #1a4de4);
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.inv-kpi-toggle:hover { background: rgba(26, 77, 228, 0.08); }

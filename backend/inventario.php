@@ -96,13 +96,24 @@ try {
 
     case 'GET:resumen':
         exigirAlgunPermiso('inventario');
+        // Valuación a costo: por defecto en MXN (los artículos en USD se convierten
+        // con el tipo de cambio de la empresa) y, aparte, el valor nativo en USD.
+        require_once __DIR__ . '/lib/cotizaciones_helpers.php';
+        $invTieneMoneda = invTieneMoneda($pdo);
+        $invTc = cotTipoCambioEmpresa();
+        $valorMXN = invSqlValorMXN($invTc, $invTieneMoneda);
+        $valorUSD = invSqlValorUSDNativo($invTieneMoneda);
+        $hayUsd = $invTieneMoneda ? "COALESCE(SUM(moneda = 'USD'), 0)" : "0";
         $kpi = $pdo->query(
             "SELECT COUNT(*) AS articulos,
-                    COALESCE(SUM(existencia * costo_unitario), 0) AS valor,
+                    $valorMXN AS valor,
+                    $valorUSD AS valor_usd,
+                    $hayUsd AS hay_usd,
                     SUM(existencia <= stock_minimo) AS bajo_minimo,
                     SUM(existencia <= 0) AS agotados
              FROM inventario_articulos WHERE activo = 1" . invSoloFisicos($pdo)
         )->fetch(PDO::FETCH_ASSOC);
+        $kpi['tipo_cambio'] = $invTc;
         if (invTieneControlExistencia($pdo)) {
             $kpi['servicios'] = (int)$pdo->query("SELECT COUNT(*) FROM inventario_articulos WHERE activo = 1 AND controla_existencia = 0")->fetchColumn();
         }
