@@ -22,7 +22,7 @@
 <body>
 
 <main class="login-card">
-  <img class="logo" data-brand-logo src="../img/logo.svg" alt="Servidesk" />
+  <img class="logo" data-brand-logo src="../img/logo.svg" alt="Sistema" />
   <p class="tagline" data-brand="eslogan"></p>
 
   <div class="error-msg" id="errorMsg" role="alert">
@@ -67,7 +67,7 @@
   </section>
 </main>
 
-<footer class="page-footer">&copy; <span id="year"></span> <span data-brand="empresa">Servidesk</span>. <span data-brand="pie_login">Uso exclusivo de personal autorizado.</span>
+<footer class="page-footer">&copy; <span id="year"></span> <span data-brand="empresa">Sistema</span>. <span data-brand="pie_login">Uso exclusivo de personal autorizado.</span>
   <a id="linkAviso" class="link-aviso" target="_blank" rel="noopener" hidden>Aviso de privacidad</a></footer>
 
 <script>
@@ -106,7 +106,7 @@
     var whats = String(s.whatsapp || '').replace(/\D/g, '');
     if (whats) {
       if (whats.length === 10) whats = '52' + whats; // número mexicano sin lada de país
-      enlaces.push('<a href="https://wa.me/' + whats + '?text=' + encodeURIComponent('Hola, soy administrador de mi empresa en Servidesk y necesito recuperar mi contraseña.') +
+      enlaces.push('<a href="https://wa.me/' + whats + '?text=' + encodeURIComponent('Hola, soy administrador del Sistema y necesito recuperar mi contraseña.') +
         '" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>');
     }
     if (s.correo) enlaces.push('<a href="mailto:' + encodeURIComponent(s.correo).replace('%40', '@') + '"><i class="fas fa-envelope"></i> ' + String(s.correo).replace(/[<>&"]/g, '') + '</a>');

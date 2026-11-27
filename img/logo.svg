@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="440" height="112" viewBox="0 0 440 112" role="img" aria-label="Servidesk">
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="112" viewBox="0 0 360 112" role="img" aria-label="Sistema">
   <defs>
     <linearGradient id="sd-g" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#3498db"/>
@@ -7,5 +7,5 @@
   </defs>
   <rect x="4" y="8" width="96" height="96" rx="22" fill="url(#sd-g)"/>
   <text x="52" y="58" text-anchor="middle" dominant-baseline="central" font-family="Arial, 'Segoe UI', sans-serif" font-size="72" font-weight="700" fill="#fff">S</text>
-  <text x="120" y="72" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="700" fill="#2c3e50" letter-spacing="-0.5">Servi<tspan fill="#3498db">desk</tspan></text>
+  <text x="120" y="72" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="700" fill="#2c3e50" letter-spacing="-0.5">Sis<tspan fill="#3498db">tema</tspan></text>
 </svg>

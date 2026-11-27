@@ -57,9 +57,9 @@ function brandConfig(): array {
     if (isset($cache[$clave])) return $cache[$clave];
 
     $cfg = [
-        'nombre'      => env('APP_NAME', 'Servidesk'),
+        'nombre'      => env('APP_NAME', 'Sistema'),
         'eslogan'     => env('APP_TAGLINE', 'Gestión de servicios y mantenimiento'),
-        'empresa'     => env('APP_COMPANY', env('APP_NAME', 'Servidesk')),
+        'empresa'     => env('APP_COMPANY', env('APP_NAME', 'Sistema')),
         'logo'        => env('APP_LOGO', 'img/logo.svg'),
         'favicon'     => env('APP_FAVICON', ''),
         'pie_login'   => env('APP_LOGIN_FOOTER', 'Uso exclusivo de personal autorizado.'),
@@ -85,7 +85,7 @@ function brandConfig(): array {
 
     if ($empresa) {
         $m = $empresa['marca'] ?? [];
-        // 'nombre' es siempre el del sistema (Servidesk); el cliente es 'empresa'
+        // 'nombre' es siempre el del sistema (p. ej. "Sistema"); el cliente es 'empresa'
         $cfg['empresa'] = $empresa['nombre'];
         foreach (['eslogan', 'logo'] as $k) {
             if (!empty($m[$k])) $cfg[$k] = (string)$m[$k];

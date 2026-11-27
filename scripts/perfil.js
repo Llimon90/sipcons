@@ -34,7 +34,8 @@
 
     function pintar(d) {
         var u = d.usuario, m = d.metricas;
-        document.title = (d.propio ? 'Mi perfil' : 'Perfil de ' + u.nombre) + ' · Servidesk';  // U-22
+        var marca = (window.APP_BRAND && window.APP_BRAND.nombre) || 'Sistema';
+        document.title = (d.propio ? 'Mi perfil' : 'Perfil de ' + u.nombre) + ' · ' + marca;  // U-22
         var foto = u.foto ? '<img src="' + esc(urlFoto(u.foto)) + '?t=' + Date.now() + '" alt="Foto de ' + esc(u.nombre) + '">' : '<span>' + esc(iniciales(u.nombre)) + '</span>';
         var html = '<section class="pf-cabecera">' +
             '<div class="pf-foto" id="pf-foto">' + foto + '</div>' +

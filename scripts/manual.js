@@ -69,7 +69,8 @@
     });
     document.getElementById('mn-pdf').addEventListener('click', function () {
         var titulo = document.title;
-        document.title = 'Manual de usuario - Servidesk'; // nombre sugerido del archivo PDF
+        var marca = (window.APP_BRAND && window.APP_BRAND.nombre) || 'Sistema';
+        document.title = 'Manual de usuario - ' + marca; // nombre sugerido del archivo PDF
         window.print();
         setTimeout(function () { document.title = titulo; }, 1000);
     });
