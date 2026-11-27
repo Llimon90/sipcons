@@ -37,11 +37,9 @@ html[data-theme="dark"] .me-pagina {
 }
 
 /* ----- encabezado y pestañas ----- */
-.me-encabezado { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.me-encabezado-marca { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.me-encabezado-marca img { height: 44px; max-width: 160px; object-fit: contain; background: #fff; border-radius: 8px; padding: 4px 8px; border: 1px solid var(--me-borde); }
-.me-encabezado h2 { margin: 0; }
-.me-encabezado p { margin: 2px 0 0; color: var(--me-suave); font-size: 0.9rem; }
+.me-encabezado { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.me-encabezado img { height: 52px; max-width: 220px; object-fit: contain; background: #fff; border-radius: 8px; padding: 6px 12px; border: 1px solid var(--me-borde); }
+.me-encabezado p { margin: 0; color: var(--me-suave); font-size: 0.9rem; }
 
 .me-pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--me-borde); margin: 8px 0 18px; overflow-x: auto; }
 .me-pestanas button {

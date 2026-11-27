@@ -176,20 +176,9 @@
             });
     }
 
-    // Plan y pagos: visible solo para quien puede contratar (session_check.php)
-    function initPlan() {
-        if (!window.appOnAuthReady) return;
-        window.appOnAuthReady(function (auth) {
-            if (auth.empresa && auth.empresa.puede_contratar) {
-                document.getElementById('seccion-plan').hidden = false;
-            }
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function () {
         initCambioPassword();
         initTema();
         initPrivilegios();
-        initPlan();
     });
 })();

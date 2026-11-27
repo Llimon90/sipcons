@@ -130,9 +130,6 @@
           <h3>Buscador global</h3>
           <p>Desde cualquier pantalla presiona <kbd>Ctrl</kbd> + <kbd>K</kbd> (en Mac <kbd>⌘</kbd> + <kbd>K</kbd>) o pulsa <span class="mn-ui">Buscar…</span> en el menú. Escribe un folio (SD-0045), un folio de cotización, un cliente, una sucursal, un número de serie o el nombre de un módulo. Los resultados se agrupan en órdenes de servicio, cotizaciones, clientes y equipos. Muévete con las flechas y abre con <kbd>Enter</kbd>.</p>
 
-          <h3>Avisos en la parte superior</h3>
-          <p>Una franja de color te avisa de la situación de la cuenta de tu empresa: días restantes de prueba, pago vencido, modo solo lectura o pago en verificación. El administrador ve ahí mismo el botón para contratar o pagar (ver <a href="#plan">Plan, pagos y estado de la cuenta</a>).</p>
-
           <h3>Modo claro u oscuro</h3>
           <p>En <a href="#ajustes">Ajustes → Apariencia</a> eliges el tema. Se guarda en tu cuenta, así que lo verás igual en cualquier equipo.</p>
         </section>
@@ -172,7 +169,7 @@
             <li><b>Descuentos arriba del máximo</b>: el Administrador o quien tenga «Puede autorizar descuentos».</li>
             <li><b>Finanzas</b>: corregir o cancelar un cobro lo hacen el Administrador y el Administrativo. Cancelar una cuenta por cobrar o un gasto, solo el Administrador.</li>
             <li><b>Marcas, modelos y manuales</b> (Soporte técnico): el Técnico solo consulta. Crean, editan y borran el Administrador y el Supervisor.</li>
-            <li><b>Mi empresa, plan y pagos, Usuarios, privilegios e Importar datos</b>: solo el Administrador.</li>
+            <li><b>Mi empresa, Usuarios, privilegios e Importar datos</b>: solo el Administrador.</li>
             <li><b>Mis métricas, Ajustes, este manual y el recorrido guiado</b>: todos los usuarios.</li>
           </ul>
         </section>
@@ -567,7 +564,7 @@
             <li>Las cuentas de <b>Administrador</b> solo las crea, modifica o elimina otro Administrador, y la empresa siempre conserva al menos uno.</li>
           </ul>
           <div class="mn-nota"><i class="fas fa-user-minus"></i><div><b>Al dar de baja a un técnico</b> (eliminarlo o pasarlo a un rol que no recibe órdenes, como Administrativo), su nombre se quita de las órdenes activas. Las que se quedan sin técnico regresan a Abierto para reasignarlas. Las órdenes cerradas conservan su nombre, porque son historial.</div></div>
-          <p>Durante la prueba gratuita no hay límite de usuarios. Con un plan contratado, el número de usuarios depende del plan; si llegas al límite, el sistema te lo indica (los usuarios que ya tenías se conservan).</p>
+          <p>No hay límite en el número de usuarios.</p>
         </section>
 
         <!-- =========================================================== -->
@@ -604,21 +601,20 @@
           <ul>
             <li><b>Mi cuenta</b>: cambia tu contraseña escribiendo la actual y la nueva dos veces.</li>
             <li><b>Apariencia</b>: tema claro u oscuro.</li>
-            <li><b>Plan y pagos</b> (administradores): acceso a contratar, renovar o cambiar el plan.</li>
             <li><b>Privilegios por rol</b> (administradores): marca qué módulos ve cada rol y pulsa <span class="mn-ui">Guardar privilegios</span>. Aplica de inmediato y queda en el historial.</li>
           </ul>
           <p>Tus preferencias personales, como el tema, el avance del recorrido guiado o los avisos que pediste no volver a mostrar, se guardan en tu cuenta y te siguen en cualquier equipo.</p>
+          <h3>Contraseña temporal</h3>
+          <p>Si recibiste una contraseña temporal (al abrir tu cuenta o al pedir que te restablezcan el acceso), el sistema te lleva a <a href="#ajustes">Ajustes</a> para cambiarla antes de continuar.</p>
         </section>
 
         <!-- =========================================================== -->
         <section id="mi-empresa" data-titulo="Mi empresa">
           <h2><span class="mn-num">19</span> Mi empresa</h2>
-          <p>Para el administrador de la cuenta. Tiene tres pestañas:</p>
-          <p><b>Exportar mis datos</b> (en Plan y facturación): descarga un ZIP con un archivo CSV por módulo, que se abre en Excel. Los adjuntos se descargan desde cada registro y las contraseñas no se exportan.</p>
+          <p>Para el administrador de la cuenta. Tiene dos pestañas:</p>
           <ul>
-            <li><b>Plan y facturación</b>: tu plan, precio, vigencia con días restantes, usuarios usados contra el límite, historial de pagos, solicitudes y datos fiscales.</li>
-            <li><b>Uso del sistema</b>: totales de órdenes de servicio, clientes, equipos, ventas e inventario; gráficas de 6 meses; actividad diaria y por usuario; espacio usado.</li>
-            <li><b>Personalización</b> (incluida en todos los planes): sube el logo de tu empresa (PNG, JPG o WEBP de hasta 1 MB), cambia los colores (con vista previa), el prefijo de los folios y las categorías de las órdenes. <span class="mn-ui">Restablecer apariencia original</span> deshace los cambios visuales.</li>
+            <li><b>Uso del sistema</b>: totales de órdenes de servicio, clientes, equipos, ventas e inventario; gráficas de 6 meses; actividad diaria y por usuario; espacio usado. Aquí también está <b>Exportar mis datos</b>: descarga un ZIP con un archivo CSV por módulo, que se abre en Excel. Los adjuntos se descargan desde cada registro y las contraseñas no se exportan.</li>
+            <li><b>Personalización</b>: sube el logo de tu empresa (PNG, JPG o WEBP de hasta 1 MB), cambia los colores (con vista previa), el prefijo de los folios y las categorías de las órdenes. <span class="mn-ui">Restablecer apariencia original</span> deshace los cambios visuales.</li>
           </ul>
           <p>En <b>Personalización</b> también está <b>Cumplimiento y horario</b>:</p>
           <ul>
@@ -630,34 +626,13 @@
             <li><b>Mano de obra por hora</b>: es el precio del concepto «Mano de obra (por hora)». Se cobra por tiempo y admite fracciones (1.5 h), así sabes cuántas horas dedica cada técnico.</li>
             <li><b>Servicios</b>: precio cerrado (mantenimiento, visita, calibración) y lo que <b>incluye</b>, un concepto por línea. Lo que incluye aparece en el PDF de la cotización. Quitar un servicio de la lista lo desactiva; no se borra de las órdenes y cotizaciones donde ya se usó.</li>
           </ul>
-          <p>En <b>Personalización</b> también está <b>Cotizaciones</b> (disponible en todos los planes): prefijo de folio (por defecto COT), vigencia por defecto (15 días), IVA por defecto (16% u 8%), descuento máximo sin autorización y términos y condiciones que se copian a cada cotización nueva.</p>
+          <p>En <b>Personalización</b> también está <b>Cotizaciones</b>: prefijo de folio (por defecto COT), vigencia por defecto (15 días), IVA por defecto (16% u 8%), descuento máximo sin autorización y términos y condiciones que se copian a cada cotización nueva.</p>
           <div class="mn-nota"><i class="fas fa-info-circle"></i><div>Cambiar el prefijo de folio afecta solo a las órdenes o cotizaciones nuevas; las anteriores conservan el suyo.</div></div>
         </section>
 
         <!-- =========================================================== -->
-        <section id="plan" data-titulo="Plan, pagos y estado de la cuenta">
-          <h2><span class="mn-num">20</span> Plan, pagos y estado de la cuenta</h2>
-          <h3>Contratar o renovar</h3>
-          <p>La contratación, los pagos y las renovaciones los lleva nuestro equipo comercial. Escríbenos por el WhatsApp o el correo que aparecen en el aviso superior o en <a href="#mi-empresa">Mi empresa</a>: te decimos el monto, cómo pagar y, al confirmarse el pago, tu cuenta se activa sin que tengas que hacer nada en el sistema.</p>
-          <p>En <a href="#mi-empresa">Mi empresa</a> ves tu plan, la fecha de vencimiento y cuántos usuarios puedes tener.</p>
-          <h3>Estados de la cuenta</h3>
-          <table class="mn-tabla">
-            <thead><tr><th>Situación</th><th>Qué puedes hacer</th></tr></thead>
-            <tbody>
-              <tr><td>En prueba</td><td>Todo el sistema, con el límite de usuarios de tu prueba. El aviso muestra los días restantes.</td></tr>
-              <tr><td>Activa</td><td>Todo. Unos días antes del vencimiento verás un aviso para renovar.</td></tr>
-              <tr><td>Prueba o pago vencido</td><td>Solo lectura: puedes consultar y exportar tu información, pero no capturar ni modificar, hasta que se registre tu pago.</td></tr>
-              <tr><td>Suspendida o cancelada</td><td>Nadie entra; ponte en contacto con nosotros para reactivarla o recuperar tu información.</td></tr>
-            </tbody>
-          </table>
-          <h3>Contraseña temporal</h3>
-          <p>Si recibiste una contraseña temporal (al abrir tu cuenta o al pedir que te restablezcan el acceso), el sistema te lleva a <a href="#ajustes">Ajustes</a> para cambiarla antes de continuar.</p>
-          <div class="mn-nota"><i class="fas fa-lock"></i><div>En ningún caso se borra tu información: al regularizar el pago todo sigue como lo dejaste.</div></div>
-        </section>
-
-        <!-- =========================================================== -->
         <section id="celular" data-titulo="Uso en el celular">
-          <h2><span class="mn-num">21</span> Uso en el celular</h2>
+          <h2><span class="mn-num">20</span> Uso en el celular</h2>
           <p>El sistema se adapta a la pantalla del celular o la tableta:</p>
           <ul>
             <li>Arriba: el botón <i class="fas fa-bars"></i> abre el menú completo y la casita te lleva al inicio.</li>
@@ -670,7 +645,7 @@
 
         <!-- =========================================================== -->
         <section id="preguntas" data-titulo="Preguntas frecuentes">
-          <h2><span class="mn-num">22</span> Preguntas frecuentes y solución de problemas</h2>
+          <h2><span class="mn-num">21</span> Preguntas frecuentes y solución de problemas</h2>
           <details class="mn-faq"><summary>No veo un módulo en mi menú</summary><p>Tu rol no lo tiene habilitado. Pide al administrador que lo active en <a href="#ajustes">Ajustes → Privilegios por rol</a> o que cambie tu rol.</p></details>
           <details class="mn-faq"><summary>Soy técnico y no veo una orden de servicio</summary><p>El técnico ve solo las órdenes donde está asignado. Pide a la oficina que te asigne; en cuanto lo hagan, la verás en tu Inicio y en la lista.</p></details>
           <details class="mn-faq"><summary>No puedo cerrar, cancelar ni reabrir una orden</summary><p>El rol Técnico no puede, y a otros usuarios se les puede quitar ese permiso. Déjala en <b>Completado</b> para que la cierre quien tenga permiso.</p></details>
@@ -683,13 +658,12 @@
           <details class="mn-faq"><summary>El sistema dice que otra persona modificó la orden</summary><p>Alguien guardó cambios mientras tú la editabas. Recarga para ver la versión actual y vuelve a aplicar tus cambios; así nadie pierde su trabajo.</p></details>
           <details class="mn-faq"><summary>Un archivo no se sube</summary><p>Revisa que pese menos de 40 MB y que sea imagen, video, PDF o documento de Office. Los archivos ejecutables no se aceptan por seguridad.</p></details>
           <details class="mn-faq"><summary>Olvidé mi contraseña</summary><p>Pide al administrador que te asigne una nueva en <a href="#usuarios">Usuarios</a>; después cámbiala en <a href="#ajustes">Ajustes</a>.</p></details>
-          <details class="mn-faq"><summary>La cuenta está en «solo lectura»</summary><p>Hay un pago pendiente. Puedes consultar todo pero no capturar. El administrador debe regularizar el pago desde el aviso superior.</p></details>
           <details class="mn-faq"><summary>La pantalla se ve desacomodada</summary><p>Recarga la página con <kbd>Ctrl</kbd> + <kbd>F5</kbd> para que el navegador cargue la versión más reciente.</p></details>
         </section>
 
         <!-- =========================================================== -->
         <section id="glosario" data-titulo="Glosario">
-          <h2><span class="mn-num">23</span> Glosario</h2>
+          <h2><span class="mn-num">22</span> Glosario</h2>
           <dl class="mn-glosario">
             <dt>Orden de servicio</dt><dd>Un trabajo por atender en un cliente, del reporte al cierre.</dd>
             <dt>Folio</dt><dd>Número consecutivo que el sistema asigna a cada orden de servicio (por ejemplo SD-0046).</dd>

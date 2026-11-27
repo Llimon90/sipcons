@@ -74,16 +74,10 @@
     }
     function oscuro() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
 
-    var SITUACION = {
-        demo: ['Demostración', 'info'], prueba: ['En prueba', 'info'], prueba_vencida: ['Prueba vencida', 'peligro'],
-        activa: ['Activa', 'ok'], gracia: ['Pago vencido', 'alerta'], solo_lectura: ['Solo lectura', 'alerta'],
-        suspendida: ['Suspendida', 'peligro'], cancelada: ['Cancelada', 'neutra']
-    };
     var TABLAS = {
         incidencias: 'Órdenes de servicio', usuarios: 'Usuarios', clientes: 'Clientes', ventas: 'Ventas', padron_equipos: 'Padrón de equipos',
         permisos_rol: 'Privilegios', inventario_articulos: 'Inventario', empresa_marca: 'Marca de la empresa', cotizaciones: 'Cotizaciones'
     };
-    var ESTADO_SOLICITUD = { pendiente: ['En verificación', 'alerta'], confirmada: ['Confirmada', 'ok'], rechazada: ['Rechazada', 'peligro'], cancelada: ['Cancelada', 'neutra'] };
 
     function chip(par) { return '<span class="me-chip ' + par[1] + '">' + esc(par[0]) + '</span>'; }
     function barra(pct, clase) {
@@ -94,14 +88,14 @@
     function limpiarGraficos() { graficos.forEach(function (g) { g.destroy(); }); graficos = []; }
 
     function mostrar(tab) {
-        if (['plan', 'uso', 'marca'].indexOf(tab) === -1) tab = 'plan';
+        if (['uso', 'marca'].indexOf(tab) === -1) tab = 'uso';
         document.querySelectorAll('.me-pestanas [data-tab]').forEach(function (b) {
             b.setAttribute('aria-selected', b.getAttribute('data-tab') === tab ? 'true' : 'false');
         });
         limpiarGraficos();
         aviso('');
         $('me-contenido').innerHTML = '<p class="me-cargando">Cargando…</p>';
-        ({ plan: pintarPlan, uso: pintarUso, marca: pintarMarca })[tab]();
+        ({ uso: pintarUso, marca: pintarMarca })[tab]();
     }
     document.querySelectorAll('.me-pestanas [data-tab]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -114,88 +108,6 @@
     function error(e) {
         $('me-contenido').innerHTML = '';
         aviso(e.message);
-    }
-
-    // ================================================================ PLAN
-    function pintarPlan() {
-        api('plan').then(function (j) {
-            cache.plan = j;
-            moneda = j.moneda || 'MXN';
-            var e = j.empresa, p = j.plan, per = j.periodo;
-            var sit = SITUACION[e.estado] || [e.estado, 'neutra'];
-            $('me-estado').innerHTML = chip(e.verificacion ? ['Pago en verificación', 'alerta'] : sit);
-
-            var vigencia;
-            if (e.estado === 'demo') {
-                vigencia = '<p class="me-nota">Cuenta de demostración: se restablece cada noche.</p>';
-            } else if (per) {
-                var restan = per.dias_restantes;
-                vigencia = '<div class="me-vigencia"><div><span>' + (e.estado === 'prueba' ? 'Prueba gratuita' : 'Periodo pagado') + '</span>' +
-                    '<strong>' + fecha(per.inicio) + ' – ' + fecha(per.fin) + '</strong></div>' +
-                    '<div class="me-vigencia-dias ' + (restan <= 5 ? 'pronto' : '') + '"><strong>' + Math.max(0, restan) + '</strong><span>' +
-                    (restan === 1 ? 'día restante' : 'días restantes') + '</span></div></div>' +
-                    barra(per.avance, restan <= 5 ? 'alerta' : '');
-            } else {
-                vigencia = '<p class="me-nota">' + esc(e.mensaje || 'Sin periodo vigente.') + '</p>';
-            }
-
-            var limite = p.max_usuarios, pctUsuarios = limite ? Math.round(j.usuarios * 100 / limite) : 0;
-            var boton = j.puede_contratar
-                ? '<a class="me-btn" href="../auth/contratar.html"><i class="fas fa-credit-card"></i> ' +
-                  (e.estado === 'prueba' ? 'Contratar plan' : 'Renovar o cambiar plan') + '</a>' : '';
-
-            $('me-contenido').innerHTML =
-                (e.mensaje && e.estado !== 'demo' ? '<div class="me-aviso ' + (e.acceso === 'total' ? 'info' : 'alerta') + '">' + esc(e.mensaje) + '</div>' : '') +
-                '<div class="me-rejilla me-rejilla-plan">' +
-                '<section class="me-tarjeta me-plan">' +
-                '<div class="me-plan-cab"><div><span class="me-etiqueta">Tu plan</span><h3>' + esc(p.nombre) + '</h3>' +
-                (p.descripcion ? '<p class="me-nota">' + esc(p.descripcion) + '</p>' : '') + '</div>' +
-                (e.estado === 'demo' ? '' : '<div class="me-precio"><strong>' + dinero(p.por_ciclo) + '</strong><span>' + moneda + ' / ' +
-                    (p.ciclo === 'anual' ? 'año' : 'mes') + (p.pactado ? ' · precio especial' : '') + '</span></div>') + '</div>' +
-                vigencia +
-                '<div class="me-plan-pie">' + boton + '</div></section>' +
-
-                '<section class="me-tarjeta"><span class="me-etiqueta">Incluido en tu plan</span>' +
-                '<div class="me-limite"><div><i class="fas fa-users"></i> Usuarios</div><strong>' + j.usuarios + (limite ? ' de ' + limite : '') + '</strong></div>' +
-                (limite ? barra(pctUsuarios, pctUsuarios >= 100 ? 'peligro' : pctUsuarios >= 80 ? 'alerta' : '') +
-                    (pctUsuarios >= 80 ? '<p class="me-nota ' + (pctUsuarios >= 100 ? 'peligro' : '') + '">' +
-                        (pctUsuarios >= 100 ? 'Llegaste al límite de usuarios de tu plan.' : 'Estás cerca del límite de usuarios de tu plan.') + '</p>' : '')
-                    : '<p class="me-nota">Usuarios ilimitados.</p>') +
-                '<div class="me-limite"><div><i class="fas fa-palette"></i> Personalización de marca</div><strong>' +
-                (p.permite_marca ? '<span class="me-si"><i class="fas fa-check"></i> Incluida</span>' : '<span class="me-no">No incluida</span>') + '</strong></div>' +
-                '<div class="me-limite"><div><i class="fas fa-calendar-check"></i> Cliente desde</div><strong>' + fecha(e.alta) + '</strong></div>' +
-                '</section></div>' +
-
-                '<section class="me-tarjeta"><h3 class="me-tarjeta-titulo">Historial de pagos</h3>' +
-                (j.pagos.length ? '<div class="me-tabla-wrap"><table class="me-tabla"><thead><tr><th>Fecha</th><th class="num">Monto</th><th>Cubre hasta</th><th>Método</th><th>Factura</th></tr></thead><tbody>' +
-                    j.pagos.map(function (pg) {
-                        var anulado = +pg.anulado;
-                        return '<tr' + (anulado ? ' class="anulado"' : '') + '><td>' + fecha(pg.fecha_pago) + '</td><td class="num">' + dinero(pg.monto) + '</td>' +
-                            '<td>' + fecha(pg.cubre_hasta) + '</td><td>' + esc(pg.metodo || '—') + (pg.referencia ? '<small>' + esc(pg.referencia) + '</small>' : '') + '</td>' +
-                            '<td>' + (anulado ? chip(['Anulado', 'neutra']) : pg.factura ? esc(pg.factura) : '<small>En proceso</small>') + '</td></tr>';
-                    }).join('') + '</tbody></table></div>'
-                    : '<p class="me-nota">Aún no hay pagos registrados.</p>') + '</section>' +
-
-                (j.solicitudes.length ? '<section class="me-tarjeta"><h3 class="me-tarjeta-titulo">Solicitudes de pago</h3><div class="me-tabla-wrap"><table class="me-tabla">' +
-                    '<thead><tr><th>Referencia</th><th>Plan</th><th class="num">Monto</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>' +
-                    j.solicitudes.map(function (s) {
-                        return '<tr><td><strong>' + esc(s.referencia) + '</strong></td><td>' + esc(s.plan || '—') + ' <small>' + (s.ciclo === 'anual' ? 'anual' : 'mensual') + '</small></td>' +
-                            '<td class="num">' + dinero(s.monto) + '</td><td>' + fecha(s.creado_en) + '</td>' +
-                            '<td>' + chip(ESTADO_SOLICITUD[s.estado] || [s.estado, 'neutra']) + (s.motivo ? '<small>' + esc(s.motivo) + '</small>' : '') + '</td></tr>';
-                    }).join('') + '</tbody></table></div></section>' : '') +
-
-                '<section class="me-tarjeta"><h3 class="me-tarjeta-titulo">Datos de la cuenta</h3><div class="me-datos">' +
-                '<div><span>Razón social</span><strong>' + esc(e.razon_social || '—') + '</strong></div>' +
-                '<div><span>RFC</span><strong>' + esc(e.rfc || '—') + '</strong></div>' +
-                '<div><span>Contacto</span><strong>' + esc(e.contacto_nombre || '—') + '</strong></div>' +
-                '<div><span>Correo de cobranza</span><strong>' + esc(e.contacto_correo || '—') + '</strong></div>' +
-                '</div><p class="me-nota">Los datos fiscales se actualizan al contratar o renovar con factura. ¿Necesitas corregir algo? ' + esc(j.contacto) + '</p></section>' +
-
-                // Tus datos son tuyos: descarga en CSV (se abre en Excel) de todo lo capturado
-                '<section class="me-tarjeta"><h3 class="me-tarjeta-titulo">Tus datos</h3>' +
-                '<p class="me-nota">Descarga toda la información de tu empresa: un archivo CSV por módulo (clientes, órdenes, inventario, cotizaciones, finanzas…), en un ZIP. Los archivos adjuntos se descargan desde cada registro.</p>' +
-                '<a class="btn-secundario" href="../backend/mi_empresa.php?accion=exportar"><i class="fas fa-file-archive" aria-hidden="true"></i> Exportar mis datos</a></section>';
-        }).catch(error);
     }
 
     // ================================================================ USO
@@ -233,7 +145,12 @@
                     return '<li><i class="fas fa-circle"></i><div><strong>' + esc(m.usuario_nombre || 'Sistema') + '</strong> ' + esc(accion) + ' ' +
                         esc(m.registro_folio && m.tabla !== 'empresa_marca' ? m.registro_folio : tabla.toLowerCase()) +
                         '<small>' + relativo(m.creado_en) + ' · ' + esc(tabla) + '</small></div></li>';
-                }).join('') + '</ul>' : '<p class="me-nota">Sin movimientos registrados.</p>') + '</section></div>';
+                }).join('') + '</ul>' : '<p class="me-nota">Sin movimientos registrados.</p>') + '</section></div>' +
+
+                // Tus datos son tuyos: descarga en CSV (se abre en Excel) de todo lo capturado
+                '<section class="me-tarjeta"><h3 class="me-tarjeta-titulo">Tus datos</h3>' +
+                '<p class="me-nota">Descarga toda la información de tu empresa: un archivo CSV por módulo (clientes, órdenes, inventario, cotizaciones, finanzas…), en un ZIP. Los archivos adjuntos se descargan desde cada registro.</p>' +
+                '<a class="btn-secundario" href="../backend/mi_empresa.php?accion=exportar"><i class="fas fa-file-archive" aria-hidden="true"></i> Exportar mis datos</a></section>';
             graficarUso(j);
         }).catch(error);
     }
@@ -570,11 +487,10 @@
                     window.location.replace('../index.html');
                     return;
                 }
-                $('me-titulo').textContent = auth.empresa.nombre || 'Mi empresa';
-                mostrar((location.hash || '#plan').slice(1));
+                mostrar((location.hash || '#uso').slice(1));
             });
         } else {
-            mostrar((location.hash || '#plan').slice(1));
+            mostrar((location.hash || '#uso').slice(1));
         }
     }
     iniciar();
