@@ -128,7 +128,8 @@ try {
             $where .= $_GET['tipo'] === 'servicios' ? ' AND controla_existencia = 0' : ' AND controla_existencia = 1';
         }
         $control = invTieneControlExistencia($pdo) ? 'controla_existencia' : '1 AS controla_existencia';
-        $st = $pdo->prepare("SELECT id, sku, nombre, categoria, marca, modelo, unidad, existencia, stock_minimo, precio_venta, costo_unitario, $control
+        $monedaCol = invTieneMoneda($pdo) ? 'moneda' : "'MXN' AS moneda";
+        $st = $pdo->prepare("SELECT id, sku, nombre, categoria, marca, modelo, unidad, existencia, stock_minimo, precio_venta, costo_unitario, $monedaCol, $control
                              FROM inventario_articulos WHERE $where ORDER BY controla_existencia DESC, nombre LIMIT 40");
         $st->execute($params);
         $articulos = $st->fetchAll(PDO::FETCH_ASSOC);

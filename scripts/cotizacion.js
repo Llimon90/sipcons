@@ -202,7 +202,11 @@
             fecha: $('c-fecha').value,
             vigencia_hasta: $('c-vigencia').value,
             moneda: $('c-moneda').value,
-            tipo_cambio: $('c-tc').value,
+            // En cotización USD, el tc es el del documento; en MXN se manda el de la
+            // empresa como tasa de referencia para convertir el COSTO de artículos en USD.
+            tipo_cambio: $('c-moneda').value === 'USD'
+                ? $('c-tc').value
+                : (estado.config ? Number(estado.config.tipo_cambio) || '' : ''),
             precios_incluyen_iva: $('c-incluye-iva').checked ? 1 : 0,
             condiciones: $('c-condiciones').value,
             notas_cliente: $('c-notas-cliente').value,
@@ -658,8 +662,23 @@
         buscarCatalogo();
     }
 
+    // Tasa MXN<->USD para convertir el precio/costo de un artículo a la moneda de
+    // la cotización. En cotización USD es el tc de la cotización; en MXN es el tipo
+    // de cambio de la empresa (Mi empresa -> Personalización).
+    function tasaConversion() {
+        return monedaActual() === 'USD'
+            ? num($('c-tc').value)
+            : (estado.config ? Number(estado.config.tipo_cambio) || 0 : 0);
+    }
+    // Igual que cotConvertirPrecio del backend (MXN como moneda intermedia).
+    function convertirPrecio(precio, origen, destino, rate) {
+        if (origen === destino || !(rate > 0)) return r2(precio);
+        var enMXN = origen === 'MXN' ? precio : precio * rate;
+        return destino === 'MXN' ? r2(enMXN) : r2(enMXN / rate);
+    }
+
     function buscarCatalogo() {
-        var tc = monedaActual() === 'USD' ? num($('c-tc').value) : 1;
+        var rate = tasaConversion();
         C.api('catalogo', { buscar: $('cat-buscar').value.trim(), tipo: $('cat-tipo').value }).then(function (j) {
             var ul = $('cat-resultados');
             if (!j.articulos.length) { ul.innerHTML = '<li class="inv-vacio">Sin resultados.</li>'; return; }
@@ -669,7 +688,7 @@
                     : num(a.existencia) <= num(a.stock_minimo) ? '<span class="etiqueta etiqueta-alerta">Bajo mínimo · ' + C.cantidad(a.existencia) + ' ' + esc(a.unidad) + '</span>'
                     : '<span class="etiqueta etiqueta-ok">' + C.cantidad(a.existencia) + ' ' + esc(a.unidad) + '</span>')
                     : '<span class="etiqueta etiqueta-servicio">' + esc(a.categoria) + '</span>';
-                var precio = tc > 0 ? num(a.precio_venta) / tc : num(a.precio_venta);
+                var precio = convertirPrecio(num(a.precio_venta), a.moneda || 'MXN', monedaActual(), rate);
                 return '<li><div><strong>' + esc(a.nombre) + '</strong><span class="inv-sub">' + esc([a.sku, a.marca, a.modelo].filter(Boolean).join(' · ')) + '</span>' + ex + '</div>' +
                     '<div class="cot-cat-precio">' + C.dinero(precio, monedaActual()) + '<button type="button" class="btn-primary" data-agregar="' + a.id + '"><i class="fas fa-plus"></i> Agregar</button></div></li>';
             }).join('');
@@ -678,9 +697,13 @@
     }
 
     function agregarArticulo(a) {
-        var tc = monedaActual() === 'USD' ? num($('c-tc').value) : 1;
-        if (monedaActual() === 'USD' && tc <= 0) {
-            AppDialogo.mostrar({ tipo: 'aviso', titulo: 'Falta el tipo de cambio', mensaje: 'Captura el tipo de cambio antes de agregar partidas a una cotización en dólares.' });
+        var rate = tasaConversion();
+        var monedaArt = a.moneda || 'MXN';
+        if (monedaArt !== monedaActual() && !(rate > 0)) {
+            AppDialogo.mostrar({ tipo: 'aviso', titulo: 'Falta el tipo de cambio',
+                mensaje: monedaActual() === 'USD'
+                    ? 'Captura el tipo de cambio de la cotización antes de agregar partidas en dólares.'
+                    : 'Este artículo está en dólares. Configura el tipo de cambio de tu empresa en Mi empresa → Personalización para cargarlo en una cotización en pesos.' });
             return;
         }
         var existente = estado.partidas.find(function (p) { return !p.id && String(p.articulo_id) === String(a.id); });
@@ -689,9 +712,9 @@
         } else {
             estado.partidas.push({
                 articulo_id: a.id, sku: a.sku, descripcion: a.nombre, marca: a.marca, modelo: a.modelo, unidad: a.unidad,
-                cantidad: 1, precio_unitario: r2(num(a.precio_venta) / tc), descuento_pct: 0,
+                cantidad: 1, precio_unitario: convertirPrecio(num(a.precio_venta), monedaArt, monedaActual(), rate), descuento_pct: 0,
                 tasa_iva: estado.config ? estado.config.iva : 0.16, es_exento: false,
-                costo_unitario: a.costo_unitario !== undefined ? r2(num(a.costo_unitario) / tc) : 0,
+                costo_unitario: a.costo_unitario !== undefined ? convertirPrecio(num(a.costo_unitario), monedaArt, monedaActual(), rate) : 0,
                 controla_existencia: a.controla_existencia, existencia: a.existencia, stock_minimo: a.stock_minimo
             });
         }
