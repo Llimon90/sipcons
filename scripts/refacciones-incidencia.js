@@ -72,8 +72,8 @@
             '</div>' +
             '<p class="inv-alta-articulo"></p>' +
             '<table class="tabla-ventas inv-consumo-tabla">' +
-            '  <thead><tr><th>Tipo</th><th>Concepto</th><th>Cantidad</th><th>Importe</th><th></th></tr></thead>' +
-            '  <tbody><tr><td colspan="5">Cargando...</td></tr></tbody>' +
+            '  <thead><tr><th>Tipo</th><th>Concepto</th><th>Cantidad</th><th></th></tr></thead>' +
+            '  <tbody><tr><td colspan="4">Cargando...</td></tr></tbody>' +
             '</table>';
 
         var form = cont.querySelector('form');
@@ -126,14 +126,10 @@
                 // La sección de cotizaciones ofrece «Cotizar lo aplicado» cuando hay algo
                 document.dispatchEvent(new CustomEvent('refacciones:cambio', { detail: { total: consumos.length + servicios.length } }));
                 if (!consumos.length && !servicios.length) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="inv-vacio">Sin conceptos aplicados en esta orden de servicio.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="inv-vacio">Sin conceptos aplicados en esta orden de servicio.</td></tr>';
                     return;
                 }
-                var total = 0;
                 var filas = consumos.map(function (c) {
-                    // D-51: importe al precio con que se aplicó (el servidor lo calcula)
-                    var importe = c.importe != null ? (parseFloat(c.importe) || 0) : (parseFloat(c.cantidad) || 0) * (parseFloat(c.precio_venta) || 0);
-                    total += importe;
                     var series = reemplazos.filter(function (r) { return String(r.articulo_id) === String(c.articulo_id); });
                     var tipo = series.length ? 'Equipo de reemplazo' : 'Refacción';
                     return '<tr>' +
@@ -141,26 +137,21 @@
                         '<td>' + esc(c.sku) + ' · ' + esc(c.nombre) +
                         (series.length ? '<span class="inv-sub">En el padrón del cliente · serie ' + series.map(function (r) { return esc(r.numero_serie); }).join(', ') + '</span>' : '') + '</td>' +
                         '<td>' + num(c.cantidad) + ' ' + esc(c.unidad) + '</td>' +
-                        '<td>' + dinero(importe) + '</td>' +
                         '<td><button type="button" class="btn-delete" data-devolver="' + c.articulo_id + '" title="Devolver al almacén">' +
                         '<i class="fas fa-undo"></i> Devolver</button></td>' +
                         '</tr>';
                 }).concat(servicios.map(function (s) {
-                    var importe = (parseFloat(s.cantidad) || 0) * (parseFloat(s.precio_unitario) || 0);
-                    total += importe;
                     return '<tr>' +
                         '<td><span class="inv-tipo">Servicio</span></td>' +
                         '<td>' + esc(s.descripcion) + '</td>' +
                         '<td>' + num(s.cantidad) + ' ' + esc(s.unidad || '') + '</td>' +
-                        '<td>' + dinero(importe) + '</td>' +
                         '<td><button type="button" class="btn-delete" data-quitar-servicio="' + s.id + '" title="Quitar de la orden">' +
                         '<i class="fas fa-times"></i> Quitar</button></td>' +
                         '</tr>';
                 }));
-                tbody.innerHTML = filas.join('') +
-                    '<tr class="inv-total"><td colspan="3"><strong>Total a precio de venta</strong></td><td><strong>' + dinero(total) + '</strong></td><td></td></tr>';
+                tbody.innerHTML = filas.join('');
             }).catch(function (e) {
-                tbody.innerHTML = '<tr><td colspan="5">' + esc(e.message) + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4">' + esc(e.message) + '</td></tr>';
             });
         }
 
