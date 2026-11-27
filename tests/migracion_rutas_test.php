@@ -43,15 +43,15 @@ prueba('No toca rutas que no son de uploads/ ni manuales/', function () {
     igual('otra/cosa/x.pdf', rutaConEmpresa('otra/cosa/x.pdf', 1));
 });
 
-// El SQL que usa la migración (REGEXP_REPLACE) debe dar EXACTAMENTE lo mismo que
-// la versión PHP, para que no diverjan. Se comprueba contra la base real.
-prueba('El SQL de migración coincide con la versión PHP', function () {
+// El SQL que usa la migración (REPLACE anidado, portátil a MySQL 5.7) debe dar
+// lo mismo que la versión PHP sobre rutas de formato VIEJO (lo único que ve la
+// migración). Se comprueba contra la base real.
+prueba('El SQL de migración coincide con la versión PHP (rutas viejas)', function () {
     global $pdo;
     $casos = [
         '../uploads/bascula2-slider.jpg',
         '../uploads/ventas/CLIENTE X/VT-1_a.png',
         'manuales/rhino/IPES/m.pdf',
-        '../uploads/e1/ya.jpg',
         '',
         'otra/cosa.pdf',
     ];
