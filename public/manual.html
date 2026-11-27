@@ -433,12 +433,12 @@
           <h2><span class="mn-num">11</span> Inventario</h2>
           <p>Es el <b>catálogo de productos y servicios</b> de tu empresa: equipos, refacciones, consumibles y herramientas del almacén, y también tus <b>servicios</b> y tu <b>mano de obra</b>. Los servicios no llevan existencias: no aparecen en el kárdex, los mínimos ni el valor del inventario. Usa el filtro «Solo productos» o «Solo servicios y mano de obra».</p>
           <ul>
-            <li><b>Indicadores</b>: artículos activos, valor del inventario a costo, artículos en o por debajo del mínimo y movimientos de los últimos 30 días.</li>
+            <li><b>Indicadores</b>: artículos activos, valor del inventario a costo, artículos en o por debajo del mínimo y movimientos de los últimos 30 días. El <b>valor a costo</b> se muestra en pesos (los artículos guardados en dólares se convierten con el tipo de cambio de tu empresa); si tienes artículos en USD, aparece un botón <span class="mn-ui">Ver en USD</span> para ver su valor nativo en dólares.</li>
             <li><b>Gráfica y «Más utilizados»</b>: consumo de los últimos meses para planear compras.</li>
             <li><b>Tabla</b>: busca por SKU, nombre, marca, modelo o ubicación; filtra por categoría, «solo bajo mínimo» o «incluir inactivos».</li>
           </ul>
           <h3>Dar de alta un artículo</h3>
-          <p>Pulsa <span class="mn-ui">Nuevo artículo</span> (aquí o en el Inicio) y captura SKU, categoría y nombre, que son obligatorios. Si quieres, agrega marca, modelo, unidad, ubicación, stock mínimo, existencia inicial, costo y precio de venta. También se puede dar de alta desde una orden de servicio, en <a href="#incidencias">Conceptos aplicados</a>, o en bloque con <a href="#importar">Importar datos</a>.</p>
+          <p>Pulsa <span class="mn-ui">Nuevo artículo</span> (aquí o en el Inicio) y captura SKU, categoría y nombre, que son obligatorios. Si quieres, agrega marca, modelo, unidad, ubicación, stock mínimo, existencia inicial, costo, precio de venta y la <b>moneda</b> del artículo (pesos o dólares). Al cargar un artículo en dólares en una cotización, su precio se convierte a la moneda de la cotización con el tipo de cambio. También se puede dar de alta desde una orden de servicio, en <a href="#incidencias">Conceptos aplicados</a>, o en bloque con <a href="#importar">Importar datos</a>.</p>
           <p>Marca <b>Controla número de serie</b> en piezas que se rastrean una por una (tarjetas, celdas de carga, displays): al aplicarlas en una orden se pide el N/S de cada pieza. No hace falta para consumibles.</p>
           <p>Puedes agregar una <b>foto del producto</b> (JPG o PNG de hasta 3 MB): aparece en la tabla y junto al producto en el PDF de las <a href="#cotizaciones">cotizaciones</a>.</p>
           <h3>Registrar movimientos</h3>
@@ -625,7 +625,7 @@
             <li><b>Mano de obra por hora</b>: es el precio del concepto «Mano de obra (por hora)». Se cobra por tiempo y admite fracciones (1.5 h), así sabes cuántas horas dedica cada técnico.</li>
             <li><b>Servicios</b>: precio cerrado (mantenimiento, visita, calibración) y lo que <b>incluye</b>, un concepto por línea. Lo que incluye aparece en el PDF de la cotización. Quitar un servicio de la lista lo desactiva; no se borra de las órdenes y cotizaciones donde ya se usó.</li>
           </ul>
-          <p>En <b>Personalización</b> también está <b>Cotizaciones</b>: prefijo de folio (por defecto COT), vigencia por defecto (15 días), IVA por defecto (16% u 8%), descuento máximo sin autorización y términos y condiciones que se copian a cada cotización nueva.</p>
+          <p>En <b>Personalización</b> también está <b>Cotizaciones</b>: prefijo de folio (por defecto COT), vigencia por defecto (15 días), IVA por defecto (16% u 8%), <b>tipo de cambio</b> (pesos por dólar, junto al IVA), descuento máximo sin autorización y términos y condiciones que se copian a cada cotización nueva. El tipo de cambio es la referencia para las cotizaciones en dólares y para valuar en pesos los artículos de inventario guardados en USD; déjalo vacío si no manejas dólares.</p>
           <div class="mn-nota"><i class="fas fa-info-circle"></i><div>Cambiar el prefijo de folio afecta solo a las órdenes o cotizaciones nuevas; las anteriores conservan el suyo.</div></div>
         </section>
 
