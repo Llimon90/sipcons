@@ -215,6 +215,23 @@ if ($vacias) {
     echo "   " . implode(', ', $vacias) . "\n";
 }
 
+// Rutas de adjuntos: deben apuntar a la carpeta de la empresa (uploads/e<ID>/,
+// manuales/e<ID>/). Si quedó alguna sin el segmento, backend/archivo.php le daría
+// 404 y el adjunto se vería roto tras el corte. Esta comprobación es la red de
+// seguridad del bug de rutas (2026-11-27).
+$tablasRuta = ["{$P}archivos_incidencias", "{$P}venta_archivos", "{$P}documentos"];
+foreach ($tablasRuta as $t) {
+    if (!existeTabla($pdo, $DESTINO, $t)) continue;
+    $cols = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=? AND table_name=? AND column_name='ruta_archivo'");
+    $cols->execute([$DESTINO, $t]);
+    if (!$cols->fetchColumn()) continue;
+    $sql = "SELECT COUNT(*) FROM `$DESTINO`.`$t` WHERE ruta_archivo REGEXP '(uploads|manuales)/' AND ruta_archivo NOT REGEXP '(uploads|manuales)/e{$EMPRESA}/'";
+    $rotas = (int)$pdo->query($sql)->fetchColumn();
+    if ($rotas > 0) {
+        $fallas[] = sprintf("%-24s %6d rutas de archivo SIN carpeta de empresa (uploads/e%d/ ...): backend/archivo.php les daría 404", $t, $rotas, $EMPRESA);
+    }
+}
+
 echo "\n-- FALLAS (bloquean el corte) ---------------------------------------\n";
 if ($fallas) {
     foreach ($fallas as $l) echo "  ❌ $l\n";

@@ -31,10 +31,28 @@
  *
  * El repo es PÚBLICO: este archivo NO contiene datos de clientes; todo sale de
  * la base origen en tiempo de ejecución.
+ *
+ * ── PASO MANUAL OBLIGATORIO: mover los archivos físicos ─────────────────────
+ * Esta herramienta reescribe en la BD las rutas de los adjuntos a la carpeta de
+ * la empresa (uploads/ -> uploads/e<ID>/, manuales/ -> manuales/e<ID>/), porque
+ * backend/archivo.php SOLO sirve uploads/e<ID>/... y manuales/e<ID>/... (da 404
+ * a cualquier otra forma). Pero NO mueve los archivos del disco. Tras migrar,
+ * en el servidor hay que mover físicamente el contenido viejo a la subcarpeta de
+ * la empresa. Con empresa=1, por SSH:
+ *     cd public_html/uploads && mkdir -p e1
+ *     shopt -s dotglob; for f in *; do [ "$f" = e1 ] || [ "$f" = .htaccess ] || mv "$f" e1/; done
+ *     cd ../manuales && mkdir -p e1
+ *     shopt -s dotglob; for f in *; do [ "$f" = e1 ] || [ "$f" = .htaccess ] || mv "$f" e1/; done
+ * (Sin SSH, el mismo movimiento desde el Administrador de archivos de cPanel.)
+ * Verifica abriendo un adjunto de una orden y uno de una venta antes del go-live.
  */
 
 declare(strict_types=1);
 mb_internal_encoding('UTF-8');
+
+// Reescritura de rutas de archivos (uploads/... -> uploads/e<ID>/...): sin esto,
+// backend/archivo.php daría 404 a TODO adjunto migrado. Ver rutas_empresa.php.
+require_once __DIR__ . '/rutas_empresa.php';
 
 $opts = getopt('', ['origen:', 'destino:', 'host:', 'user:', 'pass:', 'empresa:', 'prefijo-folio:', 'force', 'migrar-auditoria', 'migrar-analytics', 'resolver-folios-duplicados']);
 $ORIGEN   = $opts['origen']  ?? null;
@@ -207,7 +225,7 @@ try {
                 WHEN 'imagen' THEN 'imagen' WHEN 'diagrama' THEN 'diagrama' WHEN 'esquema' THEN 'esquema'
                 WHEN 'firmware' THEN 'firmware' WHEN 'software' THEN 'software' ELSE 'otro' END",
             'nombre_archivo' => "COALESCE(NULLIF(nombre_archivo,''),'documento')", 'descripcion' => 'descripcion',
-            'ruta_archivo' => "COALESCE(ruta_archivo,'')", 'fecha_subida' => "COALESCE($fechaDoc, NOW())"]);
+            'ruta_archivo' => sqlRutaConEmpresa("COALESCE(ruta_archivo,'')", $EMPRESA), 'fecha_subida' => "COALESCE($fechaDoc, NOW())"]);
     }
     migrar($pdo, 'clientes', $DESTINO, "{$P}clientes", $o('clientes'), [
         'id' => 'id', 'nombre' => 'nombre', 'rfc' => "COALESCE(rfc,'')", 'direccion' => "COALESCE(direccion,'')",
@@ -226,7 +244,7 @@ try {
         'accion' => 'i.accion', 'notas' => 'i.notas', 'clave_envio' => 'NULL']);
     if (existeTabla($pdo, $ORIGEN, 'archivos_incidencias'))
         migrar($pdo, 'archivos_incidencias', $DESTINO, "{$P}archivos_incidencias", $o('archivos_incidencias'),
-            ['id' => 'id', 'incidencia_id' => 'incidencia_id', 'ruta_archivo' => 'ruta_archivo']);
+            ['id' => 'id', 'incidencia_id' => 'incidencia_id', 'ruta_archivo' => sqlRutaConEmpresa("COALESCE(ruta_archivo,'')", $EMPRESA)]);
 
     echo "3. Ventas, detalles y archivos\n";
     migrar($pdo, 'ventas', $DESTINO, "{$P}ventas", $o('ventas'), [
@@ -242,7 +260,7 @@ try {
             'proxima_calibracion' => 'proxima_calibracion', 'proximo_servicio' => 'proximo_servicio']);
     if (existeTabla($pdo, $ORIGEN, 'venta_archivos'))
         migrar($pdo, 'venta_archivos', $DESTINO, "{$P}venta_archivos", $o('venta_archivos'),
-            ['id' => 'id', 'venta_id' => 'venta_id', 'ruta_archivo' => "COALESCE(ruta_archivo,'')",
+            ['id' => 'id', 'venta_id' => 'venta_id', 'ruta_archivo' => sqlRutaConEmpresa("COALESCE(ruta_archivo,'')", $EMPRESA),
              'nombre_archivo' => 'nombre_archivo', 'tipo_archivo' => 'tipo_archivo']);
 
     // Ventas MONOLÍTICAS (producción vieja): el equipo vive DENTRO de `ventas`
@@ -273,7 +291,7 @@ try {
                 WHERE NULLIF(TRIM(v.factura_path),'') IS NOT NULL
                   AND NOT EXISTS (SELECT 1 FROM {$o('venta_archivos')} a WHERE a.venta_id = v.id)";
             migrar($pdo, 'venta_archivos (factura_path embebida)', $DESTINO, "{$P}venta_archivos", $fromFact, [
-                'venta_id' => 'v.id', 'ruta_archivo' => 'v.factura_path',
+                'venta_id' => 'v.id', 'ruta_archivo' => sqlRutaConEmpresa("COALESCE(v.factura_path,'')", $EMPRESA),
                 'nombre_archivo' => "'factura'", 'tipo_archivo' => 'NULL']);
         }
     }
