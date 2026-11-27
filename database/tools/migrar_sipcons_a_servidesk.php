@@ -27,7 +27,7 @@
  * ── Cómo se corre ───────────────────────────────────────────────────────────
  *    C:\xampp\php\php.exe database\tools\migrar_sipcons_a_servidesk.php \
  *        --origen=sipcons_old --destino=servidesk_prod [--prefijo-folio=SIP] \
- *        [--migrar-auditoria] [--force]
+ *        [--migrar-auditoria] [--migrar-analytics] [--force]
  *
  * El repo es PÚBLICO: este archivo NO contiene datos de clientes; todo sale de
  * la base origen en tiempo de ejecución.
@@ -36,7 +36,7 @@
 declare(strict_types=1);
 mb_internal_encoding('UTF-8');
 
-$opts = getopt('', ['origen:', 'destino:', 'host:', 'user:', 'pass:', 'empresa:', 'prefijo-folio:', 'force', 'migrar-auditoria', 'resolver-folios-duplicados']);
+$opts = getopt('', ['origen:', 'destino:', 'host:', 'user:', 'pass:', 'empresa:', 'prefijo-folio:', 'force', 'migrar-auditoria', 'migrar-analytics', 'resolver-folios-duplicados']);
 $ORIGEN   = $opts['origen']  ?? null;
 $DESTINO  = $opts['destino'] ?? null;
 $HOST     = $opts['host']    ?? '127.0.0.1';
@@ -45,6 +45,7 @@ $PASS     = $opts['pass']    ?? '';
 $EMPRESA  = (int)($opts['empresa'] ?? 1);
 $FORCE    = isset($opts['force']);
 $MIG_AUD  = isset($opts['migrar-auditoria']);
+$MIG_ANA  = isset($opts['migrar-analytics']);
 $RESOLVER_DUP = isset($opts['resolver-folios-duplicados']);
 $PREF_OVERRIDE = $opts['prefijo-folio'] ?? null;
 $P = 'e' . $EMPRESA . '_';
@@ -326,6 +327,20 @@ try {
             'registro_folio' => $tieneFolio ? 'registro_folio' : 'NULL',
             'datos_anteriores' => 'datos_anteriores', 'datos_nuevos' => 'datos_nuevos',
             'ip_address' => 'ip_address', 'creado_en' => 'creado_en']);
+    }
+
+    if ($MIG_ANA && existeTabla($pdo, $ORIGEN, 'analytics_eventos')) {
+        echo "6b. Analytics (telemetría de uso)\n";
+        // Tabla CENTRAL (sin prefijo): mismas columnas que el origen + empresa_id.
+        // migrar() solo inserta las columnas que existan de verdad en el destino.
+        migrar($pdo, 'analytics_eventos', $DESTINO, 'analytics_eventos', $o('analytics_eventos'), [
+            'id' => 'id', 'empresa_id' => (string)$EMPRESA, 'creado_en' => 'creado_en',
+            'usuario_id' => 'usuario_id', 'usuario' => 'usuario', 'usuario_nombre' => 'usuario_nombre',
+            'rol' => 'rol', 'sesion_id' => 'sesion_id', 'visita_id' => 'visita_id', 'tipo' => 'tipo',
+            'pagina' => 'pagina', 'modulo' => 'modulo', 'elemento' => 'elemento', 'detalle' => 'detalle',
+            'valor' => 'valor', 'extra' => 'extra', 'referrer_pagina' => 'referrer_pagina',
+            'dispositivo' => 'dispositivo', 'navegador' => 'navegador', 'sistema' => 'sistema',
+            'viewport' => 'viewport']);
     }
 
     echo "7. Inicializar contadores de folio (e1_folios)\n";
