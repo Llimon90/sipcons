@@ -697,7 +697,9 @@ function cotDatosDesdeIncidencia(PDO $pdo, int $incidenciaId): array {
         'datos' => [
             'cliente_id' => $clienteId, 'sucursal' => $inc['sucursal'], 'contacto_id' => $contactoId,
             'fecha' => date('Y-m-d'), 'vigencia_hasta' => date('Y-m-d', strtotime('+' . $cfg['vigencia_dias'] . ' days')),
-            'moneda' => 'MXN', 'tipo_cambio' => 1, 'precios_incluyen_iva' => 0,
+            // El tc de la empresa va como tasa de referencia para convertir a pesos
+            // las refacciones/servicios aplicados que estén en USD (si no hay, queda sin efecto).
+            'moneda' => 'MXN', 'tipo_cambio' => cotTipoCambioEmpresa(), 'precios_incluyen_iva' => 0,
             'condiciones' => $cfg['terminos'],
             // O-14: las notas internas son del usuario; el origen se muestra como etiqueta del sistema
             'notas_internas' => null,
@@ -709,25 +711,32 @@ function cotDatosDesdeIncidencia(PDO $pdo, int $incidenciaId): array {
 /** Refacciones registradas en la incidencia (netas de devoluciones), como partidas nuevas. */
 function cotPartidasDeConsumos(PDO $pdo, int $incidenciaId): array {
     if (!invTablasDisponibles($pdo)) return [];
+    // El precio aplicado está en la moneda del artículo; la cotización desde una OS
+    // es en MXN, así que los artículos en USD se convierten con el tc de la empresa
+    // (si no hay moneda/tc, queda sin efecto: todo se trata como MXN).
+    $tc = cotTipoCambioEmpresa();
+    $monedaCol = invTieneMoneda($pdo) ? 'a.moneda' : "'MXN' AS moneda";
     // L-8 · D-51: lo aplicado se cotiza aunque el artículo se haya desactivado después, y al
     // precio con que se aplicó (promedio si salió a distintos precios), no al del catálogo de hoy
     $precio = invTienePrecioCongelado($pdo) ? 'COALESCE(m.precio_unitario, a.precio_venta)' : 'a.precio_venta';
+    $partida = fn($f) => ['articulo_id' => (int)$f['articulo_id'], 'cantidad' => (float)$f['cantidad'],
+        'precio_unitario' => cotConvertirPrecio((float)$f['precio'], (string)($f['moneda'] ?? 'MXN'), 'MXN', $tc)];
     // H-10: una partida por cada precio distinto (sin promediar, para no descuadrar centavos)
     $st = $pdo->prepare(
-        "SELECT m.articulo_id, $precio AS precio, SUM(-m.cantidad) AS cantidad
+        "SELECT m.articulo_id, $precio AS precio, $monedaCol, SUM(-m.cantidad) AS cantidad
          FROM inventario_movimientos m JOIN inventario_articulos a ON a.id = m.articulo_id
          WHERE m.referencia_tipo = 'incidencia' AND m.referencia_id = ?
-         GROUP BY m.articulo_id, precio
+         GROUP BY m.articulo_id, precio, moneda
          HAVING cantidad > 0
          ORDER BY MIN(m.creado_en), m.articulo_id"
     );
     $st->execute([$incidenciaId]);
-    $partida = fn($f) => ['articulo_id' => (int)$f['articulo_id'], 'cantidad' => (float)$f['cantidad'], 'precio_unitario' => round((float)$f['precio'], 2)];
     $partidas = array_map($partida, $st->fetchAll(PDO::FETCH_ASSOC));
     // D-23: también los servicios y la mano de obra aplicados (no tienen existencias)
     if (invServiciosDisponibles($pdo)) {
-        $st = $pdo->prepare('SELECT s.articulo_id, s.precio_unitario AS precio, SUM(s.cantidad) AS cantidad FROM incidencia_servicios s
-                             WHERE s.incidencia_id = ? GROUP BY s.articulo_id, s.precio_unitario HAVING cantidad > 0 ORDER BY MIN(s.id)');
+        $st = $pdo->prepare("SELECT s.articulo_id, s.precio_unitario AS precio, $monedaCol, SUM(s.cantidad) AS cantidad
+                             FROM incidencia_servicios s LEFT JOIN inventario_articulos a ON a.id = s.articulo_id
+                             WHERE s.incidencia_id = ? GROUP BY s.articulo_id, s.precio_unitario, moneda HAVING cantidad > 0 ORDER BY MIN(s.id)");
         $st->execute([$incidenciaId]);
         foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $f) $partidas[] = $partida($f);
     }
