@@ -43,6 +43,10 @@ const COT_CONFIG_DEFECTO = [
     'vigencia_dias'  => 15,
     'iva'            => 0.16,
     'descuento_max'  => 10.0,
+    // Tipo de cambio de referencia de la empresa (MXN por USD). 0 = sin
+    // configurar: las cotizaciones en USD piden el tc a mano y la valuación de
+    // inventario en pesos no convierte los artículos en USD.
+    'tipo_cambio'    => 0.0,
     'terminos'       => "Tiempo de entrega: a convenir una vez aprobada la cotización.\nForma de pago: 50% de anticipo y 50% contra entrega.\nGarantía: la del fabricante en equipos; 30 días en mano de obra.\nPrecios sujetos a cambio sin previo aviso después de la vigencia.",
 ];
 
@@ -68,8 +72,14 @@ function cotConfig(?array $empresa = null): array {
     $c['vigencia_dias'] = max(1, min(365, (int)$c['vigencia_dias']));
     $c['iva'] = in_array((float)$c['iva'], COT_TASAS_IVA, true) ? (float)$c['iva'] : 0.16;
     $c['descuento_max'] = max(0, min(100, (float)$c['descuento_max']));
+    $c['tipo_cambio'] = max(0.0, round((float)($c['tipo_cambio'] ?? 0), 4));
     $c['terminos'] = (string)$c['terminos'];
     return $c;
+}
+
+/** Tipo de cambio de referencia de la empresa (MXN por USD); 0 = sin configurar. */
+function cotTipoCambioEmpresa(?array $empresa = null): float {
+    return (float)cotConfig($empresa)['tipo_cambio'];
 }
 
 function cotLimpiarPrefijo(string $p): string {
@@ -86,8 +96,11 @@ function cotValidarConfig(array $d): array {
     if (!in_array($iva, [0.08, 0.16], true)) throw new CotizacionException('El IVA por defecto es 16% u 8% (zona fronteriza).');
     $desc = round((float)($d['descuento_max'] ?? -1), 2);
     if ($desc < 0 || $desc > 100) throw new CotizacionException('El descuento máximo va de 0 a 100%.');
+    $tc = round((float)($d['tipo_cambio'] ?? 0), 4);
+    if ($tc < 0 || $tc > 100000) throw new CotizacionException('El tipo de cambio debe ser 0 (sin configurar) o un número positivo.');
     return [
         'prefijo' => $prefijo, 'vigencia_dias' => $vigencia, 'iva' => $iva, 'descuento_max' => $desc,
+        'tipo_cambio' => $tc,
         'terminos' => mb_substr(trim((string)($d['terminos'] ?? '')), 0, 3000),
     ];
 }

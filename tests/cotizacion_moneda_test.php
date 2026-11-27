@@ -51,3 +51,31 @@ prueba('Ida y vuelta USD->MXN->USD recupera (aprox) el original', function () {
 prueba('Monedas soportadas: solo MXN y USD', function () {
     igual(['MXN', 'USD'], COT_MONEDAS);
 });
+
+grupo('Cotización · tipo de cambio de la empresa (Mi empresa)');
+
+prueba('La config acepta y normaliza un tipo de cambio válido', function () {
+    $c = cotValidarConfig(['prefijo' => 'COT', 'vigencia_dias' => 15, 'iva' => 0.16, 'descuento_max' => 10, 'tipo_cambio' => 17.5]);
+    igual(17.5, $c['tipo_cambio']);
+});
+
+prueba('Tipo de cambio 0 significa "sin configurar" y se permite', function () {
+    $c = cotValidarConfig(['prefijo' => 'COT', 'vigencia_dias' => 15, 'iva' => 0.16, 'descuento_max' => 10, 'tipo_cambio' => 0]);
+    igual(0.0, $c['tipo_cambio']);
+});
+
+prueba('Rechaza un tipo de cambio negativo', function () {
+    lanza(function () {
+        cotValidarConfig(['prefijo' => 'COT', 'vigencia_dias' => 15, 'iva' => 0.16, 'descuento_max' => 10, 'tipo_cambio' => -1]);
+    }, CotizacionException::class);
+});
+
+prueba('cotConfig trae tipo_cambio=0 por defecto cuando no está configurado', function () {
+    $c = cotConfig(['marca' => []]);
+    igual(0.0, $c['tipo_cambio']);
+});
+
+prueba('cotTipoCambioEmpresa devuelve el configurado en la marca', function () {
+    igual(18.25, cotTipoCambioEmpresa(['marca' => ['cotizaciones' => ['tipo_cambio' => 18.25]]]));
+    igual(0.0, cotTipoCambioEmpresa(['marca' => []]));
+});

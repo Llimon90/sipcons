@@ -370,6 +370,8 @@
             '<small>Ejemplo: <span id="cot-folio-ejemplo">' + esc(c.prefijo || 'COT') + '-0001</span></small></label>' +
             '<label>Vigencia por defecto (días)<input name="vigencia_dias" type="number" min="1" max="365" value="' + esc(c.vigencia_dias || 15) + '"></label>' +
             '<label>IVA por defecto<select name="iva">' + opcionIva(0.16, '16% (general)') + opcionIva(0.08, '8% (región fronteriza)') + '</select></label>' +
+            '<label>Tipo de cambio (MXN por USD)<input name="tipo_cambio" type="number" min="0" max="100000" step="0.0001" value="' + esc(c.tipo_cambio ? c.tipo_cambio : '') + '">' +
+            '<small>Referencia para cotizaciones en USD y para el valor del inventario en pesos. Déjalo vacío si no manejas dólares.</small></label>' +
             '<label>Descuento máximo sin autorización (%)<input name="descuento_max" type="number" min="0" max="100" step="0.5" value="' + esc(c.descuento_max != null ? c.descuento_max : 10) + '">' +
             '<small>Más descuento lo autoriza el Administrador o quien tenga «Puede autorizar descuentos» en Usuarios.</small></label>' +
             '</div>' +
@@ -391,6 +393,7 @@
             boton.disabled = true;
             api('guardar_cotizaciones', {
                 prefijo: form.prefijo.value, vigencia_dias: Number(form.vigencia_dias.value), iva: Number(form.iva.value),
+                tipo_cambio: Number(form.tipo_cambio.value) || 0,
                 descuento_max: Number(form.descuento_max.value), terminos: form.terminos.value
             }).then(function (j) { aviso(j.mensaje || 'Configuración guardada.', 'ok'); })
               .catch(function (e) { aviso(e.message); })

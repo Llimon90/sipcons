@@ -737,7 +737,15 @@
                 $('lista-clientes').insertAdjacentHTML('beforeend', '<option value="' + esc(c.nombre) + '">');
             }
         });
-        $('c-moneda').addEventListener('change', function () { $('campo-tc').hidden = this.value !== 'USD'; pintarPartidas(); aplicarEditable(); });
+        $('c-moneda').addEventListener('change', function () {
+            var esUSD = this.value === 'USD';
+            $('campo-tc').hidden = !esUSD;
+            // Prefill con el tipo de cambio de la empresa (Mi empresa) si está configurado y el campo está vacío
+            if (esUSD && !num($('c-tc').value) && estado.config && Number(estado.config.tipo_cambio) > 0) {
+                $('c-tc').value = estado.config.tipo_cambio;
+            }
+            pintarPartidas(); aplicarEditable();
+        });
         $('c-incluye-iva').addEventListener('change', pintarTotales);
         $('c-tc').addEventListener('input', pintarTotales);
 
