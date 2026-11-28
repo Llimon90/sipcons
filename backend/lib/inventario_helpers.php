@@ -283,8 +283,9 @@ function invSeriesExigidas(PDO $pdo, int $articuloId, float $cantidad, $series):
     if (!$art || (int)$art['controla_serie'] !== 1) return [];
     if (abs($cantidad - round($cantidad)) > 0.0001) throw new InventarioException("{$art['nombre']} se registra por pieza con su número de serie: la cantidad debe ser entera.");
     $limpias = array_values(array_filter(array_map(fn($s) => mb_substr(trim((string)$s), 0, 60), is_array($series) ? $series : []), fn($s) => $s !== ''));
-    if (count($limpias) !== (int)round($cantidad)) {
-        throw new InventarioException("{$art['nombre']} controla número de serie: captura el N/S de cada pieza (" . (int)round($cantidad) . ').');
+    // El número de serie es OPCIONAL: se aceptan de 0 a <cantidad> (no se exige uno por pieza).
+    if (count($limpias) > (int)round($cantidad)) {
+        throw new InventarioException("Capturaste más números de serie que piezas de {$art['nombre']} (" . (int)round($cantidad) . ').');
     }
     if (count(array_unique(array_map('mb_strtoupper', $limpias))) !== count($limpias)) throw new InventarioException('Hay números de serie repetidos.');
     return $limpias;

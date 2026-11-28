@@ -162,17 +162,17 @@
             var caja = document.createElement('div');
             caja.className = 'alta-campos';
             for (var i = 1; i <= n; i++) {
-                caja.insertAdjacentHTML('beforeend', '<label class="alta-campo"><span>N/S pieza ' + i + '</span><input name="serie" maxlength="60" autocomplete="off" required></label>');
+                caja.insertAdjacentHTML('beforeend', '<label class="alta-campo"><span>N/S pieza ' + i + ' <small>(opcional)</small></span><input name="serie" maxlength="60" autocomplete="off"></label>');
             }
             return AppDialogo.mostrar({
                 tipo: 'info', titulo: 'Números de serie: ' + a.nombre, contenido: caja,
-                mensaje: 'Este artículo controla número de serie. Captura el de cada pieza instalada.',
+                mensaje: 'Si lo tienes, captura el número de serie de cada pieza instalada (para trazabilidad). Es opcional: puedes dejarlo en blanco.',
                 botones: [{ texto: 'Cancelar', valor: null, estilo: 'secundario' }, { texto: 'Registrar', valor: 'ok', estilo: 'primario' }]
             }).then(function (v) {
                 if (v !== 'ok') return null;
-                var series = Array.prototype.map.call(caja.querySelectorAll('input'), function (x) { return x.value.trim(); });
-                if (series.some(function (s) { return !s; })) { avisar('Captura el número de serie de cada pieza.', 'error'); return pedirSeries(a, cantidad); }
-                return series;
+                // Opcional: se toman solo las series capturadas (puede no haber ninguna)
+                return Array.prototype.map.call(caja.querySelectorAll('input'), function (x) { return x.value.trim(); })
+                    .filter(function (s) { return s; });
             });
         }
 
