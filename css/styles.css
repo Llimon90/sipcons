@@ -3499,3 +3499,6 @@ html[data-theme="dark"] .buscador-item small, html[data-theme="dark"] .buscador-
 .acciones-usuario a.btn-editar, .acciones-usuario button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
 /* U-15: folio y fecha de la lista de órdenes en una sola línea */
 .lista-incidencias table td:nth-child(1), .lista-incidencias table td:nth-child(6) { white-space: nowrap; }
+
+/* Aviso de "sucursal nueva" bajo el campo Sucursal (D-44 / #1) */
+.suc-aviso { display: block; margin-top: 4px; color: #b45309; font-size: 0.8rem; line-height: 1.3; }

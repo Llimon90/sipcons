@@ -116,6 +116,23 @@ async function registrarIncidencia() {
     return;
   }
 
+  // #1: si la sucursal escrita es nueva y el cliente ya tiene sucursales registradas,
+  // se confirma para no crear una sucursal basura por un error de dedo.
+  const inpSuc = document.getElementById('sucursal');
+  if (window.AppSucursales && AppSucursales.esNueva(inpSuc)) {
+    const ok = await AppDialogo.mostrar({
+      tipo: 'aviso',
+      titulo: '¿Sucursal nueva?',
+      mensaje: 'La sucursal "' + inpSuc.value.trim() + '" no está registrada para este cliente. Se dará de alta como nueva.',
+      nota: 'Si quisiste una que ya existe, elígela de la lista.',
+      botones: [
+        { texto: 'Corregir', valor: 'no', estilo: 'secundario' },
+        { texto: 'Sí, darla de alta', valor: 'si', estilo: 'primario' }
+      ]
+    });
+    if (ok !== 'si') { inpSuc.focus(); return; }
+  }
+
   marcarRegistrando(true);
   const inicio = performance.now();
 
