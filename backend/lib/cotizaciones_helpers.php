@@ -531,7 +531,9 @@ function cotPrepararPartidas(PDO $pdo, array $entrada, array $existentes, float 
             'descuento_pct' => cotR($p['descuento_pct'] ?? $base['descuento_pct'] ?? 0),
             'tasa_iva' => array_key_exists('tasa_iva', $p) ? (float)$p['tasa_iva'] : (float)$base['tasa_iva'],
             'es_exento' => !empty($p['es_exento'] ?? $base['es_exento']) ? 1 : 0,
-            'costo_unitario' => cotR($base['costo_unitario']),
+            // El costo de una partida nueva lo deriva el servidor del artículo; el de una
+            // ya existente se respeta si la interfaz lo manda (convertido al cambiar la moneda).
+            'costo_unitario' => ($base['id'] && array_key_exists('costo_unitario', $p)) ? cotR($p['costo_unitario']) : cotR($base['costo_unitario']),
         ];
     }
     return $salida;
@@ -574,9 +576,10 @@ function cotGuardar(PDO $pdo, int $id, array $datos, array $partidasEntrada, str
                     'modificado_por' => cotUltimoCambio($pdo, $id),
                 ]);
             }
-            // O-13: con partidas, cambiar la moneda convierte sus precios (con confirmación)
+            // O-13: con partidas, cambiar la moneda convierte sus precios (con confirmación).
+            // Si la interfaz ya convirtió en vivo (ya_convertido), se salta para no duplicar.
             $factorMoneda = null;
-            if ($existentes && $anterior['moneda'] !== $enc['moneda']) {
+            if ($existentes && $anterior['moneda'] !== $enc['moneda'] && empty($datos['ya_convertido'])) {
                 $tcAntes = $anterior['moneda'] === 'MXN' ? 1.0 : (float)$anterior['tipo_cambio'];
                 $tcNuevo = $enc['moneda'] === 'MXN' ? 1.0 : (float)$enc['tipo_cambio'];
                 if (empty($datos['convertir_moneda'])) {

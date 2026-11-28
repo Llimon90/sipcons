@@ -211,7 +211,10 @@
             condiciones: $('c-condiciones').value,
             notas_cliente: $('c-notas-cliente').value,
             notas_internas: $('c-notas-internas').value,
-            convertir_moneda: estado.convertirMoneda ? 1 : 0  // O-13
+            convertir_moneda: estado.convertirMoneda ? 1 : 0,  // O-13 (compatibilidad)
+            // La interfaz convierte las partidas en vivo al cambiar la moneda, así que el
+            // servidor no debe reconvertirlas (evita duplicar la conversión).
+            ya_convertido: estado.monedaConvertidaEnVivo ? 1 : 0
         };
     }
 
@@ -219,7 +222,8 @@
         return estado.partidas.map(function (p) {
             var r = { cantidad: p.cantidad, precio_unitario: p.precio_unitario, descuento_pct: p.descuento_pct, descripcion: p.descripcion,
                 tasa_iva: p.es_exento ? 0 : p.tasa_iva, es_exento: p.es_exento ? 1 : 0 };
-            if (p.id) r.id = p.id; else r.articulo_id = p.articulo_id;
+            if (p.id) { r.id = p.id; if (p.costo_unitario != null) r.costo_unitario = p.costo_unitario; }
+            else r.articulo_id = p.articulo_id;
             return r;
         });
     }
@@ -232,6 +236,8 @@
         $('c-fecha').value = c ? c.fecha : hoy;
         $('c-vigencia').value = c ? c.vigencia_hasta : sumarDias(hoy, cfg.vigencia_dias || 15);
         $('c-moneda').value = c ? c.moneda : 'MXN';
+        estado.monedaPrevia = $('c-moneda').value;  // para la conversión en vivo
+        estado.monedaConvertidaEnVivo = false;
         $('c-tc').value = c && c.moneda === 'USD' ? num(c.tipo_cambio) : '';
         $('c-incluye-iva').checked = c ? Number(c.precios_incluyen_iva) === 1 : false;
         $('c-condiciones').value = c ? (c.condiciones || '') : (cfg.terminos || '');
@@ -761,12 +767,33 @@
             }
         });
         $('c-moneda').addEventListener('change', function () {
-            var esUSD = this.value === 'USD';
-            $('campo-tc').hidden = !esUSD;
+            var nueva = this.value, previa = estado.monedaPrevia || 'MXN';
+            var esUSD = nueva === 'USD';
             // Prefill con el tipo de cambio de la empresa (Mi empresa) si está configurado y el campo está vacío
             if (esUSD && !num($('c-tc').value) && estado.config && Number(estado.config.tipo_cambio) > 0) {
                 $('c-tc').value = estado.config.tipo_cambio;
             }
+            // Conversión EN VIVO de las partidas (precio y costo) al cambiar la moneda
+            if (previa !== nueva && estado.partidas.length) {
+                var tc = num($('c-tc').value) || (estado.config ? Number(estado.config.tipo_cambio) : 0);
+                var tcAntes = previa === 'MXN' ? 1 : tc;
+                var tcNuevo = nueva === 'MXN' ? 1 : tc;
+                if (!(tcAntes > 0) || !(tcNuevo > 0)) {
+                    AppDialogo.mostrar({ tipo: 'aviso', titulo: 'Falta el tipo de cambio',
+                        mensaje: 'Configura el tipo de cambio en Mi empresa (o captúralo) para convertir las partidas a ' + nueva + '.' });
+                    this.value = previa;  // se revierte el selector
+                    return;
+                }
+                var factor = tcAntes / tcNuevo;
+                estado.partidas.forEach(function (p) {
+                    p.precio_unitario = r2(num(p.precio_unitario) * factor);
+                    if (p.costo_unitario != null) p.costo_unitario = r2(num(p.costo_unitario) * factor);
+                });
+                estado.monedaConvertidaEnVivo = true;
+                marcarCambio();
+            }
+            estado.monedaPrevia = nueva;
+            $('campo-tc').hidden = !esUSD;
             pintarPartidas(); aplicarEditable();
         });
         $('c-incluye-iva').addEventListener('change', pintarTotales);
