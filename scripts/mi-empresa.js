@@ -375,6 +375,8 @@
             '<label>Descuento máximo sin autorización (%)<input name="descuento_max" type="number" min="0" max="100" step="0.5" value="' + esc(c.descuento_max != null ? c.descuento_max : 10) + '">' +
             '<small>Más descuento lo autoriza el Administrador o quien tenga «Puede autorizar descuentos» en Usuarios.</small></label>' +
             '</div>' +
+            '<label class="me-check"><input type="checkbox" name="precios_incluyen_iva"' + (Number(c.precios_incluyen_iva) === 1 ? ' checked' : '') + '> Los precios del catálogo ya incluyen IVA' +
+            '<small>Marca el check «Precios incluyen IVA» por defecto en las cotizaciones nuevas (se puede apagar en cada una).</small></label>' +
             '<label>Términos y condiciones por defecto<textarea name="terminos" rows="5" maxlength="3000">' + esc(c.terminos || '') + '</textarea></label>' +
             '<div class="me-acciones"><button type="submit" class="me-btn"><i class="fas fa-save"></i> Guardar configuración</button></div>' +
             '</form>';
@@ -394,7 +396,8 @@
             api('guardar_cotizaciones', {
                 prefijo: form.prefijo.value, vigencia_dias: Number(form.vigencia_dias.value), iva: Number(form.iva.value),
                 tipo_cambio: Number(form.tipo_cambio.value) || 0,
-                descuento_max: Number(form.descuento_max.value), terminos: form.terminos.value
+                descuento_max: Number(form.descuento_max.value), terminos: form.terminos.value,
+                precios_incluyen_iva: form.precios_incluyen_iva.checked ? 1 : 0
             }).then(function (j) { aviso(j.mensaje || 'Configuración guardada.', 'ok'); })
               .catch(function (e) { aviso(e.message); })
               .then(function () { boton.disabled = false; });

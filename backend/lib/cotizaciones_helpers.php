@@ -47,6 +47,9 @@ const COT_CONFIG_DEFECTO = [
     // configurar: las cotizaciones en USD piden el tc a mano y la valuación de
     // inventario en pesos no convierte los artículos en USD.
     'tipo_cambio'    => 0.0,
+    // Si los precios del catálogo ya incluyen IVA: valor por defecto del check
+    // "Precios incluyen IVA" al crear una cotización nueva (se puede apagar por fila).
+    'precios_incluyen_iva' => 1,
     'terminos'       => "Tiempo de entrega: a convenir una vez aprobada la cotización.\nForma de pago: 50% de anticipo y 50% contra entrega.\nGarantía: la del fabricante en equipos; 30 días en mano de obra.\nPrecios sujetos a cambio sin previo aviso después de la vigencia.",
 ];
 
@@ -73,6 +76,7 @@ function cotConfig(?array $empresa = null): array {
     $c['iva'] = in_array((float)$c['iva'], COT_TASAS_IVA, true) ? (float)$c['iva'] : 0.16;
     $c['descuento_max'] = max(0, min(100, (float)$c['descuento_max']));
     $c['tipo_cambio'] = max(0.0, round((float)($c['tipo_cambio'] ?? 0), 4));
+    $c['precios_incluyen_iva'] = !empty($c['precios_incluyen_iva']) ? 1 : 0;
     $c['terminos'] = (string)$c['terminos'];
     return $c;
 }
@@ -101,6 +105,7 @@ function cotValidarConfig(array $d): array {
     return [
         'prefijo' => $prefijo, 'vigencia_dias' => $vigencia, 'iva' => $iva, 'descuento_max' => $desc,
         'tipo_cambio' => $tc,
+        'precios_incluyen_iva' => !empty($d['precios_incluyen_iva']) ? 1 : 0,
         'terminos' => mb_substr(trim((string)($d['terminos'] ?? '')), 0, 3000),
     ];
 }
@@ -504,7 +509,9 @@ function cotPrepararPartidas(PDO $pdo, array $entrada, array $existentes, float 
                 throw new CotizacionException('Una partida no corresponde a un artículo activo del catálogo.');
             }
             $monedaArt = invTieneMoneda($pdo) ? (string)($art['moneda'] ?? 'MXN') : 'MXN';
-            $artTasaIva = invTieneTasaIva($pdo) ? (float)($art['tasa_iva'] ?? $ivaDefecto) : $ivaDefecto;
+            // El IVA por defecto de la partida es el de Mi empresa (respeta la config);
+            // se puede ajustar por fila en la cotización.
+            $artTasaIva = $ivaDefecto;
             $base = [
                 'id' => null, 'articulo_id' => (int)$art['id'], 'sku' => $art['sku'],
                 'tipo' => cotTipoDeCategoria($art['categoria']),
@@ -702,7 +709,7 @@ function cotDatosDesdeIncidencia(PDO $pdo, int $incidenciaId): array {
             'fecha' => date('Y-m-d'), 'vigencia_hasta' => date('Y-m-d', strtotime('+' . $cfg['vigencia_dias'] . ' days')),
             // El tc de la empresa va como tasa de referencia para convertir a pesos
             // las refacciones/servicios aplicados que estén en USD (si no hay, queda sin efecto).
-            'moneda' => 'MXN', 'tipo_cambio' => cotTipoCambioEmpresa(), 'precios_incluyen_iva' => 0,
+            'moneda' => 'MXN', 'tipo_cambio' => cotTipoCambioEmpresa(), 'precios_incluyen_iva' => (int)$cfg['precios_incluyen_iva'],
             'condiciones' => $cfg['terminos'],
             // O-14: las notas internas son del usuario; el origen se muestra como etiqueta del sistema
             'notas_internas' => null,

@@ -239,7 +239,8 @@
         estado.monedaPrevia = $('c-moneda').value;  // para la conversión en vivo
         estado.monedaConvertidaEnVivo = false;
         $('c-tc').value = c && c.moneda === 'USD' ? num(c.tipo_cambio) : '';
-        $('c-incluye-iva').checked = c ? Number(c.precios_incluyen_iva) === 1 : false;
+        $('c-incluye-iva').checked = c ? Number(c.precios_incluyen_iva) === 1
+            : !!(estado.config && Number(estado.config.precios_incluyen_iva) === 1);  // nueva: default de Mi empresa
         $('c-condiciones').value = c ? (c.condiciones || '') : (cfg.terminos || '');
         $('c-notas-cliente').value = c ? (c.notas_cliente || '') : '';
         $('c-notas-internas').value = c ? (c.notas_internas || '') : '';
